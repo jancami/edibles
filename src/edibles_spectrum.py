@@ -14,11 +14,11 @@
 #     wave:         he wavelength in angstrom, In the desired rest-frame
 #     flux:         The flux intensity. Spectrum should be normalized to 1,
 #                   not nesecerily the local normalization
-#     central_wave: The list containing the central wavelengths of the pick
-#                   positions. If the list contain only one value, programm
-#                   take it as central wavelength and return +-10 A around it
-#                   but if it contain two value program take those as min and
-#                   max values
+#     cw            : The list of the central wavelengths of the pick position.
+#                   If the list contain only one value, programm take it as the
+#                   central wavelength and return +-10 A around it. However, if
+#                   it contain two value program take those as min and max value.
+#
 #
 # OUTPUT:
 #     initial_val:  The initial values for fitting
