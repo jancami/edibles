@@ -32,6 +32,13 @@
 # DATE:
 #     V1.1
 #     March 7 2018
+#     V1.2
+#     March 26 2018 
+#
+# Copyright:
+#     The Copyright for these codes are belong to EDIBLES survey.
+#     For use it please refere to survey P.I. Nick Cox, Jan Cami or
+#     send an email to Amin Farhang
 #
 # +
 
