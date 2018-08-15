@@ -11,6 +11,7 @@
 #
 #   x         : Wavelength grid in Angstroms
 #   v_cloud   : The cloud component velocity in km/s
+#   lambda0   : The central wavelength for known atoms/molecules
 #   f         : Oscillator strength
 #   logN      : log of Column density in units of cm^-2
 #   b_eff     : Velocity width of the Voigt profile in km/s
