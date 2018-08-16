@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
+import pickle
 
-dictionary = []
-with open('Datasets.txt', 'r') as fp:
-	dictionary = eval(fp.read())
+with open('datasets.dict', 'rb') as handle:
+    dictionary = pickle.load(handle)
 
 plt.plot(dictionary['dataset1'][0], dictionary['dataset1'][1])
 plt.suptitle('Dataset1')
