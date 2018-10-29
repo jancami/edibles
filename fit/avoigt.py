@@ -46,41 +46,6 @@ import sys
 import numpy as np
 from scipy.special import wofz
 
-# # =========================================================================
-# #   Voigt Profile Approximation from T. Tepper-Garcia 2006, 2007
-# # =========================================================================
-# def H(a, x):
-#     P = x**2
-#     H0 = np.exp(-x**2)
-#     Q = 1.5/x**2
-#     H_a_x = H0 - (a/np.sqrt(np.pi)/P) * (H0*H0 * (4.*P*P + 7.*P + 4. + Q) - Q - 1)
-#     return H_a_x
-#
-#
-# # =========================================================================
-# #   Voigt model -- the astronomical version of Voigt function
-# # =========================================================================
-# def voigt(x, v_cloud, lambda0, z, b_eff, log_N, f_osc, gam):
-#
-#     c = 2.99792e10         # cm/s
-#     m_e = 9.1094e-28       # g
-#     e = 4.8032e-10         # cgs units
-#
-#     # convert v_cloud to central wavelength
-#     cw = (v_cloud / 299792.458) * lambda0 + lambda0
-#
-#     # Calculate Profile
-#     C_a = (np.sqrt(np.pi) * e**2 * f_osc * (cw*1.e-8)) / (m_e * c * (b_eff* 1.e5))
-#     aa = ((cw*1.e-8) * gam) / (4. * np.pi * (b_eff* 1.e5))
-#
-#     dl_D = (b_eff * 1.e5)/c * cw
-#     x = x / (z + 1.0)
-#     xx = (x - cw)/dl_D + 0.00001
-#
-#     tau = np.float64(C_a) * 10**log_N * H(aa, xx)
-#     voigt_model = np.exp(-tau) - 1.0
-#     return voigt_model
-
 
 # =========================================================================
 #   Voigt model -- the astronomical version of Voigt function
