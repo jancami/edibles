@@ -304,7 +304,7 @@ for i in range(len(warm)):
             xtitle = 'Velocity (km/s)'
         # plt.xlabel(xtitle)
         plt.ylabel('Flux')
-        plt.title(trName.split("_")[3])
+        plt.title(trName)
         plt.ticklabel_format(useOffset=False)
         file_save = trName.split("_")[0] + '_' + trName.split("_")[3] + '.txt'
         data = np.column_stack((w_air, flux))
