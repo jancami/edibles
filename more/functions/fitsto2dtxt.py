@@ -3,6 +3,7 @@ from astropy.io import fits
 import numpy as np
 import os
 import csv
+import sys
 
 
 def fitstotxt(target, filepath, writepath, xmin, xmax):
@@ -119,33 +120,36 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     for file_number in range(len(file_list)):
 
+
         file_name = file_list[file_number]
 
-        hdulist = fits.open(path + file_name)
-        hdu = hdulist[0]
-        data_towork = hdu.data
-        first_val = hdu.header['CRVAL1']
-        stepsize = hdu.header['CDELT1']
-        final_val = first_val + (stepsize * len(data_towork))
-        x = np.linspace(first_val, final_val, len(data_towork))
-        bcf = hdu.header['HIERARCH ESO QC VRAD BARYCOR']
+        if file_name.split(".")[-2] == 'fits':
+            
+            hdulist = fits.open(path + file_name)
+            hdu = hdulist[0]
+            data_towork = hdu.data
+            first_val = hdu.header['CRVAL1']
+            stepsize = hdu.header['CDELT1']
+            final_val = first_val + (stepsize * len(data_towork))
+            x = np.linspace(first_val, final_val, len(data_towork))
+            bcf = hdu.header['HIERARCH ESO QC VRAD BARYCOR']
 
-        # Analyze the NaI lines to get the proper shift
-        for i in range(0, len(data_towork)):
-            if NaIxmin <= x[i] <= NaIxmax:
-                visible_x.append(x[i])
-                visible_y.append(data_towork[i])
-            if xmin <= x[i] <= xmax:
-                DIB_x.append(x[i])
-                DIB_y.append(data_towork[i])
-            else:
+            # Analyze the NaI lines to get the proper shift
+            for i in range(0, len(data_towork)):
+                if NaIxmin <= x[i] <= NaIxmax:
+                    visible_x.append(x[i])
+                    visible_y.append(data_towork[i])
+                if xmin <= x[i] <= xmax:
+                    DIB_x.append(x[i])
+                    DIB_y.append(data_towork[i])
+                else:
+                    continue
+
+            if len(visible_x) == 0:
                 continue
-
-        if len(visible_x) == 0:
-            continue
-        else:
-            x_to_plot.extend(visible_x)
-            y_to_plot.extend(visible_y)
+            else:
+                x_to_plot.extend(visible_x)
+                y_to_plot.extend(visible_y)
 
     for j in range(0, len(x_to_plot)):
         point = (((x_to_plot[j])), (y_to_plot[j]))
@@ -187,4 +191,15 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     f.close()
 
-    return()
+
+
+# fullCmdArguments = sys.argv
+# args = fullCmdArguments[1:]
+# arN = len(sys.argv)
+
+# print(args)
+# if len(args) != 5:
+#     print('\nSyntax:    python fitsto2dtxt.py target, filepath, writepath, xmin, xmax\n')
+
+# else:
+#     fitstotxt(args[0], args[1], args[2], args[3], args[4])
