@@ -23,6 +23,8 @@
 #
 #        dates        ->  plot multiple dates of the target
 #                         all_dates
+#        save         ->  save the plotted data to a text file
+#                         One file will be created for each plot
 #
 #
 # EXMPLE:
@@ -74,6 +76,7 @@ wtype = ''
 wtypev = ''
 xrng = ''
 all_dates = False
+save = False
 for i in range(arN - 1):
     if args[i][:2] == 'HD':
         targetName = args[i]
@@ -92,6 +95,9 @@ for i in range(arN - 1):
         cen_vel = float(args[i].split(':')[1])
     if args[i] == 'all_dates':
         all_dates = True
+    if args[i] == 'save':
+        save = True
+
 
 
 if len(xrng) != 0:
@@ -304,22 +310,22 @@ for i in range(len(warm)):
             xtitle = 'Velocity (km/s)'
         # plt.xlabel(xtitle)
         plt.ylabel('Flux')
-        plt.title(trName)
+        plt.title(trName.split("_")[3])
         plt.ticklabel_format(useOffset=False)
         file_save = trName.split("_")[0] + '_' + trName.split("_")[3] + '.txt'
         data = np.column_stack((w_air, flux))
 
         # save subset of data to txt file
         
-        # data_tosave = []
-        # for i, val in enumerate(data):
-        #     if xmin < val[0] < xmax:
-        #         data_tosave.append(data[i])
-        # data_tosave = np.array(data_tosave)
-        # print(data_tosave)
+        if save is True:
+            data_tosave = []
+            for i, val in enumerate(data):
+                if xmin < val[0] < xmax:
+                    data_tosave.append(data[i])
+            data_tosave = np.array(data_tosave)
 
-        # os.chdir('/export/home/klay/research')
-        # np.savetxt(file_save, data_tosave)
+            os.chdir('/export/home/klay/github/edibles/HD170740_files_we_need/txt/')
+            np.savetxt(file_save, data_tosave)
 
 fig.canvas.set_window_title(trName.split("_")[0])
 
