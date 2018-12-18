@@ -188,6 +188,3 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     f.close()
 
     return()
-
-
-fitstotxt('HD144470', '/data/FITS/', '/export/home/klay/Desktop', 3302.9, 3304)
