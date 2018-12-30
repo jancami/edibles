@@ -20,9 +20,3 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
 
     return grid
 
-
-
-'''
-1- make a grid
-2-
-'''
