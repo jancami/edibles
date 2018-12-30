@@ -61,23 +61,6 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
 
 
     # check existense of lambda_peak
-    # if (vel_cloud is None) & (lambda_peak is None):
-    #     print 'The lambda_peak or cloud velocity should be defined !!!'
-    #     sys.exit()
-
-    # # check the cloud velocity
-    # if vel_cloud is not None:
-    #     if lambda_0 is None:
-    #         print 'The lambda_0 is not defined !!!'
-    #         sys.exit()
-    #     else:
-    #         # convert wavelength to velocity
-    #         # central_wave = (vel_cloud / 299792.458) * lambda_peak + lambda_peak
-    #         # convert peak wavelengths to velocity
-
-
-
-    # check existense of lambda_peak
     if lambda_peak is None:
         print 'The lambda_peak is not defined !!!'
         sys.exit()
@@ -102,9 +85,6 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
         resolving_power = 80000
 
 
-
-
-
     # --------------------
     # define the constants
     # --------------------
@@ -123,7 +103,6 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
     x_profile = np.array(x_nonbroad)
 
     # convert vel_cloud to central wavelength
-    # central_wave = (vel_cloud / 299792.458) * lambda_peak + lambda_peak
     central_wave = lambda_peak
 
 
