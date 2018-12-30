@@ -1,6 +1,6 @@
 import numpy as np
 
-def initial_value(cw, continuum, damp_coef=None):
+def initial_value(cw, continuum, damp_coef=None, lambda_zero=None):
 
     # determine the range of variations for continuum
     min_continuum = continuum - 3
@@ -14,25 +14,21 @@ def initial_value(cw, continuum, damp_coef=None):
     if len(cw) == 1:
         fit_flag = 'astro_voigt'
     else:
-        fit_flag = 'multi_trans'
+        fit_flag = 'multi_voigt'
         try:
-            if len(cw[0]) >= 1:
-                flag_comp = 'multi_cloud'
-                Nd = len(cw)
+            if len(cw[0]) >= 1: Nd = len(cw)
         except TypeError:
-            flag_comp = 'multi_cloud'#'single_cloud'
             cw_temp = []
             cw_temp.append(cw)
             cw = cw_temp
-    # print flag_comp
-
-
+            Nd = 1
 
     # voigt
     if fit_flag == 'astro_voigt':
         initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
         for itr in range(len(cw)):
             initial_value = np.append(initial_value, 0.0)      # cloud velocity
+            # initial_value = np.append(initial_value, lambda_zero[itr])      # line rest wavelength
             initial_value = np.append(initial_value, cw[itr])  # lambda0
             if damp_flag == 'defined':
                 initial_value = np.append(initial_value, damp_coef[itr])
@@ -43,28 +39,19 @@ def initial_value(cw, continuum, damp_coef=None):
 
 
     # multi transition
-    if fit_flag == 'multi_trans':
-        # single cloud
-        if flag_comp == 'single_cloud':
-            initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
-            for itr in range(len(cw)):
-                initial_value = np.append(initial_value, 0.0)
-                initial_value = np.append(initial_value, cw[itr])
-            initial_value = np.append(initial_value, 2.0)
-            initial_value = np.append(initial_value, 12.0)
-        # multi cloud
-        if flag_comp == 'multi_cloud':
-            initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
-            for loop_t in range(len(cw)):
-                sub_cw = cw[loop_t]
-                for itr in range(len(sub_cw)):
-                    initial_value = np.append(initial_value, sub_cw[itr])  # lambda0
-                    if damp_flag == 'defined':
-                        initial_value = np.append(initial_value, damp_coef[itr])
-                    else: initial_value = np.append(initial_value, 1.5e6)
-                initial_value = np.append(initial_value, 0.0)          # cloud velocity
-                initial_value = np.append(initial_value, 2.0)          # doppler param
-                initial_value = np.append(initial_value, 12.0)         # column density
+    if fit_flag == 'multi_voigt':
+        initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
+        for loop_t in range(len(cw)):
+            sub_cw = cw[loop_t]
+            for itr in range(len(sub_cw)):
+                initial_value = np.append(initial_value, sub_cw[itr])  # lambda0
+                if damp_flag == 'defined':
+                    initial_value = np.append(initial_value, damp_coef[itr])
+                else:
+                    initial_value = np.append(initial_value, 1.5e6)
+            initial_value = np.append(initial_value, 0.0)          # cloud velocity
+            initial_value = np.append(initial_value, 2.0)          # doppler param
+            initial_value = np.append(initial_value, 12.0)         # column density
 
 
 
@@ -99,9 +86,9 @@ def initial_value(cw, continuum, damp_coef=None):
                 parinfo[5+itr*5]['limits'][0] = 0
             # b_eff
             parinfo[6+itr*5]['limited'][0] = 1
-            parinfo[6+itr*5]['limits'][0] = 2
+            parinfo[6+itr*5]['limits'][0] = 0
             parinfo[6+itr*5]['limited'][1] = 1
-            parinfo[6+itr*5]['limits'][1] = 10
+            parinfo[6+itr*5]['limits'][1] = 12
             # logN
             parinfo[7+itr*5]['limited'][0] = 1
             parinfo[7+itr*5]['limits'][0] = 7
@@ -113,7 +100,7 @@ def initial_value(cw, continuum, damp_coef=None):
         # -----------------
         # multi transition
         # -----------------
-        if fit_flag == 'multi_trans' and flag_comp == 'multi_cloud':
+        if fit_flag == 'multi_voigt':
             for loop_sub in range(len(cw[itr])):
                 # CW
                 parinfo[prc]['limited'][0] = 1
@@ -121,6 +108,7 @@ def initial_value(cw, continuum, damp_coef=None):
                 parinfo[prc]['limited'][1] = 1
                 parinfo[prc]['limits'][1] = cw[itr][loop_sub] + 0.2
                 prc += 1
+
                 # gamma
                 if damp_flag == 'defined':
                     parinfo[prc]['fixed'] = 1
@@ -137,9 +125,9 @@ def initial_value(cw, continuum, damp_coef=None):
             prc += 1
             # b_eff
             parinfo[prc]['limited'][0] = 1
-            parinfo[prc]['limits'][0] = 2
+            parinfo[prc]['limits'][0] = 0
             parinfo[prc]['limited'][1] = 1
-            parinfo[prc]['limits'][1] = 10
+            parinfo[prc]['limits'][1] = 12
             prc += 1
             # log_N
             parinfo[prc]['limited'][0] = 1
@@ -147,29 +135,6 @@ def initial_value(cw, continuum, damp_coef=None):
             parinfo[prc]['limited'][1] = 1
             parinfo[prc]['limits'][1] = 24
             prc += 1
-
-
-
-        # -----------------
-        # multi transition
-        # -----------------
-        if fit_flag == 'multi_trans' and flag_comp == 'single_cloud':
-            # CW
-            parinfo[2+itr*4]['limited'][0] = 1
-            parinfo[2+itr*4]['limits'][0] = cw[itr] - 0.2
-            parinfo[2+itr*4]['limited'][1] = 1
-            parinfo[2+itr*4]['limits'][1] = cw[itr] + 0.2
-
-            # b_eff
-            parinfo[-2]['limited'][0] = 1
-            parinfo[-2]['limits'][0] = 2
-            parinfo[-2]['limited'][1] = 1
-            parinfo[-2]['limits'][1] = 10
-            # logN
-            parinfo[-1]['limited'][0] = 1
-            parinfo[-1]['limits'][0] = 7
-            parinfo[-1]['limited'][1] = 1
-            parinfo[-1]['limits'][1] = 24
 
     # fill out the dictionary
     for itr in range(len(p0)): parinfo[itr]['value'] = p0[itr]
