@@ -57,7 +57,6 @@ class fitSpectrum:
 
 
 
-
         # ----------------
         # multi components
         # ----------------
