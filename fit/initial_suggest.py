@@ -28,7 +28,6 @@ def initial_value(cw, continuum, damp_coef=None, lambda_zero=None):
         initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
         for itr in range(len(cw)):
             initial_value = np.append(initial_value, 0.0)      # cloud velocity
-            # initial_value = np.append(initial_value, lambda_zero[itr])      # line rest wavelength
             initial_value = np.append(initial_value, cw[itr])  # lambda0
             if damp_flag == 'defined':
                 initial_value = np.append(initial_value, damp_coef[itr])
