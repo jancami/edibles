@@ -45,26 +45,26 @@
 import sys
 import numpy as np
 from scipy.special import wofz
+import edibles.fit.make_grid as mg
+from scipy.signal import fftconvolve, gaussian
 
 
 # =========================================================================
 #   Voigt model -- the astronomical version of Voigt function
 # =========================================================================
-def voigt(x, vel_cloud=None, lambda0=None, b_eff=None, log_N=None, gamma=None, osc_freq=None):
+def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None, resolving_power=None):
 
     # check negative wavelength
     if any(nn < 0 for nn in x):
         print 'The wavelength contain negative values !!!'
         sys.exit()
 
-    # check the cloud velocity
-    if vel_cloud is None:
-        vel_cloud = 0.0
-
-    # check existense of lambda0
-    if lambda0 is None:
-        print 'The lambda0 is not defined !!!'
+    # check existense of lambda_peak
+    if lambda_peak is None:
+        print 'The lambda_peak is not defined !!!'
         sys.exit()
+    else: lambda_peak = np.float(lambda_peak)
+
 
     # check existense of b_eff
     if b_eff is None:
@@ -79,19 +79,37 @@ def voigt(x, vel_cloud=None, lambda0=None, b_eff=None, log_N=None, gamma=None, o
     if gamma is None:
         gamma = 1.0e06
 
+    # check the resolving power (R)
+    if resolving_power is None:
+        resolving_power = 80000
+
+
+
+
 
     # --------------------
     # define the constants
     # --------------------
-    c  = 2.99792458e10         # cm/s
+    # instrumental resolution defined with c/R and determine the velocity resolution in (km/s)
+    resolution = 299792.458 / np.float(resolving_power)
+    c  = 2.99792458e10         # (cm/s)
     sigma0 = 0.02654
-    x = np.array(x)
+    # resolving power of 0.1 km/s
+    R = c * 1.0e-5 / 0.1
+    delta_lambda = lambda_peak / R
+    xmin = min(x)
+    xmax = max(x)
+    x_nonbroad = np.arange(xmin, xmax, delta_lambda)
+    # using this method for making grid increase fitting time so much
+    # x_nonbroad = mg.make_grid(xmin, xmax, resolution=R)
+    x_profile = np.array(x_nonbroad)
 
     # convert vel_cloud to central wavelength
-    central_wave = (vel_cloud / 299792.458) * lambda0 + lambda0
+    central_wave = lambda_peak
 
-    # Calculate Profile
-    nu = c / (x * 1.e-8)
+
+    # Calculate intrinsic profile
+    nu = c / (x_profile * 1.e-8)
     nu0 = c / (central_wave * 1.e-8)
     delta_nu = nu - nu0
     delta_nu_D = (b_eff*1.e5) * nu / c
@@ -102,4 +120,16 @@ def voigt(x, vel_cloud=None, lambda0=None, b_eff=None, log_N=None, gamma=None, o
     tau = (10**log_N) * sigma0 * osc_freq * vgt
     voigt_model = np.exp(-tau) - 1
 
-    return voigt_model
+    # broad the intrinsic line profile by the instrumental resolution
+    pxs = np.diff(x_profile)[0] / x_profile[0] * 299792.458
+    fwhm_instrumental = resolution
+    sigma_instrumental = fwhm_instrumental / 2.35482 / pxs
+    LSF = gaussian(len(x_profile)/2, sigma_instrumental)
+    LSF = LSF / LSF.sum()
+    y_profile = fftconvolve(voigt_model, LSF, 'same')
+
+
+    # interpolate into the observed wavelength grid
+    obs_profile = np.interp(x, x_profile, y_profile)
+
+    return obs_profile
