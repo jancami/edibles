@@ -145,7 +145,8 @@ from astropy.io import fits
 wave, flux = np.loadtxt('txt/HD170740_20160613.txt', unpack=True)
 
 obj = ft.fitSpectrum()
-obj.afit(wave, flux, [7665.2], lines=['KI_7667'], cheb_order=1)
+obj.afit(wave, flux, [7664.1, 7665.2], lines=['KI_7667'], cheb_order=1)
+# obj.afit(wave, flux, [[7664.1], [7665.2]], lines=['KI_7667'], cheb_order=1)
 
 print ''
 print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '

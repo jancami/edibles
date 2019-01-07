@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/export/home/klay/github/')
+
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft
 import edibles.fit.make_grid as mg
