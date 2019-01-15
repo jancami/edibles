@@ -6,9 +6,11 @@ def initial_value(cw, continuum, damp_coef=None, lambda_zero=None):
     min_continuum = continuum - 3
     max_continuum = continuum + 3
 
-    # chech defining the damping coef
+    # check defining the damping coef
     if damp_coef is not None:
         damp_flag = 'defined'
+    else:
+        damp_flag = 'not_defined'
 
     # determine the components of cloud
     if len(cw) == 1:
@@ -24,6 +26,10 @@ def initial_value(cw, continuum, damp_coef=None, lambda_zero=None):
             Nd = 1
 
     # voigt
+
+    # initial_value is an array with entries:
+    # (continuum, 0.0, 0.0, cloud velocity, lambda0, gamma, b_eff, column_density)
+
     if fit_flag == 'astro_voigt':
         initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
         for itr in range(len(cw)):
@@ -38,6 +44,13 @@ def initial_value(cw, continuum, damp_coef=None, lambda_zero=None):
 
 
     # multi transition
+
+    # initial_value is an array with first three entries:
+    # (continuum, 0.0, 0.0)
+    # then the following code appends:
+    # (lambda0, gamma, cloud velocity, b_eff, column_density)
+    # for each central wavelength input
+
     if fit_flag == 'multi_voigt':
         initial_value = np.array([continuum, 0.0, 0.0], dtype='double')
         for loop_t in range(len(cw)):

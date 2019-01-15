@@ -41,8 +41,10 @@ class fitSpectrum:
         # --------------------
         if flg == 'voigt_fit':
             # continuum
-            if self.cheb_order == -1: cont_model = np.full(len(x), 1.0)
-            else: cont_model = p[0] + p[1] * (x - np.mean(x)) + p[2] * (2*(x - np.mean(x))**2 - 1.0)
+            if self.cheb_order == -1:
+                cont_model = np.full(len(x), 1.0)
+            else:
+                cont_model = p[0] + p[1] * (x - np.mean(x)) + p[2] * (2*(x - np.mean(x))**2 - 1.0)
             parm = p[3:]
             peak_num = 0
             for loop_p in range(0, len(parm), 5):
@@ -62,8 +64,10 @@ class fitSpectrum:
         # ----------------
         if flg == 'multi_voigt':
             # continuum
-            if self.cheb_order == -1: cont_model = np.full(len(x), 1.0)
-            else: cont_model = p[0] + p[1] * (x - np.mean(x)) + p[2] * (2*(x - np.mean(x))**2 - 1.0)
+            if self.cheb_order == -1:
+                cont_model = np.full(len(x), 1.0)
+            else:
+                cont_model = p[0] + p[1] * (x - np.mean(x)) + p[2] * (2*(x - np.mean(x))**2 - 1.0)
             parm = p[3:]
             Nc = len(parm)/float(self.Nd)
             for loop_m in range(self.Nd):

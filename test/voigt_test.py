@@ -526,9 +526,9 @@ PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 print ''
 print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 10'
-print '  In this test, we added the following component to test 3'
-print '  to check the multi-component NaI line'
+print '                              Test 10 - Welsh et al. 2010'
+print ''
+print '  continuum     :     ???                       {:7.2f}'.format(obj.fit_parm[0])
 print '  lambda_peak   :     3933.66                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
 print '  b_eff         :     2.5                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
 print '  log_N         :     11.67                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
