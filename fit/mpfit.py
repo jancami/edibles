@@ -870,11 +870,11 @@ class mpfit:
 
 		# Be sure that PARINFO is of the right type
 		if parinfo is not None:
-			if type(parinfo) != types.ListType:
+			if type(parinfo) != list:
 				self.errmsg = 'ERROR: PARINFO must be a list of dictionaries.'
 				return
 			else:
-				if type(parinfo[0]) != types.DictionaryType:
+				if type(parinfo[0]) != dict:
 					self.errmsg = 'ERROR: PARINFO must be a list of dictionaries.'
 					return
 			if ((xall is not None) and (len(xall) != len(parinfo))):

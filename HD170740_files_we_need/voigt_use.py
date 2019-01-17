@@ -78,7 +78,7 @@ print('')
 # plotting
 
 fig, ax1 = plt.subplots()
-plt.gcf().canvas.set_window_title(file)
+plt.gcf().canvas.set_window_title('test data')
 ax1.plot(wave, flux, 'gray', marker='.')
 ax1.plot(wave, obj.yfit, 'magenta')
 cont_fit = np.ones_like(wave) * obj.fit_parm[0]
