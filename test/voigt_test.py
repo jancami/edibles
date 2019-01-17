@@ -1,6 +1,11 @@
+from __future__ import print_function
 import sys
-sys.path.append('/export/home/klay/github/')
-
+import os
+path = os.getcwd()
+os.chdir('..')
+os.chdir('..')
+sys.path.append(os.getcwd())
+os.chdir(path)
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft
 import edibles.fit.make_grid as mg
@@ -45,18 +50,18 @@ obj.afit(wave, flux, [5890], lines=['NaI_5891'], cheb_order=2, resolving_power=8
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 1:'
-print '  The resolution for this test is R=80,000 and the error on data'
-print '  is zero further the continuum is the constant value 1.'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 1:')
+print('  The resolution for this test is R=80,000 and the error on data')
+print('  is zero further the continuum is the constant value 1.')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 
 
@@ -99,19 +104,19 @@ obj.afit(wave, flux, [5890], lines=['NaI_5891'], cheb_order=1, resolving_power=8
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 2'
-print '  This test exactly takes the test 1 parameters, however, we add'
-print '  the error on the intensity with a Gaussian distribution of'
-print '  width 0.05 of normalized intensity.'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 2')
+print('  This test exactly takes the test 1 parameters, however, we add')
+print('  the error on the intensity with a Gaussian distribution of')
+print('  width 0.05 of normalized intensity.')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 
 
@@ -152,18 +157,18 @@ obj.afit(wave, flux, [5890], lines=['NaI_5891'], cheb_order=1, resolving_power=8
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 3'
-print '  This test exactly takes the test 2 parameters, however, we add'
-print '  the continuum line of cnt = 0.005 * wave + 0.002'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff       :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N       :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 3')
+print('  This test exactly takes the test 2 parameters, however, we add')
+print('  the continuum line of cnt = 0.005 * wave + 0.002')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff       :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N       :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 
 
@@ -209,17 +214,17 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 4'
-print '  Similar to test 3 with R=10,000'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 4')
+print('  Similar to test 3 with R=10,000')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 # plotting
 plt.figure()
@@ -254,17 +259,17 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 5'
-print '  This test exactly takes the test 3 parameters, with fixed delta_lambda = 0.02'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 5')
+print('  This test exactly takes the test 3 parameters, with fixed delta_lambda = 0.02')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 # plotting
 plt.figure()
@@ -307,17 +312,17 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 6'
-print '  This test is similar to test 3, with a nonlinear wavelength grid'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 6')
+print('  This test is similar to test 3, with a nonlinear wavelength grid')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak   :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
 
 # plotting
 plt.figure()
@@ -359,22 +364,22 @@ obj.afit(wave, flux, [[5890], [5890.1]], lines=['NaI_5891'], cheb_order=1, resol
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 7'
-print '  In this test, we added the following component to test 3'
-print '  to check the multi-component Voigt fitting of edibles package'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3])
-print '  b_eff_1       :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N_1       :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
-print '  lambda_peak_2 :     5890.12                    {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-print '  b_eff_2       :     4.13                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11])
-print '  log_N_2       :     11.17                      {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 7')
+print('  In this test, we added the following component to test 3')
+print('  to check the multi-component Voigt fitting of edibles package')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3]))
+print('  b_eff_1       :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N_1       :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
+print('  lambda_peak_2 :     5890.12                    {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+print('  b_eff_2       :     4.13                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11]))
+print('  log_N_2       :     11.17                      {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12]))
+print('')
 
 
 
@@ -419,19 +424,19 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 8'
-print '  In this test, we added the following component to test 3'
-print '  to check the multi-component NaI line'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda_peak_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3])
-print '  lambda_peak_2 :     5896.1                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[5], PCERROR[5])
-print '  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-print '  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[9], PCERROR[9])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 8')
+print('  In this test, we added the following component to test 3')
+print('  to check the multi-component NaI line')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda_peak_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3]))
+print('  lambda_peak_2 :     5896.1                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[5], PCERROR[5]))
+print('  b_eff         :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+print('  log_N         :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[9], PCERROR[9]))
+print('')
 
 # plotting
 plt.figure()
@@ -478,24 +483,24 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 9'
-print '  In this test, we added the following component to test 3'
-print '  to check the multi-component NaI line'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  lambda1_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3])
-print '  lambda1_2 :     5896                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[5], PCERROR[5])
-print '  b_eff_1   :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-print '  log_N_1   :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[9], PCERROR[9])
-print ''
-print '  lambda2_1 :     5890.3                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[10], PCERROR[10])
-print '  lambda2_2 :     5896.3                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12])
-print '  b_eff_2   :     4.13                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[15], PCERROR[15])
-print '  log_N_2   :     11.17                      {:7.3f} +- {:1.2f}'.format(obj.fit_parm[16], PCERROR[16])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 9')
+print('  In this test, we added the following component to test 3')
+print('  to check the multi-component NaI line')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  lambda1_1 :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[3], PCERROR[3]))
+print('  lambda1_2 :     5896                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[5], PCERROR[5]))
+print('  b_eff_1   :     3.47                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+print('  log_N_1   :     12.843                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[9], PCERROR[9]))
+print('')
+print('  lambda2_1 :     5890.3                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[10], PCERROR[10]))
+print('  lambda2_2 :     5896.3                     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12]))
+print('  b_eff_2   :     4.13                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[15], PCERROR[15]))
+print('  log_N_2   :     11.17                      {:7.3f} +- {:1.2f}'.format(obj.fit_parm[16], PCERROR[16]))
+print('')
 
 
 # plotting
@@ -524,14 +529,14 @@ DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test 10 - Welsh et al. 2010'
-print ''
-print '  continuum     :     ???                       {:7.2f}'.format(obj.fit_parm[0])
-print '  lambda_peak   :     3933.66                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff         :     2.5                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N         :     11.67                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test 10 - Welsh et al. 2010')
+print('')
+print('  continuum     :     ???                       {:7.2f}'.format(obj.fit_parm[0]))
+print('  lambda_peak   :     3933.66                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff         :     2.5                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N         :     11.67                     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
 
 plt.figure()
 plt.gcf().canvas.set_window_title('Welsh et al. 2010 CaII-K')

@@ -1,8 +1,7 @@
+from __future__ import print_function
 import os, glob, sys
 import numpy as np
 import matplotlib.pyplot as plt
-import mpfit
-import ref_index
 from scipy.special import wofz
 from scipy.stats import chi2
 from scipy import interpolate, signal, stats

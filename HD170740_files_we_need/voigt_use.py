@@ -1,13 +1,16 @@
+from __future__ import print_function
 import sys
-sys.path.append('/export/home/klay/github/')
-
+import os
+path = os.getcwd()
+os.chdir('..')
+os.chdir('..')
+sys.path.append(os.getcwd())
+os.chdir(path)
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
-import numpy as np
-
 
 # ===================== Test Data ==========================
 #   Three components, made to look like the real data from
@@ -55,22 +58,22 @@ better_fit = fit[0]*wave + fit[1]
 new_flux = flux - obj.yfit
 
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Test Data'
-print ''
-print '                    *** the fitting results ***'
-print '               real parameter           fitted parameter'
-print '  continuum :     line                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0])
-print ''
-print '  lambda0_1 :     7665.05                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff_1   :     2.85                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N_1   :     11.983                    {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
-print '  lambda0_2 :     7666.15                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-print '  b_eff_2   :     3.12                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11])
-print '  log_N_2   :     12.047                    {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Test Data')
+print('')
+print('                    *** the fitting results ***')
+print('               real parameter           fitted parameter')
+print('  continuum :     line                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0]))
+print('')
+print('  lambda0_1 :     7665.05                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff_1   :     2.85                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N_1   :     11.983                    {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
+print('  lambda0_2 :     7666.15                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+print('  b_eff_2   :     3.12                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11]))
+print('  log_N_2   :     12.047                    {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12]))
+print('')
 
 # plotting
 
@@ -114,14 +117,14 @@ wave, flux = np.loadtxt(file, unpack=True)
 obj = ft.fitSpectrum()
 obj.afit(wave, flux, [[7665.05], [7666.15], [7664.5]], lines=['KI_7667'], cheb_order=1)
 
-# print ''
-# print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-# print '                              20160613'
-# print '  Known values                        Estimated values'
-# print '--------------------------------------------------------------------'
-# print '  lambda0   :     ?                  {:7.2f}'.format(obj.fit_parm[4])
-# print '  b_eff     :     ?                  {:7.2f}'.format(obj.fit_parm[6])
-# print '  log_N     :     ?                  {:7.3f}'.format(obj.fit_parm[7])
+# print(''
+# print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
+# print('                              20160613'
+# print('  Known values                        Estimated values'
+# print('--------------------------------------------------------------------'
+# print('  lambda0   :     ?                  {:7.2f}'.format(obj.fit_parm[4])
+# print('  b_eff     :     ?                  {:7.2f}'.format(obj.fit_parm[6])
+# print('  log_N     :     ?                  {:7.3f}'.format(obj.fit_parm[7])
 
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
@@ -143,21 +146,21 @@ weights = (flux / mean)
 fit = np.polyfit(wave, flux, 1, w=weights)
 better_fit = fit[0]*wave + fit[1]
 
-print ''
-print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-print '                              Raw data'
-print ''
-print '                    *** the fitting results ***'
-print '                  fitted parameter'
-print '  continuum :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0])
-print '  lambda0_1 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-print '  b_eff_1   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-print '  log_N_1   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-print ''
-print '  lambda0_2 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-print '  b_eff_2   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11])
-print '  log_N_2   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12])
-print ''
+print('')
+print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+print('                              Raw data')
+print('')
+print('                    *** the fitting results ***')
+print('                  fitted parameter')
+print('  continuum :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0]))
+print('  lambda0_1 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+print('  b_eff_1   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+print('  log_N_1   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+print('')
+print('  lambda0_2 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+print('  b_eff_2   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11]))
+print('  log_N_2   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12]))
+print('')
 
 
 fig, ax1 = plt.subplots()
@@ -180,23 +183,23 @@ ax1.set_ylabel('Flux')
 # obj = ft.fitSpectrum()
 # obj.afit(wave, flux, [[7665.05], [7666.15]], lines=['KI_7667'], cheb_order=1)
 
-# print ''
-# print '  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% '
-# print '                              Normalized data'
-# print '  In this test, we added the following component to test 3'
-# print '  to check the multi-component Voigt fitting of edibles package'
-# print ''
-# print '                    *** the fitting results ***'
-# print '                  fitted parameter'
-# print '  continuum :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0])
-# print '  lambda0_1 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4])
-# print '  b_eff_1   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6])
-# print '  log_N_1   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7])
-# print ''
-# print '  lambda0_2 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8])
-# print '  b_eff_2   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11])
-# print '  log_N_2   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12])
-# print ''
+# print('')
+# print('  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ')
+# print('                              Normalized data')
+# print('  In this test, we added the following component to test 3')
+# print('  to check the multi-component Voigt fitting of edibles package')
+# print('')
+# print('                    *** the fitting results ***')
+# print('                  fitted parameter')
+# print('  continuum :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0]))
+# print('  lambda0_1 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
+# print('  b_eff_1   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
+# print('  log_N_1   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[7], PCERROR[7]))
+# print('')
+# print('  lambda0_2 :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[8], PCERROR[8]))
+# print('  b_eff_2   :     {:7.2f} +- {:1.2f}'.format(obj.fit_parm[11], PCERROR[11]))
+# print('  log_N_2   :     {:7.3f} +- {:1.2f}'.format(obj.fit_parm[12], PCERROR[12]))
+# print('')
 
 
 # plt.figure()
