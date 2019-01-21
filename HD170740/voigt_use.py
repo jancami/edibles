@@ -79,11 +79,12 @@ print('')
 
 fig, ax1 = plt.subplots()
 plt.gcf().canvas.set_window_title('test data')
-ax1.plot(wave, flux, 'gray', marker='.')
-ax1.plot(wave, obj.yfit, 'magenta')
+ax1.plot(wave, flux, 'gray', marker='.', label='data')
+ax1.plot(wave, obj.yfit, 'magenta', label='fit')
 cont_fit = np.ones_like(wave) * obj.fit_parm[0]
-ax1.plot(wave, cont_fit, 'blue')
-ax1.plot(wave, better_fit, 'red')
+ax1.plot(wave, cont_fit, 'blue', label='average')
+ax1.plot(wave, better_fit, 'red', label='poly')
+plt.legend()
 
 # ax2 = ax1.twinx()
 

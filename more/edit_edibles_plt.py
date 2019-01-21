@@ -324,7 +324,7 @@ for i in range(len(warm)):
                     data_tosave.append(data[i])
             data_tosave = np.array(data_tosave)
 
-            os.chdir('/export/home/klay/github/edibles/HD170740_files_we_need/txt/')
+            os.chdir('/export/home/klay/github/edibles/HD170740/txt/')
             np.savetxt(file_save, data_tosave)
 
 fig.canvas.set_window_title(trName.split("_")[0])
