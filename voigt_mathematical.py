@@ -9,9 +9,9 @@ def voigt_math(x, alpha, gamma, x_pts=None, y_pts=None, cont=False):
     and Gaussian component HWHM alpha.
 
     Input:
-    x:      [ndarray]  data grid
-    alpha:  [int]      Gaussian HWHM component
-    gamma:  [int]      Lorentzian HWHM component
+    x:      [ndarray]  Data grid
+    alpha:  [float]    Gaussian HWHM component
+    gamma:  [float]    Lorentzian HWHM component
     x_pts:  [ndarray]  x-components of initial continuum guess
     y_pts:  [ndarray]  y-components of initial continuum guess
     cont:   [bool]     Use a continuum term? Default is False
