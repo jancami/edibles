@@ -41,7 +41,7 @@
 #     farhang.amin@gmail.com
 #
 # +
-
+from __future__ import print_function
 import sys
 import numpy as np
 from scipy.special import wofz
@@ -56,20 +56,20 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
 
     # check negative wavelength
     if any(nn < 0 for nn in x):
-        print 'The wavelength contain negative values !!!'
+        print('The wavelength contain negative values !!!')
         sys.exit()
 
 
     # check existense of lambda_peak
     if lambda_peak is None:
-        print 'The lambda_peak is not defined !!!'
+        print('The lambda_peak is not defined !!!')
         sys.exit()
     else: lambda_peak = np.float(lambda_peak)
 
 
     # check existense of b_eff
     if b_eff is None:
-        print 'The b_eff is not defined !!!'
+        print('The b_eff is not defined !!!')
         sys.exit()
 
     # check the oscillator frequencty

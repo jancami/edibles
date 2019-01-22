@@ -24,7 +24,11 @@ def cont_est(wave, spec, cw):
     # fit a straight line
     cont_x = np.concatenate((np.array(cnxl), np.array(cnxr)), axis=0)
     cont_y = np.concatenate((np.array(cnyl), np.array(cnyr)), axis=0)
-    pol = np.poly1d(np.polyfit(cont_x, cont_y, 2))
+
+    mean = np.mean(cont_y)
+    weights = cont_y / mean
+
+    pol = np.poly1d(np.polyfit(cont_x, cont_y, 2, w=weights))
     continuum_lim = np.mean(pol(cont_x))
 
     return continuum_lim
