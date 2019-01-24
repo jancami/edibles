@@ -7,7 +7,7 @@ def fits2ascii(input_fits):
     fits2ascii("an_edibles_spectrum.fits")
     """
 
-    """ note: probably needs some checks to see if FITS file is valid """
+    """ note: probably needs some error catching checks to see if FITS file is valid """
 
     hdu = fits.open(input_fits)
     spec_flux = hdu[0].data
