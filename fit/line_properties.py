@@ -1,5 +1,5 @@
 import numpy as np
-from TextFileParser import parseTextFile
+import edibles.more.functions.TextFileParser as tfp
 
 def line_properties(cw, lines):
 
@@ -13,7 +13,7 @@ def line_properties(cw, lines):
     gam = []
     mass = []
 
-    lineList = parseTextFile(atomfile, delimiter='\t', header=3)
+    lineList = tfp.parseTextFile(atomfile, delimiter='\t', header=3)
     for file_line in range(len(lineList)):
         try:
 

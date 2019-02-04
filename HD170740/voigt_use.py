@@ -1,16 +1,21 @@
 from __future__ import print_function
 import sys
 import os
+
 path = os.getcwd()
+print(sys.path)
 os.chdir('..')
 os.chdir('..')
 sys.path.append(os.getcwd())
 os.chdir(path)
+print(sys.path)
+from edibles import fit, more
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+
 
 sys.dont_write_bytecode = True
 
@@ -66,7 +71,7 @@ print('                              Test Data')
 print('')
 print('                    *** the fitting results ***')
 print('               real parameter           fitted parameter')
-print('  continuum :     line                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0]))
+print('  continuum :     line                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[0], PCERROR[0]))
 print('')
 print('  lambda0_1 :     7665.05                   {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
 print('  b_eff_1   :     2.85                      {:7.2f} +- {:1.2f}'.format(obj.fit_parm[6], PCERROR[6]))
@@ -98,7 +103,6 @@ plt.legend()
 # --------------------------
 # data / red line
 # --------------------------
-
 
 
 
