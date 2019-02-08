@@ -1,5 +1,5 @@
 import numpy as np
-import edibles.more.functions.TextFileParser as tfp
+import edibles.more.TextFileParser as tfp
 
 def line_properties(cw, lines):
 
@@ -47,7 +47,7 @@ def line_properties(cw, lines):
     gam_temp = []
 
     for loop_l in range(len(lines)):
-        index = lineList[:,0].tolist().index(lines[loop_l])
+        index = lineList[:, 0].tolist().index(lines[loop_l])
         tag, ion, l0, f, gam, mass = lineList[index]
         l0_temp.append(l0)
         f_temp.append(f)
