@@ -45,8 +45,8 @@ from __future__ import print_function
 import sys
 import numpy as np
 from scipy.special import wofz
-import edibles.fit.make_grid as mg
 from scipy.signal import fftconvolve, gaussian
+from astropy import constants as cst
 
 
 # =========================================================================
@@ -89,11 +89,11 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
     # define the constants
     # --------------------
     # instrumental resolution defined with c/R and determine the velocity resolution in (km/s)
-    resolution = 299792.458 / np.float(resolving_power)
-    c  = 2.99792458e10         # (cm/s)
+    resolution = cst.c.to('km/s').value / np.float(resolving_power)
+
     sigma0 = 0.02654
     # resolving power of 0.1 km/s
-    R = c * 1.0e-5 / 0.1
+    R = cst.c.to('cm/s').value * 1.0e-5 / 0.1
     delta_lambda = lambda_peak / R
     xmin = min(x)
     xmax = max(x)
@@ -107,10 +107,10 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
 
 
     # Calculate intrinsic profile
-    nu = c / (x_profile * 1.e-8)
-    nu0 = c / (central_wave * 1.e-8)
+    nu = cst.c.to('cm/s').value / (x_profile * 1.e-8)
+    nu0 = cst.c.to('cm/s').value / (central_wave * 1.e-8)
     delta_nu = nu - nu0
-    delta_nu_D = (b_eff*1.e5) * nu / c
+    delta_nu_D = (b_eff*1.e5) * nu / cst.c.to('cm/s').value
     prf = 1.0 / ((np.pi**0.5) * delta_nu_D)
     Z_xval = delta_nu / delta_nu_D
     Z_gval = gamma / (4 * np.pi * delta_nu_D)
