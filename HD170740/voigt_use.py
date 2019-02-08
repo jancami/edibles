@@ -16,9 +16,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
 
-
-sys.dont_write_bytecode = True
-
 # ===================== Test Data ==========================
 #   Three components, made to look like the real data from
 #   the file 'txt/HD170740_20160613_reduced.txt'
@@ -89,13 +86,13 @@ plt.gcf().canvas.set_window_title('test data')
 ax1.plot(wave, flux, 'gray', marker='.', label='data')
 ax1.plot(wave, obj.yfit, 'magenta', label='fit')
 cont_fit = np.ones_like(wave) * obj.fit_parm[0]
-ax1.plot(wave, cont_fit, 'b--', label='average')
-ax1.plot(wave, better_fit, 'r--', label='poly')
+# ax1.plot(wave, cont_fit, 'b--', label='average')
+# ax1.plot(wave, better_fit, 'r--', label='poly')
 
 
 # ax2 = ax1.twinx()
 
-ax1.plot(wave, new_flux, 'green', marker='.', label='cleaned')
+# ax1.plot(wave, new_flux, 'green', marker='.', label='cleaned')
 plt.xlabel('Wavelength ($\AA$)')
 ax1.set_ylabel('Flux')
 
