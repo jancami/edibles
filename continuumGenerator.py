@@ -1,5 +1,6 @@
 import numpy as np
-import scipy.interpolate
+from scipy.interpolate import CubicSpline
+from scipy.stats import chisquare
 import matplotlib.pyplot as plt
 
 import sys
@@ -10,71 +11,65 @@ sys.path.append(os.getcwd())
 os.chdir(path)
 
 from edibles.voigtMathematical import voigt_math
+from edibles.fit.make_grid import make_grid
 
 
-def generateContinuum(x, y, n_sections=4, move_x=True, move_y=False):
+def generateContinuum(x, y, n_sections=4, move_x=False, move_y=True):
 	'''
 	This function fits a continuum to data separated into n sections
-	using a cubic spline.
+	where the x and y-values are the median of each section	using a cubic spline
 
 	INPUT:
 	x: [ndarray] wavelength grid
 	y: [ndarray] flux values
 	n_sections: [int, default=4] evenly split data into n sections
-		(n+1 points) one point will be on either end of the data
-	move_x: [bool, default=True] change x values of points to fit
-	move_y: [bool, default=False] change y values of points to fit
+	move_x: [bool, default=False] change x values of points to fit
+	move_y: [bool, default=True] change y values of points to fit
 
 	OUTPUT:
 	x_cont: [ndarray] wavelength grid points for fit continuum
 	y_cont: [ndarray] flux value points for fit continuum
 	'''
 
-	x_sections = np.split(x, n_sections)
-	y_sections = np.split(y, n_sections)
+	x_sections = np.array_split(x, n_sections)
+	y_sections = np.array_split(y, n_sections)
 
-	# print(x_sections)
-
-
-
-	x_value_array = [x[0]]
-	y_value_array = [y[0]]
+	x_value_array = []
+	y_value_array = []
 	for i in range(len(x_sections)):
-
-		x_value = x_sections[i][-1]
-		y_value = y_sections[i][-1]
+		x_value = np.median(x_sections[i])
+		y_value = np.median(y_sections[i])
 		x_value_array.append(x_value)
 		y_value_array.append(y_value)
 
 
-	# cont_values = np.column_stack((x_value_array, y_value_array))
+	spline = CubicSpline(x_value_array, y_value_array)
 
-	return x_value_array, y_value_array
 
+	x_spline = np.linspace(np.min(x), np.max(x), (len(x)))
+	y_spline = spline(x_spline)
+
+	# # plot median points of each section
+	# plt.plot(x_value_array, y_value_array, 'ko')
+
+
+	return x_spline, y_spline
 
 
 # Example
 
-x = np.linspace(0, 1000, 1000)
+alpha, gamma = 0.1, 0.1
+
+wave = np.linspace(-3, 3, 1000)
+flux = -voigt_math(wave, alpha, gamma)
+
+# Generate the spline curve
+x_spline, y_spline = generateContinuum(wave, flux)
+
+plt.plot(wave, flux, marker='o', markersize='3', label='Data')
+plt.plot(x_spline, y_spline, label='Spline fit')
+plt.legend()
+plt.show()
 
 
-y = voigt_math(x, 0.5, 0.5)
-
-
-generateContinuum(x, y)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# scipy.interpolate.CubicSpline()
-
-# plt.plot()
+plt.show()
