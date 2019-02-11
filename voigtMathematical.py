@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import wofz
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 def voigt_math(x, alpha, gamma, x_pts=None, y_pts=None, cont=False):
@@ -19,6 +19,7 @@ def voigt_math(x, alpha, gamma, x_pts=None, y_pts=None, cont=False):
     """
     sigma = alpha / np.sqrt(2 * np.log(2))
 
+
     if cont is True:
         # call continuum function here?
         print("Do something")
@@ -27,10 +28,11 @@ def voigt_math(x, alpha, gamma, x_pts=None, y_pts=None, cont=False):
 
 
 
-# alpha, gamma = 0.1, 0.1
-# x = np.linspace(-0.8,0.8,1000)
+alpha, gamma = 0.1, 0.1
+x = np.linspace(-0.8,0.8,1000)
+y = voigt_math(x, alpha, gamma)
 
-# plt.plot(x, voigt_math(x, alpha, gamma), label='Voigt')
+plt.plot(x, y, label='Voigt')
 # plt.xlim(-0.8,0.8)
-# plt.legend()
-# plt.show()
+plt.legend()
+plt.show()
