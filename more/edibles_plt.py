@@ -21,10 +21,12 @@
 #                         x:wc e.g. x:5780 will plot the spectrum around wc+-10A
 #
 #
-#        dates        ->  plot multiple dates of the target
+#        dates        ->  Plot multiple dates of the target
 #                         all_dates
-#        save         ->  save the plotted data to a text file
-#                         One file will be created for each plot
+#        save         ->  Save the plotted data to a text file.
+#                         One file will be created for each plot.
+#                         Should be in this format:
+#                           save:/path/to/folder/
 #
 #
 # EXMPLE:
@@ -95,8 +97,8 @@ for i in range(arN - 1):
         cen_vel = float(args[i].split(':')[1])
     if args[i] == 'all_dates':
         all_dates = True
-    if args[i] == 'save':
-        save = True
+    if args[i][:5] == 'save:':
+        save = args[i]
 
 
 
@@ -317,14 +319,15 @@ for i in range(len(warm)):
 
         # save subset of data to txt file
         
-        if save is True:
+        if save is not False:
             data_tosave = []
             for i, val in enumerate(data):
                 if xmin < val[0] < xmax:
                     data_tosave.append(data[i])
             data_tosave = np.array(data_tosave)
 
-            os.chdir('/export/home/klay/github/edibles/HD170740/txt/')
+            save = save[5:]
+            os.chdir(save)
             np.savetxt(file_save, data_tosave)
 
 fig.canvas.set_window_title(trName.split("_")[0])
