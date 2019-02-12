@@ -27,7 +27,6 @@ def voigt_math(x, alpha, gamma, x_pts=None, y_pts=None, cont=False):
     return np.real(wofz((x + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
 
 
-
 # alpha, gamma = 0.1, 0.1
 # x = np.linspace(-0.8,0.8,1000)
 # y = voigt_math(x, alpha, gamma)
