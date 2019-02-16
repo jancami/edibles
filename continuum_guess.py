@@ -12,11 +12,11 @@ os.chdir('..')
 sys.path.append(os.getcwd())
 os.chdir(path)
 
-from edibles.voigtMathematical import voigt_math
+# from edibles.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid
 
 
-def generateContinuum(x, y, n_sections=4, move_x=False, move_y=True):
+def generateContinuum(x, y, n_piece=2, move_x=False, move_y=True):
 	'''
 	This function fits a continuum to data separated into n sections
 	where the x and y-values are the median of each section	using a cubic spline
@@ -24,7 +24,7 @@ def generateContinuum(x, y, n_sections=4, move_x=False, move_y=True):
 	INPUT:
 	x: [ndarray] wavelength grid
 	y: [ndarray] flux values
-	n_sections: [int, default=4] evenly split data into n sections
+	n_piece: [int, default=4] evenly split data into n sections
 	move_x: [bool, default=False] change x values of points to fit
 	move_y: [bool, default=True] change y values of points to fit
 
@@ -52,8 +52,8 @@ def generateContinuum(x, y, n_sections=4, move_x=False, move_y=True):
 	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
 	x_spline = np.array(x_nonbroad)
 
-	x_sections = np.array_split(x, n_sections)
-	y_sections = np.array_split(y, n_sections)
+	x_sections = np.array_split(x, n_piece)
+	y_sections = np.array_split(y, n_piece)
 
 	x_value_array = []
 	y_value_array = []
@@ -77,7 +77,7 @@ def generateContinuum(x, y, n_sections=4, move_x=False, move_y=True):
 
 alpha, gamma = 0.1, 0.1
 
-wave = np.linspace(7663, 7670, 1000)
+wave = np.linspace(7666, 7668, 1000)
 # flux = -voigt_math(wave, alpha, gamma)
 voigt_func = Voigt1D(x_0=7667, amplitude_L=10, fwhm_L=0.1, fwhm_G=0.2)
 flux = -1 * voigt_func(wave)
