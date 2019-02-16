@@ -12,11 +12,8 @@ os.chdir('..')
 sys.path.append(os.getcwd())
 os.chdir(path)
 
-# from edibles.voigtMathematical import voigt_math
-from edibles.fit.make_grid import make_grid
 
-
-def generateContinuum(x, y, n_piece=2, move_x=False, move_y=True):
+def generate_continuum(x, y, n_piece=2, move_x=False, move_y=True):
 	'''
 	This function fits a continuum to data separated into n sections
 	where the x and y-values are the median of each section	using a cubic spline
@@ -36,19 +33,8 @@ def generateContinuum(x, y, n_piece=2, move_x=False, move_y=True):
 	# # resolving power of 0.1 km/s
 	# R = cst.c.to('cm/s').value * 1.0e-5 / 0.1
 
-	# make resolving power 1 m/s
-	R = cst.c.to('m/s').value
-
-	# print('Resolotion: ', R)
-
-
-	# delta_lambda = lambda_peak / R
-	# xmin = min(x)
-	# xmax = max(x)
-	# x_nonbroad = np.arange(xmin, xmax, delta_lambda)
-	# # using this method for making grid increase fitting time so much
-	# # x_nonbroad = mg.make_grid(xmin, xmax, resolution=R)
-
+	# make resolving power 1 m/s (R = c/delta_v)
+	R = cst.c.value / 1.0
 	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
 	x_spline = np.array(x_nonbroad)
 
@@ -67,14 +53,13 @@ def generateContinuum(x, y, n_piece=2, move_x=False, move_y=True):
 	# x_spline = np.linspace(np.min(x), np.max(x), (len(x)))
 	y_spline = spline(x_spline)
 
-	# # plot median points of each section
-	# plt.plot(x_value_array, y_value_array, 'ko')
-
 	return x_spline, y_spline
 
 
 # Example
 
+# from edibles.voigtMathematical import voigt_math
+from edibles.fit.make_grid import make_grid
 alpha, gamma = 0.1, 0.1
 
 wave = np.linspace(7666, 7668, 1000)
