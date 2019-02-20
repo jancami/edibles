@@ -3,8 +3,6 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from astropy.modeling.models import Voigt1D
 from astropy import constants as cst
-from edibles.fit.make_grid import make_grid
-
 
 import sys
 import os
@@ -12,6 +10,9 @@ path = os.getcwd()
 os.chdir('..')
 sys.path.append(os.getcwd())
 os.chdir(path)
+
+from edibles.fit.make_grid import make_grid
+
 
 
 def generate_continuum(x, y, n_piece=None):
@@ -34,28 +35,44 @@ def generate_continuum(x, y, n_piece=None):
 	
         # check n_piece param
 	if n_piece is None: n_piece = 2
+
 	
 	# make resolving power 1 m/s (R = c/delta_v)
 	R = cst.c.value / 1.0
 	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
 	x_spline = np.array(x_nonbroad)
 
-	x_sections = np.array_split(x, n_piece)
-	y_sections = np.array_split(y, n_piece)
 
-	x_value_array = []
-	y_value_array = []
-	for i in range(len(x_sections)):
-		x_value = np.median(x_sections[i])
-		y_value = np.median(y_sections[i])
-		x_value_array.append(x_value)
-		y_value_array.append(y_value)
+	x_sections = np.array_split(x, n_piece*2)
+	y_sections = np.array_split(y, n_piece*2)
 
-	spline = CubicSpline(x_value_array, y_value_array)
+	# initialize list of points to spline fit
+	x_points = [np.min(x)]
+	y_points = [np.median(y_sections[0])]
+
+
+	for i in range(1, len(x_sections), 2):
+
+		x_point = np.max(x_sections[i])
+
+		# create span of points for median
+		# check if last section
+		if x_point == np.max(x):
+			span = y_sections[i]
+			y_point = np.median(span)
+
+		else:
+			span = np.append(y_sections[i], y_sections[i+1])
+			y_point = np.median(span)
+
+		x_points.append(x_point)
+		y_points.append(y_point)
+
+	spline = CubicSpline(x_points, y_points)
 	y_spline = spline(x_spline)
+	# plt.plot(x_points, y_points, 'kx', markersize='8', label='Points')
 
 	return x_spline, y_spline
-
 
 
 # # Example
