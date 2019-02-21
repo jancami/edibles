@@ -1,7 +1,5 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
-from astropy.modeling.models import Voigt1D
 from astropy import constants as cst
 
 import sys
@@ -15,34 +13,39 @@ from edibles.fit.make_grid import make_grid
 
 
 
-def generate_continuum(x, y, n_piece=None):
+def generate_continuum(x, y, delta_v=1.0, n_piece=None):
 	'''
 	This function fits a continuum to data separated into n sections
 	where the x and y-values are the median of each section	using a cubic spline
 
 	INPUT:
-	x: [ndarray] wavelength grid
-	y: [ndarray] flux values
+	x:       [ndarray] wavelength grid
+	y:       [ndarray] flux values
+	delta_v: [float] desired resolution of continuum (in m/s)
 	n_piece: [int, default=4] evenly split data into n sections
-	move_x: [bool, default=False] change x values of points to fit
-	move_y: [bool, default=True] change y values of points to fit
 
 	OUTPUT:
-	x_cont: [ndarray] wavelength grid points for fit continuum
-	y_cont: [ndarray] flux value points for fit continuum
+	x_cont:  [ndarray] wavelength grid points for fit continuum
+	y_cont:  [ndarray] flux value points for fit continuum
+	
+	Graphic:
+
+	X------|-:    |    :-|-----X
+	|      |  :   |   :  |     |
+	|      |   :  X  :   |     |
+	|      |    :-|-:    |     |
+	|______|______|______|_____|
+
+	<----piece---><---piece---->
+	<-sec-><-sec-><-sec-><-sec->
+
 	'''
 	
 	
-        # check n_piece param
+       # check n_piece param
 	if n_piece is None: n_piece = 2
 
-	
-	# make resolving power 1 m/s (R = c/delta_v)
-	R = cst.c.value / 1.0
-	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
-	x_spline = np.array(x_nonbroad)
-
-
+	# split x & y arrays into n_piece*2 sections
 	x_sections = np.array_split(x, n_piece*2)
 	y_sections = np.array_split(y, n_piece*2)
 
@@ -51,8 +54,13 @@ def generate_continuum(x, y, n_piece=None):
 	y_points = [np.median(y_sections[0])]
 
 
+	# loop through every other section (1, 3, 5...)
+	# make n_piece+1 points to fit a spline through
+	# create a spline point on edge of each piece
 	for i in range(1, len(x_sections), 2):
 
+
+		# set x_point 
 		x_point = np.max(x_sections[i])
 
 		# create span of points for median
@@ -68,6 +76,12 @@ def generate_continuum(x, y, n_piece=None):
 		x_points.append(x_point)
 		y_points.append(y_point)
 
+
+	# make resolving power delta_v (R = c/delta_v)
+	R = cst.c.value / delta_v
+	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
+	x_spline = np.array(x_nonbroad)
+
 	spline = CubicSpline(x_points, y_points)
 	y_spline = spline(x_spline)
 	# plt.plot(x_points, y_points, 'kx', markersize='8', label='Points')
@@ -75,18 +89,4 @@ def generate_continuum(x, y, n_piece=None):
 	return x_spline, y_spline
 
 
-# # Example
-# alpha, gamma = 0.1, 0.1
 
-# wave = np.linspace(7666, 7668, 1000)
-# # flux = -voigt_math(wave, alpha, gamma)
-# voigt_func = Voigt1D(x_0=7667, amplitude_L=10, fwhm_L=0.1, fwhm_G=0.2)
-# flux = -1 * voigt_func(wave)
-
-# # Generate the spline curve
-# x_spline, y_spline = generate_continuum(wave, flux)
-
-# plt.plot(wave, flux, marker='o', markersize='3', label='Data')
-# plt.plot(x_spline, y_spline, label='Spline fit')
-# plt.legend()
-# plt.show()
