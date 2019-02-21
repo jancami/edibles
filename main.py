@@ -21,7 +21,7 @@ from edibles.fit.make_grid import make_grid
 # set params
 alpha = 0.1
 gamma = 0.1
-delta_v = 10.0
+delta_v = 100.0
 x_min = 7665
 x_max = 7669
 cent = 7667
@@ -35,20 +35,39 @@ wave = np.array(x_nonbroad)
 
 
 # generate voigt data with specified parameters
-flux = -voigt_math(wave, cent, alpha, gamma, delta_v)
+flux = -voigt_math(wave, cent, alpha, gamma, delta_v) + 1
 
 
 # Generate the continuum data
 x_spline, y_spline = generate_continuum(wave, flux, delta_v, n_piece)
 
 
-# check x length
-if len(wave) != len(x_spline):
+# check x arrays
+if np.array_equal(wave, x_spline) != True:
     print('Bad x resolution!')
 
 
+
+# ==========
+# C*V
+# ==========
+cxv = y_spline * flux
+
+
+# ==========
+# Residuals
+# ==========
+
+resid = flux - cxv
+
+
 # plot
-plt.plot(wave, flux, marker='o', markersize='3', label='Data')
+plt.plot(wave, flux, 'k.', markersize='1', label='Data')
 plt.plot(x_spline, y_spline, label='Spline fit')
+
+plt.plot(wave, cxv, label='C*V')
+plt.plot(wave, resid, label='Residuals')
+
 plt.legend()
 plt.show()
+
