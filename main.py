@@ -35,7 +35,7 @@ wave = np.array(x_nonbroad)
 
 
 # generate voigt data with specified parameters
-flux = -voigt_math(wave, cent, alpha, gamma, delta_v) + 1
+flux = -voigt_math(wave, cent, alpha, gamma) + 1
 
 
 # Generate the continuum data
@@ -43,8 +43,8 @@ x_spline, y_spline = generate_continuum(wave, flux, delta_v, n_piece)
 
 
 # check x arrays
-if np.array_equal(wave, x_spline) != True:
-    print('Bad x resolution!')
+if np.array_equal(wave, x_spline) is not True:
+	print('Bad x resolution!')
 
 
 
@@ -70,4 +70,3 @@ plt.plot(wave, resid, label='Residuals')
 
 plt.legend()
 plt.show()
-
