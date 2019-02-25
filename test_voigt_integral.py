@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 
-def normalize(x, y):
+def normalize(x, y, show=False):
 	'''
 	This function checks if the area under the curve produced using the x
 	and y arrays is equal to one. If it is not equal to one, the y axis is
@@ -20,22 +20,31 @@ def normalize(x, y):
 	# Check to see if area under curve equals 1.0
 	area = np.trapz(y, x)
 
-	print('Initial area under curve: {:.16f}'.format(area))
+	if show is True:
+		print('Initial area under curve: {:6.16f}'.format(area))
 
 	# loop until normalized (maybe)
 	i = 0
 	while area != 1.0:
-		i = i + 1
-		print('Normalizing attempt number: {}'.format(i))
-		y = y / area
-		area = np.trapz(y, x)
 
-		print('Area under curve: {:.16f}'.format(area))
-		print(area.is_integer())
+		# stop after too long
 		if i >1000:
 			print('Area under curve could not be normalized to one!')
 			sys.exit()
 
-		y_norm = y
+		i = i + 1
+		if show is True:
+			print('Normalizing attempt number: {}'.format(i))
+
+		# normalize / renormalize
+		y = y / area
+		area = np.trapz(y, x)
+
+		if show is True:
+			print('Area under curve: {:15.16f}'.format(area))
+			print('area.is_integer() results: {}'.format(area.is_integer()))
+			print('')
+
+	y_norm = y
 
 	return y_norm
