@@ -23,9 +23,9 @@ from edibles.test_voigt_integral import normalize
 alpha = 0.1
 gamma = 0.1
 delta_v = 100.0
-x_min = 7665
+x_min = 7665.
 x_max = 7669
-cent = 7667
+cent = 7667.
 n_piece = 3
 
 
@@ -36,16 +36,16 @@ wave = np.array(x_nonbroad)
 
 
 # generate voigt data with specified parameters
-flux = -voigt_math(wave, cent, alpha, gamma) + 1
+flux = voigt_math(wave, cent, alpha, gamma)
 
 
 # normalize the flux values
-flux_norm = normalize(wave, flux)
+flux_norm = normalize(wave, flux, show=True)
 
-
+flux_norm = -flux_norm + 1
 
 # Generate the continuum data
-x_spline, y_spline = generate_continuum(wave, flux, delta_v, n_piece)
+x_spline, y_spline = generate_continuum(wave, flux_norm, delta_v, n_piece)
 
 
 # check x arrays
@@ -57,22 +57,21 @@ if np.array_equal(wave, x_spline) is not True:
 # ==========
 # C*V
 # ==========
-cxv = y_spline * flux
+cxv = y_spline * flux_norm
 
 
 # ==========
 # Residuals
 # ==========
 
-resid = flux - cxv
+# resid = flux_norm - cxv
 
 
 # plot
-plt.plot(wave, flux, 'k.', markersize='1', label='Data')
+plt.plot(wave, flux_norm, 'k.', markersize='1', label='Data')
 plt.plot(x_spline, y_spline, label='Spline fit')
-
 plt.plot(wave, cxv, label='C*V')
-plt.plot(wave, resid, label='Residuals')
+# plt.plot(wave, resid, label='Residuals')
 
 plt.legend()
 plt.show()
