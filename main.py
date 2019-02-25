@@ -12,6 +12,7 @@ os.chdir(path)
 from edibles.continuum_guess import generate_continuum
 from edibles.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid
+from edibles.test_voigt_integral import normalize
 
 
 # ===========
@@ -36,6 +37,11 @@ wave = np.array(x_nonbroad)
 
 # generate voigt data with specified parameters
 flux = -voigt_math(wave, cent, alpha, gamma) + 1
+
+
+# normalize the flux values
+flux_norm = normalize(wave, flux)
+
 
 
 # Generate the continuum data
