@@ -12,7 +12,7 @@ os.chdir(path)
 from edibles.continuum_guess import generate_continuum
 from edibles.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid
-from edibles.test_voigt_integral import normalize
+# from edibles.test_voigt_integral import normalize
 
 
 # ===========
