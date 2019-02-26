@@ -21,7 +21,7 @@ def normalize(x, y, show=False):
 	area = np.trapz(y, x)
 
 	if show is True:
-		print('Initial area under curve: {:6.16f}'.format(area))
+		print('Initial area under curve: {:.16f}'.format(area))
 
 	# loop until normalized (maybe)
 	i = 0
@@ -41,7 +41,7 @@ def normalize(x, y, show=False):
 		area = np.trapz(y, x)
 
 		if show is True:
-			print('Area under curve: {:15.16f}'.format(area))
+			print('Area under curve: {:.16f}'.format(area))
 			print('area.is_integer() results: {}'.format(area.is_integer()))
 			print('')
 

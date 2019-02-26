@@ -22,10 +22,10 @@ from edibles.test_voigt_integral import normalize
 # set params
 alpha = 0.1
 gamma = 0.1
-delta_v = 100.0
-x_min = 7665.
-x_max = 7669
-cent = 7667.
+delta_v = 1000
+x_min = 7663
+x_max = 7671
+cent = 7667
 n_piece = 3
 
 
@@ -36,13 +36,13 @@ wave = np.array(x_nonbroad)
 
 
 # generate voigt data with specified parameters
-flux = voigt_math(wave, cent, alpha, gamma)
+flux_norm = voigt_math(wave, cent, alpha, gamma)
 
 
 # normalize the flux values
-flux_norm = normalize(wave, flux, show=True)
+# flux_norm = normalize(wave, flux, show=True)
 
-flux_norm = -flux_norm + 1
+# flux_norm = -flux_norm + 1
 
 # Generate the continuum data
 x_spline, y_spline = generate_continuum(wave, flux_norm, delta_v, n_piece)
