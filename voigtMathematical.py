@@ -2,19 +2,24 @@ import numpy as np
 from scipy.special import wofz
 
 
-def voigt_math(x, cent, a1, g1):
+def voigt_math(x, cent, alpha, gamma):
     """
-    Return the Voigt line shape centered at cent with Lorentzian component HWHM g1
-    and Gaussian component HWHM a1.
+    Return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
+    and Gaussian component HWHM alpha.
 
     Input:  [Angstroms]
 
-    x:      [ndarray]  Data grid
-    cent:   [float]    Peak of the Voigt profile
-    a1:     [float]    Gaussian HWHM component
-    g1:     [float]    Lorentzian HWHM component
+    x:         [ndarray]  Data grid
+    cent:      [float]    Peak of the Voigt profile
+    alpha:     [float]    Gaussian HWHM component
+    gamma:     [float]    Lorentzian HWHM component
+
+    OUTPUT:
+
+    y:         [ndarray]  Flux data for given inputs
+
     """
 
-    sigma = a1 / np.sqrt(2 * np.log(2))
+    sigma = alpha / np.sqrt(2 * np.log(2))
 
-    return np.real(wofz(((x - cent) + 1j*g1)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
+    return np.real(wofz(((x - cent) + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
