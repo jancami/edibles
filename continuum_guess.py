@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 from astropy import constants as cst
-
 import sys
 import os
 path = os.getcwd()
@@ -18,13 +17,13 @@ def generate_continuum(x, y, delta_v=1.0, n_piece=None):
 	This function fits a continuum to data separated into n sections
 	where the x and y-values are the median of each section	using a cubic spline
 
-	INPUT:
+	INPUT:   [Angstroms]
 	x:       [ndarray] wavelength grid
 	y:       [ndarray] flux values
 	delta_v: [float] desired resolution of continuum (in m/s)
 	n_piece: [int, default=4] evenly split data into n sections
 
-	OUTPUT:
+	OUTPUT:  [Angstroms]
 	x_cont:  [ndarray] wavelength grid points for fit continuum
 	y_cont:  [ndarray] flux value points for fit continuum
 	
@@ -65,9 +64,12 @@ def generate_continuum(x, y, delta_v=1.0, n_piece=None):
 
 		# create span of points for median
 		# check if last section
-		if x_point == np.max(x):
+		# np.max(x_sections[i]) != np.max(x) for i = 5
+
+		if i == range(len(x_sections))[-1]:
 			span = y_sections[i]
 			y_point = np.median(span)
+			x_point = np.max(x)
 
 		else:
 			span = np.append(y_sections[i], y_sections[i+1])
@@ -81,7 +83,6 @@ def generate_continuum(x, y, delta_v=1.0, n_piece=None):
 	R = cst.c.value / delta_v
 	x_nonbroad = make_grid(np.min(x), np.max(x), resolution=R)
 	x_spline = np.array(x_nonbroad)
-
 	spline = CubicSpline(x_points, y_points)
 	y_spline = spline(x_spline)
 	# plt.plot(x_points, y_points, 'kx', markersize='8', label='Points')
