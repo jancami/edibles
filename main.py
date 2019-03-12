@@ -24,10 +24,13 @@ from edibles.astro_wrapper import voigt_astro
 alpha = 0.1
 gamma = 0.1
 delta_v = 1000
-x_min = 7663
-x_max = 7671
-cent = 7667
+x_min = 5977
+x_max = 5983
+cent = 5980
 n_piece = 3
+
+b_eff=3.5
+Gamma=1.9
 
 
 # generate wavelength grid with resolving power delta_v (R = c/delta_v)
@@ -39,22 +42,25 @@ wave = np.array(x_nonbroad)
 # generate voigt data with specified parameters
 flux_norm = voigt_math(wave, cent, alpha, gamma)
 
+
+plt.plot(wave, flux_norm, 'grey', markersize='1', label='Data')
+
 # Generate the continuum data
 x_spline, y_spline = generate_continuum(wave, flux_norm, delta_v, n_piece)
-
 
 # check x arrays
 if np.array_equal(wave, x_spline) is not True:
 	print('Bad x resolution!')
 
 
+plt.plot(x_spline, y_spline, label='Spline fit')
 
 # ==========
 # C*V
-# ==========
-cxv = y_spline * flux_norm
+# # ==========
+# cxv = y_spline * flux_norm
 
-
+# plt.plot(wave, cxv, label='C*V')
 
 
 
@@ -62,23 +68,16 @@ cxv = y_spline * flux_norm
 # Astro
 # ==========
 
-y2 = voigt_astro(wave, cent, b_eff=0.0000002, Gamma=6.064)
-
-plt.plot(wave, y2)
-plt.show()
 
 
+x2, y2 = voigt_astro(wave, cent, b_eff, Gamma)
 
-
+plt.plot(x2, y2, 'red', label='astro')
 
 
 
 # plot
-plt.plot(wave, flux_norm, 'k.', markersize='1', label='Data')
-plt.xlabel('Frequency')
-plt.plot(x_spline, y_spline, label='Spline fit')
-plt.plot(wave, cxv, label='C*V')
-# plt.plot(nu, resid, label='Residuals')
 
+plt.xlabel('Frequency')
 plt.legend()
 plt.show()

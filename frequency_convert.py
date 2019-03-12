@@ -7,8 +7,8 @@ def converter(x, cent, alpha=None, gamma=None, units=None):
 	INPUT:  [Angstroms]
 
 	x:      [ndarray]  Wavelength data grid
-    cent:   [float]    Wavelength peak of the Voigt profile
-    type:   [str] 	   Angstroms or Hz
+	cent:   [float]    Wavelength peak of the Voigt profile
+	type:   [str] 	   Angstroms or Hz
 	
 
 	OUTPUT: [Hz]
