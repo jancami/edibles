@@ -21,16 +21,21 @@ from edibles.astro_wrapper import voigt_astro
 # ===========
 
 # set params
-alpha = 0.1
-gamma = 0.1
+alpha = 0.0576265588185308
+gamma = 0.00048255778745462673
 delta_v = 1000
 x_min = 5977
 x_max = 5983
 cent = 5980
 n_piece = 3
 
-b_eff=3.5
-Gamma=1.9
+b_eff=3.47
+Gamma=6.064e7
+
+
+# Real data:
+# NaI_5891       NaI     5891.5835  0.63100000  6.064e+07  22.990
+
 
 
 # generate wavelength grid with resolving power delta_v (R = c/delta_v)
@@ -72,8 +77,16 @@ plt.plot(x_spline, y_spline, label='Spline fit')
 
 x2, y2 = voigt_astro(wave, cent, b_eff, Gamma)
 
-plt.plot(x2, y2, 'red', label='astro')
+plt.plot(x2, y2, 'red', linestyle=':', label='astro')
+print(np.max(flux_norm))
+print(np.max(y2))
 
+plt.figure()
+difference = flux_norm - y2
+plt.plot(x2, difference)
+
+diff_add = np.sum(difference)
+print('Total difference between math and voigt:', diff_add)
 
 
 # plot
@@ -81,3 +94,6 @@ plt.plot(x2, y2, 'red', label='astro')
 plt.xlabel('Frequency')
 plt.legend()
 plt.show()
+
+
+

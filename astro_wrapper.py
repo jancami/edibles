@@ -28,7 +28,7 @@ def voigt_astro(x, cent, b_eff, Gamma):
 	nu, nu0 = converter(x, cent)
 
 
-	gamma = Gamma / (4 * np.pi)
+	gamma = Gamma / (4 * np.pi) * 1e-10
 
 
 	# b_eff -> delta_nu_D -> sigma -> alpha
