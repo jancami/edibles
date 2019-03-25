@@ -1,14 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import constants as cst
-
-import sys
-import os
-path = os.getcwd()
-os.chdir('..')
-sys.path.append(os.getcwd())
-os.chdir(path)
-
 from edibles.continuum_guess import generate_continuum
 from edibles.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid

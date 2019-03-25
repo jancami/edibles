@@ -1,15 +1,6 @@
 from __future__ import print_function
 
 from astropy import constants as cst
-
-import sys
-import os
-path = os.getcwd()
-os.chdir('..')
-os.chdir('..')
-sys.path.append(os.getcwd())
-os.chdir(path)
-
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft
 import edibles.fit.make_grid as mg

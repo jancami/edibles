@@ -1,14 +1,6 @@
 from __future__ import print_function
 import sys
 import os
-
-path = os.getcwd()
-# print(sys.path)
-os.chdir('..')
-os.chdir('..')
-sys.path.append(os.getcwd())
-os.chdir(path)
-# print(sys.path)
 from edibles import fit, more
 import edibles.fit.avoigt as fit
 import edibles.fit.avoigt_fit as ft

@@ -1,13 +1,5 @@
 import numpy as np
 from astropy import constants as cst
-
-import sys
-import os
-path = os.getcwd()
-os.chdir('..')
-sys.path.append(os.getcwd())
-os.chdir(path)
-
 from edibles.frequency_convert import converter
 from edibles.voigtMathematical import voigt_math
 

@@ -1,13 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 from astropy import constants as cst
-import sys
-import os
-path = os.getcwd()
-os.chdir('..')
-sys.path.append(os.getcwd())
-os.chdir(path)
-
 from edibles.fit.make_grid import make_grid
 
 
