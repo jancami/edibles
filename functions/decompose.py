@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from edibles.voigtMathematical import voigt_math
+from edibles.functions.voigtMathematical import voigt_math
 
 
 def decompose(x, fit_param, fit_error, fit_norm, num_params=4, print_data=False, plot=False):

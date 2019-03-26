@@ -1,7 +1,7 @@
 import numpy as np
 from astropy import constants as cst
-from edibles.frequency_convert import converter
-from edibles.voigtMathematical import voigt_math
+from edibles.functions.frequency_convert import converter
+from edibles.functions.voigtMathematical import voigt_math
 
 
 def voigt_astro(x, cent, b_eff, Gamma):

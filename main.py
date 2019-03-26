@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import constants as cst
-from edibles.continuum_guess import generate_continuum
-from edibles.voigtMathematical import voigt_math
+from edibles.functions.continuum_guess import generate_continuum
+from edibles.functions.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid
-from edibles.astro_wrapper import voigt_astro
-# from edibles.test_voigt_integral import normalize
+from edibles.functions.astro_wrapper import voigt_astro
+# from edibles.tests.test_voigt_integral import normalize
 
 
 # ===========

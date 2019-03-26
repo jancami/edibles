@@ -1,5 +1,5 @@
 import numpy as np
-import edibles.more.TextFileParser as tfp
+import edibles.functions.TextFileParser as tfp
 
 def line_properties(cw, lines):
 
