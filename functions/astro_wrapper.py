@@ -2,6 +2,7 @@ import numpy as np
 from astropy import constants as cst
 from edibles.functions.frequency_convert import converter
 from edibles.functions.voigtMathematical import voigt_math
+from edibles.functions.freq_convert_2 import unit_converter
 
 
 def voigt_astro(x, cent, b_eff, Gamma):
@@ -19,6 +20,8 @@ def voigt_astro(x, cent, b_eff, Gamma):
 
 	nu, nu0 = converter(x, cent)
 
+	# nu = unit_converter(x, units='Angstroms')
+	# nu0 = unit_converter(cent, units='Angstroms')
 
 	gamma = Gamma / (4 * np.pi) * 1e-10
 
@@ -39,17 +42,6 @@ def voigt_astro(x, cent, b_eff, Gamma):
 	print('alpha: ', alpha)
 	print('gamma: ', gamma)
 
-
-
-
-
-
-	# print('gamma_con: ', gamma2)
-
-
-
 	y = voigt_math(x, cent, alpha, gamma)
-
-	# delta_nu = nu - nu0
 
 	return x, y

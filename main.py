@@ -70,19 +70,18 @@ plt.plot(x_spline, y_spline, label='Spline fit')
 x2, y2 = voigt_astro(wave, cent, b_eff, Gamma)
 
 plt.plot(x2, y2, 'red', linestyle=':', label='astro')
+plt.legend()
 print(np.max(flux_norm))
 print(np.max(y2))
 
-plt.figure()
-difference = flux_norm - y2
-plt.plot(x2, difference)
 
+difference = flux_norm - y2
 diff_add = np.sum(difference)
 print('Total difference between math and voigt:', diff_add)
 
 
-# plot
-
+plt.figure()
+plt.plot(x2, difference, label='residual')
 plt.xlabel('Frequency')
 plt.legend()
 plt.show()
