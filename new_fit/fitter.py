@@ -9,6 +9,7 @@ from edibles.functions.astro_wrapper import voigt_astro
 from scipy.special import wofz
 
 
+
 # ===========
 # Main script
 # ===========
@@ -31,13 +32,20 @@ R = cst.c.value / delta_v
 x_nonbroad = make_grid(x_min, x_max, resolution=R)
 wave = np.array(x_nonbroad)
 
+# plt.figure()
+# plt.plot(x_nonbroad, np.ones_like(x_nonbroad))
+# plt.show()
 
-plt.figure()
-plt.plot(np.ones_like(x_nonbroad), x_nonbroad)
-plt.show()
-print(x_nonbroad)
-wofz(x_nonbroad)
 
+
+# x_nonbroad = np.linspace(100, 200, 352, dtype=np.float128)
+
+
+
+
+
+# wofz(x_nonbroad)
+print(type(wave[0]))
 
 # generate voigt data with specified parameters
 flux_norm = voigt_math(wave, cent, alpha, gamma)
