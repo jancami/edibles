@@ -5,18 +5,6 @@ import edibles.fit.make_grid as mg
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from edibles.fit.output import print_results
-
-def broad(x, y, res):
-    pxs = np.diff(x)[0] / x[0] * 299792.458
-    fwhm_instrumental = res
-    sigma_instrumental = fwhm_instrumental / 2.35482 / pxs
-    LSF = gaussian(len(x)/2, sigma_instrumental)
-    LSF = LSF / LSF.sum()
-    y_profile = fftconvolve(y, LSF, 'same')
-
-    return y_profile
-
 
 
 # ========================== Test 1 ===============================

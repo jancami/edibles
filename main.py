@@ -25,7 +25,7 @@ b_eff=3.47
 Gamma=6.064e7
 
 
-# Real data:
+# some real data:
 # NaI_5891       NaI     5891.5835  0.63100000  6.064e+07  22.990
 
 

@@ -6,8 +6,8 @@ import edibles.fit.avoigt_fit as ft
 import edibles.fit.make_grid as mg
 import numpy as np
 import matplotlib.pyplot as plt
-from edibles.voigtMathematical import voigt_math
-from edibles.astro_wrapper import voigt_astro
+from edibles.functions.voigtMathematical import voigt_math
+from edibles.functions.astro_wrapper import voigt_astro
 
 
 

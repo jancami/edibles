@@ -81,32 +81,6 @@ plt.show()
 
 
 
-import edibles.functions.TextFileParser as tfp
-
-atomfile = 'edibles/data/atomic_data.dat'
-
-
-lineList = tfp.parseTextFile(atomfile, delimiter='\t', header=3)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
