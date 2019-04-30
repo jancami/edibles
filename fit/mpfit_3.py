@@ -1458,18 +1458,18 @@ class mpfit:
 			return values
 		values = []
 		for i in range(n):
-			if (parinfo is not None) and (parinfo[i].has_key(key)):
+			if (parinfo is not None) and (key in parinfo[i]):
 				values.append(parinfo[i][key])
 			else:
 				values.append(default)
 
 		# Convert to numeric arrays if possible
 		test = default
-		if type(default) == types.ListType:
+		if type(default) is list:
 			test=default[0]
-		if isinstance(test, types.IntType):
+		if isinstance(test, int):
 			values = numpy.asarray(values, int)
-		elif isinstance(test, types.FloatType):
+		elif isinstance(test, float):
 			values = numpy.asarray(values, float)
 		return values
 

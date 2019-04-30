@@ -8,7 +8,7 @@ from scipy import interpolate, signal, stats
 import warnings
 import edibles.fit.initial_suggest as ini_guess
 import edibles.fit.err_est as err
-import edibles.fit.mpfit as mpfit
+import edibles.fit.mpfit_3 as mpfit
 import edibles.fit.cont_est as cont_est
 import edibles.fit.line_properties as line_properties
 import edibles.fit.avoigt as avoigt

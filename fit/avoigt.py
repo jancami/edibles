@@ -122,7 +122,7 @@ def voigt(x, lambda_peak=None, b_eff=None, log_N=None, gamma=None, osc_freq=None
     pxs = np.diff(x_profile)[0] / x_profile[0] * cst.c.to('km/s').value
     fwhm_instrumental = resolution
     sigma_instrumental = fwhm_instrumental / 2.35482 / pxs
-    LSF = gaussian(len(x_profile)/2, sigma_instrumental)
+    LSF = gaussian( int(len(x_profile)/2), sigma_instrumental)
     LSF = LSF / LSF.sum()
     y_profile = fftconvolve(voigt_model, LSF, 'same')
 

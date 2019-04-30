@@ -6,9 +6,6 @@ from edibles.functions.voigtMathematical import voigt_math
 from edibles.fit.make_grid import make_grid
 from edibles.functions.astro_wrapper import voigt_astro
 
-from scipy.special import wofz
-
-
 
 # ===========
 # Main script
@@ -32,45 +29,26 @@ R = cst.c.value / delta_v
 x_nonbroad = make_grid(x_min, x_max, resolution=R)
 wave = np.array(x_nonbroad)
 
-# plt.figure()
-# plt.plot(x_nonbroad, np.ones_like(x_nonbroad))
-# plt.show()
-
-
-
-# x_nonbroad = np.linspace(100, 200, 352, dtype=np.float128)
-
-
-
-
-
-# wofz(x_nonbroad)
-print(type(wave[0]))
 
 # generate voigt data with specified parameters
 flux_norm = voigt_math(wave, cent, alpha, gamma)
+
 
 # plot math data
 plt.plot(wave, flux_norm, 'grey', markersize='1', label='Data')
 
 
-
-
-
 # Generate the continuum data
 x_spline, y_spline = generate_continuum(wave, flux_norm, delta_v, n_piece)
+
 
 # check x arrays
 if np.array_equal(wave, x_spline) is not True:
 	print('Bad x resolution!')
 
-# plot continuum spline
+
+# overplot continuum spline
 plt.plot(x_spline, y_spline, label='Spline fit')
-
-
-
-
-
 
 
 # ==========
@@ -80,7 +58,8 @@ plt.plot(x_spline, y_spline, label='Spline fit')
 # create astro voigt data using wrapper
 x2, y2 = voigt_astro(wave, cent, b_eff, Gamma)
 
-# plot astro voigt data 
+
+# overplot astro voigt data 
 plt.plot(x2, y2, 'red', linestyle=':', label='astro')
 plt.legend()
 print(np.max(flux_norm))
@@ -93,7 +72,6 @@ diff_add = np.sum(difference)
 print('Total difference between math and voigt:', diff_add)
 
 
-
 # plot residuals
 plt.figure()
 plt.plot(x2, difference, label='residual')
@@ -103,11 +81,12 @@ plt.show()
 
 
 
+import edibles.functions.TextFileParser as tfp
+
+atomfile = 'edibles/data/atomic_data.dat'
 
 
-
-
-
+lineList = tfp.parseTextFile(atomfile, delimiter='\t', header=3)
 
 
 
