@@ -22,4 +22,39 @@ def voigt_math(x, cent, alpha, gamma):
 
     sigma = alpha / np.sqrt(2 * np.log(2))
 
-    return np.real(wofz(((x - cent) + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
+    y = np.real(wofz(((x - cent) + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
+
+    return y
+
+
+
+
+
+
+if __name__ == "__main__":
+
+    from edibles.fit.make_grid import make_grid
+    from astropy import constants as cst
+    import matplotlib.pyplot as plt
+
+        # set params
+    alpha = 0.0576265588185308
+    gamma = 0.00048255778745462673
+    delta_v = 1000
+    x_min = 5978
+    x_max = 5982
+    cent = [5980]
+
+    b_eff=[3.47]
+    Gamma=[6.064e7]
+
+
+    # generate wavelength grid with resolving power delta_v (R = c/delta_v)
+    R = cst.c.value / delta_v
+    wave = make_grid(x_min, x_max, resolution=R)
+
+
+    flux_norm = voigt_math(wave, cent, alpha, gamma)
+
+    plt.plot(wave, flux_norm, markersize='1', label='Data')
+    plt.show()

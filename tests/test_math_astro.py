@@ -16,7 +16,7 @@ delta_v = 1000
 
 R = cst.c.value / delta_v
 grid = mg.make_grid(5886, 5894, resolution=R)
-yy = 1 + fit.voigt(grid, lambda_peak=5890, b_eff=3.47, log_N=12.843, gamma=6.064e+07, osc_freq=0.631, resolving_power=R)
+yy = 1 + fit.voigt(grid, lambda_peak=5890, b_eff=3.47, log_N=12., gamma=6.064e+07, osc_freq=0.631, resolving_power=R)
 flux = yy
 noise = np.random.normal(0, 0.02, len(flux))
 flux = flux + noise
@@ -34,7 +34,7 @@ obj.afit(wave, flux, [5890], lines=['NaI_5891'], cheb_order=1, resolving_power=R
 DOF = len(wave) - len(obj.fit_parm)
 PCERROR = obj.fit_err * np.sqrt(obj.fit_norm/DOF)
 
-print('')
+print('==================================================================')
 print('                    *** the fitting results ***')
 print('               real parameter           fitted parameter')
 print('  lambda_peak :     5890                       {:7.2f} +- {:1.2f}'.format(obj.fit_parm[4], PCERROR[4]))
@@ -64,7 +64,7 @@ cent = obj.fit_parm[4]
 Gamma = obj.fit_parm[5]
 b_eff = obj.fit_parm[6]
 
-x2, y2 = voigt_astro(grid, cent, b_eff, Gamma)
+y2 = voigt_astro(grid, cent, b_eff, Gamma)
 plt.figure()
 plt.plot(grid, y2, 'red', linestyle=':', label='astro')
 
