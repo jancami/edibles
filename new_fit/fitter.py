@@ -39,16 +39,11 @@ plt.plot(wave, flux_norm, 'grey', markersize='1', label='Data')
 
 
 # Generate the continuum data
-x_spline, y_spline = generate_continuum(wave, flux_norm, delta_v, n_piece)
-
-
-# check x arrays
-if np.array_equal(wave, x_spline) is not True:
-	print('Bad x resolution!')
+y_spline = generate_continuum((wave, flux_norm), delta_v, n_piece)
 
 
 # overplot continuum spline
-plt.plot(x_spline, y_spline, label='Spline fit')
+plt.plot(wave, y_spline, label='Spline fit')
 
 
 # ==========
@@ -56,11 +51,11 @@ plt.plot(x_spline, y_spline, label='Spline fit')
 # ==========
 
 # create astro voigt data using wrapper
-x2, y2 = voigt_astro(wave, cent, b_eff, Gamma)
+y2 = voigt_astro(wave, cent, b_eff, Gamma)
 
 
 # overplot astro voigt data 
-plt.plot(x2, y2, 'red', linestyle=':', label='astro')
+plt.plot(wave, y2, 'red', linestyle=':', label='astro')
 plt.legend()
 print(np.max(flux_norm))
 print(np.max(y2))
@@ -74,7 +69,7 @@ print('Total difference between math and voigt:', diff_add)
 
 # plot residuals
 plt.figure()
-plt.plot(x2, difference, label='residual')
+plt.plot(wave, difference, label='residual')
 plt.xlabel('Frequency')
 plt.legend()
 plt.show()
