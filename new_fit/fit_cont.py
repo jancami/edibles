@@ -1,50 +1,60 @@
 from __future__ import print_function
-import os, glob, sys
+
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.special import wofz
-from scipy.stats import chi2
-from scipy import interpolate, signal, stats
-import warnings
-import edibles.fit.initial_suggest as ini_guess
-import edibles.fit.err_est as err
 import edibles.fit.mpfit_3 as mpfit
-import edibles.fit.cont_est as cont_est
-import edibles.fit.line_properties as line_properties
-from edibles.functions.astro_wrapper import voigt_astro
-import edibles.fit.ref_index as ref_index
-warnings.simplefilter('ignore')
+from edibles.functions.continuum_guess import generate_continuum
+from scipy.optimize import curve_fit
+from astropy import constants as cst
+from edibles.fit.make_grid import make_grid
+from edibles.functions.voigtMathematical import voigt_math
 
 
 
 
 
 
+alpha = 0.0576265588185308
+gamma = 0.00048255778745462673
+delta_v = 1000
+x_min = 5977
+x_max = 5983
+cent = 5980
+n_piece = 4
 
-def cont_func(p, fjac=None, x=None, y=None, err=None):
-
-
-
-    # Parameter values are passed in "p"
-    # If fjac==None then partial derivatives should not be
-    # computed.  It will always be None if MPFIT is called with default
-    # flag.
-    model = F(x, p)
-    # Non-negative status value means MPFIT should continue, negative means
-    # stop the calculation.
-    status = 0
-    return [status, (y-model)/err]
+b_eff=3.47
+Gamma=6.064e7
 
 
-   # EXAMPLE
+# generate wavelength grid with resolving power delta_v (R = c/delta_v)
+R = cst.c.value / delta_v
+x_nonbroad = make_grid(x_min, x_max, resolution=R)
+wave = np.array(x_nonbroad)
 
-# import mpfit
-x = np.arange(100, dtype=np.float64)
-p0 = [5.7, 2.2, 500., 1.5, 2000.]
-y = ( p[0] + p[1]*[x] + p[2]*[x**2] + p[3]*np.sqrt(x) + p[4]*np.log(x))
-fa = {'x':x, 'y':y, 'err':err}
-m = mpfit(cont_func, p0, functkw=fa)
-print('status = ', m.status)
-if (m.status <= 0):
-    print('error message = ', m.errmsg)
-print('parameters = ', m.params)
+
+# generate voigt data with specified parameters
+flux_norm = voigt_math(wave, cent, alpha, gamma)
+
+# Generate the continuum data
+y_spline = generate_continuum((wave, flux_norm), delta_v, n_piece)
+
+# plot
+plt.plot(wave, flux_norm, markersize='1', label='Data')
+plt.plot(wave, y_spline)
+print(len(wave), len(flux_norm))
+plt.show()
+
+
+
+
+# add some noise to the data and try to fit the data generated beforehand
+initial_guess = (delta_v)
+
+data_noisy = flux_norm + 0.02*np.random.normal(size=len(wave))
+plt.plot(wave, data_noisy)
+plt.show()
+
+popt, pcov = curve_fit(generate_continuum, (wave,flux_norm), data_noisy, p0 = initial_guess)
+
+
+print(popt)
