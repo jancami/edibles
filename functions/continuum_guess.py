@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 def generate_continuum(data_tuple, delta_v=1.0, n_piece=None):
@@ -13,9 +13,8 @@ def generate_continuum(data_tuple, delta_v=1.0, n_piece=None):
     delta_v:      [float]                     desired resolution of continuum (in m/s)
     n_piece:      [int, default=4]            number of sections to split data into
 
-    OUTPUT:  [Angstroms]
-    x_cont:  [ndarray] wavelength grid points for fit continuum
-    y_cont:  [ndarray] flux value points for fit continuum
+    OUTPUT:       [Angstroms]
+    y_spline:     [ndarray]                   continuum flux value array
     
     Graphic:
 
@@ -64,8 +63,7 @@ def generate_continuum(data_tuple, delta_v=1.0, n_piece=None):
 
     spline = CubicSpline(x_points, y_points)
     y_spline = spline(x)
-    plt.plot(x_points, y_points, 'kx', markersize='8', label='Points')
 
-    # cont_tuple = (x_spline, y_spline)
+    # plt.plot(x_points, y_points, 'kx', markersize='8', label='Points')
 
     return y_spline
