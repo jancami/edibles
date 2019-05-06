@@ -32,7 +32,7 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     example:
 
-    fitstotxt('HD144470', '/data/FITS/', '/home/txtfiles/, 6610, 6618)
+    fitstotxt('HD144470', '/data/DR3_fits/', '/home/txtfiles/, 6610, 6618)
 
     '''
 
@@ -114,7 +114,7 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
 
 
-    # file_list = [os.path.basename(q) for q in glob.glob(path + '*.fits.gz')]
+    # file_list = [os.path.basename(q) for q in glob.glob(path + '*.fits')]
     path = loc
     file_list = os.listdir(path)
 

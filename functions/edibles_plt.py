@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 
 
 # determine the DR directory
-DR_address = '/data/FITS/'
+DR_address = '/data/DR3_fits/'
 
 
 # ****************
@@ -176,7 +176,7 @@ for i in range(len(warm)):
         ar = 'L'
     if warm[i] == 'REDU_564' or warm[i] == 'REDU_860':
         ar = 'U'
-    obsNames = '%s*_%s.fits.gz' % (targetName, ar)
+    obsNames = '%s*_%s.fits' % (targetName, ar)
 
     n_science = 0
     all_names = []
@@ -200,7 +200,7 @@ for i in range(len(warm)):
         if warm[i] == 'REDL_860' or warm[i] == 'REDU_860':
             w_ar = 'w860'
         all_names = glob.glob(targetName + '_' + w_ar +
-                              '*' + obs_date + '_' + ar + '.fits.gz')
+                              '*' + obs_date + '_' + ar + '.fits')
         trName = all_names[0]
 
     # plot all dates
@@ -214,7 +214,7 @@ for i in range(len(warm)):
         if warm[i] == 'REDL_860' or warm[i] == 'REDU_860':
             w_ar = 'w860'
         all_names = glob.glob(targetName + '_' + w_ar +
-                              '*' + obs_date + '_' + ar + '.fits.gz')
+                              '*' + obs_date + '_' + ar + '.fits')
 
 
 
