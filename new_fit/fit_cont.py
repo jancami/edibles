@@ -36,7 +36,7 @@ wave = np.array(x_nonbroad)
 flux_norm = voigt_math(wave, cent, alpha, gamma)
 
 # Generate the continuum data
-y_spline = generate_continuum((wave, flux_norm), delta_v, n_piece)
+y_spline, y_points = generate_continuum((wave, flux_norm), delta_v=delta_v, n_piece=n_piece)
 
 # plot
 plt.plot(wave, flux_norm, markersize='1', label='Data')
@@ -54,7 +54,7 @@ data_noisy = flux_norm + 0.02*np.random.normal(size=len(wave))
 plt.plot(wave, data_noisy)
 plt.show()
 
-popt, pcov = curve_fit(generate_continuum, (wave,flux_norm), data_noisy, p0 = initial_guess)
+# popt, pcov = curve_fit(generate_continuum, (wave,flux_norm), data_noisy, p0 = initial_guess)
 
 
-print(popt)
+# print(popt)

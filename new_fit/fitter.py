@@ -39,7 +39,7 @@ plt.plot(wave, flux_norm, 'grey', markersize='1', label='Data')
 
 
 # Generate the continuum data
-y_spline = generate_continuum((wave, flux_norm), delta_v, n_piece)
+y_spline, y_points = generate_continuum((wave, flux_norm), delta_v=delta_v, n_piece=n_piece)
 
 
 # overplot continuum spline
