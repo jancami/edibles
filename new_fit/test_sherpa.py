@@ -10,7 +10,7 @@ from sherpa.plot import DataPlot
 # Parameters to change
 delta_v = 1000
 n_piece = 4
-
+n_points = n_piece + 1
 
 
 dataset = 2
@@ -31,15 +31,10 @@ if dataset == 1:
     yy2 = 1 + fit.voigt(grid, lambda_peak=5896, b_eff=3.47, log_N=12.843, 
                         gamma=6.098e+07, osc_freq=0.318, resolving_power=80000)
 
-
-
     flux =  cont_const + yy1 #+ yy2
-
-
-
     noise = np.random.normal(0, 0.005, len(flux))
-
     flux = flux + noise
+
     # interpolate into fixed grid
     spec_wave = np.linspace(5887, 5898, 1000)
     spec_flux = np.interp(spec_wave, grid, flux)
@@ -58,14 +53,13 @@ if dataset == 2:
     # load data from file
     from astropy.io import fits
     hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20160613_O12.fits')
+    # hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits')
     spec_flux = hdu[0].data
     crval1 = hdu[0].header["CRVAL1"]
     cdelt1 = hdu[0].header["CDELT1"]
     nwave = len(spec_flux)
     wave = np.arange(0, nwave, 1)
     spec_wave = (wave) * cdelt1 + crval1
-
-
 
     # create data subset
     x_min = 7662.
@@ -78,7 +72,6 @@ if dataset == 2:
     # error of data for different stats options
     err = (hdu[0].header["CRDER1"] + hdu[0].header["CSYER1"]) * np.ones_like(flux_subset)
 
-
     # normalize data
     flux_subset = flux_subset / (np.max(flux_subset) - np.min(flux_subset)) 
     err = err / (np.max(flux_subset) - np.min(flux_subset))
@@ -89,7 +82,6 @@ if dataset == 2:
 # find peaks of spectrum
 from scipy.signal import find_peaks
 
-
 prominence = (np.max(flux_subset) - np.min(flux_subset)) * 0.1
 
 peaks, _ = find_peaks(-flux_subset, prominence=prominence)
@@ -98,9 +90,13 @@ plt.plot(wave_subset, flux_subset)
 plt.plot(wave_subset[peaks], flux_subset[peaks], 'x')
 plt.show()
 
+
 # =========================================================================
 
 # CREATE MODEL
+from sherpa.astro.optical import AbsorptionVoigt
+from cont_model import Cont1D
+
 
 
 # create initial continuum guess spline points
@@ -110,21 +106,29 @@ y_spline, y_points= generate_continuum((wave_subset, flux_subset),
 
 print(np.sum(np.abs(flux_subset - y_spline)))
 
-from cont_model import Cont1D
 cont = Cont1D()
-cont.y1            = y_points[0]
-cont.y1.frozen     = False
-cont.y2            = y_points[1]
-cont.y2.frozen     = False
-cont.y3            = y_points[2]
-cont.y3.frozen     = False
-cont.y4            = y_points[3]
-cont.y4.frozen     = False
-cont.y5            = y_points[4]
-cont.y5.frozen     = False
-# cont.y6            = y_points[5]
-# cont.y6.frozen     = False
-cont.n_piece       = n_piece
+
+# always at least 2 points / 1 piece
+if n_points >= 1:
+    cont.y1            = y_points[0]
+    cont.y1.frozen     = False
+if n_points >= 2:
+    cont.y2            = y_points[1]
+    cont.y2.frozen     = False
+if n_points >= 3:
+    cont.y3            = y_points[2]
+    cont.y3.frozen     = False
+if n_points >= 4:
+    cont.y4            = y_points[3]
+    cont.y4.frozen     = False
+if n_points >= 5:
+    cont.y5            = y_points[4]
+    cont.y5.frozen     = False
+if n_points >= 6:
+    cont.y6            = y_points[5]
+    cont.y6.frozen     = False
+
+cont.n_piece           = n_piece
 print(cont)
 
 # ==========
@@ -132,9 +136,6 @@ model = cont
 # ==========
 
 
-
-
-from sherpa.astro.optical import AbsorptionVoigt
 
 # voigt_models = [v1, v2, v3, v4, v5, v6, v7, v8]
 # voigt_models = []
@@ -150,9 +151,6 @@ for i in range(len(peaks)):
 
     model += temp
     temp=0
-
-
-
 
 
 
