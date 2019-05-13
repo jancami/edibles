@@ -5,39 +5,40 @@ import sys
 
 
 def read2dfile(path):
-	'''
-	This function will read a n*2 text file and show a plot
+    '''
+    This function will read a n*2 text file and show a plot
 
-	input:		path/to/file
+    input:      path/to/file
 
-	Output:		plot
+    Output:     plot
 
-	example file:
-		7.662 1.453
-		7.662 1.436
-		7.662 1.414
-			.
-		 	.
-		 	.
+    example file:
+        7.662 1.453
+        7.662 1.436
+        7.662 1.414
+            .
+            .
+            .
 
-	'''
+    '''
 
-	array = np.loadtxt(path)
+    array = np.loadtxt(path)
 
-	wave = array[:, 0]
-	flux = array[:, 1]
+    wave = array[:, 0]
+    flux = array[:, 1]
 
-	plt.plot(wave, flux)
-	plt.show()
+    plt.plot(wave, flux)
+    plt.show()
 
+if __name__ == '__main__':
+    
+    fullCmdArguments = sys.argv
+    args = fullCmdArguments[1:]
+    arN = len(sys.argv)
 
-fullCmdArguments = sys.argv
-args = fullCmdArguments[1:]
-arN = len(sys.argv)
+    if len(args) != 1:
+        print('\nSyntax:    python read2dtxt.py path/to/file\n')
 
-if len(args) != 1:
-	print('\nSyntax:	python read2dtxt.py path/to/file\n')
-
-else:
-	path = args[0]
-	read2dfile(path)
+    else:
+        path = args[0]
+        read2dfile(path)

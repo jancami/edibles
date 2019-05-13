@@ -9,8 +9,8 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
     if resolution is None:
         resolution = 1500.0
 
-    lambda_start = np.float128(lambda_start)
-    lambda_end = np.float128(lambda_end)
+    lambda_start = np.float64(lambda_start)
+    lambda_end = np.float64(lambda_end)
 
     # produce grid
     R = resolution * oversample
