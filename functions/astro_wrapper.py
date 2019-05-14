@@ -5,7 +5,7 @@ from edibles.functions.voigtMathematical import voigt_math
 from edibles.functions.freq_convert_2 import unit_converter
 
 
-def voigt_astro(x, cent, b_eff, Gamma, amplitude):
+def voigt_astro(x, cent, b_eff, Gamma, amplitude=1.0):
     '''
     INPUT:
     x:         [ndarray]    Wavelength grid
