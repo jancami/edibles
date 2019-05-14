@@ -98,6 +98,18 @@ from cont_model import Cont1D
 
 
 
+import numpy as np
+from astropy.modeling.models import Voigt1D
+import matplotlib.pyplot as plt
+
+plt.figure()
+x = np.arange(0, 10, 0.01)
+v1 = Voigt1D(x_0=5, amplitude_L=10, fwhm_L=0.5, fwhm_G=0.9)
+
+
+
+
+
 # create initial continuum guess spline points
 from edibles.functions.continuum_guess import generate_continuum
 y_spline, y_points= generate_continuum((wave_subset, flux_subset), 
@@ -135,7 +147,8 @@ model = cont
 # ==========
 
 
-
+print()
+print()
 # voigt_models = [v1, v2, v3, v4, v5, v6, v7, v8]
 # voigt_models = []
 for i in range(len(peaks)):
@@ -147,6 +160,14 @@ for i in range(len(peaks)):
     temp.fwhm          = 6.
     temp.lg            = 2.
     print(temp)
+
+
+    # temp = Voigt1D()
+    # temp.x_0        = wave_subset[peaks[i]]  #  7664.87
+    # temp.amplitude_L = False
+    # temp.fwhm_L            = .3
+    # temp.fwhm_G          = 6.
+    # print(temp)
 
     model += temp
     temp=0

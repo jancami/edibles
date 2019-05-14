@@ -52,7 +52,7 @@ class Voigt1D(Fittable1DModel):
         [-0.3085, 0.5906, -0.3085, 0.5906],    # C
         [0.0210, -1.1858, -0.0210, 1.1858]])   # D
 
-[docs]    @classmethod
+# [docs]    @classmethod
     def evaluate(cls, x, x_0, amplitude_L, fwhm_L, fwhm_G):
 
         A, B, C, D = cls._abcd
@@ -67,7 +67,7 @@ class Voigt1D(Fittable1DModel):
         return (fwhm_L * amplitude_L * np.sqrt(np.pi) * sqrt_ln2 / fwhm_G) * V
 
 
-[docs]    @classmethod
+# [docs]    @classmethod
     def fit_deriv(cls, x, x_0, amplitude_L, fwhm_L, fwhm_G):
 
         A, B, C, D = cls._abcd
