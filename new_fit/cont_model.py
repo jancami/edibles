@@ -19,7 +19,6 @@ def _cont1d(pars, x):
 
     pars:         [list]                      (y_pts, delta_v, n_piece)
         y1 - y8:      [floats]                    input y_points to fit spline
-        delta_v:      [float]                     desired resolution of continuum (in m/s)
         n_piece:      [int, default=2]            number of sections to split data into
 
     OUTPUT:
