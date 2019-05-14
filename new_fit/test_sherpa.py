@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from sherpa.plot import DataPlot
 
 
-
 # Parameters to change
 delta_v = 1000
 n_piece = 4
