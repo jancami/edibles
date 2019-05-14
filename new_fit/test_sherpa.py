@@ -51,7 +51,7 @@ if dataset == 2:
 
     # load data from file
     from astropy.io import fits
-    hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20160613_O12.fits')
+    hdu = fits.open('/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits')
     # hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits')
     spec_flux = hdu[0].data
     crval1 = hdu[0].header["CRVAL1"]
@@ -61,8 +61,8 @@ if dataset == 2:
     spec_wave = (wave) * cdelt1 + crval1
 
     # create data subset
-    x_min = 7662.
-    x_max = 7670.
+    x_min = 5885.
+    x_max = 5898.
     min_idx = (np.abs(spec_wave - x_min)).argmin()
     max_idx = (np.abs(spec_wave - x_max)).argmin()
     wave_subset = spec_wave[min_idx:max_idx]
@@ -81,7 +81,7 @@ if dataset == 2:
 # find peaks of spectrum
 from scipy.signal import find_peaks
 
-prominence = (np.max(flux_subset) - np.min(flux_subset)) * 0.1
+prominence = (np.max(flux_subset) - np.min(flux_subset)) * 0.5
 
 peaks, _ = find_peaks(-flux_subset, prominence=prominence)
 
