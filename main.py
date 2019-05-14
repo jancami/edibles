@@ -30,7 +30,6 @@ Gamma=6.064e7
 # NaI_5891       NaI     5891.5835  0.63100000  6.064e+07  22.990
 
 
-
 # generate wavelength grid with resolving power delta_v (R = c/delta_v)
 R = cst.c.value / delta_v
 x_nonbroad = make_grid(x_min, x_max, resolution=R)
