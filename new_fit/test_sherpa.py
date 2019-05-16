@@ -51,8 +51,24 @@ if dataset == 2:
 
     # load data from file
     from astropy.io import fits
-    hdu = fits.open('/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits')
-    # hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits')
+
+    # # NaI 5890/5896
+    # hdu = fits.open('/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits')
+    # x_min = 5885.
+    # x_max = 5898.
+
+    # # NaI 3000
+    # hdu = fits.open('/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits')
+    # x_min = 3300.
+    # x_max = 3305.
+
+    # KI 7665
+    hdu = fits.open('/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits')
+    x_min = 7662.
+    x_max = 7670.
+
+
+
     spec_flux = hdu[0].data
     crval1 = hdu[0].header["CRVAL1"]
     cdelt1 = hdu[0].header["CDELT1"]
@@ -60,9 +76,10 @@ if dataset == 2:
     wave = np.arange(0, nwave, 1)
     spec_wave = (wave) * cdelt1 + crval1
 
+    plt.plot(spec_wave, spec_flux)
+    plt.show()
+
     # create data subset
-    x_min = 5885.
-    x_max = 5898.
     min_idx = (np.abs(spec_wave - x_min)).argmin()
     max_idx = (np.abs(spec_wave - x_max)).argmin()
     wave_subset = spec_wave[min_idx:max_idx]
@@ -70,11 +87,6 @@ if dataset == 2:
 
     # error of data for different stats options
     err = (hdu[0].header["CRDER1"] + hdu[0].header["CSYER1"]) * np.ones_like(flux_subset)
-
-    # normalize data
-    flux_subset = flux_subset / (np.max(flux_subset) - np.min(flux_subset)) 
-    err = err / (np.max(flux_subset) - np.min(flux_subset))
-
 
 # =========================================================================
 
@@ -95,27 +107,17 @@ plt.show()
 # CREATE MODEL
 from sherpa.astro.optical import AbsorptionVoigt
 from cont_model import Cont1D
-
+from v_model import Voigt1D
 
 
 import numpy as np
-from astropy.modeling.models import Voigt1D
 import matplotlib.pyplot as plt
-
-plt.figure()
-x = np.arange(0, 10, 0.01)
-v1 = Voigt1D(x_0=5, amplitude_L=10, fwhm_L=0.5, fwhm_G=0.9)
-
-
-
 
 
 # create initial continuum guess spline points
 from edibles.functions.continuum_guess import generate_continuum
 y_spline, y_points= generate_continuum((wave_subset, flux_subset), 
                                         delta_v=delta_v, n_piece=n_piece)
-
-print(np.sum(np.abs(flux_subset - y_spline)))
 
 cont = Cont1D()
 
@@ -138,6 +140,12 @@ if n_points >= 5:
 if n_points >= 6:
     cont.y6            = y_points[5]
     cont.y6.frozen     = False
+if n_points >= 7:
+    cont.y7            = y_points[6]
+    cont.y7.frozen     = False
+if n_points >= 8:
+    cont.y8            = y_points[7]
+    cont.y8.frozen     = False
 
 cont.n_piece           = n_piece
 print(cont)
@@ -147,37 +155,48 @@ model = cont
 # ==========
 
 
-print()
-print()
-# voigt_models = [v1, v2, v3, v4, v5, v6, v7, v8]
-# voigt_models = []
+# ================================================================
+# Semi-automated voigt profile model generator - done?
+
+
+# # sherpa voigt function
+# for i in range(len(peaks)):
+
+#     temp = AbsorptionVoigt()
+#     temp.center        = wave_subset[peaks[i]]  #  7664.87
+#     # temp.center.frozen = False
+#     temp.ew            = .1
+#     temp.fwhm          = 5.
+#     temp.lg            = 1.
+#     print(temp)
+
+
+#     model += temp
+#     temp=0
+
+# our voigt function
 for i in range(len(peaks)):
 
-    temp = AbsorptionVoigt()
-    temp.center        = wave_subset[peaks[i]]  #  7664.87
-    temp.center.frozen = False
-    temp.ew            = .3
-    temp.fwhm          = 6.
-    temp.lg            = 2.
+    temp = Voigt1D()
+    temp.cent          = wave_subset[peaks[i]]  #  7664.87
+    # temp.cent.frozen = False
+    temp.alpha         = .05
+    temp.gamma         = .005
+    temp.scaling       = 1.
+    temp.scaling.frozen = False
     print(temp)
 
-
-    # temp = Voigt1D()
-    # temp.x_0        = wave_subset[peaks[i]]  #  7664.87
-    # temp.amplitude_L = False
-    # temp.fwhm_L            = .3
-    # temp.fwhm_G          = 6.
-    # print(temp)
 
     model += temp
     temp=0
 
 
+# Individual addition of models
 
 # # telluric on left 
 # v1 = AbsorptionVoigt()
-# v1.center        = wave_subset[peaks[1]]  #  7664.87
-# v1.center.frozen = False
+# v1.center        = wave_subset[peaks[0]]  #  7664.87
+# # v1.center.frozen = False
 # v1.ew            = .343141
 # v1.fwhm          = 7.21035
 # v1.lg            = 1.81324
@@ -188,7 +207,7 @@ for i in range(len(peaks)):
 # # telluric on right
 # v2 = AbsorptionVoigt()
 # v2.center        = wave_subset[peaks[2]]  #  7665.94      # v1.center + (7665.94-7664.87)
-# v2.center.frozen = False
+# # v2.center.frozen = False
 # v2.ew            = 0.37439
 # v2.fwhm          = 6.78904
 # v2.lg            = 2.3472
@@ -197,8 +216,8 @@ for i in range(len(peaks)):
 
 # # small IS on left
 # v3 = AbsorptionVoigt()
-# v3.center        = wave_subset[peaks[0]]  #  7664.43
-# v3.center.frozen = False
+# v3.center        = wave_subset[peaks[1]]  #  7664.43
+# # v3.center.frozen = False
 # v3.ew            = 0.191724
 # v3.fwhm          = 5.34348
 # v3.lg            = 5.91221
@@ -207,8 +226,7 @@ for i in range(len(peaks)):
 # model = cont + v1 + v2 + v3
 
 
-
-d = Data1D('ex', wave_subset, flux_subset)
+d = Data1D('Initial model', wave_subset, flux_subset)
 
 dplot = DataPlot()
 dplot.prepare(d)
@@ -250,12 +268,8 @@ fplot.prepare(dplot, mplot)
 fplot.plot()
 
 
-print(np.sum(np.abs(flux_subset - model(d.x))))
-
 title = 'number of spline points: ' + str(n_piece+1)
 plt.title(title)
-
-
 plt.plot(wave_subset, flux_subset-model(wave_subset))
 plt.show()
 
