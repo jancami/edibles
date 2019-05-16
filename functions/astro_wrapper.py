@@ -5,14 +5,14 @@ from edibles.functions.voigtMathematical import voigt_math
 from edibles.functions.freq_convert_2 import unit_converter
 
 
-def voigt_astro(x, cent, b_eff, Gamma, amplitude=1.0):
+def voigt_astro(x, cent, b_eff, Gamma, scaling=1.0):
     '''
     INPUT:
     x:         [ndarray]    Wavelength grid
     cent:      [float]      Central wavelength
     b_eff:     [float]      Velocity width [km/s]
     Gamma:     [float]      Lorentzian HWHM component * 4pi
-    amplitude: [float]      Height of the line
+    scaling: [float]      Height of the line
 
     OUTPUT:
     y:     [ndarray]    Voigt profile
@@ -43,6 +43,6 @@ def voigt_astro(x, cent, b_eff, Gamma, amplitude=1.0):
     # print('alpha: ', alpha)
     # print('gamma: ', gamma)
 
-    y = voigt_math(x, cent, alpha, gamma, amplitude)
+    y = voigt_math(x, cent, alpha, gamma, scaling)
 
     return y
