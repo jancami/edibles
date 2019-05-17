@@ -103,7 +103,7 @@ class Cont1D(ArithmeticModel):
         self.y7 = Parameter(name, 'y7', None, frozen=True)
         self.y8 = Parameter(name, 'y8', None, frozen=True)
 
-        self.n_piece = Parameter(name, 'n_piece', 2, min=0, hard_min=0, frozen=True)
+        self.n_piece = Parameter(name, 'n_piece', 2, min=2, max=8, frozen=True)
 
         ArithmeticModel.__init__(self, name,
             (self.y1, self.y2, self.y3, self.y4, self.y5, self.y6, 
