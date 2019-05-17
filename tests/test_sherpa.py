@@ -105,9 +105,8 @@ plt.show()
 # =========================================================================
 
 # CREATE MODEL
-from sherpa.astro.optical import AbsorptionVoigt
-from cont_model import Cont1D
-from v_model import Voigt1D
+from edibles.new_fit.cont_model import Cont1D
+from edibles.new_fit.v_model import Voigt1D
 
 
 import numpy as np
