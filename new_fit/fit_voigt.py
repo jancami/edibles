@@ -222,3 +222,11 @@ if __name__ == "__main__":
 
     fitter(file, xmin=xmin, xmax=xmax, peak_cutoff=peak_cutoff, n_points=n_points, 
                     alpha=alpha, gamma=gamma, scaling=scaling)
+
+
+
+
+
+
+
+print('finished!')
