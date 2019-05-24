@@ -19,18 +19,11 @@ delta_v = 1000
 x_min = 5977
 x_max = 5983
 cent = 5980
-amplitude = 5.0
+scaling = 5.0
 n_piece = 3
 
 b_eff=3.47
 Gamma=6.064e7
-
-
-
-
-
-
-
 
 
 
@@ -46,7 +39,7 @@ wave = np.array(x_nonbroad)
 
 
 # generate voigt data with specified parameters
-flux_norm = voigt_math(wave, cent, alpha, gamma, amplitude)
+flux_norm = voigt_math(wave, cent, alpha, gamma, scaling)
 
 
 plt.plot(wave, flux_norm, 'grey', markersize='1', label='Data')
@@ -73,7 +66,7 @@ plt.plot(wave, y_spline, label='Spline fit')
 
 
 
-y2 = voigt_astro(wave, cent, b_eff, Gamma, amplitude)
+y2 = voigt_astro(wave, cent, b_eff, Gamma, scaling)
 
 plt.plot(wave, y2, 'red', linestyle=':', label='astro')
 plt.legend()
