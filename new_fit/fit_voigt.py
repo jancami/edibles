@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from scipy.signal import find_peaks
@@ -9,6 +10,7 @@ from edibles.new_fit.cont_model import Cont1D
 from edibles.new_fit.v_model import Voigt1D
 from edibles.new_fit.astro_v_model import AstroVoigt1D
 from edibles.functions.continuum_guess import generate_continuum
+from edibles.functions.line_merger import line_merger
 
 from sherpa.data import Data1D
 from sherpa.plot import DataPlot
@@ -19,7 +21,7 @@ from sherpa.fit import Fit
 from sherpa.plot import FitPlot
 
 
-def fitter(file, xmin, xmax, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e07, scaling=1.0):
+def fitter(wave_subset, flux_subset, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e07, scaling=1.0):
     '''
     Function that fits a spline continum and multiple voigt profile peaks simultaneously. 
 
@@ -50,23 +52,23 @@ def fitter(file, xmin, xmax, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e
     n_piece = n_points - 1
 
 
-    hdu = fits.open(file)
+    # hdu = fits.open(file)
 
-    spec_flux = hdu[0].data
-    crval1 = hdu[0].header["CRVAL1"]
-    cdelt1 = hdu[0].header["CDELT1"]
-    nwave = len(spec_flux)
-    wave = np.arange(0, nwave, 1)
-    spec_wave = (wave) * cdelt1 + crval1
+    # spec_flux = hdu[0].data
+    # crval1 = hdu[0].header["CRVAL1"]
+    # cdelt1 = hdu[0].header["CDELT1"]
+    # nwave = len(spec_flux)
+    # wave = np.arange(0, nwave, 1)
+    # spec_wave = (wave) * cdelt1 + crval1
 
-    plt.plot(spec_wave, spec_flux)
-    plt.show()
+    # plt.plot(spec_wave, spec_flux)
+    # plt.show()
 
-    # create data subset
-    min_idx = (np.abs(spec_wave - xmin)).argmin()
-    max_idx = (np.abs(spec_wave - xmax)).argmin()
-    wave_subset = spec_wave[min_idx:max_idx]
-    flux_subset = spec_flux[min_idx:max_idx]
+    # # create data subset
+    # min_idx = (np.abs(spec_wave - xmin)).argmin()
+    # max_idx = (np.abs(spec_wave - xmax)).argmin()
+    # wave_subset = spec_wave[min_idx:max_idx]
+    # flux_subset = spec_flux[min_idx:max_idx]
 
     # =========================================================================
 
@@ -135,15 +137,15 @@ def fitter(file, xmin, xmax, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e
         # create temporary voigt object
         obj = AstroVoigt1D()
         obj.cent          = wave_subset[peaks[i]]  #  7664.87
-<<<<<<< HEAD
-        obj.cent.frozen = False
-        obj.alpha         = alpha
-        obj.gamma         = gamma
-=======
+# <<<<<<< HEAD
+        # obj.cent.frozen = False
+        # obj.alpha         = alpha
+        # obj.gamma         = gamma
+# =======
         # obj.cent.frozen = False
         obj.b_eff         = b_eff
         obj.Gamma         = Gamma
->>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
+# >>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
         obj.scaling       = scaling
         obj.scaling.frozen = False
         print(obj)
@@ -165,7 +167,7 @@ def fitter(file, xmin, xmax, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e
     mplot.prepare(d, model)
     dplot.plot()
     mplot.overplot()
-    plt.show()
+    # plt.show()
 
     stat = LeastSq()
     opt = LevMar()
@@ -182,6 +184,23 @@ def fitter(file, xmin, xmax, peak_cutoff=0.5, n_points=5, b_eff=3.47, Gamma=6.0e
     print()
     print(vres.format())
 
+        ###########################
+    print("__________TEST__________")
+    # print()
+    # print(vres.parnames)
+    # print(vres.parvals)
+    print()
+
+    var = n_piece+1
+    for i in range(3*len(peaks)):
+        print("{}       :      {}".format(vres.parnames[var+i],vres.parvals[var+i]))
+    print()   
+    print(pd.DataFrame(np.array(vres.parnames[var:])))
+    print(pd.DataFrame(np.array(vres.parvals[var:])))
+    print() 
+    print("___________END__________")
+
+        ############################
     fplot = FitPlot()
     mplot.prepare(d, model)
     fplot.prepare(dplot, mplot)
@@ -206,22 +225,22 @@ if __name__ == "__main__":
     # load data from file
 
     # # NaI 5890/5896
-<<<<<<< HEAD
-    file = '/home/ranjan/python/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
-    xmin = 5885.
-    xmax = 5898.
-=======
+# <<<<<<< HEAD
+#     file = '/home/ranjan/python/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
+#     xmin = 5885.
+#     xmax = 5898.
+# # =======
     # file = '/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
     # xmin = 5885.
     # xmax = 5898.
     # scaling = 250.
->>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
+# >>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
 
     # NaI 3000
-    file = '/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
-    xmin = 3300.
-    xmax = 3305.
-    scaling = 30.
+    # file = '/home/ranjan/python/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
+    # xmin = 3300.
+    # xmax = 3305.
+    # scaling = 30.
 
     # # KI 7665
     # file = '/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits'
@@ -229,28 +248,50 @@ if __name__ == "__main__":
     # xmax = 7670
     # scaling = 1.
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
     # KI 7665
     # file = '/data/DR3_fits/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits'
 
     # xmin = 7662
     # xmax = 7670
-    peak_cutoff = 0.5
-    n_points = 5
-    alpha = 0.05
-    gamma = 0.005
-    scaling = 75.
-=======
+    # peak_cutoff = 0.5
+    # n_points = 5
+    # alpha = 0.05
+    # gamma = 0.005
+    # scaling = 75.
+
+
+
+
+    # ____________________Using line merger___________________
+
+    file1 = '/home/ranjan/python/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
+    xmin1 = 3300.
+    xmax1 = 3305.
+
+    file2 = '/home/ranjan/python/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
+    xmin2 = 5885.
+    xmax2 = 5898.
+
+    wave_subsetf, flux_subsetf = line_merger(file1,xmin1,xmax1,file2,xmin2,xmax2)
+
+    plt.plot(wave_subsetf,flux_subsetf)
+    plt.show()
+
+    scaling = 30.
+
+    # ________________________________________________________
+# =======
 
     peak_cutoff = 0.5
     n_points = 5
 
     b_eff=6.47
     Gamma=6.064e9
->>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
+# >>>>>>> 0bd5ecd769e2776ec33c0290a06cd233fa08264e
 
 
-    fitter(file, xmin=xmin, xmax=xmax, peak_cutoff=peak_cutoff, n_points=n_points, 
+    fitter(wave_subsetf, flux_subsetf, peak_cutoff=peak_cutoff, n_points=n_points, 
                     b_eff=b_eff, Gamma=Gamma, scaling=scaling)
 
 
