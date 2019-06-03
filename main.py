@@ -7,20 +7,19 @@ from edibles.functions.continuum_guess import generate_continuum
 from edibles.new_fit.cont_model import Cont1D
 from edibles.new_fit.astro_v_model import AstroVoigt1D
 
-from sherpa.data import Data1D
-from sherpa.data import DataSimulFit
+from sherpa.data import Data1D, DataSimulFit
 from sherpa.stats import LeastSq
 from sherpa.optmethods import LevMar, MonCar, NelderMead
-from sherpa.fit import Fit
-from sherpa.fit import SimulFitModel
-from sherpa.plot import DataPlot
-from sherpa.plot import ModelPlot
-from sherpa.plot import FitPlot
-from sherpa.plot import SplitPlot
+from sherpa.fit import Fit, SimulFitModel
+from sherpa.plot import DataPlot, ModelPlot, FitPlot, SplitPlot
 
 # ===========
 # Main script
 # ===========
+
+star_name = 'HD170740'
+number_of_lines = 4
+
 
 # set model to zero
 model1 = 0
@@ -335,4 +334,24 @@ splot.addplot(fplot2)
 
 plt.tight_layout()
 plt.show()
+print()
+print()
 
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Making database
+
+star_info = []
+list_of_models = [obj1, obj2, obj3, obj4]
+line_params = []
+
+for i in list_of_models:
+    each_line = [i.cent.val, i.b_eff.val, i.Gamma.val, i.scaling.val]
+    line_params.append(each_line)
+
+
+star_info = [star_name, number_of_lines, line_params]
+
+print(star_info)
+
+# somehow add the star info to database here
