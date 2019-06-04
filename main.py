@@ -32,7 +32,7 @@ n_piece = n_points - 1
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # MODEL 1 BEGIN
 
-file1 = '/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
+file1 = '/home/ranjan/python/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
 xmin1 = 3300.
 xmax1 = 3305.
 
@@ -141,7 +141,7 @@ model1 += obj2
 
 # MODEL 2 BEGIN
 
-file2 = '/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
+file2 = '/home/ranjan/python/data/DR3_fits/HD170740/RED_564/HD170740_w564_n9_20160612_U.fits'
 xmin2 = 5885.
 xmax2 = 5898.
 
