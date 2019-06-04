@@ -8,6 +8,7 @@ def catalog_maker(row):
         writer.writerow(row)
 
     csvFile.close()
+    
 
 
 
