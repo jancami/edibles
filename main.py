@@ -6,6 +6,7 @@ from astropy.io import fits
 from edibles.functions.continuum_guess import generate_continuum
 from edibles.new_fit.cont_model import Cont1D
 from edibles.new_fit.astro_v_model import AstroVoigt1D
+from edibles.catalog.cataloguing import catalog_maker
 
 from sherpa.data import Data1D, DataSimulFit
 from sherpa.stats import LeastSq
@@ -353,5 +354,7 @@ for i in list_of_models:
 star_info = [star_name, number_of_lines, line_params]
 
 print(star_info)
+
+catalog_maker(star_info)
 
 # somehow add the star info to database here
