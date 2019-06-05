@@ -4,8 +4,9 @@ from scipy.signal import find_peaks
 from astropy.io import fits
 
 from edibles.functions.continuum_guess import generate_continuum
-from edibles.new_fit.cont_model import Cont1D
-from edibles.new_fit.astro_v_model import AstroVoigt1D
+# from edibles.new_fit.cont_model import Cont1D
+# from edibles.new_fit.astro_v_model import AstroVoigt1D
+from edibles.new_fit.models import Cont1D, AstroVoigt1D
 
 from sherpa.data import Data1D, DataSimulFit
 from sherpa.stats import LeastSq
