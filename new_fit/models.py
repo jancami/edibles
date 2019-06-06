@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import wofz
 from scipy.interpolate import CubicSpline
+import astropy.constants as cst
 
 
 from sherpa.models.model import ArithmeticModel
@@ -9,7 +10,9 @@ from sherpa.models.parameter import Parameter
 from edibles.functions.parameter_converter import param_convert
 from edibles.functions.voigtMathematical import voigt_math
 
-__all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D')
+from edibles.voigt.voigt import voigtOpticalDepth
+
+__all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
 
 
@@ -250,3 +253,92 @@ class AstroVoigt1D(ArithmeticModel):
 
         return -y
 
+
+
+class VoigtAbsorptionLine(ArithmeticModel):
+    """A one-dimensional continuum spline.
+
+    Attributes
+    ----------
+
+    lam:
+        [float64]  (Angstroms)  Wavelength grid
+
+    pars:
+        lam_0:
+            [float64]  (Angstroms)  Central wavelength
+        b:
+            [float64]  (km/s)       Gaussian standard deviation
+        d:
+            [float64]  (units)      Damping parameter
+
+        Choose:
+            N:        [float64]  (units)      Column density
+            f:        [float64]  (units)      Oscillator strength
+            ========================  OR  ========================
+            tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
+
+
+    """
+
+    def __init__(self, name='voigtabsorptionline'):
+
+
+
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=True)
+        self.b = Parameter(name, 'b', 3.5, frozen=False, min=0)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
+        self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
+        self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
+        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=0)
+
+
+        ArithmeticModel.__init__(self, name, (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
+
+
+    def calc(self, pars, x, *args, **kwargs):
+        '''
+        INPUT:
+
+        lam:
+            [float64]  (Angstroms)  Wavelength grid
+
+        pars:
+            lam_0:
+                [float64]  (Angstroms)  Central wavelength
+            b:
+                [float64]  (km/s)       Gaussian standard deviation
+            d:
+                [float64]  (units)      Damping parameter
+
+            Choose:
+                N:        [float64]  (units)      Column density
+                f:        [float64]  (units)      Oscillator strength
+                ========================  OR  ========================
+                tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
+
+        OUTPUT:
+        line:
+            [ndarray]    Voigt profile
+        '''
+
+        if len(pars) == 5:
+            lam_0, b, d, N, f = pars
+
+            Nf = N * f
+
+
+        else:
+            lam_0, b, d, tau_0 = pars
+
+            Nf = tau_0 * cst.m_e.value * cst.c.to('km/s').value / (np.pi * (cst.e.value)**2 * lam_0)
+
+
+
+
+
+        tau = voigtOpticalDepth(lam=x, lam_0=lam_0, b=b, d=d, Nf=Nf)
+
+        line = np.exp(-tau)
+
+        return line
