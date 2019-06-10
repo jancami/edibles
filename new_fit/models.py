@@ -24,7 +24,7 @@ class Cont1D(ArithmeticModel):
     Attributes
     ----------
 
-    y_pts
+    y1, y2, ... y7, y8:
         initial y_points to fit
     n_points
         number of segments to break spectrum into.
@@ -43,11 +43,10 @@ class Cont1D(ArithmeticModel):
         self.y7 = Parameter(name, 'y7', None, frozen=True)
         self.y8 = Parameter(name, 'y8', None, frozen=True)
 
-        self.n_piece = Parameter(name, 'n_piece', 2, min=2, max=8, frozen=True)
 
         ArithmeticModel.__init__(self, name,
             (self.y1, self.y2, self.y3, self.y4, self.y5, self.y6, 
-                self.y7, self.y8, self.n_piece))
+                self.y7, self.y8))
 
 
     def calc(self, pars, x, *args, **kwargs):
@@ -65,8 +64,6 @@ class Cont1D(ArithmeticModel):
         pars:
             y1 - y8:
                 [floats]            input y_points to fit spline
-            n_piece:
-                [int, default=2]    number of sections to split data into
 
         OUTPUT:
         -------
@@ -75,17 +72,22 @@ class Cont1D(ArithmeticModel):
             [ndarray]               continuum flux value array
         '''
 
-        (y1, y2, y3, y4, y5, y6 ,y7, y8, n_piece) = pars
+        n_points = 0
+        for i in range(len(pars)):
 
-        if type(n_piece) is not int:
-            n_piece = int(n_piece)
+            if np.isnan(pars[i]):
+                pars[i] = None
+
+            if pars[i] is not None:
+                n_points += 1
+
+        n_piece = n_points - 1
 
         # split x & y arrays into n_piece*2 sections
         x_sections = np.array_split(x, n_piece*2)
 
         # initialize list of points to spline fit
         x_points = [np.min(x)]
-
 
         # loop through every other section (1, 3, 5...)
         # make n_piece+1 points to fit a spline through
@@ -100,11 +102,10 @@ class Cont1D(ArithmeticModel):
 
             x_points.append(x_point)
 
-        y_pts = [y1, y2, y3, y4, y5, y6, y7, y8]
         y_points = []
-        for i in range(n_piece+1):
-            if y_pts[i] is not None:
-                y_points.append(y_pts[i])
+        for i in range(len(pars)):
+            if pars[i] is not None:
+                y_points.append(pars[i])
             else:
                 break
 
@@ -285,15 +286,15 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
 
 
-        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=True)
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=0)
         self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
-        self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
-        self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
+        # self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
+        # self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
         self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=0)
 
 
-        ArithmeticModel.__init__(self, name, (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
+        ArithmeticModel.__init__(self, name, (self.lam_0, self.b, self.d, self.tau_0))
 
 
     def calc(self, pars, x, *args, **kwargs):
