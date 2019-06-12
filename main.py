@@ -25,9 +25,9 @@ number_of_lines = 4
 # set SOME initial params
 
 # file params
-file = '/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n6_20160612_B.fits'
-xmin = 3300.
-xmax = 3305.
+file = '/data/DR3_fits/HD170740/RED_860/HD170740_w860_n20_20140915_L.fits'
+xmin = 7661.
+xmax = 7670.
 
 # spline params
 n_points = 4
@@ -130,10 +130,17 @@ line2.d              = d_2
 line2.tau_0          = tau_0_2
 print(line2)
 
+line3 = VoigtAbsorptionLine()
+line3.lam_0          = wave[peaks[2]]
+line3.b              = b_2
+line3.d              = d_2
+line3.tau_0          = tau_0_2
+print(line3)
 
 # multiply lines by model
 model *= line1
 model *= line2
+model *= line3
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
