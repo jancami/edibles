@@ -3,14 +3,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
 from edibles.functions.continuum_guess import generate_continuum
-<<<<<<< HEAD
-from edibles.new_fit.cont_model import Cont1D
-from edibles.new_fit.astro_v_model import AstroVoigt1D
-from edibles.catalog.cataloguing import catalog_maker
-=======
 from edibles.new_fit.models import Cont1D, VoigtAbsorptionLine
 from edibles.load_fits_range import load_fits_range
->>>>>>> master
 
 from sherpa.data import Data1D
 from sherpa.stats import LeastSq
