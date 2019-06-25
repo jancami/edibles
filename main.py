@@ -4,8 +4,8 @@ from scipy.signal import find_peaks
 
 from edibles.functions.continuum_guess import generate_continuum
 
-from edibles.new_fit.models import Cont1D, VoigtAbsorptionLine
-from edibles.load_fits_range import load_fits_range
+from edibles.models import Cont1D, VoigtAbsorptionLine
+from edibles.functions.load_fits_range import load_fits_range
 
 from sherpa.data import Data1D
 from sherpa.stats import LeastSq
@@ -19,33 +19,24 @@ from sherpa.plot import DataPlot, ModelPlot, FitPlot
 # Main script
 # ===========
 
-star_name = 'HD170740'
-number_of_lines = 4
-
-
-# set SOME initial params
-
 # file params
+star_name = 'HD170740'
 file = '/data/DR3_fits/HD170740/RED_860/HD170740_w860_n20_20140915_L.fits'
 xmin = 7661.
 xmax = 7670.
 
 # spline params
-n_points = 4
+n_points = 3
 n_piece = n_points - 1
 
 # line params
 
-
 peak_cutoff = 0.035
 
-
-# lam_0   =
 b_1       = 2.6
 d_1       = .005
 tau_0_2   = 0.08
 
-# lam_0   =
 b_2       = 2.2
 d_2       = .006
 tau_0_3   = 0.08
@@ -182,10 +173,10 @@ print(line7)
 model *= line1
 model *= line2
 model *= line3
-# model *= line4
-# model *= line5
-# model *= line6
-# model *= line7
+model *= line4
+model *= line5
+model *= line6
+model *= line7
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
