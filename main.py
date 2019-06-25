@@ -27,7 +27,7 @@ xmin = 7661.
 xmax = 7670.
 
 # spline params
-n_points = 3
+n_points = 4
 n_piece = n_points - 1
 
 # line params
