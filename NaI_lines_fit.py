@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-from astropy.io import fits
 
 from edibles.functions.continuum_guess import generate_continuum
 from edibles.new_fit.models import Cont1D, VoigtAbsorptionLine

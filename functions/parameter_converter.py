@@ -1,7 +1,7 @@
 import astropy.units as u
 import astropy.constants as cst
 import numpy as np
-from edibles.fit.make_grid import make_grid
+from edibles.functions.make_grid import make_grid
 
 
 
