@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
 from edibles.functions.continuum_guess import generate_continuum
-from edibles.new_fit.models import Cont1D, VoigtAbsorptionLine
-from edibles.load_fits_range import load_fits_range
+from edibles.models import Cont1D, VoigtAbsorptionLine
+from edibles.functions.load_fits_range import load_fits_range
 
 
 from sherpa.data import Data1D, DataSimulFit
@@ -12,6 +12,11 @@ from sherpa.stats import LeastSq
 from sherpa.optmethods import LevMar, MonCar, NelderMead
 from sherpa.fit import Fit, SimulFitModel
 from sherpa.plot import DataPlot, ModelPlot, FitPlot, SplitPlot
+
+
+import time
+now = time.time()
+
 
 # ===========
 # Main script
@@ -43,6 +48,17 @@ b_1 = 3.4
 b_2 = 3.5
 b_3 = 6.0
 b_4 = 5.5
+
+
+# central wavelengths from NIST
+c1 = 3302.369
+c2 = 3302.979
+c3 = 5889.95095
+c4 = 5895.92424
+diff_bw_c1_c2 = c2 - c1
+diff_bw_c1_c3 = c3 - c1
+diff_bw_c1_c4 = c4 - c1
+diff_bw_c3_c4 = c4 - c3
 
 
 
@@ -85,7 +101,7 @@ if n_points >= 7:
 if n_points >= 8:
     cont1.y8            = y_points1[7]
     cont1.y8.frozen     = False
-print(cont1)
+# print(cont1)
 
 # add cont to model
 model1 = cont1
@@ -97,35 +113,27 @@ peaks, _ = find_peaks(-y1, prominence=prominence)
 
 # create voigt lines
 
-
-# central wavelengths from NIST
-c1 = 3302.369
-c2 = 3302.979
-diff_bw_c1_c2 = c2 - c1
-
-
-
 obj1 = VoigtAbsorptionLine()
 obj1.lam_0          = x1[peaks[0]]
 obj1.lam_0.frozen   = False
-obj1.b              = b_1
-# obj1.b.frozen     = True
+# obj1.b              = b_1
+# obj1.b.frozen     = False
 # obj1.d              = d1
-# obj1.d.frozen     = True
+# obj1.d.frozen     = False
 # obj1.tau_0          = tau_01
 obj1.tau_0.frozen = False
-print(obj1)
+# print(obj1)
 
 obj2 = VoigtAbsorptionLine()
 obj2.lam_0          = obj1.lam_0 + diff_bw_c1_c2
 obj2.lam_0.frozen   = False
-obj2.b              = b_2
-# obj2.b.frozen     = True
+# obj2.b              = obj1.b
+# obj2.b.frozen       = False
 # obj2.d              = d2
-# obj2.d.frozen     = True
-# obj2.tau_0          = tau_02
-obj2.tau_0.frozen = False
-print(obj2)
+# obj2.d.frozen       = False
+obj2.tau_0          = obj1.tau_0
+obj2.tau_0.frozen   = False
+# print(obj2)
 
 
 
@@ -176,7 +184,7 @@ if n_points >= 7:
 if n_points >= 8:
     cont2.y8            = y_points2[7]
     cont2.y8.frozen     = False
-print(cont2)
+# print(cont2)
 
 # add cont to model
 model2 = cont2
@@ -188,41 +196,27 @@ peaks, _ = find_peaks(-y2, prominence=prominence)
 
 # create voigt lines
 
-
-
-
-# central wavelengths from NIST
-c3 = 5889.95095
-c4 = 5895.92424
-
-
-diff_bw_c1_c3 = c3 - c1
-diff_bw_c1_c4 = c4 - c1
-
-diff_bw_c3_c4 = c4 - c3
-
-
 obj3 = VoigtAbsorptionLine()
 obj3.lam_0          = x2[peaks[0]]
 obj3.lam_0.frozen   = False
 obj3.b              = b_3
-# obj3.b.frozen     = True
+# obj3.b.frozen       = True
 # obj3.d              = d1
-# obj3.d.frozen     = True
+# obj3.d.frozen       = True
 # obj3.tau_0          = tau_01
-obj3.tau_0.frozen = False
-print(obj3)
+obj3.tau_0.frozen   = False
+# print(obj3)
 
 obj4 = VoigtAbsorptionLine()
 obj4.lam_0          = obj3.lam_0 + diff_bw_c3_c4
 obj4.lam_0.frozen   = False
-obj4.b              = b_4
-# obj4.b.frozen     = True
+# obj4.b              = obj3.b
+# obj4.b.frozen       = True
 # obj4.d              = d2
-# obj4.d.frozen     = True
-# obj4.tau_0          = tau_02
-obj4.tau_0.frozen = False
-print(obj4)
+# obj4.d.frozen       = True
+obj4.tau_0          = obj3.tau_0
+obj4.tau_0.frozen   = False
+# print(obj4)
 
 # add objects to model
 model2 *= obj3
@@ -246,30 +240,32 @@ mall = SimulFitModel('combined', (model1, model2))
     # Dataset 1
 dplot1 = DataPlot()
 dplot1.prepare(d1)
-dplot1.plot()
+# dplot1.plot()
 
 mplot1 = ModelPlot()
 mplot1.prepare(d1, model1)
-dplot1.plot()
-mplot1.overplot()
-plt.show()
+# dplot1.plot()
+# mplot1.overplot()
+# plt.show()
 
     # Dataset 2
 dplot2 = DataPlot()
 dplot2.prepare(d2)
-dplot2.plot()
+# dplot2.plot()
 
 mplot2 = ModelPlot()
 mplot2.prepare(d2, model2)
-dplot2.plot()
-mplot2.overplot()
-plt.show()
+# dplot2.plot()
+# mplot2.overplot()
+# plt.show()
 
 # =========================================
 # Fitting happens here - don't break please
 stat = LeastSq()
+
 # opt = LevMar()
 opt = NelderMead()
+
 print(opt)
 
 
@@ -292,25 +288,25 @@ print(vres.format())
 fplot1 = FitPlot()
 mplot1.prepare(d1, model1)
 fplot1.prepare(dplot1, mplot1)
-fplot1.plot()
+# fplot1.plot()
 
-    # residual
-title = 'Data 1'
-plt.title(title)
-plt.plot(x1, y1-model1(x1))
-plt.show()
+#     # residual
+# title = 'Data 1'
+# plt.title(title)
+# plt.plot(x1, y1-model1(x1))
+# plt.show()
 
     # Dataset 2
 fplot2 = FitPlot()
 mplot2.prepare(d2, model2)
 fplot2.prepare(dplot2, mplot2)
-fplot2.plot()
+# fplot2.plot()
 
-    # residual
-title = 'Data 2'
-plt.title(title)
-plt.plot(x2, y2-model2(x2))
-plt.show()
+#     # residual
+# title = 'Data 2'
+# plt.title(title)
+# plt.plot(x2, y2-model2(x2))
+# plt.show()
 
     # both datasets - no residuals
 splot = SplitPlot()
@@ -319,8 +315,8 @@ splot.addplot(fplot2)
 
 plt.tight_layout()
 plt.show()
-print()
-print()
+
+
 
 
 # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -331,12 +327,22 @@ print()
 # line_params = []
 
 # for i in list_of_models:
-#     each_line = [i.cent.val, i.b_eff.val, i.Gamma.val, i.scaling.val]
+#     each_line = [i.lam_0.val, i.b.val, i.d.val, i.tau_0.val]
 #     line_params.append(each_line)
 
 
 # star_info = [star_name, number_of_lines, line_params]
 
-# print(star_info)
-
-# # somehow add the star info to database here
+print()
+print()
+duration = time.time() - now
+print('Time taken: ' + str(duration))
+print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+print('RESULTS FOR ' + star_name)
+print('Line #    cent           b             d           tau_0')
+print('1         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj1.lam_0.val, obj1.b.val, obj1.d.val, obj1.tau_0.val))
+print('2         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj2.lam_0.val, obj2.b.val, obj2.d.val, obj2.tau_0.val))
+print('3         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj3.lam_0.val, obj3.b.val, obj3.d.val, obj3.tau_0.val))
+print('4         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj4.lam_0.val, obj4.b.val, obj4.d.val, obj4.tau_0.val))
+print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+print()
