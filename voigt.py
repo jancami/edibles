@@ -77,18 +77,16 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     # return scaled & shifted data
     return tau
 
-def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
+def voigtAbsorptionLine(lam, lam_0, b, d, tau_0, N=None, f=None):
     """
     Converts parameters to make proper call to voigtOpticalDepth
 
     INPUT:
-
     lam:          [float64]  (Angstroms)  Wavelength grid
     lam_0:        [float64]  (Angstroms)  Central wavelength
     b:            [float64]  (km/s)       Gaussian standard deviation
     d:            [float64]  (units)      Damping parameter
-
-    Choose:
+        ======================= EITHER ========================
         N:        [float64]  (units)      Column density
         f:        [float64]  (units)      Oscillator strength
         ========================  OR  ========================
@@ -96,7 +94,6 @@ def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
 
 
     OUTPUT:
-
     transmission:    [float64]  (units)  
 
     """
@@ -106,7 +103,6 @@ def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
         Nf = N * f
     else:
         Nf = tau_0 * cst.m_e.to('g').value * (cst.c.to('cm/s').value)**2 / (np.pi * (cst.e.esu.value)**2 * 1e8*lam_0)
-        print(Nf)
 
     tau = voigtOpticalDepth(lam, lam_0, b, d, Nf)
 

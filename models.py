@@ -16,6 +16,86 @@ __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
 
 
+class VoigtAbsorptionLine(ArithmeticModel):
+    """A one-dimensional continuum spline.
+
+    Attributes
+    ----------
+
+    lam:
+        [float64]  (Angstroms)  Wavelength grid
+
+    pars:
+        lam_0:
+            [float64]  (Angstroms)  Central wavelength
+        b:
+            [float64]  (km/s)       Gaussian standard deviation
+        d:
+            [float64]  (units)      Damping parameter
+
+        Choose:
+            N:        [float64]  (units)      Column density
+            f:        [float64]  (units)      Oscillator strength
+            ========================  OR  ========================
+            tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
+
+
+    """
+
+    def __init__(self, name='voigtabsorptionline'):
+
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
+        self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
+        self.N = Parameter(name, 'N', None, alwaysfrozen=True, hidden=True, min=0)
+        self.f = Parameter(name, 'f', None, alwaysfrozen=True, hidden=True, min=0)
+        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
+
+        ArithmeticModel.__init__(self, name, 
+                                (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
+
+    def calc(self, pars, x, *args, **kwargs):
+        '''
+        INPUT:
+
+        lam:
+            [float64]  (Angstroms)  Wavelength grid
+
+        pars:
+            lam_0:
+                [float64]  (Angstroms)  Central wavelength
+            b:
+                [float64]  (km/s)       Gaussian standard deviation
+            d:
+                [float64]  (units)      Damping parameter
+
+            Choose:
+                N:        [float64]  (units)      Column density
+                f:        [float64]  (units)      Oscillator strength
+                ========================  OR  ========================
+                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
+
+        OUTPUT:
+        line:
+            [ndarray]    Voigt profile
+        '''
+
+        lam_0, b, d, N, f, tau_0 = pars
+
+        if len(pars) == 5:
+
+            transmission = voigtAbsorptionLine(x, lam_0, b, d, N, f)
+
+        else:
+
+            transmission = voigtAbsorptionLine(x, lam_0, b, d, tau_0)
+
+
+        return transmission
+
+
+
+
 class Cont1D(ArithmeticModel):
     """
 
@@ -31,7 +111,7 @@ class Cont1D(ArithmeticModel):
 
     """
 
-    def __init__(self, name='cont1d'):
+    def __init__(self, name='continuum_flux_value'):
 
 
         self.y1 = Parameter(name, 'y1', 1.0, frozen=True)
@@ -255,82 +335,3 @@ class AstroVoigt1D(ArithmeticModel):
         return -y
 
 
-
-class VoigtAbsorptionLine(ArithmeticModel):
-    """A one-dimensional continuum spline.
-
-    Attributes
-    ----------
-
-    lam:
-        [float64]  (Angstroms)  Wavelength grid
-
-    pars:
-        lam_0:
-            [float64]  (Angstroms)  Central wavelength
-        b:
-            [float64]  (km/s)       Gaussian standard deviation
-        d:
-            [float64]  (units)      Damping parameter
-
-        Choose:
-            N:        [float64]  (units)      Column density
-            f:        [float64]  (units)      Oscillator strength
-            ========================  OR  ========================
-            tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
-
-
-    """
-
-    def __init__(self, name='voigtabsorptionline'):
-
-        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
-        self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
-        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
-        self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
-        self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
-        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
-
-        ArithmeticModel.__init__(self, name, 
-                                (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
-
-    def calc(self, pars, x, *args, **kwargs):
-        '''
-        INPUT:
-
-        lam:
-            [float64]  (Angstroms)  Wavelength grid
-
-        pars:
-            lam_0:
-                [float64]  (Angstroms)  Central wavelength
-            b:
-                [float64]  (km/s)       Gaussian standard deviation
-            d:
-                [float64]  (units)      Damping parameter
-
-            Choose:
-                N:        [float64]  (units)      Column density
-                f:        [float64]  (units)      Oscillator strength
-                ========================  OR  ========================
-                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
-
-        OUTPUT:
-        line:
-            [ndarray]    Voigt profile
-        '''
-        lam = x
-
-        lam_0, b, d, N, f, tau_0 = pars
-
-        print(lam_0, b, d, tau_0)
-        if len(pars) == 5:
-
-            transmission = voigtAbsorptionLine(lam, lam_0, b, d, N, f)
-
-        else:
-
-            transmission = voigtAbsorptionLine(lam, lam_0, b, d, tau_0)
-
-
-        return transmission
