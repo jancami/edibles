@@ -105,7 +105,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
     if (N is not None) and (f is not None):
         Nf = N * f
     else:
-        Nf = tau_0 * cst.m_e.value * cst.c.to('km/s').value / (np.pi * (cst.e.value)**2 * lam_0)
+        Nf = tau_0 * cst.m_e.to('g').value * (cst.c.to('cm/s').value)**2 / (np.pi * (cst.e.esu.value)**2 * 1e8*lam_0)
         print(Nf)
 
     tau = voigtOpticalDepth(lam, lam_0, b, d, Nf)

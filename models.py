@@ -10,7 +10,7 @@ from sherpa.models.parameter import Parameter
 from edibles.functions.parameter_converter import param_convert
 from edibles.functions.voigtMathematical import voigt_math
 
-from edibles.voigt import voigtOpticalDepth
+from edibles.voigt import voigtOpticalDepth, voigtAbsorptionLine
 
 __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
@@ -284,18 +284,15 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
     def __init__(self, name='voigtabsorptionline'):
 
-
-
         self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
         self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
-        # self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
-        # self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
+        self.N = Parameter(name, 'N', 1e12, frozen=False, min=0)
+        self.f = Parameter(name, 'f', 1e-4, frozen=False, min=0)
         self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
 
-
-        ArithmeticModel.__init__(self, name, (self.lam_0, self.b, self.d, self.tau_0))
-
+        ArithmeticModel.__init__(self, name, 
+                                (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
 
     def calc(self, pars, x, *args, **kwargs):
         '''
@@ -316,30 +313,24 @@ class VoigtAbsorptionLine(ArithmeticModel):
                 N:        [float64]  (units)      Column density
                 f:        [float64]  (units)      Oscillator strength
                 ========================  OR  ========================
-                tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
+                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
 
         OUTPUT:
         line:
             [ndarray]    Voigt profile
         '''
+        lam = x
 
+        lam_0, b, d, N, f, tau_0 = pars
+
+        print(lam_0, b, d, tau_0)
         if len(pars) == 5:
-            lam_0, b, d, N, f = pars
 
-            Nf = N * f
-
+            transmission = voigtAbsorptionLine(lam, lam_0, b, d, N, f)
 
         else:
-            lam_0, b, d, tau_0 = pars
 
-            Nf = tau_0 * cst.m_e.to('g').value * (cst.c.to('cm/s').value)**2 / (np.pi * (cst.e.esu.value)**2 * 1e8*lam_0)
+            transmission = voigtAbsorptionLine(lam, lam_0, b, d, tau_0)
 
-        lam = x
-        transmission = VoigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1)
-
-
-        # tau = voigtOpticalDepth(lam=x, lam_0=lam_0, b=b, d=d, Nf=Nf)
-
-        # line = np.exp(-tau)
 
         return transmission
