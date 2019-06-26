@@ -70,7 +70,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
     # multiply by tau_0
 
-    tau_0 = np.pi * (cst.e.value)**2 * Nf*lam_0 / (cst.m_e.value*cst.c.to('km/s').value)
+    tau_0 = np.pi * (cst.e.esu.value)**2 * Nf*1e8*lam_0 / (cst.m_e.to('g').value*(cst.c.to('cm/s').value)**2)
 
     tau = tau_0 * y
 
@@ -97,7 +97,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
 
     OUTPUT:
 
-    something:    [float64]  (units)  
+    transmission:    [float64]  (units)  
 
     """
 
@@ -110,9 +110,9 @@ def voigtAbsorptionLine(lam, lam_0, b, d, N=None, f=None, tau_0=0.1):
 
     tau = voigtOpticalDepth(lam, lam_0, b, d, Nf)
 
-    something = np.exp(-tau)
+    transmission = np.exp(-tau)
 
-    return something
+    return transmission
 
 
 if __name__ == "__main__":

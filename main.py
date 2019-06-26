@@ -37,13 +37,13 @@ peak_cutoff = 0.035
 
 b_1       = 2.6
 d_1       = .005
-tau_0_2   = 0.08
+tau_0_2   = 0.8
 
 b_2       = 2.2
 d_2       = .006
-tau_0_3   = 0.08
+tau_0_3   = 0.8
 
-tau_0_4 = 0.08
+tau_0_4 = 0.8
 
 tau_0_0 = 0.01
 tau_0_1 = 0.01
@@ -123,10 +123,12 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 line1 = VoigtAbsorptionLine()
 line1.lam_0          = wave[peaks[2]]
-line1.b              = b_1
+line1.b              =  b_1
 line1.d              = d_1
 line1.tau_0          = tau_0_2
 # print(line1)
+model *= line1
+
 
 line2 = VoigtAbsorptionLine()
 line2.lam_0          = wave[peaks[3]]
@@ -134,6 +136,8 @@ line2.b              = b_2
 line2.d              = d_2
 line2.tau_0          = tau_0_3
 # print(line2)
+model *= line2
+
 
 line3 = VoigtAbsorptionLine()
 line3.lam_0          = wave[peaks[4]]
@@ -141,42 +145,39 @@ line3.b              = b_2
 line3.d              = d_2
 line3.tau_0          = tau_0_4
 # print(line3)
-
-
-
-line4 = VoigtAbsorptionLine()
-line4.lam_0          = wave[peaks[0]]
-line4.b              = 1.5
-line4.d              = d_2
-line4.tau_0          = tau_0_0
-# print(line4)
-line5 = VoigtAbsorptionLine()
-line5.lam_0          = wave[peaks[1]]
-line5.b              = 1.5
-line5.d              = d_2
-line5.tau_0          = tau_0_1
-# print(line5)
-line6 = VoigtAbsorptionLine()
-line6.lam_0          = wave[peaks[5]]
-line6.b              = 1.5
-line6.d              = d_2
-line6.tau_0          = tau_0_5
-# print(line6)
-line7 = VoigtAbsorptionLine()
-line7.lam_0          = wave[peaks[6]]
-line7.b              = 1.5
-line7.d              = d_2
-line7.tau_0          = tau_0_6
-# print(line7)
-
-
-# multiply lines by model
-model *= line1
-model *= line2
 model *= line3
+
+
+# line4 = VoigtAbsorptionLine()
+# line4.lam_0          = wave[peaks[0]]
+# line4.b              = 1.5
+# line4.d              = d_2
+# line4.tau_0          = tau_0_0
+# # print(line4)
 # model *= line4
+
+# line5 = VoigtAbsorptionLine()
+# line5.lam_0          = wave[peaks[1]]
+# line5.b              = 1.5
+# line5.d              = d_2
+# line5.tau_0          = tau_0_1
+# # print(line5)
 # model *= line5
+
+# line6 = VoigtAbsorptionLine()
+# line6.lam_0          = wave[peaks[5]]
+# line6.b              = 1.5
+# line6.d              = d_2
+# line6.tau_0          = tau_0_5
+# # print(line6)
 # model *= line6
+
+# line7 = VoigtAbsorptionLine()
+# line7.lam_0          = wave[peaks[6]]
+# line7.b              = 1.5
+# line7.d              = d_2
+# line7.tau_0          = tau_0_6
+# # print(line7)
 # model *= line7
 
 
@@ -193,13 +194,13 @@ d = Data1D('2014-09-15', wave, flux)
     # Dataset 1
 dplot = DataPlot()
 dplot.prepare(d)
-# dplot.plot()
+dplot.plot()
 
 mplot = ModelPlot()
 mplot.prepare(d, model)
-# dplot.plot()
-# mplot.overplot()
-# plt.show()
+dplot.plot()
+mplot.overplot()
+plt.show()
 
 
 # =========================================
@@ -208,6 +209,12 @@ stat = LeastSq()
 
 opt = NelderMead()
 # opt = LevMar()
+
+opt.verbose = 3
+# opt.ftol = 1e-15
+# opt.xtol = 1e-15
+# opt.gtol = 1e-15
+# opt.epsfcn = 1e-15
 
 print(opt)
 
@@ -244,9 +251,196 @@ plt.xlabel('Wavelength (AA)', fontsize=12)
 plt.ylabel('Flux', fontsize=12)
 plt.tick_params(axis='both', labelsize=12)
 
-
+print()
+print()
 duration = time.time() - start
 print('Time taken: ' + str(duration))
 
 
+print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+print('RESULTS FOR ' + star_name)
+print('Line #    cent           b             d           tau_0')
+print('1         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line1.lam_0.val, line1.b.val, line1.d.val, line1.tau_0.val))
+print('2         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line2.lam_0.val, line2.b.val, line2.d.val, line2.tau_0.val))
+print('3         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line3.lam_0.val, line3.b.val, line3.d.val, line3.tau_0.val))
+# print('4         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj4.lam_0.val, obj4.b.val, obj4.d.val, obj4.tau_0.val))
+print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+print()
+print(type(line1.lam_0.val))
+
 plt.show()
+
+
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+# # create cont object and define parameters
+# # ----------------------------------------
+
+# cont2 = Cont1D()
+
+#     # always at least 2 points / 1 piece
+# if n_points >= 1:
+#     cont2.y1            = cont.y1.val
+#     cont2.y1.frozen     = False
+# if n_points >= 2:
+#     cont2.y2            = cont.y2.val
+#     cont2.y2.frozen     = False
+# if n_points >= 3:
+#     cont2.y3            = cont.y3.val
+#     cont2.y3.frozen     = False
+# if n_points >= 4:
+#     cont2.y4            = cont.y4.val
+#     cont2.y4.frozen     = False
+# if n_points >= 5:
+#     cont2.y5            = cont.y5.val
+#     cont2.y5.frozen     = False
+# if n_points >= 6:
+#     cont2.y6            = cont.y6.val
+#     cont2.y6.frozen     = False
+# if n_points >= 7:
+#     cont2.y7            = cont.y7.val
+#     cont2.y7.frozen     = False
+# if n_points >= 8:
+#     cont2.y8            = cont.y8.val
+#     cont2.y8.frozen     = False
+# # print(cont2)
+
+
+#     # add cont2 to model
+# model_new = cont2
+
+
+
+
+
+
+# line1_new = VoigtAbsorptionLine()
+# line1_new.lam_0          = line1.lam_0
+# line1_new.b              = line1.b
+# line1_new.d              = line1.d
+# line1_new.tau_0          = line1.tau_0
+# # print(line1)
+# model_new *= line1_new
+
+
+# line2_new = VoigtAbsorptionLine()
+# line2_new.lam_0          = line2.lam_0
+# line2_new.b              = line2.b
+# line2_new.d              = line2.d
+# line2_new.tau_0          = line2.tau_0
+# # print(line1)
+# model_new *= line2_new
+
+
+# line3_new = VoigtAbsorptionLine()
+# line3_new.lam_0          = line3.lam_0
+# line3_new.b              = line3.b
+# line3_new.d              = line3.d
+# line3_new.tau_0          = line3.tau_0
+# # print(line3)
+# model_new *= line3_new
+
+
+
+
+
+
+# # setup to fit / plot
+
+# d = Data1D('2014-09-15', wave, flux)
+
+
+# # ==========================================
+# # Initial guesses
+
+#     # Dataset 1
+# dplot = DataPlot()
+# dplot.prepare(d)
+# # dplot.plot()
+
+# mplot = ModelPlot()
+# mplot.prepare(d, model_new)
+# # dplot.plot()
+# # mplot.overplot()
+# # plt.show()
+
+
+# # =========================================
+# # Fitting happens here - don't break please
+# stat = LeastSq()
+
+# opt = NelderMead()
+# # opt = LevMar()
+
+# print(opt)
+
+# vfit = Fit(d, model_new, stat=stat, method=opt)
+
+
+# print(vfit)
+# vres = vfit.fit()
+
+# print()
+# print()
+# print('Did the fit succeed? [bool]')
+# print(vres.succeeded)
+# print()
+# print()
+# print(vres.format())
+
+# # =========================================
+# # Plotting after fit
+
+#     # Dataset 1
+# fplot = FitPlot()
+# mplot.prepare(d, model_new)
+# fplot.prepare(dplot, mplot)
+# fplot.plot()
+
+#     # residual
+# title = '2014-09-15'
+# plt.title(title)
+# plt.plot(wave, flux-model_new(wave))
+
+# # plt.xaxis(fontsize = )
+# plt.xlabel('Wavelength (AA)', fontsize=12)
+# plt.ylabel('Flux', fontsize=12)
+# plt.tick_params(axis='both', labelsize=12)
+
+# print()
+# print()
+# duration = time.time() - start
+# print('Time taken: ' + str(duration))
+
+
+# print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+# print('RESULTS FOR ' + star_name)
+# print('Line #    cent           b             d           tau_0')
+# print('1         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line1_new.lam_0.val, line1_new.b.val, line1_new.d.val, line1_new.tau_0.val))
+# print('2         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line2_new.lam_0.val, line2_new.b.val, line2_new.d.val, line2_new.tau_0.val))
+# print('3         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(line3_new.lam_0.val, line3_new.b.val, line3_new.d.val, line3_new.tau_0.val))
+# # print('4         {:.5f}     {:.5f}       {:.5f}     {:.5f}'.format(obj4.lam_0.val, obj4.b.val, obj4.d.val, obj4.tau_0.val))
+# print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+# print()
+
+# plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
