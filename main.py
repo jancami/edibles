@@ -8,9 +8,9 @@ from edibles.functions.load_fits_range import load_fits_range
 
 # file params
 star_name = 'HD170740'
-file = '/data/DR3_fits/HD170740/RED_860/HD170740_w860_n20_20140915_L.fits'
-xmin = 7661.
-xmax = 7670.
+file = '/data/DR3_fits/HD147084/BLUE_346/HD147084_w346_n10_20160419_B.fits'
+xmin = 3300.
+xmax = 3305.
 
 
 data = load_fits_range(file, xmin, xmax)
