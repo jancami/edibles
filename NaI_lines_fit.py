@@ -263,8 +263,8 @@ mplot2.prepare(d2, model2)
 # Fitting happens here - don't break please
 stat = LeastSq()
 
-# opt = LevMar()
-opt = NelderMead()
+opt = LevMar()
+# opt = NelderMead()
 
 print(opt)
 
