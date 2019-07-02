@@ -28,7 +28,6 @@ def fit(star_name, data, model):
     '''
 
 
-    start = time.time()
 
     wave, flux = data
 
@@ -59,6 +58,8 @@ def fit(star_name, data, model):
 
     # =========================================
     # Fitting happens here - don't break please
+    start = time.time()
+
     stat = LeastSq()
 
     opt = LevMar()
@@ -79,11 +80,7 @@ def fit(star_name, data, model):
 
     print()
     print()
-    print('Did the fit succeed? [bool]')
-    print(vres.succeeded)
-    print()
-    print()
-    # print(vres.format())
+    print(vres.format())
 
     # =========================================
     # Plotting after fit
