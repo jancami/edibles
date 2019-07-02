@@ -24,6 +24,7 @@ data = load_fits_range(file, xmin, xmax)
 wave, flux = data
 
 
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Continuum
 n_points = 4
