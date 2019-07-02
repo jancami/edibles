@@ -17,7 +17,7 @@ __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
 
 class VoigtAbsorptionLine(ArithmeticModel):
-    """A one-dimensional continuum spline.
+    """Voigt function for modelling absorption, with astronomical parameters.
 
     Attributes
     ----------
@@ -47,8 +47,8 @@ class VoigtAbsorptionLine(ArithmeticModel):
         self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
         self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
-        self.N = Parameter(name, 'N', None, alwaysfrozen=True, hidden=True, min=0)
-        self.f = Parameter(name, 'f', None, alwaysfrozen=True, hidden=True, min=0)
+        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0)
+        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0)
         self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
 
         ArithmeticModel.__init__(self, name, 
@@ -82,12 +82,10 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
         lam_0, b, d, N, f, tau_0 = pars
 
-        if len(pars) == 5:
 
+        if N != 999:
             transmission = voigtAbsorptionLine(x, lam_0, b, d, N, f)
-
         else:
-
             transmission = voigtAbsorptionLine(x, lam_0, b, d, tau_0)
 
 
@@ -270,7 +268,7 @@ class Voigt1D(ArithmeticModel):
 
 
 class AstroVoigt1D(ArithmeticModel):
-    """A one-dimensional continuum spline.
+    """Voigt function for modelling absorption, with astronomical parameters.
 
     Attributes
     ----------
