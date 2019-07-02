@@ -26,7 +26,7 @@ wave, flux = data
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Continuum
-n_points = 3
+n_points = 4
 cont = createCont(data, n_points)
 
 # ==========
