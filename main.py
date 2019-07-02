@@ -1,10 +1,10 @@
 import numpy as np
 from scipy.signal import find_peaks
 
-
 from edibles.fit import fit
 from edibles.create_model import createLine, createKnownLine, createKnownCloud, createCont
 from edibles.functions.load_fits_range import load_fits_range
+from edibles.functions.find_f_known import find_F
 
 
 # file params
@@ -69,13 +69,23 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 #     #  fit b params will not be accurate for telluric lines in KI region
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ion0 = 'Na I'
+wave0 = wave[peaks[0]]
+ion1 = 'Na I'
+wave1 = wave[peaks[1]]
+
+f0 = find_F(ion0, wave0)
+f1 = find_F(ion1, wave1)
+
+
+
 
 name    = ['line0', 'line1']
 lam_0   = [wave[peaks[0]], wave[peaks[1]]]
 b       = [2.0, 2.0]
 d       = [0.005, 0.005]
 N       = [0.14, 0.14]
-f_known = [8.26E-03, 4.06E-03]
+f_known = [f0, f1]
 
 cloud = createKnownCloud(name=name, num_lines=2, lam_0=lam_0, b=b, d=d, N=N, f_known=f_known)
 model *= cloud

@@ -1,5 +1,4 @@
 from edibles.functions.continuum_guess import generate_continuum
-from edibles.functions.find_f_known import find_F
 from edibles.models import Cont1D, VoigtAbsorptionLine
 
 
