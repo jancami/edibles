@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import find_peaks
 
 from edibles.fit import fit
-from edibles.create_model import createLine, createKnownLine, createKnownCloud, createCont
+from edibles.create_model import createLine, createKnownLine, createKnownVelocityLine, createKnownCloud, createCont
 from edibles.functions.load_fits_range import load_fits_range
 from edibles.functions.find_f_known import find_F
 
@@ -27,7 +27,7 @@ wave, flux = data
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Continuum
-n_points = 4
+n_points = 5
 cont = createCont(data, n_points)
 
 # ==========
@@ -55,45 +55,46 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# list_of_lines = []
-# for i in range(len(peaks)):
-#     name    = 'line' + str(i)
-#     lam_0   = wave[peaks[i]]
-#     b       = 1
-#     d       = .005
-#     N       = 0.14
-#     f_known = 6.82e-01
-#     line = createKnownLine(name, lam_0, b, d, N, f_known)
-#     # ===========
-#     model *= line
-#     list_of_lines.append(line)
-#     #  fit b params will not be accurate for telluric lines in KI region
+list_of_lines = []
+for i in range(len(peaks)):
+    name    = 'line' + str(i)
+    v_cloud = 10
+    lab_lam_0 = wave[peaks[i]] - 0.1
+    b       = 1
+    d       = .005
+    N       = 0.14
+    f_known = 6.82e-01
+    line = createKnownVelocityLine(name, v_cloud, lab_lam_0, b, d, N, f_known)
+    # ===========
+    model *= line
+    list_of_lines.append(line)
+    #  fit b params will not be accurate for telluric lines in KI region
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ion0 = 'Na I'
-wave0 = wave[peaks[0]]
-ion1 = 'Na I'
-wave1 = wave[peaks[1]]
+# ion0 = 'Na I'
+# wave0 = wave[peaks[0]]
+# ion1 = 'Na I'
+# wave1 = wave[peaks[1]]
 
-f0 = find_F(ion0, wave0)
-f1 = find_F(ion1, wave1)
-
-
+# f0 = find_F(ion0, wave0)
+# f1 = find_F(ion1, wave1)
 
 
-name    = ['line0', 'line1']
-lam_0   = [wave[peaks[0]], wave[peaks[1]]]
-b       = [2.0, 2.0]
-d       = [0.005, 0.005]
-N       = [0.14, 0.14]
-f_known = [f0, f1]
 
-cloud = createKnownCloud(name=name, num_lines=2, lam_0=lam_0, b=b, d=d, N=N, f_known=f_known)
-model *= cloud
+
+# name    = ['line0', 'line1']
+# lam_0   = [wave[peaks[0]], wave[peaks[1]]]
+# b       = [2.0, 2.0]
+# d       = [0.005, 0.005]
+# N       = [0.14, 0.14]
+# f_known = [f0, f1]
+
+# cloud = createKnownCloud(name=name, num_lines=2, lam_0=lam_0, b=b, d=d, N=N, f_known=f_known)
+# model *= cloud
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fit_model = fit(star_name, data, model)
 
-for line in cloud:
+for line in model:
     print(line)
