@@ -1,7 +1,7 @@
 import astropy.constants as cst
 
 from edibles.functions.continuum_guess import generate_continuum
-from edibles.models import Cont1D, VoigtAbsorptionLine
+from edibles.models import Cont1D, VoigtAbsorptionLine, KnownVelocityLine
 
 
 def createLine(name, lam_0, b, d, tau_0):
@@ -65,8 +65,8 @@ def createKnownLine(name, lam_0, b, d, N, f_known):
     return line
 
 
-def createKnownVelocityLine(name, v_cloud, lab_lam_0, b, d, N, f_known):
-    '''Creates an instance of a VoigtAbsorptionLine object 
+def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
+    '''Creates an instance of a KnownVelocityLine object 
     where the oscillator strength is KNOWN and the x axis is in velocity space
 
     INPUT:
@@ -75,33 +75,24 @@ def createKnownVelocityLine(name, v_cloud, lab_lam_0, b, d, N, f_known):
 
         line params: [floats]
             v_cloud
-            lab_lam_0
             b
             d
             N
             f_known
+            lab_lam_0
     OUTPUT:
         line model [object instance]
 
     '''
-    lam_shift = v_cloud * lab_lam_0 / cst.c.to('km/s').value
 
-    lam_0 = lab_lam_0 + lam_shift
+    line = KnownVelocityLine(name=name)
 
-    line = VoigtAbsorptionLine(name=name)
-
-    line.N.hidden = False
-    line.f.hidden = False
-    line.tau_0.hidden = True
-
-    line.N.frozen = False
-    line.tau_0.frozen = True
-
-    line.lam_0          = lam_0
+    line.v_cloud        = v_cloud
     line.b              = b
     line.d              = d
     line.N              = N
     line.f              = f_known
+    line.lab_lam_0      = lab_lam_0
 
     return line
 

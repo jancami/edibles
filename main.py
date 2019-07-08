@@ -1,10 +1,13 @@
 import numpy as np
 from scipy.signal import find_peaks
+import astropy.constants as cst
 
 from edibles.fit import fit
 from edibles.create_model import createLine, createKnownLine, createKnownVelocityLine, createKnownCloud, createCont
 from edibles.functions.load_fits_range import load_fits_range
 from edibles.functions.find_f_known import find_F
+from edibles.edibles_spectrum import edibles_spectrum
+from edibles.edibles_settings import *
 
 
 # file params
@@ -22,6 +25,23 @@ xmax = 3305.
 
 data = load_fits_range(file, xmin, xmax)
 wave, flux = data
+
+
+# sp = edibles_spectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
+# print("Barycentric Velocity is", sp.v_bary)
+# wave,flux = sp.GetSpectrum()
+# plt.plot(wave, flux)
+# axes = plt.gca()
+# axes.set_xlim([7660,7705])
+# axes.set_ylim([0,160])
+# plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
+# plt.show()
+
+
+
+
+
+
 
 
 
@@ -55,16 +75,31 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+lab_wave = 3302.369
+
+wave = (wave - lab_wave)/wave * cst.c.to('km/s').value
+
+data = wave, flux
+
+
+lab_list = [3302.369, 3302.978]
+
+v_cloud = 1
+lam_0 = lab_list[0] / (1. - v_cloud/cst.c.to('km/s').value)
+print(v_cloud)
+print(lam_0)
+
 list_of_lines = []
 for i in range(len(peaks)):
     name    = 'line' + str(i)
-    v_cloud = 10
-    lab_lam_0 = wave[peaks[i]] - 0.1
+    v_cloud = 1
+    lab_lam_0 = lab_list[i]
     b       = 1
     d       = .005
-    N       = 0.14
+    N       = 0.1
     f_known = 6.82e-01
-    line = createKnownVelocityLine(name, v_cloud, lab_lam_0, b, d, N, f_known)
+    line = createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0)
     # ===========
     model *= line
     list_of_lines.append(line)

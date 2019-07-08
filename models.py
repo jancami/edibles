@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import wofz
 from scipy.interpolate import CubicSpline
+import astropy.constants as cst
 
 
 from sherpa.models.model import ArithmeticModel
@@ -59,7 +60,6 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
         lam:
             [float64]  (Angstroms)  Wavelength grid
-
         pars:
             lam_0:
                 [float64]  (Angstroms)  Central wavelength
@@ -75,12 +75,12 @@ class VoigtAbsorptionLine(ArithmeticModel):
                 tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
 
         OUTPUT:
+
         line:
             [ndarray]    Voigt profile
         '''
 
         lam_0, b, d, N, f, tau_0 = pars
-
 
         if N != 999:
             transmission = voigtAbsorptionLine(x, lam_0, b, d, N, f)
@@ -90,6 +90,76 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
         return transmission
 
+
+
+class KnownVelocityLine(ArithmeticModel):
+    """Voigt function for modelling absorption, with KNOWN astronomical parameters.
+
+    Attributes
+    ----------
+    pars:
+        v_cloud:
+            [float64]  (km/s)       Velocity of cloud
+        b:
+            [float64]  (km/s)       Gaussian standard deviation
+        d:
+            [float64]  (units)      Damping parameter
+        N:  
+            [float64]  (1/cm^2)     Column density
+        f:
+            [float64]  (unitless?)  Oscillator strength
+        lab_lam_0:
+            [float64]  (Angstroms)  Lab rest wavelength (AIR)
+    """
+
+    def __init__(self, name='Known Velocity Line'):
+
+        self.v_cloud = Parameter(name, 'v_cloud', 0.0, frozen=False, min=-200, max=200)
+        self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
+        self.N = Parameter(name, 'N', 999, frozen=False, hidden=False, min=0)
+        self.f = Parameter(name, 'f', 999, frozen=True, hidden=False, min=0)
+        self.lab_lam_0 = Parameter(name, 'lab_lam_0', 5000, frozen=True)
+
+        ArithmeticModel.__init__(self, name, 
+                                (self.v_cloud, self.b, self.d, self.N, self.f, self.lab_lam_0))
+
+    def calc(self, pars, x, *args, **kwargs):
+        '''
+        INPUT:
+
+        x:
+            [float64]  (Angstroms)  Wavelength grid
+        pars:
+            v_cloud:
+                [float64]  (km/s)       Velocity of cloud
+            b:
+                [float64]  (km/s)       Gaussian standard deviation
+            d:
+                [float64]  (units)      Damping parameter
+            N:  
+                [float64]  (1/cm^2)     Column density
+            f:
+                [float64]  (unitless?)  Oscillator strength
+            lab_lam_0:
+                [float64]  (Angstroms)  Lab rest wavelength (AIR)
+
+        OUTPUT:
+
+        line:
+            [ndarray]    Voigt profile
+        '''
+
+        v_cloud, b, d, N, f, lab_lam_0 = pars
+
+        lam_0 = lab_lam_0 / (1. - v_cloud/cst.c.to('km/s').value)
+        # print(v_cloud)
+        # print(lam_0)
+
+
+        transmission = voigtAbsorptionLine(x, v_cloud, b, d, N, f)
+
+        return transmission
 
 
 
