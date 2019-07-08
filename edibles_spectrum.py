@@ -30,7 +30,7 @@ class edibles_spectrum:
 
 
 
-sp = edibles_spectrum(datadir+"/FITS/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits")
+sp = edibles_spectrum(datadir+"/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits")
 print("Barycentric Velocity is", sp.v_bary)
 wave,flux = sp.GetSpectrum()
 plt.plot(wave, flux)
