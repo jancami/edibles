@@ -1,10 +1,11 @@
 import numpy as np
+from edibles.edibles_settings import edibles_pythondir
 
-class atomic_lines:
+class AtomicLines:
     
        
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self):
+        self.filename = edibles_pythondir+'/atomic_lines.txt'
         with open(self.filename) as f:
 
             first_line = f.readline()
@@ -42,7 +43,7 @@ class atomic_lines:
 
             self.data = np.asarray(data)
    
-    def find_index(self, ion, wave):
+    def findIndex(self, ion, wave):
 
         indeces = []
         species = self.species
@@ -62,23 +63,23 @@ class atomic_lines:
     
     def get_f_known(self, ion, wave):
         
-        index = self.find_index(ion, wave)
+        index = self.findIndex(ion, wave)
         f_known = float(self.f_ik[index])
         return f_known
 
     def get_lvl_en_cm_1(self, ion, wave):
 
-        index = self.find_index(ion, wave)
+        index = self.findIndex(ion, wave)
         lvl_en_cm_1 = self.LVL_EN_CM_1[index]
         return lvl_en_cm_1
 
 
 if __name__ == "__main__":
 
-    obj = atomic_lines('/home/ranjan/python/edibles/atomic_lines.txt')
+    obj = AtomicLines()
 
     ion = 'Na I'
-    wave = 3302.7
+    wave = 5895.9
 
     print(obj.get_f_known(ion, wave))
     print(obj.get_lvl_en_cm_1(ion, wave))
