@@ -96,6 +96,7 @@ def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
 
     return line
 
+
 def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
     '''Creates multiple instances of a VoigtAbsorptionLine object 
     where the Oscillator strength is KNOWN
@@ -124,6 +125,42 @@ def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
             line.b = line0.b
 
             cloud *= line
+
+    return cloud
+
+
+def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam_0):
+    '''Creates multiple instances of a KnownVelocityLine object 
+    where the oscillator strength is KNOWN and the x axis is in velocity space
+
+    INPUT:
+        name:           [list of strings]
+        data:           [tuple]  In the form (wave, flux)
+        num_lines:      [int]
+
+
+        line params:
+            v_cloud     [float]
+            b           [list of floats]
+            d           [list of floats]
+            N           [float]
+            f_known     [list of floats]
+            lab_lam_0   [list of floats]
+    OUTPUT:
+        line model [object instance]
+
+    '''
+
+    line0 = createKnownVelocityLine(name[0], v_cloud, b[0], d[0], N, f_known[0], lab_lam_0[0])
+    cloud = line0
+
+    if num_lines > 1:
+        for i in range(1, num_lines):
+            line = createKnownVelocityLine(name[i], v_cloud, b[i], d[i], N, f_known[i], lab_lam_0[i])
+            line.v_cloud = line0.v_cloud
+            line.N = line0.N
+            cloud *= line
+
     return cloud
 
 

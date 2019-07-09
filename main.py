@@ -3,9 +3,9 @@ from scipy.signal import find_peaks
 import astropy.constants as cst
 
 from edibles.fit import fit
-from edibles.create_model import createLine, createKnownLine, createKnownVelocityLine, createKnownCloud, createCont
+from edibles.create_model import *
 from edibles.functions.load_fits_range import load_fits_range
-from edibles.functions.find_f_known import find_F
+from edibles.functions.find_f_known import AtomicLines
 from edibles.edibles_spectrum import edibles_spectrum
 from edibles.edibles_settings import *
 
@@ -75,47 +75,44 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-lab_wave = 3302.369
-
-wave = (wave - lab_wave)/wave * cst.c.to('km/s').value
-
-data = wave, flux
+# lab_list = [3302.369, 3302.978]
 
 
-lab_list = [3302.369, 3302.978]
+# wave = (wave - lab_list[0])/wave * cst.c.to('km/s').value
 
-v_cloud = 1
-lam_0 = lab_list[0] / (1. - v_cloud/cst.c.to('km/s').value)
-print(v_cloud)
-print(lam_0)
+# data = wave, flux
 
-list_of_lines = []
-for i in range(len(peaks)):
-    name    = 'line' + str(i)
-    v_cloud = 1
-    lab_lam_0 = lab_list[i]
-    b       = 1
-    d       = .005
-    N       = 0.1
-    f_known = 6.82e-01
-    line = createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0)
-    # ===========
-    model *= line
-    list_of_lines.append(line)
-    #  fit b params will not be accurate for telluric lines in KI region
+
+# v_cloud_list = [1, 50]
+# lam_0 = lab_list[0] / (1. - v_cloud_list[0]/cst.c.to('km/s').value)
+# # print(v_cloud)
+# print(lam_0)
+
+# list_of_lines = []
+# for i in range(len(peaks)):
+#     name    = 'line' + str(i)
+#     v_cloud = v_cloud_list[i]
+#     lab_lam_0 = lab_list[0]
+#     b       = 1
+#     d       = .005
+#     N       = 0.1
+#     f_known = 6.82e-01
+#     line = createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0)
+#     # ===========
+#     model *= line
+#     list_of_lines.append(line)
+#     #  fit b params will not be accurate for telluric lines in KI region
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 # ion0 = 'Na I'
 # wave0 = wave[peaks[0]]
 # ion1 = 'Na I'
 # wave1 = wave[peaks[1]]
 
-# f0 = find_F(ion0, wave0)
-# f1 = find_F(ion1, wave1)
-
-
-
+# AtomicLineList = AtomicLines()
+# f0 = AtomicLineList.get_f_known(ion0, wave0)
+# f1 = AtomicLineList.get_f_known(ion1, wave1)
 
 # name    = ['line0', 'line1']
 # lam_0   = [wave[peaks[0]], wave[peaks[1]]]
@@ -126,6 +123,28 @@ for i in range(len(peaks)):
 
 # cloud = createKnownCloud(name=name, num_lines=2, lam_0=lam_0, b=b, d=d, N=N, f_known=f_known)
 # model *= cloud
+
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ion0 = 'Na I'
+wave0 = wave[peaks[0]]
+ion1 = 'Na I'
+wave1 = wave[peaks[1]]
+
+AtomicLineList = AtomicLines()
+f0 = AtomicLineList.get_f_known(ion0, wave0)
+f1 = AtomicLineList.get_f_known(ion1, wave1)
+
+name    = ['line0', 'line1']
+v_cloud = 20
+b       = [2.0, 2.0]
+d       = [0.005, 0.005]
+N       = 0.14
+f_known = [f0, f1]
+lab_list = [3302.369, 3302.978]
+
+cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
+model *= cloud
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
