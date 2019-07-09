@@ -151,14 +151,16 @@ def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam
 
     '''
 
-    line0 = createKnownVelocityLine(name[0], v_cloud, b[0], d[0], N, f_known[0], lab_lam_0[0])
+    line0 = createKnownVelocityLine(name[0], v_cloud, b, d, N, f_known[0], lab_lam_0[0])
     cloud = line0
 
     if num_lines > 1:
         for i in range(1, num_lines):
-            line = createKnownVelocityLine(name[i], v_cloud, b[i], d[i], N, f_known[i], lab_lam_0[i])
+            line = createKnownVelocityLine(name[i], v_cloud, b, d, N, f_known[i], lab_lam_0[i])
             line.v_cloud = line0.v_cloud
             line.N = line0.N
+            line.b = line0.b
+            line.d = line0.d
             cloud *= line
 
     return cloud

@@ -75,33 +75,33 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# lab_list = [3302.369, 3302.978]
+lab_list = [3302.369, 3302.978]
 
 
-# wave = (wave - lab_list[0])/wave * cst.c.to('km/s').value
+wave = (wave - lab_list[0])/wave * cst.c.to('km/s').value
 
-# data = wave, flux
+data = wave, flux
 
 
-# v_cloud_list = [1, 50]
-# lam_0 = lab_list[0] / (1. - v_cloud_list[0]/cst.c.to('km/s').value)
-# # print(v_cloud)
-# print(lam_0)
+v_cloud_list = [1, 50]
+lam_0 = lab_list[0] / (1. - v_cloud_list[0]/cst.c.to('km/s').value)
+# print(v_cloud)
+print(lam_0)
 
-# list_of_lines = []
-# for i in range(len(peaks)):
-#     name    = 'line' + str(i)
-#     v_cloud = v_cloud_list[i]
-#     lab_lam_0 = lab_list[0]
-#     b       = 1
-#     d       = .005
-#     N       = 0.1
-#     f_known = 6.82e-01
-#     line = createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0)
-#     # ===========
-#     model *= line
-#     list_of_lines.append(line)
-#     #  fit b params will not be accurate for telluric lines in KI region
+list_of_lines = []
+for i in range(len(peaks)):
+    name    = 'line' + str(i)
+    v_cloud = v_cloud_list[i]
+    lab_lam_0 = lab_list[0]
+    b       = 1
+    d       = .005
+    N       = 0.1
+    f_known = 6.82e-01
+    line = createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0)
+    # ===========
+    model *= line
+    list_of_lines.append(line)
+    #  fit b params will not be accurate for telluric lines in KI region
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -126,25 +126,25 @@ peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ion0 = 'Na I'
-wave0 = wave[peaks[0]]
-ion1 = 'Na I'
-wave1 = wave[peaks[1]]
+# ion0 = 'Na I'
+# wave0 = 3302.3
+# ion1 = 'Na I'
+# wave1 = 3302.9
 
-AtomicLineList = AtomicLines()
-f0 = AtomicLineList.get_f_known(ion0, wave0)
-f1 = AtomicLineList.get_f_known(ion1, wave1)
+# AtomicLineList = AtomicLines()
+# f0 = AtomicLineList.get_f_known(ion0, wave0)
+# f1 = AtomicLineList.get_f_known(ion1, wave1)
 
-name    = ['line0', 'line1']
-v_cloud = 20
-b       = [2.0, 2.0]
-d       = [0.005, 0.005]
-N       = 0.14
-f_known = [f0, f1]
-lab_list = [3302.369, 3302.978]
+# name    = ['line0', 'line1']
+# v_cloud = 20
+# b       = 2
+# d       = 0.005
+# N       = 0.14
+# f_known = [f0, f1]
+# lab_list = [3302.369, 3302.978]
 
-cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
-model *= cloud
+# cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
+# model *= cloud
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
