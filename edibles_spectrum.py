@@ -1,7 +1,7 @@
 import numpy as np
 from astropy.io import fits
 import matplotlib.pyplot as plt
-from edibles_settings import *
+from edibles.edibles_settings import *
 
 class edibles_spectrum:
 # This object will contain a spectrum from EDIBLES, and a set of methods to operate on the data. 
