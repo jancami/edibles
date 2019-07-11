@@ -6,7 +6,7 @@ from edibles.fit import fit
 from edibles.create_model import *
 from edibles.functions.load_fits_range import load_fits_range
 from edibles.functions.find_f_known import AtomicLines
-from edibles.edibles_spectrum import edibles_spectrum
+from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 
 
@@ -29,28 +29,15 @@ wave1 = 3302.9
 lab_list = [3302.369, 3302.978]
 
 
-
-
-data = load_fits_range(file, xmin, xmax)
+sp = EdiblesSpectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
+data = sp.getSpectrumRange(xmin,xmax)
 wave, flux = data
-
-
-# sp = edibles_spectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
-# print("Barycentric Velocity is", sp.v_bary)
-# wave,flux = sp.GetSpectrum()
-# plt.plot(wave, flux)
-# axes = plt.gca()
-# axes.set_xlim([7660,7705])
-# axes.set_ylim([0,160])
-# plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
-# plt.show()
-
 
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Continuum
-n_points = 5
+n_points = 7
 cont = createCont(data, n_points)
 
 # ==========
