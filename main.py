@@ -4,7 +4,6 @@ import astropy.constants as cst
 
 from edibles.fit import fit
 from edibles.create_model import *
-from edibles.functions.load_fits_range import load_fits_range
 from edibles.functions.find_f_known import AtomicLines
 from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
@@ -30,7 +29,7 @@ lab_list = [3302.369, 3302.978]
 
 
 sp = EdiblesSpectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
-data = sp.getSpectrumRange(xmin,xmax)
+data = sp.getSpectrum(xmin,xmax)
 wave, flux = data
 
 
@@ -92,14 +91,14 @@ f0 = AtomicLineList.get_f_known(ion0, wave0)
 f1 = AtomicLineList.get_f_known(ion1, wave1)
 
 name    = ['line0', 'line1']
-v_cloud = 20
+v_cloud = 18
 b       = 2
 d       = 0.005
-N       = 14
+N       = 21
 f_known = [f0, f1]
 
 cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
-model *= cloud
+# model *= cloud
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
