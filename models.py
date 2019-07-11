@@ -155,8 +155,9 @@ class KnownVelocityLine(ArithmeticModel):
         lam_0 = lab_lam_0 * (1. + v_cloud/cst.c.to('km/s').value)
         # print(v_cloud)
 
+        tau_0 = None
 
-        transmission = voigtAbsorptionLine(x, lam_0, b, d, N, f)
+        transmission = voigtAbsorptionLine(x, lam_0=lam_0, b=b, d=d, tau_0=tau_0, N=N, f=f)
 
         return transmission
 

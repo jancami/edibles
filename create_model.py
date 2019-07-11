@@ -1,5 +1,3 @@
-import astropy.constants as cst
-
 from edibles.functions.continuum_guess import generate_continuum
 from edibles.models import Cont1D, VoigtAbsorptionLine, KnownVelocityLine
 
@@ -72,7 +70,6 @@ def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
     INPUT:
         name:
         data:        [tuple]  In the form (wave, flux)
-
         line params: [floats]
             v_cloud
             b
@@ -80,13 +77,12 @@ def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
             N
             f_known
             lab_lam_0
+
     OUTPUT:
         line model [object instance]
-
     '''
 
     line = KnownVelocityLine(name=name)
-
     line.v_cloud        = v_cloud
     line.b              = b
     line.d              = d
@@ -111,10 +107,11 @@ def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
             d
             N
             f_known
+
     OUTPUT:
         line model [object instance]
-
     '''
+
     line0 = createKnownLine(name[0], lam_0[0], b[0], d[0], N[0], f_known[0])
     cloud = line0
 
@@ -137,8 +134,6 @@ def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam
         name:           [list of strings]
         data:           [tuple]  In the form (wave, flux)
         num_lines:      [int]
-
-
         line params:
             v_cloud     [float]
             b           [list of floats]
@@ -146,9 +141,9 @@ def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam
             N           [float]
             f_known     [list of floats]
             lab_lam_0   [list of floats]
+
     OUTPUT:
         line model [object instance]
-
     '''
 
     line0 = createKnownVelocityLine(name[0], v_cloud, b, d, N, f_known[0], lab_lam_0[0])
@@ -161,6 +156,7 @@ def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam
             line.N = line0.N
             line.b = line0.b
             line.d = line0.d
+
             cloud *= line
 
     return cloud
@@ -176,8 +172,8 @@ def createCont(data, n_points):
 
     OUTPUT:
         line model [object instance]
-
     '''
+
     n_piece = n_points - 1
     y_spline, y_points= generate_continuum(data, delta_v=1000, n_piece=n_piece)
 
