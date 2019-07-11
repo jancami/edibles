@@ -57,8 +57,10 @@ class AtomicLines:
         for i in indeces:
             wave_table = float(wavelength[i])
             diff.append(np.abs(wave_table-wave))
-
-        index = np.argmin(diff)
+        
+        min_val_index = np.argmin(diff)
+        index = indeces[min_val_index]
+        
         return index
     
     def get_f_known(self, ion, wave):
@@ -78,8 +80,8 @@ if __name__ == "__main__":
 
     obj = AtomicLines()
 
-    ion = 'Na I'
-    wave = 5895.9
+    ion = 'K I'
+    wave = 5000
 
     print(obj.get_f_known(ion, wave))
     print(obj.get_lvl_en_cm_1(ion, wave))
