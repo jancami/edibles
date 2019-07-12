@@ -1,10 +1,9 @@
 import numpy as np
 from scipy.signal import find_peaks
-import astropy.constants as cst
 
 from edibles.fit import fit
 from edibles.create_model import *
-from edibles.functions.find_f_known import AtomicLines
+from edibles.functions.atomic_line_tool import AtomicLines
 from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 
@@ -25,14 +24,10 @@ ion0 = 'Na I'
 wave0 = 3302.3
 ion1 = 'Na I'
 wave1 = 3302.9
-lab_list = [3302.369, 3302.978]
-
 
 sp = EdiblesSpectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
 data = sp.getSpectrum(xmin,xmax)
 wave, flux = data
-
-
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Continuum
@@ -41,12 +36,6 @@ cont = createCont(data, n_points)
 
 # ==========
 model = cont
-
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Lines
-peak_cutoff = 0.3
-prominence = (np.max(flux) - np.min(flux)) * peak_cutoff
-peaks, _ = find_peaks(-flux, prominence=prominence)
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -90,6 +79,10 @@ AtomicLineList = AtomicLines()
 f0 = AtomicLineList.get_f_known(ion0, wave0)
 f1 = AtomicLineList.get_f_known(ion1, wave1)
 
+lab_wave0 = AtomicLineList.getLabWavelength(ion0, wave0)
+lab_wave1 = AtomicLineList.getLabWavelength(ion1, wave1)
+lab_list = [lab_wave0, lab_wave1]
+
 name    = ['line0', 'line1']
 v_cloud = 18
 b       = 2
@@ -98,7 +91,9 @@ N       = 21
 f_known = [f0, f1]
 
 cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
-# model *= cloud
+
+for line in cloud:
+    model *= line
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
