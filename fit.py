@@ -120,24 +120,28 @@ def multifit(star_name, data_list, model_list, silent=False):
         # Dataset 1
     dplot1 = DataPlot()
     dplot1.prepare(d1)
-    dplot1.plot()
+    if silent is False:
+        dplot1.plot()
 
     mplot1 = ModelPlot()
     mplot1.prepare(d1, model1)
-    dplot1.plot()
-    mplot1.overplot()
-    plt.show()
+    if silent is False:
+        dplot1.plot()
+        mplot1.overplot()
+        plt.show()
 
         # Dataset 2
     dplot2 = DataPlot()
     dplot2.prepare(d2)
-    dplot2.plot()
+    if silent is False:
+        dplot2.plot()
 
     mplot2 = ModelPlot()
     mplot2.prepare(d2, model2)
-    dplot2.plot()
-    mplot2.overplot()
-    plt.show()
+    if silent is False:
+        dplot2.plot()
+        mplot2.overplot()
+        plt.show()
 
     # # =========================================
     # # Fitting happens here - don't break please
@@ -166,38 +170,38 @@ def multifit(star_name, data_list, model_list, silent=False):
 
     # # =========================================
     # # Plotting after fit
+    if silent is False:
+            # Dataset 1
+        fplot1 = FitPlot()
+        mplot1.prepare(d1, model1)
+        fplot1.prepare(dplot1, mplot1)
+        fplot1.plot()
 
-        # Dataset 1
-    fplot1 = FitPlot()
-    mplot1.prepare(d1, model1)
-    fplot1.prepare(dplot1, mplot1)
-    fplot1.plot()
+            # residual
+        title = 'Data 1'
+        plt.title(title)
+        plt.plot(wave1, flux1-model1(wave1))
+        plt.show()
 
-        # residual
-    title = 'Data 1'
-    plt.title(title)
-    plt.plot(wave1, flux1-model1(wave1))
-    plt.show()
+            # Dataset 2
+        fplot2 = FitPlot()
+        mplot2.prepare(d2, model2)
+        fplot2.prepare(dplot2, mplot2)
+        fplot2.plot()
 
-        # Dataset 2
-    fplot2 = FitPlot()
-    mplot2.prepare(d2, model2)
-    fplot2.prepare(dplot2, mplot2)
-    fplot2.plot()
+            # residual
+        title = 'Data 2'
+        plt.title(title)
+        plt.plot(wave2, flux2-model2(wave2))
+        plt.show()
 
-        # residual
-    title = 'Data 2'
-    plt.title(title)
-    plt.plot(wave2, flux2-model2(wave2))
-    plt.show()
+            # both datasets - no residuals
+        splot = SplitPlot()
+        splot.addplot(fplot1)
+        splot.addplot(fplot2)
 
-        # both datasets - no residuals
-    splot = SplitPlot()
-    splot.addplot(fplot1)
-    splot.addplot(fplot2)
-
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
 
     return model_list
