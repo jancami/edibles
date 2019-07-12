@@ -28,25 +28,29 @@ class obsfile:
 		self.object=''
 		self.date_obs=''
 		self.setting=''
-		self.wave_min=0.
-		self.wave_max=0.
+		self.wave_min=''
+		self.wave_max=''
 		#self.order=0
 		#self.merged=False
 
 n_files = len(allfitsfiles)
 full_list = [obsfile() for i in range(n_files)]
 
-for count in range(len(allfitsfiles[0:10])): 
+for count in range(len(allfitsfiles)): 
 	full_list[count].filename = allfitsfiles[count]
 	#print(datadir + full_list[count].filename)
 	spec = edibles_spectrum(datadir + full_list[count].filename)
 	#print(spec.header)
 	full_list[count].object = spec.header["OBJECT"]
 	full_list[count].date_obs = spec.header["DATE-OBS"]
-	full_list[count].setting = spec.header["HIERARCH ESO INS GRAT2 WLEN"]
+	print(allfitsfiles[count])
+	if "HIERARCH ESO INS GRAT1 WLEN" in spec.header: 
+		full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT1 WLEN"])
+	if "HIERARCH ESO INS GRAT2 WLEN" in spec.header: 
+		full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT2 WLEN"])
 	wave,flux = spec.GetSpectrum()
-	full_list[count].wave_min = np.min(wave)
-	full_list[count].wave_max = np.max(wave)
+	full_list[count].wave_min = "{:.1f}".format(np.min(wave))
+	full_list[count].wave_max = "{:.1f}".format(np.max(wave))
 	del spec
 
 # Create arrays of formatted strings to print to a csv file now. 

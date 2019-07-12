@@ -6,7 +6,7 @@ from edibles_settings import *
 class EdiblesSpectrum:
 # This object will contain a spectrum from EDIBLES, and a set of methods to operate on the data. 
 
-    def loadSpectrum (self):
+    def load_spectrum (self):
         # Assume the file is a DR3 product here. 
         hdu = fits.open(self.filename)
         self.header = hdu[0].header
@@ -23,26 +23,18 @@ class EdiblesSpectrum:
 
     def __init__(self, filename):
         self.filename = filename
-        self.loadSpectrum()
+        self.load_spectrum()
 
-    def getSpectrum (self):
+    def getSpectrum(self, xmin=None, xmax=None):
+
+        if (xmin is not None) and (xmax is not None):
+
+            assert xmin < xmax, 'xmin must be less than xmax'
+            idx = (self.wave > xmin) * (self.wave < xmax)
+
+            return self.wave[np.where(idx)], self.flux[np.where(idx)]
         return self.wave, self.flux
 
-
-    def getSpectrumRange(self, xmin, xmax):
-
-        assert xmin < xmax, 'xmin must be less than xmax'
-
-
-        # create data subset
-        min_idx = (np.abs(self.wave - xmin)).argmin()
-        max_idx = (np.abs(self.wave - xmax)).argmin()
-        wave_range = self.wave[min_idx:max_idx]
-        flux_range = self.flux[min_idx:max_idx]
-
-        data = (wave_range, flux_range)
-
-        return data
 
 if __name__ == '__main__':
     sp = EdiblesSpectrum(datadir+"/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits")
@@ -55,7 +47,7 @@ if __name__ == '__main__':
     plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
     plt.show()
 
-    wave_range, flux_range = sp.getSpectrumRange(7660,7705)
+    wave_range, flux_range = sp.getSpectrum(7660,7705)
     plt.plot(wave_range, flux_range)
     plt.show()
 
