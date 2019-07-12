@@ -6,7 +6,7 @@ from scipy.signal import find_peaks
 from heapq import nsmallest
 from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
-from edibles.functions.find_f_known import AtomicLines
+from edibles.functions.atomic_line_tool import AtomicLines
 
 
 def wavelength_at_peaks(wave, flux, n=2):
