@@ -37,17 +37,13 @@ class EdiblesSpectrum:
 
 
 if __name__ == '__main__':
-    sp = EdiblesSpectrum(datadir+"/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits")
+    sp = EdiblesSpectrum(datadir+"/HD57061/RED_564/HD57061_w564_n24_20141010_U.fits")
     print("Barycentric Velocity is", sp.v_bary)
     wave,flux = sp.getSpectrum()
     plt.plot(wave, flux)
     axes = plt.gca()
-    axes.set_xlim([7660,7705])
-    axes.set_ylim([0,160])
-    plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
-    plt.show()
-
-    wave_range, flux_range = sp.getSpectrum(7660,7705)
-    plt.plot(wave_range, flux_range)
+    # axes.set_xlim([7660,7705])
+    # axes.set_ylim([0,160])
+    # plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
     plt.show()
 

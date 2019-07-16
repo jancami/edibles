@@ -30,11 +30,11 @@
 #
 #
 # EXMPLE:
-#     ALL DATES of HD170740 in velocity and apply the Barycentric correction
-#     python edit_edibles_plt.py HD170740 bar x:7662-7669 vel:7667 all_dates
+#     ALL DATES of HD170740 and apply the Barycentric correction
+#     python edibles_plt.py HD170740 bar x:7662-7669 all_dates
 #
 #     SINGLE date of HD170740 in velocity and apply the Barycentric correction
-#     python edit_edibles_plt.py HD170740 20140915 bar x:7662-7669 vel:7667
+#     python edibles_plt.py HD170740 20140915 bar x:7662-7669 vel:7667
 #
 #
 # Author:
