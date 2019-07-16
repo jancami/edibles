@@ -114,7 +114,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0, N=None, f=None):
 
 if __name__ == "__main__":
 
-    from edibles.fit.make_grid import make_grid
+    from edibles.functions.make_grid import make_grid
     import matplotlib.pyplot as plt
 
         # set params
