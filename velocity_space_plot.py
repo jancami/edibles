@@ -7,6 +7,20 @@ from heapq import nsmallest
 from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 from edibles.functions.atomic_line_tool import AtomicLines
+from astropy.constants import c
+import bisect
+
+
+def spliceToRange(l, minimum, maximum):
+    def find_gt(a, x):
+        'Find leftmost value greater than x'
+        return bisect.bisect_right(a, x)
+
+    def find_lt(a, x):
+        'Find rightmost value less than x'
+        return bisect.bisect_left(a, x)
+
+    return find_gt(l, minimum), find_lt(l, maximum)
 
 
 def wavelength_at_peaks(wave, flux, n=2):
@@ -16,21 +30,32 @@ def wavelength_at_peaks(wave, flux, n=2):
     peaks, _ = find_peaks(-flux)  # indices of peaks
     peak_flux = nsmallest(2, flux[peaks])  # smallest two flux values at peaks
     peak_wavelength = [wave[np.where(flux == peak)][0] for peak in peak_flux]  # corresponding wavelengths
-    return peak_wavelength
+    return sorted(peak_wavelength)
 
 
-def filter_dataframe(df, star, time, lab_wavelength):
+def filter_dataframe(star, time, lab_wavelength):
+    """
+
+    :param star:
+    :param time:
+    :param lab_wavelength:
+    :return:
+    """
+    df = pd.read_csv(edibles_pythondir + '/data/DR3_ObsLog.csv')
     df.DateObs = df.DateObs.apply(parse_time)  # format date
     df2 = df[(df.DateObs == time) & (df.Object == star)]  # get correct date
 
     # get only in range
-    wave1 = lab_wavelength[0]
-    filt = (df2.WaveMax > wave1) & (df2.WaveMin < wave1)
-    for wave in lab_wavelength[1:]:
-        filt = filt | ((df2.WaveMax > wave) & (df2.WaveMin < wave))
-    df2 = df2[filt]
+    if type(lab_wavelength) == list:
+        wave1 = lab_wavelength[0]
+        filt = (df2.WaveMax > wave1) & (df2.WaveMin < wave1)
+        for wave in lab_wavelength[1:]:
+            filt = filt | ((df2.WaveMax > wave) & (df2.WaveMin < wave))
+        df2 = df2[filt]
+    else:
+        df2 = df2[(df2.WaveMax > lab_wavelength) & (df2.WaveMin < lab_wavelength)]
 
-    return df2[~df2.Filename.str.contains('O')]  # get only the largest range
+    return df2[df2.Filename.str.contains('O')].reset_index(drop=True)  # get only the largest range
 
 
 def parse_time(timestamp):
@@ -47,15 +72,11 @@ def velocity_space(star, time, lab_wavelength):
     :param star: star name
     :param time:
     :param lab_wavelength: Array of wavelengths
-    :return:
     """
-    c = 2.9979 * 10 ** 5  # km/s
 
-    df = pd.read_csv('./data/DR3_ObsLog.csv')
-    df = filter_dataframe(df, star, time, lab_wavelength)
+    df = filter_dataframe(star, time, lab_wavelength)
     # pd.set_option('display.max_colwidth', -1)
     # print(df.to_string())
-    df = df.reset_index(drop=True)
 
     for index, row in df.iterrows():
         # get wavelength and flux values from file
@@ -68,34 +89,46 @@ def velocity_space(star, time, lab_wavelength):
         plt.figure()
         plt.plot(wave, flux)
         plt.vlines(wavelengths, min(flux), max(flux))
+        plt.title(star + ' at ' + time)
+        plt.xlabel('Wavelength (AA)')
+        plt.ylabel('Flux')
 
         # TODO: doesn't allow for size 1 AND size > 2
         # TODO: doesn't allow for non-adjacent peaks
-        peak_wavelength = sorted(wavelength_at_peaks(wave, flux))
+        peak_wavelength = wavelength_at_peaks(wave, flux)
         # bisector = sum(peak_wavelength) / len(peak_wavelength)
         peak_distance = abs(peak_wavelength[1] - peak_wavelength[0])
 
         for peakn in range(len(wavelengths)):
             def transform(wavelength):
-                return (wavelengths[peakn] - wavelength) / wavelengths[peakn] * c
+                return (wavelengths[peakn] - wavelength) / wavelengths[peakn] * c.to('km/s').value
 
             v = transform(wave)
 
-            # TODO: normalize flux values before plotting
-            plt.figure('Velocity Space')
-            plt.plot(v, flux)
             av_v = transform(peak_wavelength[peakn])
-            approx_v_range = peak_distance / wavelengths[peakn] * c
+            approx_v_range = peak_distance / wavelengths[peakn] * c.to('km/s').value
+
+            v_min, v_max = spliceToRange(v, av_v - 0.5 * approx_v_range, av_v + 0.5 * approx_v_range)
+            median_flux = flux[(v_max - v_min) // 2]
+
+            plt.figure('Velocity Space')
+            plt.plot(v, flux / median_flux, label='$\lambda$=' + str(wavelengths[peakn]))
             plt.xlim([av_v - 0.5 * approx_v_range, av_v + 0.5 * approx_v_range])
-            plt.xlabel('Velocity (km/s)')
-            plt.ylabel('Flux')
+
+        plt.title(star + ' at ' + time)
+        plt.xlabel('Velocity (km/s)')
+        plt.ylabel('Flux')
+        plt.legend()
 
     plt.show()
 
 
 if __name__ == '__main__':
     star = 'HD170740'
-    time = '20140916'
-    na_observed_wavelength = AtomicLines().getAllLabWavelength('Na I')
+    time = '20170701'
+    ion = 'Na I'
 
+    na_observed_wavelength = AtomicLines().getAllLabWavelength(ion)
     velocity_space(star, time, na_observed_wavelength)
+    pd.set_option('display.max_colwidth', -1)
+    
