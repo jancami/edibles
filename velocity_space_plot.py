@@ -131,4 +131,3 @@ if __name__ == '__main__':
     na_observed_wavelength = AtomicLines().getAllLabWavelength(ion)
     velocity_space(star, time, na_observed_wavelength)
     pd.set_option('display.max_colwidth', -1)
-    
