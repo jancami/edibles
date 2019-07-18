@@ -38,6 +38,35 @@ class FilterDR(object):
         return timestamp.split('T')[0].replace('-', '')
 
     @reset_index
+    def filterAll(self, **kwargs):
+        """
+        FilterDR().filterAll(star=star, date=time, wavelength=lab_wavelength)
+            is the same as
+        FilterDR().filterStar(star).filterDate(time).filterRange(lab_wavelength).filterOrder()
+
+        INPUT:          type
+            star:       [string]                    ex. 'HD170740'
+            date:       [string]                    ex. '20150626',
+            wavelength: [list of float] or [float]  Filters out files that do not contain any wavelengths in list
+            order:      [list of int] or [int]      11 for _O11
+            combined:   [boolean]                   If filename contains L, R or U
+        """
+        keys = kwargs.keys()
+        if 'star' in keys:
+            self.filterStar(kwargs['star'])
+        if 'date' in keys:
+            self.filterDate(kwargs['date'])
+        if 'wavelength' in keys:
+            self.filterRange(kwargs['wavelength'])
+        if 'order' in keys:
+            self.filterOrder(order=kwargs['order'])
+        elif 'combined' in keys:
+            self.filterOrder(combined=kwargs['combined'])
+        else:
+            self.filterOrder()
+
+
+    @reset_index
     def filterStar(self, star):
         self.df = self.df[self.df.Object == star]
 
@@ -69,7 +98,7 @@ class FilterDR(object):
 
     @reset_index
     def filterDate(self, date):
-        df2 = self.df[:]
+        df2 = self.df.copy()
         df2.DateObs = df2.DateObs.apply(self.parse_time)  # format date
         self.df = self.df[(df2.DateObs == date)]
 
@@ -129,11 +158,11 @@ class FilterDR(object):
 
 if __name__ == '__main__':
     filter = FilterDR()
-    print(filter.getStars())
+    #print(filter.getStars())
     filter.filterStar('HD170740')
     filter.filterOrder(order=[12, 13])
     # filter.filterOrder()
     # filter.filterDate('20140915')
     # filter.filterRange([3300, 5890])
-    print(filter)
+    #print(filter)
     print(filter.getDates())

@@ -7,8 +7,10 @@ from heapq import nsmallest
 from edibles.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 from edibles.functions.atomic_line_tool import AtomicLines
+from edibles.functions.file_search import FilterDR
 from astropy.constants import c
 import bisect
+
 
 
 def spliceToRange(l, minimum, maximum):
@@ -30,43 +32,10 @@ def wavelength_at_peaks(wave, flux, n=2):
     peaks, _ = find_peaks(-flux)  # indices of peaks
     peak_flux = nsmallest(2, flux[peaks])  # smallest two flux values at peaks
     peak_wavelength = [wave[np.where(flux == peak)][0] for peak in peak_flux]  # corresponding wavelengths
-    return sorted(peak_wavelength)
+    return peak_wavelength
 
 
-def filter_dataframe(star, time, lab_wavelength):
-    """
-
-    :param star:
-    :param time:
-    :param lab_wavelength:
-    :return:
-    """
-    df = pd.read_csv(edibles_pythondir + '/data/DR3_ObsLog.csv')
-    df.DateObs = df.DateObs.apply(parse_time)  # format date
-    df2 = df[(df.DateObs == time) & (df.Object == star)]  # get correct date
-
-    # get only in range
-    if type(lab_wavelength) == list:
-        wave1 = lab_wavelength[0]
-        filt = (df2.WaveMax > wave1) & (df2.WaveMin < wave1)
-        for wave in lab_wavelength[1:]:
-            filt = filt | ((df2.WaveMax > wave) & (df2.WaveMin < wave))
-        df2 = df2[filt]
-    else:
-        df2 = df2[(df2.WaveMax > lab_wavelength) & (df2.WaveMin < lab_wavelength)]
-
-    return df2[df2.Filename.str.contains('O')].reset_index(drop=True)  # get only the largest range
-
-
-def parse_time(timestamp):
-    """
-    :param timestamp: ex. 2014-10-29T07:01:33.557
-    :return: 20141029
-    """
-    return timestamp.split('T')[0].replace('-', '')
-
-
-def velocity_space(star, time, lab_wavelength):
+def velocity_space(star, time, ion):
     """
 
     :param star: star name
@@ -74,9 +43,11 @@ def velocity_space(star, time, lab_wavelength):
     :param lab_wavelength: Array of wavelengths
     """
 
-    df = filter_dataframe(star, time, lab_wavelength)
-    # pd.set_option('display.max_colwidth', -1)
-    # print(df.to_string())
+    lab_wavelength = AtomicLines().getAllLabWavelength(ion)
+
+    data = FilterDR().filterAll(star=star, date=time, wavelength=lab_wavelength, order=[4, 11])
+    print(data)
+    df = data.getDataFrame()
 
     for index, row in df.iterrows():
         # get wavelength and flux values from file
@@ -86,12 +57,13 @@ def velocity_space(star, time, lab_wavelength):
         sp = EdiblesSpectrum(datadir + row.Filename)
         wave, flux = sp.getSpectrum(wavelengths[0] - wave_dist, wavelengths[-1] + wave_dist)
 
-        plt.figure()
+        plt.figure('Figure ' + str(index))
         plt.plot(wave, flux)
-        plt.vlines(wavelengths, min(flux), max(flux))
-        plt.title(star + ' at ' + time)
+        plt.title(star + ' at ' + time[:4] + '-' + time[4:6] + '-' + time[6:])
         plt.xlabel('Wavelength (AA)')
         plt.ylabel('Flux')
+        ax = plt.gca()
+        plot_lines(ax, ion, wavelengths, flux)
 
         # TODO: doesn't allow for size 1 AND size > 2
         # TODO: doesn't allow for non-adjacent peaks
@@ -115,19 +87,31 @@ def velocity_space(star, time, lab_wavelength):
             plt.plot(v, flux / median_flux, label='$\lambda$=' + str(wavelengths[peakn]))
             plt.xlim([av_v - 0.5 * approx_v_range, av_v + 0.5 * approx_v_range])
 
-        plt.title(star + ' at ' + time)
+        plt.title(star + ' at ' + time[:4] + '-' + time[4:6] + '-' + time[6:])
         plt.xlabel('Velocity (km/s)')
         plt.ylabel('Flux')
         plt.legend()
 
-    plt.show()
+
+
+def plot_lines(ax, ion, wavelengths, flux):
+    """
+
+    :type ax: matplotlib.axis
+    """
+    ymax = max(flux)
+    ax.vlines(wavelengths, 0.95 * min(flux), 0.98 * ymax)
+    for wavelength in wavelengths:
+        ax.text(wavelength, ymax, ion, horizontalalignment='center')
 
 
 if __name__ == '__main__':
     star = 'HD170740'
-    time = '20170701'
     ion = 'Na I'
 
-    na_observed_wavelength = AtomicLines().getAllLabWavelength(ion)
-    velocity_space(star, time, na_observed_wavelength)
-    pd.set_option('display.max_colwidth', -1)
+    filter = FilterDR().filterAll(star=star, wavelength=AtomicLines().getAllLabWavelength(ion))
+    time_list = filter.getDates()
+    print(time_list)
+
+    velocity_space(star, time_list[0], ion)
+    plt.show()
