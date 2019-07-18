@@ -1,7 +1,7 @@
-from edibles.fit import multifit
-from edibles.create_model import createKnownVelocityCloud, createCont
+from edibles.fit.fit import multifit
+from edibles.fit.models.create_model import createKnownVelocityCloud, createCont
 from edibles.functions.atomic_line_tool import AtomicLines
-from edibles.edibles_spectrum import EdiblesSpectrum
+from edibles.functions.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import datadir
 
 # ======================================

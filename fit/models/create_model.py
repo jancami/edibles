@@ -1,5 +1,5 @@
 from edibles.functions.continuum_guess import generate_continuum
-from edibles.models import Cont1D, VoigtAbsorptionLine, KnownVelocityLine
+from edibles.fit.models.models import Cont1D, VoigtAbsorptionLine, KnownVelocityLine
 
 
 def createLine(name, lam_0, b, d, tau_0):

@@ -3,11 +3,10 @@
 # first, then open each of them to read the header and extract the information. Finally, store everything 
 # in a text file. 
 import os
-from astropy.io import fits
 import numpy as np
 import csv
-from edibles_settings import *
-from edibles_spectrum import *
+from edibles.edibles_settings import *
+from edibles.functions.edibles_spectrum import *
 
 
 print(datadir)
@@ -39,7 +38,7 @@ full_list = [obsfile() for i in range(n_files)]
 for count in range(len(allfitsfiles)): 
 	full_list[count].filename = allfitsfiles[count]
 	#print(datadir + full_list[count].filename)
-	spec = edibles_spectrum(datadir + full_list[count].filename)
+	spec = EdiblesSpectrum(datadir + full_list[count].filename)
 	#print(spec.header)
 	full_list[count].object = spec.header["OBJECT"]
 	full_list[count].date_obs = spec.header["DATE-OBS"]
@@ -48,7 +47,7 @@ for count in range(len(allfitsfiles)):
 		full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT1 WLEN"])
 	if "HIERARCH ESO INS GRAT2 WLEN" in spec.header: 
 		full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT2 WLEN"])
-	wave,flux = spec.GetSpectrum()
+	wave,flux = spec.getSpectrum()
 	full_list[count].wave_min = "{:.1f}".format(np.min(wave))
 	full_list[count].wave_max = "{:.1f}".format(np.max(wave))
 	del spec

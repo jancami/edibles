@@ -1,10 +1,7 @@
-import numpy as np
-from scipy.signal import find_peaks
-
-from edibles.fit import fit
-from edibles.create_model import *
+from edibles.fit.fit import fit
+from edibles.fit.models.create_model import *
 from edibles.functions.atomic_line_tool import AtomicLines
-from edibles.edibles_spectrum import EdiblesSpectrum
+from edibles.functions.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 
 

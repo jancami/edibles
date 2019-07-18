@@ -5,7 +5,7 @@ from edibles.edibles_settings import edibles_pythondir
 class AtomicLines:
 
     def __init__(self):
-        self.filename = edibles_pythondir + '/atomic_lines.txt'
+        self.filename = edibles_pythondir + '/data/atomic_lines.txt'
         with open(self.filename) as f:
 
             first_line = f.readline()

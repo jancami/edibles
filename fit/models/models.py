@@ -10,7 +10,7 @@ from sherpa.models.parameter import Parameter
 from edibles.functions.parameter_converter import param_convert
 from edibles.functions.voigtMathematical import voigt_math
 
-from edibles.voigt import voigtAbsorptionLine
+from edibles.functions.voigt import voigtAbsorptionLine
 
 __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
