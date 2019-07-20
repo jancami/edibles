@@ -22,7 +22,10 @@ class EdiblesSpectrum:
         self.v_bary = hdu[0].header["HIERARCH ESO QC VRAD BARYCOR"]
 
     def __init__(self, filename):
-        self.filename = filename
+        """
+        Filename is relative to the DR3 directory
+        """
+        self.filename = datadir + filename
         self.load_spectrum()
 
     def getSpectrum(self, xmin=None, xmax=None):

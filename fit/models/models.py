@@ -3,7 +3,6 @@ from scipy.special import wofz
 from scipy.interpolate import CubicSpline
 import astropy.constants as cst
 
-
 from sherpa.models.model import ArithmeticModel
 from sherpa.models.parameter import Parameter
 
@@ -13,7 +12,6 @@ from edibles.functions.voigtMathematical import voigt_math
 from edibles.functions.voigt import voigtAbsorptionLine
 
 __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
-
 
 
 class VoigtAbsorptionLine(ArithmeticModel):
@@ -51,8 +49,8 @@ class VoigtAbsorptionLine(ArithmeticModel):
         self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0)
         self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
 
-        ArithmeticModel.__init__(self, name, 
-                                (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
+        ArithmeticModel.__init__(self, name,
+                                 (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
 
     def calc(self, pars, x, *args, **kwargs):
         '''
@@ -83,13 +81,11 @@ class VoigtAbsorptionLine(ArithmeticModel):
         lam_0, b, d, N, f, tau_0 = pars
 
         if N != 999:
-            transmission = voigtAbsorptionLine(x, lam_0, b, d, N, f)
+            transmission = voigtAbsorptionLine(lam=x, lam_0=lam_0, b=b, d=d, N=N, f=f)
         else:
-            transmission = voigtAbsorptionLine(x, lam_0, b, d, tau_0)
-
+            transmission = voigtAbsorptionLine(lam=x, lam_0=lam_0, b=b, d=d, tau_0=tau_0)
 
         return transmission
-
 
 
 class KnownVelocityLine(ArithmeticModel):
@@ -113,7 +109,6 @@ class KnownVelocityLine(ArithmeticModel):
     """
 
     def __init__(self, name='Known Velocity Line'):
-
         self.v_cloud = Parameter(name, 'v_cloud', 0.0, frozen=False, min=-200, max=200)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
         self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
@@ -121,8 +116,8 @@ class KnownVelocityLine(ArithmeticModel):
         self.f = Parameter(name, 'f', 999, frozen=True, hidden=False, min=0)
         self.lab_lam_0 = Parameter(name, 'lab_lam_0', 5000, frozen=True)
 
-        ArithmeticModel.__init__(self, name, 
-                                (self.v_cloud, self.b, self.d, self.N, self.f, self.lab_lam_0))
+        ArithmeticModel.__init__(self, name,
+                                 (self.v_cloud, self.b, self.d, self.N, self.f, self.lab_lam_0))
 
     def calc(self, pars, x, *args, **kwargs):
         '''
@@ -152,7 +147,7 @@ class KnownVelocityLine(ArithmeticModel):
 
         v_cloud, b, d, N, f, lab_lam_0 = pars
 
-        lam_0 = lab_lam_0 * (1. + v_cloud/cst.c.to('km/s').value)
+        lam_0 = lab_lam_0 * (1. + v_cloud / cst.c.to('km/s').value)
         # print(v_cloud)
 
         tau_0 = None
@@ -160,7 +155,6 @@ class KnownVelocityLine(ArithmeticModel):
         transmission = voigtAbsorptionLine(x, lam_0=lam_0, b=b, d=d, tau_0=tau_0, N=N, f=f)
 
         return transmission
-
 
 
 class Cont1D(ArithmeticModel):
@@ -180,7 +174,6 @@ class Cont1D(ArithmeticModel):
 
     def __init__(self, name='continuum_flux_value'):
 
-
         self.y1 = Parameter(name, 'y1', 1.0, frozen=True)
         self.y2 = Parameter(name, 'y2', 1.0, frozen=True)
         self.y3 = Parameter(name, 'y3', 1.0, frozen=True)
@@ -190,11 +183,9 @@ class Cont1D(ArithmeticModel):
         self.y7 = Parameter(name, 'y7', None, frozen=True)
         self.y8 = Parameter(name, 'y8', None, frozen=True)
 
-
         ArithmeticModel.__init__(self, name,
-            (self.y1, self.y2, self.y3, self.y4, self.y5, self.y6, 
-                self.y7, self.y8))
-
+                                 (self.y1, self.y2, self.y3, self.y4, self.y5, self.y6,
+                                  self.y7, self.y8))
 
     def calc(self, pars, x, *args, **kwargs):
 
@@ -231,7 +222,7 @@ class Cont1D(ArithmeticModel):
         n_piece = n_points - 1
 
         # split x & y arrays into n_piece*2 sections
-        x_sections = np.array_split(x, n_piece*2)
+        x_sections = np.array_split(x, n_piece * 2)
 
         # initialize list of points to spline fit
         x_points = [np.min(x)]
@@ -244,7 +235,6 @@ class Cont1D(ArithmeticModel):
             x_point = np.max(x_sections[i])
 
             if i == range(len(x_sections))[-1]:
-
                 x_point = np.max(x)
 
             x_points.append(x_point)
@@ -260,7 +250,6 @@ class Cont1D(ArithmeticModel):
         y_spline = spline(x)
 
         return y_spline
-
 
 
 class Voigt1D(ArithmeticModel):
@@ -284,9 +273,6 @@ class Voigt1D(ArithmeticModel):
     """
 
     def __init__(self, name='voigt1d'):
-
-
-
         self.cent = Parameter(name, 'cent', 5000., frozen=True)
         self.alpha = Parameter(name, 'alpha', 0.05, frozen=False, min=0)
         self.gamma = Parameter(name, 'gamma', 0.0005, frozen=False, min=0)
@@ -294,9 +280,7 @@ class Voigt1D(ArithmeticModel):
 
         ArithmeticModel.__init__(self, name, (self.cent, self.alpha, self.gamma, self.scaling))
 
-
     def calc(self, pars, x, *args, **kwargs):
-
         """
         Return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
         and Gaussian component HWHM alpha.
@@ -326,14 +310,10 @@ class Voigt1D(ArithmeticModel):
         (cent, alpha, gamma, scaling) = pars
         sigma = alpha / np.sqrt(2. * np.log(2.))
 
-
-
-        z = (x - cent + 1j*gamma)/ (sigma*np.sqrt(2.))
-        y = scaling * wofz(z).real / (sigma*np.sqrt(2.*np.pi))
-
+        z = (x - cent + 1j * gamma) / (sigma * np.sqrt(2.))
+        y = scaling * wofz(z).real / (sigma * np.sqrt(2. * np.pi))
 
         return -y
-
 
 
 class AstroVoigt1D(ArithmeticModel):
@@ -357,18 +337,13 @@ class AstroVoigt1D(ArithmeticModel):
     """
 
     def __init__(self, name='astrovoigt1d'):
-
-
-
         self.cent = Parameter(name, 'cent', 5000., frozen=True)
         self.alpha = Parameter(name, 'b_eff', 3.5, frozen=False, min=0)
         self.gamma = Parameter(name, 'Gamma', 6.0e07, frozen=False, min=0)
         self.scaling = Parameter(name, 'scaling', 1.0, frozen=True, min=0)
 
-
         ArithmeticModel.__init__(self, name,
-            (self.cent, self.b_eff, self.Gamma, self.scaling))
-
+                                 (self.cent, self.b_eff, self.Gamma, self.scaling))
 
     def calc(self, pars, x, *args, **kwargs):
         '''
@@ -400,5 +375,3 @@ class AstroVoigt1D(ArithmeticModel):
         y = voigt_math(x, cent, alpha, gam, scaling)
 
         return -y
-
-

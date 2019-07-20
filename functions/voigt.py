@@ -78,7 +78,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     return tau
 
 
-def voigtAbsorptionLine(lam, lam_0, b, d, tau_0, N=None, f=None):
+def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     """
     Converts parameters to make proper call to voigtOpticalDepth
 

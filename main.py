@@ -2,7 +2,6 @@ from edibles.fit.fit import fit
 from edibles.fit.models.create_model import *
 from edibles.functions.atomic_line_tool import AtomicLines
 from edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles_settings import *
 
 
 # file params
@@ -14,7 +13,7 @@ from edibles.edibles_settings import *
 
 
 star_name = 'HD170740'
-file = '/data/DR3_fits/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits'
+file = '/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits'
 xmin = 3301.
 xmax = 3305.
 ion0 = 'Na I'
@@ -22,7 +21,7 @@ wave0 = 3302.3
 ion1 = 'Na I'
 wave1 = 3302.9
 
-sp = EdiblesSpectrum(datadir+"/HD170740/BLUE_346/HD170740_w346_n20_20140916_B.fits")
+sp = EdiblesSpectrum(file)
 data = sp.getSpectrum(xmin,xmax)
 wave, flux = data
 
