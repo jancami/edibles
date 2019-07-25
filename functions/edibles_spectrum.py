@@ -40,7 +40,8 @@ class EdiblesSpectrum:
 
 
 if __name__ == '__main__':
-    sp = EdiblesSpectrum(datadir+"/HD57061/RED_564/HD57061_w564_n24_20141010_U.fits")
+    filename = '/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits'
+    sp = EdiblesSpectrum(filename)
     print("Barycentric Velocity is", sp.v_bary)
     wave,flux = sp.getSpectrum()
     plt.plot(wave, flux)
