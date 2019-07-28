@@ -44,7 +44,7 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
         self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
-        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
         self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0)
         self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0)
         self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)

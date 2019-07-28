@@ -83,7 +83,7 @@ name    = ['line0', 'line1']
 v_cloud = 18
 b       = 2
 d       = 0.005
-N       = 21
+N       = 6.61966e+13
 f_known = [f0, f1]
 
 cloud = createKnownVelocityCloud(name=name, num_lines=2, v_cloud=v_cloud, b=b, d=d, N=N, f_known=f_known, lab_lam_0=lab_list)
