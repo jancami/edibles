@@ -42,12 +42,12 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
     def __init__(self, name='voigtabsorptionline'):
 
-        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False, min=0.0)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
         self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
-        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0)
-        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0)
-        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
+        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0.0)
+        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0.0)
+        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=0.0)
 
         ArithmeticModel.__init__(self, name,
                                  (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
@@ -86,6 +86,55 @@ class VoigtAbsorptionLine(ArithmeticModel):
             transmission = voigtAbsorptionLine(lam=x, lam_0=lam_0, b=b, d=d, tau_0=tau_0)
 
         return transmission
+
+
+
+class IonCloud:
+    '''A cloud with multiple groups of lines that share the same b and d parameters.'''
+
+    def __init__(self, star_name, cont):
+
+        self.star_name = star_name
+        self.model = cont
+
+    def addGroup(self, group_name, b, d):
+        '''This is an "initializer line" for the purpose of linking 
+            the b and d parameters of subsequent lines - VALUES WILL BE HIDDEN
+        '''
+        init_line = VoigtAbsorptionLine(name=group_name)
+        init_line.lam_0 = 5000          # arbitrary
+        init_line.lam_0.frozen=True     # frozen to decrease fit params - arbitrary
+        init_line.lam_0.hidden=True
+        init_line.b = b
+        init_line.b.hidden=True
+        init_line.d = d
+        init_line.d.hidden=True
+        init_line.tau_0 = 0.0           # MUST BE ZERO
+        init_line.tau_0.frozen = True   # MUST BE FROZEN
+        init_line.tau_0.hidden=True
+
+        self.init_line = init_line
+        self.model *= init_line 
+
+
+    def addLine(self, name, lam_0, tau_0):
+        '''Creates an instance of a VoigtAbsorptionLine object
+
+        INPUT:
+            name:       [string]
+            lam_0       [float]
+            tau_0       [float]
+        OUTPUT:
+            line model  [object instance]
+        '''
+        line = VoigtAbsorptionLine(name=name)
+        line.lam_0          = lam_0
+        line.b              = self.init_line.b
+        line.d              = self.init_line.d
+        line.tau_0          = tau_0
+
+        self.model *= line
+
 
 
 class KnownVelocityLine(ArithmeticModel):
@@ -172,7 +221,7 @@ class Cont1D(ArithmeticModel):
 
     """
 
-    def __init__(self, name='continuum_flux_value'):
+    def __init__(self, name='Cont_flux'):
 
         self.y1 = Parameter(name, 'y1', 1.0, frozen=True)
         self.y2 = Parameter(name, 'y2', 1.0, frozen=True)

@@ -6,7 +6,7 @@ from edibles.edibles_settings import *
 class EdiblesSpectrum:
 # This object will contain a spectrum from EDIBLES, and a set of methods to operate on the data. 
 
-    def load_spectrum (self):
+    def loadSpectrum (self):
         # Assume the file is a DR3 product here. 
         hdu = fits.open(self.filename)
         self.header = hdu[0].header
@@ -26,7 +26,7 @@ class EdiblesSpectrum:
         Filename is relative to the DR3 directory
         """
         self.filename = datadir + filename
-        self.load_spectrum()
+        self.loadSpectrum()
 
     def getSpectrum(self, xmin=None, xmax=None):
 
@@ -46,8 +46,8 @@ if __name__ == '__main__':
     wave,flux = sp.getSpectrum()
     plt.plot(wave, flux)
     axes = plt.gca()
-    # axes.set_xlim([7660,7705])
-    # axes.set_ylim([0,160])
-    # plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
+    axes.set_xlim([7660,7705])
+    axes.set_ylim([0,160])
+    plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
     plt.show()
 
