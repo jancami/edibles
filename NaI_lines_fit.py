@@ -38,10 +38,10 @@ names = ['NaI_3302.3', 'NaI_3302.9', 'NaI_5890', 'NaI_5896']
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-sp1 = EdiblesSpectrum(datadir+file1)
+sp1 = EdiblesSpectrum(file1)
 data1 = sp1.getSpectrum(xmin1,xmax1)
 wave1, flux1 = data1
-sp2 = EdiblesSpectrum(datadir+file2)
+sp2 = EdiblesSpectrum(file2)
 data2 = sp2.getSpectrum(xmin2,xmax2)
 wave2, flux2 = data2
 

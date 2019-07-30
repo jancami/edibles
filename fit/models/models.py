@@ -96,6 +96,7 @@ class IonCloud:
 
         self.star_name = star_name
         self.model = cont
+        self.groups = {}
 
     def addGroup(self, group_name, b, d):
         '''This is an "initializer line" for the purpose of linking 
@@ -104,18 +105,21 @@ class IonCloud:
         init_line = VoigtAbsorptionLine(name=group_name)
         init_line.lam_0 = 5000          # arbitrary
         init_line.lam_0.frozen=True     # frozen to decrease fit params - arbitrary
-        init_line.lam_0.hidden=True
+        # init_line.lam_0.hidden=True
         init_line.b = b
-        init_line.b.hidden=True
+        # init_line.b.hidden=True
         init_line.d = d
-        init_line.d.hidden=True
+        # init_line.d.hidden=True
         init_line.tau_0 = 0.0           # MUST BE ZERO
         init_line.tau_0.frozen = True   # MUST BE FROZEN
-        init_line.tau_0.hidden=True
+        # init_line.tau_0.hidden=True
 
         self.init_line = init_line
         self.model *= init_line 
+        self.groups[group_name] = init_line
 
+    def setGroup(self, group_name):
+        self.init_line = self.groups[group_name]
 
     def addLine(self, name, lam_0, tau_0):
         '''Creates an instance of a VoigtAbsorptionLine object

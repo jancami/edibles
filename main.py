@@ -13,7 +13,7 @@ from edibles.fit.fit import fit
 
 star_name = 'HD170740'
 file = '/HD170740/RED_860/HD170740_w860_redl_20140916_O12.fits'
-xmin = 7661.
+xmin = 7661.5
 xmax = 7670.
 sp = EdiblesSpectrum(file)
 data = sp.getSpectrum(xmin,xmax)
@@ -33,15 +33,14 @@ cloud.addGroup(group_name='Interstellar', b=1.0, d=0.001)
 cloud.addLine(name='KI_1', lam_0=7665.3, tau_0=0.1)
 cloud.addLine(name='KI_2', lam_0=7665.35, tau_0=0.05)
 
+# cloud.setGroup('Telluric')
+# cloud.addGroup(group_name='Telluric2', b=1.0, d=0.001)
+# cloud.addLine(name='tell213', lam_0=7662.05, tau_0=0.05)
+
 
 # fit_model = fit(star_name, data, cloud.model)
-fit_model = fit(star_name, data, cloud.model, breakdown=True)
+fit_model = fit(star_name, data, cloud.model)
 # print(fit_model)
-
-
-
-
-
 
 
 
