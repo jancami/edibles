@@ -105,6 +105,7 @@ def fit(star_name, data, model, silent=False, breakdown=False):
                     print(line)
                     plt.plot(wave,line(wave), linestyle='--')
                 else:
+                    print()
                     print(line)
                     plt.plot(wave,line(wave)*cont(wave), linestyle='--')
 
