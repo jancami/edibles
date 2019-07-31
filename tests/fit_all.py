@@ -1,4 +1,3 @@
-from edibles.functions.voigt import voigtAbsorptionLine, voigtOpticalDepth, voigtNorm
 from edibles.fit.models.create_model import createLine, createCont
 import astropy.constants as cst
 

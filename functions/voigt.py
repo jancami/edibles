@@ -69,7 +69,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
     # multiply by tau_0
     tau_0 = np.pi * (cst.e.esu.value)**2 * Nf*(1e-8*lam_0)**2 / (cst.m_e.to('g').value*(cst.c.to('cm/s').value)**2)  # cm
-    tau_0 = tau_0 * 1e8  # cm to angstroms
+    tau_0 *= 1e8  # cm to angstroms
 
     tau = tau_0 * y
     # return scaled & shifted data
