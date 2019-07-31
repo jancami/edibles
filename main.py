@@ -4,7 +4,7 @@ from __future__ import print_function
 from edibles.fit.models.create_model import *
 from edibles.functions.atomic_line_tool import AtomicLines
 from edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.fit.models.models import IonCloud
+from edibles.fit.models.models import Sightline
 from edibles.fit.fit import fit
 
 
@@ -13,7 +13,7 @@ from edibles.fit.fit import fit
 
 star_name = 'HD170740'
 file = '/HD170740/RED_860/HD170740_w860_redl_20140916_O12.fits'
-xmin = 7661.5
+xmin = 7661.
 xmax = 7670.
 sp = EdiblesSpectrum(file)
 data = sp.getSpectrum(xmin,xmax)
@@ -23,7 +23,7 @@ wave, flux = data
 n_points = 4
 cont = createCont(data, n_points)
 
-cloud = IonCloud(star_name=star_name, cont=cont)
+cloud = Sightline(star_name=star_name, cont=cont)
 
 cloud.addGroup(group_name='Telluric', b=1.07, d=0.046)
 cloud.addLine(name='tell_1', lam_0=7664.8, tau_0=0.75)
@@ -33,13 +33,9 @@ cloud.addGroup(group_name='Interstellar', b=1.0, d=0.001)
 cloud.addLine(name='KI_1', lam_0=7665.3, tau_0=0.1)
 cloud.addLine(name='KI_2', lam_0=7665.35, tau_0=0.05)
 
-# cloud.setGroup('Telluric')
-# cloud.addGroup(group_name='Telluric2', b=1.0, d=0.001)
-# cloud.addLine(name='tell213', lam_0=7662.05, tau_0=0.05)
-
 
 # fit_model = fit(star_name, data, cloud.model)
-fit_model = fit(star_name, data, cloud.model)
+fit_model = fit(star_name, data, cloud.model, breakdown=True)
 # print(fit_model)
 
 

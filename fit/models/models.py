@@ -89,9 +89,11 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
 
 
-class IonCloud:
-    '''A cloud with multiple groups of lines that share the same b and d parameters.'''
-
+class Sightline:
+    '''A sightline with multiple groups of lines (clouds) that share 
+    the same b and d parameters. Groups can be Stellar, Interstellar,
+    or Telluric, or subsets of each. 
+    '''
     def __init__(self, star_name, cont):
 
         self.star_name = star_name
@@ -105,25 +107,25 @@ class IonCloud:
         init_line = VoigtAbsorptionLine(name=group_name)
         init_line.lam_0 = 5000          # arbitrary
         init_line.lam_0.frozen=True     # frozen to decrease fit params - arbitrary
-        # init_line.lam_0.hidden=True
+        init_line.lam_0.hidden=True
         init_line.b = b
         # init_line.b.hidden=True
         init_line.d = d
         # init_line.d.hidden=True
         init_line.tau_0 = 0.0           # MUST BE ZERO
         init_line.tau_0.frozen = True   # MUST BE FROZEN
-        # init_line.tau_0.hidden=True
+        init_line.tau_0.hidden=True
 
         self.init_line = init_line
         self.model *= init_line 
         self.groups[group_name] = init_line
 
     def setGroup(self, group_name):
+        '''Used to revert to a previous group after a new one has been added.'''
         self.init_line = self.groups[group_name]
 
     def addLine(self, name, lam_0, tau_0):
         '''Creates an instance of a VoigtAbsorptionLine object
-
         INPUT:
             name:       [string]
             lam_0       [float]
