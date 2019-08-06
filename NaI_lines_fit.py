@@ -27,7 +27,7 @@ n_points = 4
 v_cloud = -19
 b       = 2
 d       = 0.001
-N       = 14
+N       = 1e13
 
 ion = 'Na I'
 num_lines = 4
