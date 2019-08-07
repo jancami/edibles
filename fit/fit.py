@@ -59,15 +59,20 @@ def fit(star_name, data, model, silent=False, breakdown=False):
     opt.gtol = 1e-15
     opt.epsfcn = 1e-15
 
-    print(opt)
+    if silent == False:
+        print(opt)
 
     vfit = Fit(d, model, stat=stat, method=opt)
-    print(vfit)
+
+    if silent == False:
+        print(vfit)
+
     vres = vfit.fit()
 
-    print()
-    print()
-    print(vres.format())
+    if silent == False:
+        print()
+        print()
+        print(vres.format())
 
     # =========================================
     # Plotting after fit
