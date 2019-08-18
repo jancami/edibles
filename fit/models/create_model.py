@@ -12,8 +12,7 @@ def createLine(name, lam_0, b, d, tau_0):
             lam_0
             b
             d
-            N
-            f_known
+            tau_0
     OUTPUT:
         line model [object instance]
 

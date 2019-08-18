@@ -8,7 +8,7 @@ from sherpa.fit import Fit, SimulFitModel
 from sherpa.plot import DataPlot, ModelPlot, FitPlot, SplitPlot
 
 
-def fit(star_name, data, model, silent=False):
+def fit(star_name, data, model, silent=False, breakdown=False):
     '''A function that will fit a given multi-part model to a given spectrum.
 
     INPUT:
@@ -59,15 +59,20 @@ def fit(star_name, data, model, silent=False):
     opt.gtol = 1e-15
     opt.epsfcn = 1e-15
 
-    print(opt)
+    if silent == False:
+        print(opt)
 
     vfit = Fit(d, model, stat=stat, method=opt)
-    print(vfit)
+
+    if silent == False:
+        print(vfit)
+
     vres = vfit.fit()
 
-    print()
-    print()
-    print(vres.format())
+    if silent == False:
+        print()
+        print()
+        print(vres.format())
 
     # =========================================
     # Plotting after fit
@@ -92,9 +97,24 @@ def fit(star_name, data, model, silent=False):
     print()
     print('Time taken: ' + str(duration))
     print()
-
     plt.show()
 
+    if breakdown is True:
+        cont = model[0]
+        plt.scatter(wave, flux, marker='.', c='black')
+        plt.plot(wave, model(wave), c='C1')
+
+        for line in model:
+            if (line.name[0] != '('):
+                if line.name == 'Cont_flux':
+                    print(line)
+                    plt.plot(wave,line(wave), linestyle='--')
+                else:
+                    print()
+                    print(line)
+                    plt.plot(wave,line(wave)*cont(wave), linestyle='--')
+
+        plt.show()
 
     return model
 

@@ -4,14 +4,14 @@ import numpy as np
 
 from scipy.signal import find_peaks
 from heapq import nsmallest
-from edibles.edibles_spectrum import EdiblesSpectrum
+from edibles.functions.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles_settings import *
 from edibles.functions.atomic_line_tool import AtomicLines
 from edibles.functions.file_search import FilterDR
 from astropy.constants import c
 import bisect
 
-
+from edibles.functions.peak_wavelength import largest_peak_wavelength
 
 def spliceToRange(l, minimum, maximum):
     def find_gt(a, x):
@@ -23,16 +23,6 @@ def spliceToRange(l, minimum, maximum):
         return bisect.bisect_left(a, x)
 
     return find_gt(l, minimum), find_lt(l, maximum)
-
-
-def wavelength_at_peaks(wave, flux, n=2):
-    """
-    Returns the wavelengths of the lowest n peaks of the equation
-    """
-    peaks, _ = find_peaks(-flux)  # indices of peaks
-    peak_flux = nsmallest(2, flux[peaks])  # smallest two flux values at peaks
-    peak_wavelength = [wave[np.where(flux == peak)][0] for peak in peak_flux]  # corresponding wavelengths
-    return peak_wavelength
 
 
 def velocity_space(star, time, ion):
@@ -54,7 +44,7 @@ def velocity_space(star, time, ion):
         xrange = [row.WaveMin, row.WaveMax]
         wavelengths = sorted([wavelength for wavelength in lab_wavelength if xrange[0] < wavelength < xrange[1]])
         wave_dist = 2 * (wavelengths[-1] - wavelengths[0])  # arbitrary parameter to limit range of spectrum
-        sp = EdiblesSpectrum(datadir + row.Filename)
+        sp = EdiblesSpectrum(row.Filename)
         wave, flux = sp.getSpectrum(wavelengths[0] - wave_dist, wavelengths[-1] + wave_dist)
 
         plt.figure('Figure ' + str(index))
@@ -67,7 +57,7 @@ def velocity_space(star, time, ion):
 
         # TODO: doesn't allow for size 1 AND size > 2
         # TODO: doesn't allow for non-adjacent peaks
-        peak_wavelength = wavelength_at_peaks(wave, flux)
+        peak_wavelength = largest_peak_wavelength(wave, flux)
         # bisector = sum(peak_wavelength) / len(peak_wavelength)
         peak_distance = abs(peak_wavelength[1] - peak_wavelength[0])
 

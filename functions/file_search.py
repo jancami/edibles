@@ -6,6 +6,10 @@ class FilterDR(object):
     def __init__(self, init_df=None):
         if init_df is None:
             self.df = pd.read_csv(edibles_pythondir + '/data/DR3_ObsLog.csv')
+            self.df.Object = self.df.Object.apply(lambda x: x.replace(' ', ''))  # HD 123456 -> HD123456
+
+            self.df["Order"] = self.df.Filename.apply(lambda x: int(x.split('_O')[1][:-5]) if '_O' in x else -1)
+            self.df.Order = self.df.Order.astype('int32')
         else:
             self.df = init_df
 
@@ -65,6 +69,7 @@ class FilterDR(object):
         else:
             self.filterOrder()
 
+        self.sort(['star', 'order'])
 
     @reset_index
     def filterStar(self, star):
@@ -89,18 +94,42 @@ class FilterDR(object):
         order = [str(o) for o in order]
         # bit convoluted but it works
         if len(order) > 0:
-            self.df = self.df[
-                self.df.Filename == self.df.Filename.apply(lambda x: x if x.split('O')[-1][:-5] in order else None)]
+            self.df = self.df[self.df.Order.isin(order)]
         elif combined:
-            self.df = self.df[~self.df.Filename.str.contains('O')]
+            self.df = self.df[self.df.Order == -1]
         else:
-            self.df = self.df[self.df.Filename.str.contains('O')]
+            self.df = self.df[self.df.Order != -1]
 
     @reset_index
     def filterDate(self, date):
         df2 = self.df.copy()
         df2.DateObs = df2.DateObs.apply(self.parse_time)  # format date
         self.df = self.df[(df2.DateObs == date)]
+
+    @reset_index
+    def sortOrder(self):
+        self.df.sort_values(by=['Order'], inplace=True)
+
+    @reset_index
+    def sortDate(self):
+        self.df.sort_values(by='DateObs', inplace=True)
+
+    @reset_index
+    def sortStar(self):
+        self.df.sort_values(by='Object', inplace=True)
+
+    @reset_index
+    def sort(self, columns):
+        if type(columns) == str:
+            columns = [columns]
+        assert all([type(i) == str for i in columns]), "Column names must be strings"
+
+        dic = {'order': 'Order',
+               "date": 'DateObs',
+               'star': 'Object'}
+
+        columns = [dic[s] for s in columns]
+        self.df.sort_values(by=columns, inplace=True)
 
     def getCopy(self):
         """
@@ -126,7 +155,7 @@ class FilterDR(object):
         OUTPUT: 
         [12, 13]
         """
-        return [int(x) for x in list(set(self.df.Filename.apply(lambda x: x.split('O')[-1][:-5]))) if '/' not in x]
+        return [int(x) for x in list(set(self.df.Order)) if x != -1]
 
     def getDates(self):
         """
@@ -158,11 +187,5 @@ class FilterDR(object):
 
 if __name__ == '__main__':
     filter = FilterDR()
-    #print(filter.getStars())
-    filter.filterStar('HD170740')
-    filter.filterOrder(order=[12, 13])
-    # filter.filterOrder()
-    # filter.filterDate('20140915')
-    # filter.filterRange([3300, 5890])
-    #print(filter)
-    print(filter.getDates())
+    print(filter.filterAll())
+    # print(filter.getDates())

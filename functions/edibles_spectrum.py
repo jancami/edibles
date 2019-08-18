@@ -6,7 +6,7 @@ from edibles.edibles_settings import *
 class EdiblesSpectrum:
 # This object will contain a spectrum from EDIBLES, and a set of methods to operate on the data. 
 
-    def load_spectrum (self):
+    def loadSpectrum (self):
         # Assume the file is a DR3 product here. 
         hdu = fits.open(self.filename)
         self.header = hdu[0].header
@@ -22,8 +22,11 @@ class EdiblesSpectrum:
         self.v_bary = hdu[0].header["HIERARCH ESO QC VRAD BARYCOR"]
 
     def __init__(self, filename):
-        self.filename = filename
-        self.load_spectrum()
+        """
+        Filename is relative to the DR3 directory
+        """
+        self.filename = datadir + filename
+        self.loadSpectrum()
 
     def getSpectrum(self, xmin=None, xmax=None):
 
@@ -37,13 +40,14 @@ class EdiblesSpectrum:
 
 
 if __name__ == '__main__':
-    sp = EdiblesSpectrum(datadir+"/HD57061/RED_564/HD57061_w564_n24_20141010_U.fits")
+    filename = '/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits'
+    sp = EdiblesSpectrum(filename)
     print("Barycentric Velocity is", sp.v_bary)
     wave,flux = sp.getSpectrum()
     plt.plot(wave, flux)
     axes = plt.gca()
-    # axes.set_xlim([7660,7705])
-    # axes.set_ylim([0,160])
-    # plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
+    axes.set_xlim([7660,7705])
+    axes.set_ylim([0,160])
+    plt.vlines((7667.021,7701.093), 0, 160, linestyles='dashed', colors='r')
     plt.show()
 
