@@ -100,21 +100,32 @@ def fit(star_name, data, model, silent=False, breakdown=False):
     plt.show()
 
     if breakdown is True:
+        params = []
+
         cont = model[0]
-        plt.scatter(wave, flux, marker='.', c='black')
-        plt.plot(wave, model(wave), c='C1')
+
+        if silent is False:
+            plt.scatter(wave, flux, marker='.', c='black')
+            plt.plot(wave, model(wave), c='C1')
 
         for line in model:
             if (line.name[0] != '('):
                 if line.name == 'Cont_flux':
-                    print(line)
-                    plt.plot(wave,line(wave), linestyle='--')
+                    if silent is False:
+                        print(line)
+                        plt.plot(wave,line(wave), linestyle='--')
                 else:
-                    print()
-                    print(line)
-                    plt.plot(wave,line(wave)*cont(wave), linestyle='--')
+                    params.append(line)
+                    if silent is False:
+                        print()
+                        print(line)
+                        plt.plot(wave,line(wave)*cont(wave), linestyle='--')
+
+
 
         plt.show()
+
+        return model, params
 
     return model
 
