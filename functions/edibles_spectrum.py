@@ -11,6 +11,7 @@ class EdiblesSpectrum:
         # Assume the file is a DR3 product here. 
         hdu = fits.open(self.filename)
         self.header = hdu[0].header
+        self.date = self.header["DATE-OBS"]
         self.flux = hdu[0].data
         self.flux_units="arbitrary"
         crval1 = hdu[0].header["CRVAL1"]
