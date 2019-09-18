@@ -33,14 +33,23 @@ class EdiblesSpectrum:
         self.filename = datadir + filename
         self.loadSpectrum()
 
-    def getSpectrum(self, xmin=None, xmax=None):
+    def getSpectrum(self, xmin=None, xmax=None, bary=False):
 
-        if (xmin is not None) and (xmax is not None):
 
-            assert xmin < xmax, 'xmin must be less than xmax'
-            idx = (self.wave > xmin) * (self.wave < xmax)
+        if bary is True:
+            if (xmin is not None) and (xmax is not None):
+                assert xmin < xmax, 'xmin must be less than xmax'
+                idx = (self.bary_wave > xmin) * (self.bary_wave < xmax)
 
-            return self.wave[np.where(idx)], self.flux[np.where(idx)]
+                return self.bary_wave[np.where(idx)], self.flux[np.where(idx)]
+
+        else:
+            if (xmin is not None) and (xmax is not None):
+                assert xmin < xmax, 'xmin must be less than xmax'
+                idx = (self.wave > xmin) * (self.wave < xmax)
+
+                return self.wave[np.where(idx)], self.flux[np.where(idx)]
+
         return self.wave, self.flux
 
 
@@ -50,7 +59,10 @@ if __name__ == '__main__':
     print("Barycentric Velocity is", sp.v_bary)
     print(sp.target)
     plt.plot(sp.wave, sp.flux, label='Geocentric')
-    plt.plot(sp.bary_wave, sp.flux, label='Barycentric')
+
+    bary_data = sp.getSpectrum(xmin=7660,xmax=7705, bary=True)
+
+    plt.plot(bary_data[0], bary_data[1], label='Barycentric')
     axes = plt.gca()
     axes.set_xlim([7660,7705])
     axes.set_ylim([0,160])
