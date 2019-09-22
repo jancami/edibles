@@ -93,10 +93,12 @@ def fit(star_name, data, model, silent=False, breakdown=False):
         plt.ylabel('Flux', fontsize=12)
         plt.tick_params(axis='both', labelsize=12)
 
-    duration = time.time() - start
-    print()
-    print('Time taken: ' + str(duration))
-    print()
+    if silent is False:
+        duration = time.time() - start
+        print()
+        print('Time taken: ' + str(duration))
+        print()
+
     plt.show()
 
     if breakdown is True:
