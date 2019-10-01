@@ -13,13 +13,8 @@ from matplotlib.figure import Figure
 from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from gui import Ui_MainWindow
-from edibles_spectrum import edibles_spectrum as edspec
-
-
-# Directory spectra are contained in (TODO: sensible way of initialising this)
-path2spectra = '../../spectra/'
-
+from edibles.gui.gui import Ui_MainWindow
+from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
 
 class PandasModel(QAbstractTableModel):
     """
@@ -190,13 +185,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 filename = self.selectionmodel.data(
                            self.selectionmodel.index(idxxx.row(), 0))
                 # Load wav and flux of corresponding spectrum
-                wav, flux = edspec(path2spectra+filename).GetSpectrum()
+                wav, flux = edspec(filename).getSpectrum()
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
             self.canvas.draw()
-        except(AttributeError, IndexError):
-            pass
+        #except(AttributeError, IndexError):
+        #    pass
         except(FileNotFoundError):
             print('FileNotFoundError: \"' + filename + '\" not found...')
 
