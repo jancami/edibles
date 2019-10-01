@@ -42,12 +42,12 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
     def __init__(self, name='voigtabsorptionline'):
 
-        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False)
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False, min=0.0)
         self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
-        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=1e-12)
-        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0)
-        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0)
-        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=1e-12)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
+        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0.0)
+        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0.0)
+        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=0.0)
 
         ArithmeticModel.__init__(self, name,
                                  (self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
@@ -88,6 +88,162 @@ class VoigtAbsorptionLine(ArithmeticModel):
         return transmission
 
 
+class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
+    """
+    Identical to VoigtAbsorptionLine but splits lam_0 into two variables, where lam_0 -> lam_0 * k
+    Used for linking lam_0 to another model and changing k
+    """
+    def __init__(self, name='voigtabsorptionline'):
+        # lambda' = lambda * (c + v')/(c + v) = lambda * k
+        self.k = Parameter(name, 'k', 1.00005, frozen=False, min=1e-12)
+        self.lam_0 = Parameter(name, 'lam_0', 5000., frozen=False, min=0.0)
+        self.b = Parameter(name, 'b', 3.5, frozen=False, min=1e-12)
+        self.d = Parameter(name, 'd', 0.0005, frozen=False, min=0)
+        self.N = Parameter(name, 'N', 999, frozen=True, hidden=True, min=0.0)
+        self.f = Parameter(name, 'f', 999, frozen=True, hidden=True, min=0.0)
+        self.tau_0 = Parameter(name, 'tau_0', 0.1, frozen=False, min=0.0)
+
+        ArithmeticModel.__init__(self, name,
+                                 (self.k, self.lam_0, self.b, self.d, self.N, self.f, self.tau_0))
+
+    def calc(self, pars, x, *args, **kwargs):
+        '''
+        INPUT:
+
+        lam:
+            [float64]  (Angstroms)  Wavelength grid
+        pars:
+            lam_0:
+                [float64]  (Angstroms)  Central wavelength
+            b:
+                [float64]  (km/s)       Gaussian standard deviation
+            d:
+                [float64]  (units)      Damping parameter
+
+            Choose:
+                N:        [float64]  (units)      Column density
+                f:        [float64]  (units)      Oscillator strength
+                ========================  OR  ========================
+                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
+
+        OUTPUT:
+
+        line:
+            [ndarray]    Voigt profile
+        '''
+
+        k, lam_0, b, d, N, f, tau_0 = pars
+
+        if N != 999:
+            transmission = voigtAbsorptionLine(lam=x, lam_0=k * lam_0, b=b, d=d, N=N, f=f)
+        else:
+            transmission = voigtAbsorptionLine(lam=x, lam_0=k * lam_0, b=b, d=d, tau_0=tau_0)
+
+        return transmission
+
+
+class Sightline:
+    '''A sightline with multiple groups of lines (clouds) that share
+    the same b and d parameters. Groups can be Stellar, Interstellar,
+    or Telluric, or subsets of each.
+    '''
+    def __init__(self, star_name, cont):
+
+        self.star_name = star_name
+        self.model = cont
+
+        self.clouds = {}
+        self.lines = {}
+        self.current_cloud = None
+
+    def dupCloud(self, old_cloud_name, new_cloud_name, k):
+        """
+        Used for easily linking the wavelengths of one cloud to another in a new
+        cloud, creating each of the lines automatically.
+
+            k is related to the velocity relative to the two clouds. k=0.99995 will decrease the wavelength.
+            All other parameters are intialized to be the same as the other cloud.
+
+        INPUT:
+            old_cloud_name:     [string]
+            new_cloud_name:     [string]
+            k:                  [float]
+        """
+        b = self.clouds[old_cloud_name].b.val
+        d = self.clouds[old_cloud_name].d.val
+        self.addCloud(new_cloud_name, b, d, k)
+
+        for i, line in enumerate(self.lines[old_cloud_name]):
+            new_line = VoigtAbsorptionLine(name=new_cloud_name + '-line ' + str(i))
+            new_line.lam_0 = self.init_line.k * line.lam_0
+            new_line.b = self.init_line.b
+            new_line.d = self.init_line.d
+            new_line.tau_0 = line.tau_0.val
+
+            self.model *= new_line
+            self.lines[new_cloud_name].append(new_line)
+
+    def addCloud(self, cloud_name, b, d, k=None):
+        '''This is an "initializer line" for the purpose of linking 
+            the b and d parameters of subsequent lines - VALUES WILL BE HIDDEN
+
+            DONT use k unless lam_0 is linked to another model. It is redundant
+        '''
+        if k is None:
+            init_line = VoigtAbsorptionLine(name=cloud_name)
+        else:
+            init_line = LinkedWavelengthVoigtAbsorptionLine(name=cloud_name)
+            init_line.k = k
+
+        init_line.lam_0 = 5000  # arbitrary
+        init_line.lam_0.frozen = True  # frozen to decrease fit params - arbitrary
+        # init_line.lam_0.hidden=True
+        init_line.b = b
+        # init_line.b.hidden=True
+        init_line.d = d
+        # init_line.d.hidden=True
+        init_line.tau_0 = 0.0           # MUST BE ZERO
+        init_line.tau_0.frozen = True   # MUST BE FROZEN
+        init_line.tau_0.hidden=True
+
+        self.init_line = init_line
+        self.model *= init_line
+
+        self.clouds[cloud_name] = init_line
+        self.lines[cloud_name] = []  # REMOVES WHAT IS ALREADY THERE
+        self.current_cloud = cloud_name
+
+    def setCloud(self, cloud_name):
+        """
+        Changes which cloud a line is being added to when addLine is called
+
+        """
+        if cloud_name in self.clouds.keys():
+            self.current_cloud = cloud_name
+            self.init_line = self.clouds[self.current_cloud]
+        else:
+            raise NameError("Cloud {} was not initialized".format(cloud_name))
+
+    def addLine(self, name, lam_0, tau_0):
+        '''Creates an instance of a VoigtAbsorptionLine object
+
+        INPUT:
+            name:       [string]
+            lam_0       [float]
+            tau_0       [float]
+        OUTPUT:
+            line model  [object instance]
+        '''
+        line = VoigtAbsorptionLine(name=name)
+        line.lam_0 = lam_0
+        line.b = self.init_line.b
+        line.d = self.init_line.d
+        line.tau_0 = tau_0
+
+        self.model *= line
+        self.lines[self.current_cloud].append(line)
+
+
 class KnownVelocityLine(ArithmeticModel):
     """Voigt function for modelling absorption, with KNOWN astronomical parameters.
 
@@ -103,7 +259,7 @@ class KnownVelocityLine(ArithmeticModel):
         N:  
             [float64]  (1/cm^2)     Column density
         f:
-            [float64]  (unitless?)  Oscillator strength
+            [float64]  (unitless)  Oscillator strength
         lab_lam_0:
             [float64]  (Angstroms)  Lab rest wavelength (AIR)
     """
@@ -135,7 +291,7 @@ class KnownVelocityLine(ArithmeticModel):
             N:  
                 [float64]  (1/cm^2)     Column density
             f:
-                [float64]  (unitless?)  Oscillator strength
+                [float64]  (unitless)  Oscillator strength
             lab_lam_0:
                 [float64]  (Angstroms)  Lab rest wavelength (AIR)
 
@@ -172,7 +328,7 @@ class Cont1D(ArithmeticModel):
 
     """
 
-    def __init__(self, name='continuum_flux_value'):
+    def __init__(self, name='Cont_flux'):
 
         self.y1 = Parameter(name, 'y1', 1.0, frozen=True)
         self.y2 = Parameter(name, 'y2', 1.0, frozen=True)
