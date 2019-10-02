@@ -154,6 +154,7 @@ class Sightline:
 
         self.clouds = {}
         self.lines = {}
+        self.lines['all'] = []
         self.current_cloud = None
 
     def dupCloud(self, old_cloud_name, new_cloud_name, k):
@@ -182,6 +183,7 @@ class Sightline:
 
             self.model *= new_line
             self.lines[new_cloud_name].append(new_line)
+            self.lines['all'].append(new_line)
 
     def addCloud(self, cloud_name, b, d, k=None):
         '''This is an "initializer line" for the purpose of linking 
@@ -236,12 +238,42 @@ class Sightline:
         '''
         line = VoigtAbsorptionLine(name=name)
         line.lam_0 = lam_0
+
+        # Attempting to stop line crossover
+        if len(self.lines['all']) != 0:
+
+            val_list=[]
+            for old_line in self.lines['all']:
+                val_list.append(old_line.lam_0.val)
+            sorted_val_list = np.sort(val_list)
+
+            try:   # MAX
+                max_we_want = min(sorted_val_list[sorted_val_list > line.lam_0.val])
+                for old_line in self.lines['all']:
+                    if max_we_want == old_line.lam_0.val:
+                        max_line = old_line
+                line.lam_0.max = max_line.lam_0.val
+            except ValueError:
+                pass
+
+            
+            try:   # MIN
+                min_we_want = max(sorted_val_list[sorted_val_list < line.lam_0.val])
+                for old_line in self.lines['all']:
+                    if min_we_want == old_line.lam_0.val:
+                        min_line = old_line
+                line.lam_0.min = min_line.lam_0.val
+            except ValueError:
+                pass
+
+
         line.b = self.init_line.b
         line.d = self.init_line.d
         line.tau_0 = tau_0
 
         self.model *= line
         self.lines[self.current_cloud].append(line)
+        self.lines['all'].append(line)
 
 
 class KnownVelocityLine(ArithmeticModel):
