@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from edibles.gui.gui import Ui_MainWindow
 from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
 
+
 class PandasModel(QAbstractTableModel):
     """
     Class to populate a table view with a pandas dataframe
@@ -119,14 +120,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Load overview file from /catalog/DR3_obslist.ext.txt
         self.load_overview()
         # Initialise Filter/Data overview
-        self.filtertab()
+        self.filtertab(self.overview)
         # Initialise MPL figure and toolbar
         self.add_mpl()
 
         # Connect Main window buttons to relevant functions
         self.ui.FilterAddButton.clicked.connect(lambda: self.filter_add())
-        self.ui.FilterRemButton.clicked.connect(lambda: self.filter_rem())
         self.ui.PlotButton.clicked.connect(lambda: self.update_plot())
+        self.ui.ObjectpushButton.clicked.connect(lambda: self.Objectfilter())
 
     def keyPressEvent(self, event):
 
@@ -190,14 +191,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
             self.canvas.draw()
-        #except(AttributeError, IndexError):
-        #    pass
+        except(AttributeError, IndexError):
+            pass
         except(FileNotFoundError):
             print('FileNotFoundError: \"' + filename + '\" not found...')
 
-    def filtertab(self):
+    def filtertab(self, input):
         # Initialise overview table from pandas dataframe, and show the dialog
-        self.model = PandasModel(self.overview)
+        self.model = PandasModel(input)
         self.ui.FiltertableView.setModel(self.model)
 
     def filter_add(self):
@@ -228,18 +229,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 statustext = ''
             self.ui.statusBar.showMessage(statustext, 3000)
 
-    def filter_rem(self):
-            idx = self.ui.FiltertableView.selectionModel().selectedRows()
-            for idxxx in idx:
-                filename = self.model.data(self.model.index(idxxx.row(), 4))
-
-                if len(self.selected_data):
-                    if filename in self.selected_data:
-                        self.selected_data.remove(filename)
-                        continue
-
-            self.selectionmodel = SelectionModel(self.selected_data)
-            self.ui.SelectedDataTable.setModel(self.selectionmodel)
+    def Objectfilter(self):
+        if len(self.ui.ObjectlineEdit.text()):
+            self.filtertab(self.overview[self.overview['Object'].str.contains(
+                           self.ui.ObjectlineEdit.text())])
+        else:
+            self.filtertab(self.overview)
 
 
 if __name__ == "__main__":
