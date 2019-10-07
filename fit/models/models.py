@@ -156,6 +156,7 @@ class Sightline:
         self.lines = {}
         self.lines['all'] = []
         self.current_cloud = None
+        self.resolution = 80000
 
     def dupCloud(self, old_cloud_name, new_cloud_name, k):
         """
@@ -251,21 +252,19 @@ class Sightline:
                 max_we_want = min(sorted_val_list[sorted_val_list > line.lam_0.val])
                 for old_line in self.lines['all']:
                     if max_we_want == old_line.lam_0.val:
-                        max_line = old_line
-                line.lam_0.max = max_line.lam_0.val
+                        max_line = old_line 
+                line.lam_0.max = max_line.lam_0.val - 0.5*max_line.lam_0.val/self.resolution
             except ValueError:
                 pass
 
-            
             try:   # MIN
                 min_we_want = max(sorted_val_list[sorted_val_list < line.lam_0.val])
                 for old_line in self.lines['all']:
                     if min_we_want == old_line.lam_0.val:
                         min_line = old_line
-                line.lam_0.min = min_line.lam_0.val
+                line.lam_0.min = min_line.lam_0.val + 0.5*min_line.lam_0.val/self.resolution
             except ValueError:
                 pass
-
 
         line.b = self.init_line.b
         line.d = self.init_line.d
