@@ -42,7 +42,7 @@ full_list = [obsfile() for i in range(n_files)]
 for count in range(len(allfitsfiles)):
     full_list[count].filename = allfitsfiles[count]
     # print(datadir + full_list[count].filename)
-    spec = EdiblesSpectrum(datadir + full_list[count].filename)
+    spec = EdiblesSpectrum(full_list[count].filename)
     # print(spec.header)
     full_list[count].object = spec.header["OBJECT"]
     full_list[count].date_obs = spec.header["DATE-OBS"]
