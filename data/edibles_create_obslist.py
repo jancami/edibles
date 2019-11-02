@@ -7,8 +7,8 @@
 import os
 import numpy as np
 import csv
-from edibles.edibles_settings import *
-from edibles.functions.edibles_spectrum import *
+from edibles.edibles_settings import datadir, edibles_pythondir, datarelease
+from edibles.functions.edibles_spectrum import EdiblesSpectrum
 
 
 print(datadir)

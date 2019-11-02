@@ -15,7 +15,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from edibles.gui.gui import Ui_MainWindow
 from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.gui.models import PandasModel, SelectionModel
-from edibles.edibles_settings import *
+from edibles.edibles_settings import edibles_pythondir
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
