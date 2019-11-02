@@ -84,7 +84,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_overview(self):
         # Load obslist overview into pandas frame
-        self.overview = pd.read_csv(edibles_pythondir + 'catalog/DR3_obslist_ext.txt',
+        self.overview = pd.read_csv(edibles_pythondir + '/catalog/DR3_obslist_ext.txt',
                                     delim_whitespace=True)
         cols = list(self.overview)
         # move the Filename column to end of list using index, pop and insert
