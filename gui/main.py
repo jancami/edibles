@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
 from edibles.gui.gui import Ui_MainWindow
 from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.gui.models import PandasModel, SelectionModel
@@ -27,11 +27,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     Current functionality:
     - Use filter tab to select EDIBLES spectra
     - Use plot tab to display matplotlib plot of highlighted spectra
+    - Basic I/O functions for subselection
+    - Basic filtering by object and wavelength (value or range)
 
     TODO:
-    - I/O functions for subselection?
     - Add FITS header/stellar/etc info into new panel below MPL canvas?
-    - Implement filter functions for overview table (by starname, etc)
+    - More filter functions for overview table?
     - Expand overview file with additional parameters? (exptime, S/N, etc)
     - Integrate fitting/science functions into GUI
       (i.e. interactive lambda selection for profile fitting, etc)
@@ -55,42 +56,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect Main window buttons to relevant functions
         self.ui.FilterAddButton.clicked.connect(lambda: self.filter_add())
         self.ui.PlotButton.clicked.connect(lambda: self.update_plot())
-        self.ui.ObjectpushButton.clicked.connect(lambda: self.Objectfilter())
+        self.ui.SearchPushButton.clicked.connect(lambda: self.Objectfilter())
+        self.ui.Selectedpushbutton.clicked.connect(lambda: self.Remove_selected())
+        self.ui.menuExit.triggered.connect(qApp.quit)
+        # TODO Probably make these names shorter...
+        self.ui.menuSelectedDataImport.triggered.connect(self.ImportSelData)
+        self.ui.menuSelectedDataExport.triggered.connect(self.ExportSelData)
+
+    def ImportSelData(self):
+        # retrieve file to load in
+        fname = QFileDialog.getOpenFileName(self, 'Open file', './')
+        if fname[0]:
+            with open(fname[0], 'r') as f:
+                # for filename in file
+                for filename in f.read().splitlines():
+                    if filename in self.selected_data:
+                        # if filename already in selected data, skip
+                        continue
+                    # add filename to selected data
+                    self.selected_data.append(filename)
+                # refresh selected data table
+                if len(self.selected_data):
+                    self.selectionmodel = SelectionModel(self.selected_data)
+                    self.ui.SelectedDataTable.setModel(self.selectionmodel)
+
+    def ExportSelData(self):
+        # create file to export selected data to
+        fname = QFileDialog.getSaveFileName(self, 'Save file', './')
+        if fname[0]:
+            with open(fname[0], 'w') as f:
+                for row in self.selected_data:
+                    f.write(row + '\n')
 
     def keyPressEvent(self, event):
-
         # Delete key used to remove highlighted spectra from selected sidebar
         if event.key() == QtCore.Qt.Key_Delete:
-            # Get highlighted rows
-            idx = self.ui.SelectedDataTable.selectionModel().selectedRows()
+            self.Remove_selected()
 
-            # Retrieve filename corresponding to highlighted rows
-            # ( TODO probably a nicer way to do this?)
-            filenames = []
-            for idxxx in idx:
-                filenames.append(self.selectionmodel.data(
-                                 self.selectionmodel.index(idxxx.row(), 0)))
+    def Remove_selected(self):
+        # Get highlighted rows
+        idx = self.ui.SelectedDataTable.selectionModel().selectedRows()
 
-            # Iterate over highlighted files, remove rom selection list
-            for filename in filenames:
-                if len(self.selected_data):
-                    if filename in self.selected_data:
-                        self.selected_data.remove(filename)
-                        continue
+        # Retrieve filename corresponding to highlighted rows
+        # ( TODO probably a nicer way to do this?)
+        filenames = []
+        for idxxx in idx:
+            filenames.append(self.selectionmodel.data(
+                             self.selectionmodel.index(idxxx.row(), 0)))
 
-            # Regenerate selection model and tableview
-            self.selectionmodel = SelectionModel(self.selected_data)
-            self.ui.SelectedDataTable.setModel(self.selectionmodel)
+        # Iterate over highlighted files, remove rom selection list
+        for filename in filenames:
+            if len(self.selected_data):
+                if filename in self.selected_data:
+                    self.selected_data.remove(filename)
+                    continue
+
+        # Regenerate selection model and tableview
+        self.selectionmodel = SelectionModel(self.selected_data)
+        self.ui.SelectedDataTable.setModel(self.selectionmodel)
 
     def load_overview(self):
         # Load obslist overview into pandas frame
-        self.overview = pd.read_csv(edibles_pythondir + '/catalog/DR3_obslist_ext.txt',
-                                    delim_whitespace=True)
-        cols = list(self.overview)
-        # move the Filename column to end of list using index, pop and insert
-        cols.insert(len(cols), cols.pop(cols.index('Filename')))
-        # use ix to reorder
-        self.overview = self.overview.ix[:, cols]
+        self.overview = pd.read_csv(edibles_pythondir + '/data/DR4_ObsLog.csv')
 
     def add_mpl(self):
         # Initial MPL figure and toolbar
@@ -118,6 +145,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
+                self.ax.set_xlabel(r'Wavelength ($\AA$)')
+                self.ax.set_ylabel(r'Flux')
+
             self.canvas.draw()
         except(AttributeError, IndexError):
             pass
@@ -133,7 +163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             idx = self.ui.FiltertableView.selectionModel().selectedRows()
             skiptotal = 0
             for idxxx in idx:
-                filename = self.model.data(self.model.index(idxxx.row(), 4))
+                filename = self.model.data(self.model.index(idxxx.row(), 7))
 
                 if len(self.selected_data):
                     if filename in self.selected_data:
@@ -158,11 +188,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ui.statusBar.showMessage(statustext, 3000)
 
     def Objectfilter(self):
-        if len(self.ui.ObjectlineEdit.text()):
-            self.filtertab(self.overview[self.overview['Object'].str.contains(
-                           self.ui.ObjectlineEdit.text())])
-        else:
-            self.filtertab(self.overview)
+        newdata = self.overview
+        obj_in = self.ui.ObjLineEdit.text()
+        wav_in = self.ui.WavLineEdit.text()
+
+        if len(obj_in):
+            newdata = newdata[newdata['Object'].str.contains(obj_in, na=False,
+                                                             case=False)]
+
+        if len(wav_in):
+            if '-' in wav_in:
+                wav_min, wav_max = wav_in.split('-')
+                try:
+                    newdata = newdata[((newdata['WaveMin'] < float(wav_min)) &
+                                      (newdata['WaveMax'] > float(wav_min))) |
+                                      ((newdata['WaveMin'] < float(wav_max)) &
+                                      (newdata['WaveMax'] > float(wav_max))) |
+                                      ((newdata['WaveMin'] < float(wav_max)) &
+                                      (newdata['WaveMax'] > float(wav_min)))]
+                except(ValueError):
+                    pass
+            else:
+                try:
+                    newdata = newdata[(newdata['WaveMin'] < float(wav_in)) &
+                                      (newdata['WaveMax'] > float(wav_in))]
+                except(ValueError):
+                    pass
+        self.filtertab(newdata)
 
 
 if __name__ == "__main__":
