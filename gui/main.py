@@ -24,6 +24,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     Command line usage: $ python main.py
 
+    Alternatively, add the following to .bashrc/bashprofile for command line
+    usage anywhere:
+    
+    $ alias edigui="python /FULL/PATH/TO/edibles/gui/main.py"
+
+    Alternate command line usage: $ edigui
+
     Current functionality:
     - Use filter tab to select EDIBLES spectra
     - Use plot tab to display matplotlib plot of highlighted spectra
