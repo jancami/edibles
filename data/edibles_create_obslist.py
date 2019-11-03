@@ -32,6 +32,9 @@ class obsfile:
         self.setting = ''
         self.wave_min = ''
         self.wave_max = ''
+        self.ra = ''
+        self.dec = ''
+        self.exptime = ''
         # self.order=0
         # self.merged=False
 
@@ -46,6 +49,9 @@ for count in range(len(allfitsfiles)):
     # print(spec.header)
     full_list[count].object = spec.header["OBJECT"]
     full_list[count].date_obs = spec.header["DATE-OBS"]
+    full_list[count].ra = spec.header["RA"]
+    full_list[count].dec = spec.header["DEC"]
+    full_list[count].exptime = spec.header["EXPTIME"]
     print(allfitsfiles[count])
     if "HIERARCH ESO INS GRAT1 WLEN" in spec.header:
         full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT1 WLEN"])
@@ -57,11 +63,13 @@ for count in range(len(allfitsfiles)):
     del spec
 
 # Create arrays of formatted strings to print to a csv file now.
-pstrings = [['Filename', 'Object', 'DateObs', 'setting', 'WaveMin', 'WaveMax']]
+pstrings = [['Object', 'RA', 'DEC', 'DateObs', 'setting', 'WaveMin', 'WaveMax',
+            'Filename']]
 for count in range(n_files):
-    pstrings.append([full_list[count].filename, full_list[count].object,
-                    full_list[count].date_obs, full_list[count].setting,
-                    full_list[count].wave_min, full_list[count].wave_max])
+    pstrings.append([full_list[count].object, full_list[count].ra,
+                     full_list[count].dec, full_list[count].date_obs,
+                     full_list[count].setting, full_list[count].wave_min,
+                     full_list[count].wave_max, full_list[count].filename])
 
 # Time to print things out! Let's use csv format to do that.
 outfile = edibles_pythondir + "/data/" + datarelease + "_ObsLog.csv"
