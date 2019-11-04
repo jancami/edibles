@@ -2145,8 +2145,15 @@
     <addaction name="menuSelectedDataImport"/>
     <addaction name="menuSelectedDataExport"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Setti&amp;ngs</string>
+    </property>
+    <addaction name="actionEnable_ASCII_format"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSelectedData"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionExit">
@@ -2178,6 +2185,14 @@
   <action name="menuSelectedDataExport">
    <property name="text">
     <string>&amp;Export...</string>
+   </property>
+  </action>
+  <action name="actionEnable_ASCII_format">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable ASCII format</string>
    </property>
   </action>
  </widget>
