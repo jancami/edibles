@@ -15,27 +15,12 @@ __all__ = ('Cont1D', 'Voigt1D', 'AstroVoigt1D', 'VoigtAbsorptionLine')
 
 
 class VoigtAbsorptionLine(ArithmeticModel):
-    """Voigt function for modelling absorption, with astronomical parameters.
+    """Class for modelling Voigt absorption with astronomical parameters.
+
+
 
     Attributes
     ----------
-
-    lam:
-        [float64]  (Angstroms)  Wavelength grid
-
-    pars:
-        lam_0:
-            [float64]  (Angstroms)  Central wavelength
-        b:
-            [float64]  (km/s)       Gaussian standard deviation
-        d:
-            [float64]  (units)      Damping parameter
-
-        Choose:
-            N:        [float64]  (units)      Column density
-            f:        [float64]  (units)      Oscillator strength
-            ========================  OR  ========================
-            tau_0:    [float64]  (units)      Scaling parameter, default = 0.1
 
 
     """
@@ -54,28 +39,28 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
     def calc(self, pars, x, *args, **kwargs):
         '''
-        INPUT:
 
-        lam:
-            [float64]  (Angstroms)  Wavelength grid
-        pars:
-            lam_0:
-                [float64]  (Angstroms)  Central wavelength
-            b:
-                [float64]  (km/s)       Gaussian standard deviation
-            d:
-                [float64]  (units)      Damping parameter
+        Parameters
+        ----------
+        lam : float64
+            Wavelength grid
+        lam_0 : float64
+            Central wavelength
+        b : float64
+            Gaussian standard deviation
+        d : float64
+            Damping parameter
+        N : float64
+            Column density
+        f : float64
+            Oscillator strength
+        tau_0 : float64
+            Scaling parameter
 
-            Choose:
-                N:        [float64]  (units)      Column density
-                f:        [float64]  (units)      Oscillator strength
-                ========================  OR  ========================
-                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
-
-        OUTPUT:
-
-        line:
-            [ndarray]    Voigt profile
+        Returns
+        -------
+        ndarray
+            Voigt absorption line transmission
         '''
 
         lam_0, b, d, N, f, tau_0 = pars
@@ -108,28 +93,29 @@ class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
 
     def calc(self, pars, x, *args, **kwargs):
         '''
-        INPUT:
 
-        lam:
-            [float64]  (Angstroms)  Wavelength grid
-        pars:
-            lam_0:
-                [float64]  (Angstroms)  Central wavelength
-            b:
-                [float64]  (km/s)       Gaussian standard deviation
-            d:
-                [float64]  (units)      Damping parameter
+        Parameters
+        ----------
+        lam : float64
+            Wavelength grid
+        lam_0 : float64
+            Central wavelength
+        b : float64
+            Gaussian standard deviation
+        d : float64
+            Damping parameter
+        N : float64
+            Column density
+        f : float64
+            Oscillator strength
+        tau_0 : float64
+            Scaling parameter
 
-            Choose:
-                N:        [float64]  (units)      Column density
-                f:        [float64]  (units)      Oscillator strength
-                ========================  OR  ========================
-                tau_0:    [float64]  (units)      Optical Depth at peak, default = 0.1
+        Returns
+        -------
+        ndarray
+            Voigt profile line absorption
 
-        OUTPUT:
-
-        line:
-            [ndarray]    Voigt profile
         '''
 
         k, lam_0, b, d, N, f, tau_0 = pars
@@ -143,9 +129,30 @@ class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
 
 
 class Sightline:
-    '''A sightline with multiple groups of lines (clouds) that share
-    the same b and d parameters. Groups can be Stellar, Interstellar,
-    or Telluric, or subsets of each.
+    '''
+    An object containing continuum and all Voigt models.
+
+
+    A sightline with multiple sources of lines that share the same b 
+    and d parameters. Groups can be Stellar, Interstellar, Telluric, 
+    or subsets of each.
+
+    Attributes
+    ----------
+    star_name : str
+        name of the target star
+    model : Object
+        Combination of continuum and 0 or more Voigt lines
+    clouds : dict
+        Dict of all the sources in the sightline
+    lines : dict
+        Dict of all the lines in the sightline
+    current_cloud : str
+        The current source of lines
+    resolution : float64
+        The resolution of the data
+
+
     '''
     def __init__(self, star_name, cont):
 

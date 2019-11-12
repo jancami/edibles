@@ -25,7 +25,7 @@ def voigtMath(x, alpha, gamma):
 
     Returns
     -------
-    array
+    ndarray
         Flux array for given input
 
     """
@@ -55,7 +55,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
     Returns
     -------
-    array
+    ndarray
         Optical depth for given input
 
     """
@@ -114,7 +114,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
     Returns
     -------
-    array
+    ndarray
         flux array of light transmission
 
     """
