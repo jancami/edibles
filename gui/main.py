@@ -4,7 +4,7 @@
 # Requirements: Python3, pandas, matplotlib, PyQt5
 
 import sys
-# import numpy as np
+import numpy as np
 import pandas as pd
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
 from edibles.gui.gui import Ui_MainWindow
 from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.gui.models import PandasModel, SelectionModel
-from edibles.edibles_settings import edibles_pythondir
+from edibles.edibles_settings import edibles_pythondir, datadir
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -26,7 +26,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     Alternatively, add the following to .bashrc/bashprofile for command line
     usage anywhere:
-    
+
     $ alias edigui="python /FULL/PATH/TO/edibles/gui/main.py"
 
     Alternate command line usage: $ edigui
@@ -77,6 +77,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(fname[0], 'r') as f:
                 # for filename in file
                 for filename in f.read().splitlines():
+                    if 'ascii' in filename:
+                        filename = filename.replace('ascii', 'fits')
                     if filename in self.selected_data:
                         # if filename already in selected data, skip
                         continue
@@ -93,7 +95,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if fname[0]:
             with open(fname[0], 'w') as f:
                 for row in self.selected_data:
-                    f.write(row + '\n')
+                    if self.ui.actionEnable_ASCII_format.isChecked():
+                        f.write(row[:-4] + 'ascii\n')
+                    else:
+                        f.write(row + '\n')
 
     def keyPressEvent(self, event):
         # Delete key used to remove highlighted spectra from selected sidebar
@@ -148,7 +153,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 filename = self.selectionmodel.data(
                            self.selectionmodel.index(idxxx.row(), 0))
                 # Load wav and flux of corresponding spectrum
-                wav, flux = edspec(filename).getSpectrum()
+                if self.ui.actionEnable_ASCII_format.isChecked():
+                    wav, flux = np.loadtxt(datadir+filename[:-4]+'ascii',unpack=True)
+                else:
+                    wav, flux = edspec(filename).getSpectrum()
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
