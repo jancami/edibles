@@ -110,7 +110,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     f : float64
         Oscillator strength
     tau_0 : float64
-        Scaling parameter
+        Optical depth at center of line
 
     Returns
     -------
