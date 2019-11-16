@@ -3,97 +3,119 @@ from scipy.special import wofz
 import astropy.constants as cst
 
 
-def voigtNorm(x, alpha, gamma):
+def voigtMath(x, alpha, gamma):
     """
-    Return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
+    Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
     and Gaussian component HWHM alpha.
 
-    INPUT:
+    Creates a Voigt line profile using the scipy.special.wofz, which returns 
+    the value of the Faddeeva function. 
 
-    x:        [float64]    dimensionless point/array
-    alpha:    [float64]    Gaussian HWHM component
-    gamma:    [float64]    Lorentzian HWHM component
+    WARNING
+    scipy.special.wofz is not compaible with np.float128 type parameters. 
 
-    OUTPUT:
+    Parameters
+    ----------
+    x : float64
+        Dimensionless point/array
+    alpha : float64
+        Gaussian HWHM component
+    gamma : float64
+        Lorentzian HWHM component
 
-    y:        [float64]  Flux for given input
+    Returns
+    -------
+    ndarray
+        Flux array for given input
 
     """
 
-    sigma = alpha / np.sqrt(2. * np.log(2.))
+    sigma = alpha / np.sqrt(2 * np.log(2))
 
-    z = (x + 1j*gamma)/sigma/np.sqrt(2.)
-
-    y = wofz(z).real / (sigma*np.sqrt(2.*np.pi))
-
-    return y
+    return np.real(wofz((x + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
 
 
 def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     """
-    Converts parameters to make proper call to voigtNorm
+    Converts parameters to make proper call to voigtMath
 
-    INPUT:
 
-    lam:      [float64]  (Angstroms)  Wavelength grid
-    lam_0:    [float64]  (Angstroms)  Central wavelength
-    b:        [float64]  (km/s)       Gaussian standard deviation
-    d:        [float64]  (Angstroms)  Damping parameter
-    Nf:       [float64]  (1/cm2)      Scaling parameter, default = 1.0
+    Parameters
+    ----------
+    lam : float64
+        Wavelength grid
+    lam_0 : float64
+        Central wavelength
+    b : float64
+        Gaussian standard deviation
+    d : float64
+        Damping parameter
+    Nf : float64
+        Scaling parameter, default = 1.0
 
-    OUTPUT:
-
-    tau:      [float64]  (none)  Optical depth for given input
+    Returns
+    -------
+    ndarray
+        Optical depth for given input
 
     """
 
     # convert lam & lam_0 to x
-
     x = lam - lam_0
 
-    # convert b to alpha    -->    b = sigma / lam_0 * cst.c.to('km/s')
-
+    # convert b to sigma, then alpha
     sigma = b * lam_0 / cst.c.to('km/s').value
     alpha = sigma * np.sqrt(2. * np.log(2.))
 
-    # convert d to gamma -- ??? is d: [ gamma OR Gamma OR a ] ???
+    # convert d to gamma -- [ depends on what units we want to use ]
 
+    # Currently, we are using the Lorentzian HWHM. This can easily be changed...
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     gamma = d
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    # create y data from voigtNorm
+    # create y data from voigtMath
+    y = voigtMath(x, alpha, gamma)
 
-    y = voigtNorm(x, alpha, gamma)
-    # shift data to desired wavelength location -- I don't think this is a real step
-
-    # multiply by tau_0
+    # Calculate tau_0
     tau_0 = np.pi * (cst.e.esu.value)**2 * Nf*(1e-8*lam_0)**2 / (cst.m_e.to('g').value*(cst.c.to('cm/s').value)**2)  # cm
-    tau_0 *= 1e8  # cm to angstroms
+    # Convert cm to angstroms
+    tau_0 *= 1e8  
 
+    # Calculate tau
     tau = tau_0 * y
+
     # return scaled & shifted data
     return tau
 
 
 def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     """
-    Converts parameters to make proper call to voigtOpticalDepth
+    Function that takes in physical parameters and returns an absorption line. 
 
-    INPUT:
-    lam:          [float64]  (Angstroms)  Wavelength grid
-    lam_0:        [float64]  (Angstroms)  Central wavelength
-    b:            [float64]  (km/s)       Gaussian standard deviation
-    d:            [float64]  (Angstroms)  Damping parameter
-        ======================= EITHER ========================
-        N:        [float64]  (1/cm2)      Column density
-        f:        [float64]  (none)       Oscillator strength
-        ========================  OR  ========================
-        tau_0:    [float64]  (Angstroms)  Scaling parameter, default = 0.1
+    Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
+    Parameters
+    ----------
+    lam : float64
+        Wavelength grid
+    lam_0 : float64
+        Central wavelength
+    b : float64
+        Gaussian standard deviation
+    d : float64
+        Damping parameter
+    N : float64
+        Column density
+    f : float64
+        Oscillator strength
+    tau_0 : float64
+        Optical depth at center of line
 
-    OUTPUT:
-    transmission:    [float64]  (none)
+    Returns
+    -------
+    ndarray
+        flux array of light transmission
 
     """
 
@@ -132,7 +154,7 @@ if __name__ == "__main__":
     tau_0 = 0.05
 
     x = lam - lam_0
-    one = voigtNorm(x, alpha, gamma)
+    one = voigtMath(x, alpha, gamma)
     plt.plot(x, one)
     plt.show()
 
