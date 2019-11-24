@@ -1,2 +1,2 @@
-# edibles-lips
-Software for EDIBLES and LIPS data analysis.
+# edibles
+Software for EDIBLES data analysis and plotting.
