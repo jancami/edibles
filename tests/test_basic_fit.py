@@ -6,12 +6,10 @@ from edibles.fit.models.models import Sightline
 from edibles.fit.fit import fit
 
 
-
 file1 = '/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits'
 sp1 = EdiblesSpectrum(file1)
 xmin = 7661.5
 xmax = 7669.0
-
 
 
 data = sp1.getSpectrum(xmin=xmin,xmax=xmax, bary=False)

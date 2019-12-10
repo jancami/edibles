@@ -2,7 +2,7 @@ import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
 import matplotlib.pyplot as plt
-from edibles.edibles_settings import datadir
+from edibles.edibles import DATADIR
 
 
 class EdiblesSpectrum:
@@ -31,7 +31,7 @@ class EdiblesSpectrum:
         """
         Filename is relative to the DR3 directory
         """
-        self.filename = datadir + filename
+        self.filename = DATADIR + filename
         self.loadSpectrum()
 
     def getSpectrum(self, xmin=None, xmax=None, bary=False):
@@ -54,7 +54,7 @@ class EdiblesSpectrum:
 
 
 if __name__ == '__main__':
-    filename = '/HD170740/RED_860/HD170740_w860_n20_20140916_L.fits'
+    filename = '/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits'
     sp = EdiblesSpectrum(filename)
     print("Barycentric Velocity is", sp.v_bary)
     print(sp.target)
@@ -64,8 +64,8 @@ if __name__ == '__main__':
 
     plt.plot(bary_data[0], bary_data[1], label='Barycentric')
     axes = plt.gca()
-    axes.set_xlim([7660, 7705])
-    axes.set_ylim([0, 160])
-    plt.vlines((7667.021, 7701.093), 0, 160, linestyles='dashed', colors='r')
+    # axes.set_xlim([7660, 7705])
+    # axes.set_ylim([0, 160])
+    # plt.vlines((7667.021, 7701.093), 0, 160, linestyles='dashed', colors='r')
     plt.legend()
     plt.show()

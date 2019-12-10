@@ -2,7 +2,7 @@ from edibles.functions.continuum_guess import generate_continuum
 from edibles.fit.models.models import Cont1D, VoigtAbsorptionLine, KnownVelocityLine
 
 
-def createCont(data, n_points):
+def createCont(data, n_points=4):
     '''
     Creates an spline through a spectrum.
 

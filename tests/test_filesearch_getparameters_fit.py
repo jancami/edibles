@@ -2,9 +2,9 @@ from edibles.fit.models.create_model import createLine, createCont
 import astropy.constants as cst
 
 from edibles.fit.fit import fit
-from edibles.functions.file_search import FilterDR
-from edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.functions.peak_wavelength import largest_peak_wavelength, all_prominent_peak_wavelength
+from edibles.edibles.functions.file_search import FilterDR
+from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.functions.peak_wavelength import largest_peak_wavelength, all_prominent_peak_wavelength
 from astropy.constants import c
 
 import matplotlib.pyplot as plt
