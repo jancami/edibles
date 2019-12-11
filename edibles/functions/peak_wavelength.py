@@ -10,7 +10,9 @@ def largest_peak_wavelength(wave, flux, n=2):
     """
     peaks, _ = find_peaks(-flux)  # indices of peaks
     peak_flux = nsmallest(n, flux[peaks])  # smallest two flux values at peaks
-    peak_wavelength = [wave[np.where(flux == peak)][0] for peak in peak_flux]  # corresponding wavelengths
+    peak_wavelength = [
+        wave[np.where(flux == peak)][0] for peak in peak_flux
+    ]  # corresponding wavelengths
     return peak_wavelength
 
 

@@ -32,7 +32,11 @@ def voigtMath(x, alpha, gamma):
 
     sigma = alpha / np.sqrt(2 * np.log(2))
 
-    return np.real(wofz((x + 1j*gamma)/sigma/np.sqrt(2))) / sigma/np.sqrt(2*np.pi)
+    return (
+        np.real(wofz((x + 1j * gamma) / sigma / np.sqrt(2)))
+        / sigma
+        / np.sqrt(2 * np.pi)
+    )
 
 
 def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
@@ -64,8 +68,8 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     x = lam - lam_0
 
     # convert b to sigma, then alpha
-    sigma = b * lam_0 / cst.c.to('km/s').value
-    alpha = sigma * np.sqrt(2. * np.log(2.))
+    sigma = b * lam_0 / cst.c.to("km/s").value
+    alpha = sigma * np.sqrt(2.0 * np.log(2.0))
 
     # convert d to gamma -- [ depends on what units we want to use ]
 
@@ -78,9 +82,15 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     y = voigtMath(x, alpha, gamma)
 
     # Calculate tau_0
-    tau_0 = np.pi * (cst.e.esu.value)**2 * Nf*(1e-8*lam_0)**2 / (cst.m_e.to('g').value*(cst.c.to('cm/s').value)**2)  # cm
+    tau_0 = (
+        np.pi
+        * (cst.e.esu.value) ** 2
+        * Nf
+        * (1e-8 * lam_0) ** 2
+        / (cst.m_e.to("g").value * (cst.c.to("cm/s").value) ** 2)
+    )  # cm
     # Convert cm to angstroms
-    tau_0 *= 1e8  
+    tau_0 *= 1e8
 
     # Calculate tau
     tau = tau_0 * y
@@ -123,7 +133,12 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     if (N is not None) and (f is not None):
         Nf = N * f
     else:
-        Nf = (tau_0 * 1e-8) * cst.m_e.to('g').value * (cst.c.to('cm/s').value)**2 / (np.pi * (cst.e.esu.value)**2 * (1e-8*lam_0)**2)
+        Nf = (
+            (tau_0 * 1e-8)
+            * cst.m_e.to("g").value
+            * (cst.c.to("cm/s").value) ** 2
+            / (np.pi * (cst.e.esu.value) ** 2 * (1e-8 * lam_0) ** 2)
+        )
 
     tau = voigtOpticalDepth(lam, lam_0, b, d, Nf)
 
@@ -134,20 +149,20 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
 if __name__ == "__main__":
 
-    from edibles.functions.make_grid import make_grid
+    from edibles.edibles.functions.make_grid import make_grid
     import matplotlib.pyplot as plt
 
-        # set params
+    # set params
     alpha = 0.0576265588185308
     gamma = 0.00048255778745462673
-    delta_v = 1000.
-    x_min = 5888.
-    x_max = 5892.
+    delta_v = 1000.0
+    x_min = 5888.0
+    x_max = 5892.0
 
     R = cst.c.value / delta_v
     lam = make_grid(x_min, x_max, resolution=R)
 
-    lam_0 = 5890.
+    lam_0 = 5890.0
     b = 3
     d = 0.00048255778745462673
     Nf = 28747080.71319038
@@ -166,4 +181,3 @@ if __name__ == "__main__":
     plt.plot(lam, three)
 
     plt.show()
-

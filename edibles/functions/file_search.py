@@ -1,15 +1,21 @@
 import pandas as pd
-from edibles.edibles_settings import edibles_pythondir
+from edibles.edibles import EDIBLES_PYTHONDIR, DATARELEASE
 
 
 class FilterDR(object):
     def __init__(self, init_df=None):
         if init_df is None:
-            self.df = pd.read_csv(edibles_pythondir + '/data/DR3_ObsLog.csv')
-            self.df.Object = self.df.Object.apply(lambda x: x.replace(' ', ''))  # HD 123456 -> HD123456
+            self.df = pd.read_csv(
+                EDIBLES_PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
+            )
+            self.df.Object = self.df.Object.apply(
+                lambda x: x.replace(" ", "")
+            )  # HD 123456 -> HD123456
 
-            self.df["Order"] = self.df.Filename.apply(lambda x: int(x.split('_O')[1][:-5]) if '_O' in x else -1)
-            self.df.Order = self.df.Order.astype('int32')
+            self.df["Order"] = self.df.Filename.apply(
+                lambda x: int(x.split("_O")[1][:-5]) if "_O" in x else -1
+            )
+            self.df.Order = self.df.Order.astype("int32")
         else:
             self.df = init_df
 
@@ -30,7 +36,7 @@ class FilterDR(object):
         return reset
 
     def __str__(self):
-        pd.set_option('max_colwidth', -1)
+        pd.set_option("max_colwidth", -1)
         return self.df.to_string()
 
     @staticmethod
@@ -39,7 +45,7 @@ class FilterDR(object):
         :param timestamp: ex. 2014-10-29T07:01:33.557
         :return: 20141029
         """
-        return timestamp.split('T')[0].replace('-', '')
+        return timestamp.split("T")[0].replace("-", "")
 
     @reset_index
     def filterAll(self, **kwargs):
@@ -56,20 +62,20 @@ class FilterDR(object):
             combined:   [boolean]                   If filename contains L, R or U
         """
         keys = kwargs.keys()
-        if 'star' in keys:
-            self.filterStar(kwargs['star'])
-        if 'date' in keys:
-            self.filterDate(kwargs['date'])
-        if 'wavelength' in keys:
-            self.filterRange(kwargs['wavelength'])
-        if 'order' in keys:
-            self.filterOrder(order=kwargs['order'])
-        elif 'combined' in keys:
-            self.filterOrder(combined=kwargs['combined'])
+        if "star" in keys:
+            self.filterStar(kwargs["star"])
+        if "date" in keys:
+            self.filterDate(kwargs["date"])
+        if "wavelength" in keys:
+            self.filterRange(kwargs["wavelength"])
+        if "order" in keys:
+            self.filterOrder(order=kwargs["order"])
+        elif "combined" in keys:
+            self.filterOrder(combined=kwargs["combined"])
         else:
             self.filterOrder()
 
-        self.sort(['star', 'order'])
+        self.sort(["star", "order"])
 
     @reset_index
     def filterStar(self, star):
@@ -84,7 +90,9 @@ class FilterDR(object):
                 filt = filt | ((self.df.WaveMax > wave) & (self.df.WaveMin < wave))
             self.df = self.df[filt]
         else:
-            self.df = self.df[(self.df.WaveMax > lab_wavelength) & (self.df.WaveMin < lab_wavelength)]
+            self.df = self.df[
+                (self.df.WaveMax > lab_wavelength) & (self.df.WaveMin < lab_wavelength)
+            ]
 
     @reset_index
     def filterOrder(self, order=[], combined=False):
@@ -108,15 +116,15 @@ class FilterDR(object):
 
     @reset_index
     def sortOrder(self):
-        self.df.sort_values(by=['Order'], inplace=True)
+        self.df.sort_values(by=["Order"], inplace=True)
 
     @reset_index
     def sortDate(self):
-        self.df.sort_values(by='DateObs', inplace=True)
+        self.df.sort_values(by="DateObs", inplace=True)
 
     @reset_index
     def sortStar(self):
-        self.df.sort_values(by='Object', inplace=True)
+        self.df.sort_values(by="Object", inplace=True)
 
     @reset_index
     def sort(self, columns):
@@ -124,9 +132,7 @@ class FilterDR(object):
             columns = [columns]
         assert all([type(i) == str for i in columns]), "Column names must be strings"
 
-        dic = {'order': 'Order',
-               "date": 'DateObs',
-               'star': 'Object'}
+        dic = {"order": "Order", "date": "DateObs", "star": "Object"}
 
         columns = [dic[s] for s in columns]
         self.df.sort_values(by=columns, inplace=True)
@@ -185,7 +191,7 @@ class FilterDR(object):
         return list(set(self.df.Object))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filter = FilterDR()
     print(filter.filterAll())
     # print(filter.getDates())

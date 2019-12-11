@@ -7,7 +7,7 @@ import sys
 
 
 def fitstotxt(target, filepath, writepath, xmin, xmax):
-    '''
+    """
     Reads a FITS file, applies barycentric and cloud corrections
     and writes a subsection within a given range to a .txt file.
 
@@ -34,14 +34,11 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     fitstotxt('HD144470', '/data/DR3_fits/', '/home/txtfiles/, 6610, 6618)
 
-    '''
-
-
-
+    """
 
     c = 2.99 * (10 ** 8)  # m/s
 
-    arms = ['BLUE_346', 'BLUE_437', 'REDL_564', 'REDU_564', 'REDL_860', 'REDU_860']
+    arms = ["BLUE_346", "BLUE_437", "REDL_564", "REDU_564", "REDL_860", "REDU_860"]
 
     if xmin <= 3876:
         l1 = 0
@@ -69,7 +66,6 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     if xmax >= 8650:
         l2 = 5
 
-
     if l1 == l2:
         warm = [arms[l1]]
     if l1 != l2:
@@ -77,15 +73,15 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     for i in range(len(warm)):
         os.chdir(filepath)
-        loc = filepath + target + '/' + warm[i] + '/'
-        if warm[i] == 'REDL_564' or warm[i] == 'REDU_564':
-            loc = filepath + target + '/RED_564' + '/'
-        if warm[i] == 'REDL_860' or warm[i] == 'REDU_860':
-            loc = filepath + target + '/RED_860' + '/'
+        loc = filepath + target + "/" + warm[i] + "/"
+        if warm[i] == "REDL_564" or warm[i] == "REDU_564":
+            loc = filepath + target + "/RED_564" + "/"
+        if warm[i] == "REDL_860" or warm[i] == "REDU_860":
+            loc = filepath + target + "/RED_860" + "/"
 
         if os.path.isdir(loc) is False:
-            print('This object have not been observed yet!')
-            return()
+            print("This object have not been observed yet!")
+            return ()
         os.chdir(loc)
 
     # Min and Max values used in order to shift based on interstellar NaI
@@ -112,27 +108,24 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     DIB_x = []
     DIB_y = []
 
-
-
     # file_list = [os.path.basename(q) for q in glob.glob(path + '*.fits')]
     path = loc
     file_list = os.listdir(path)
 
     for file_number in range(len(file_list)):
 
-
         file_name = file_list[file_number]
 
-        if file_name.split(".")[-2] == 'fits':
-            
+        if file_name.split(".")[-2] == "fits":
+
             hdulist = fits.open(path + file_name)
             hdu = hdulist[0]
             data_towork = hdu.data
-            first_val = hdu.header['CRVAL1']
-            stepsize = hdu.header['CDELT1']
+            first_val = hdu.header["CRVAL1"]
+            stepsize = hdu.header["CDELT1"]
             final_val = first_val + (stepsize * len(data_towork))
             x = np.linspace(first_val, final_val, len(data_towork))
-            bcf = hdu.header['HIERARCH ESO QC VRAD BARYCOR']
+            bcf = hdu.header["HIERARCH ESO QC VRAD BARYCOR"]
 
             # Analyze the NaI lines to get the proper shift
             for i in range(0, len(data_towork)):
@@ -161,7 +154,7 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     xpoint = [x[0] for x in points]
     ypoint = [y[1] for y in points]
     lowest_min = np.argmin(ypoint / max(ypoint))
-    lambda_obs = (xpoint[lowest_min])
+    lambda_obs = xpoint[lowest_min]
     cloud_vel = c * (lambda_obs - lambda_res) / lambda_res
     cloud_vel_corr = 1 - (cloud_vel / c)
 
@@ -172,25 +165,23 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     DIB_plot_x = [total_wavelength_correction * x_val for x_val in DIB_x]
     DIB_plot_y_1 = [(y / max(DIB_y)) for y in DIB_y]
-    a = (np.mean(DIB_plot_y_1[:25]))
+    a = np.mean(DIB_plot_y_1[:25])
     DIB_plot_y = DIB_plot_y_1 / a
     NaI_plot_x = [total_wavelength_correction * x_val for x_val in xpoint]
     NaI_plot_y = [y / max(ypoint) for y in ypoint]
 
-
     # write to .txt file
     os.chdir(writepath)
     f = open(target + "_subrange.txt", "w+")
-    f.write('# ' + target)
+    f.write("# " + target)
     f.write("\n")
     title = "# Wavelength(1/cm)      Relative Intensity \n"
     f.write(title)
 
-    writer = csv.writer(f, delimiter='\t')
+    writer = csv.writer(f, delimiter="\t")
     writer.writerows(zip(DIB_plot_x, DIB_plot_y))
 
     f.close()
-
 
 
 # fullCmdArguments = sys.argv

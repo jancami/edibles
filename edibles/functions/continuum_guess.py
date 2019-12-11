@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
+
 # import matplotlib.pyplot as plt
 
 
 def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
-    '''
+    """
     This function fits a continuum to data separated into n sections
     where the x and y-values are the median of each section using a cubic spline
 
@@ -28,26 +29,26 @@ def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
     <----piece---><---piece---->
     <-sec-><-sec-><-sec-><-sec->
 
-    '''
+    """
     (x, y) = data_tuple
-    
-       # check n_piece param
-    if n_piece is None: n_piece = 2
+
+    # check n_piece param
+    if n_piece is None:
+        n_piece = 2
 
     # split x & y arrays into n_piece*2 sections
-    x_sections = np.array_split(x, n_piece*2)
-    y_sections = np.array_split(y, n_piece*2)
+    x_sections = np.array_split(x, n_piece * 2)
+    y_sections = np.array_split(y, n_piece * 2)
 
     # initialize list of points to spline fit
     x_points = [np.min(x)]
     y_points = [np.median(y_sections[0])]
 
-
     # loop through every other section (1, 3, 5...)
     # make n_piece+1 points to fit a spline through
     # create a spline point on edge of each piece
     for i in range(1, len(x_sections), 2):
-        # set x_point 
+        # set x_point
         x_point = np.max(x_sections[i])
 
         if i == range(len(x_sections))[-1]:
@@ -56,15 +57,16 @@ def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
             x_point = np.max(x)
 
         else:
-            span = np.append(y_sections[i], y_sections[i+1])
+            span = np.append(y_sections[i], y_sections[i + 1])
             y_point = np.median(span)
 
         x_points.append(x_point)
         y_points.append(y_point)
 
-
     if pars is not None:
-        assert ((n_piece+1) == len(pars)), 'Incorrect number of input y_points parameters'
+        assert (n_piece + 1) == len(
+            pars
+        ), "Incorrect number of input y_points parameters"
         y_points = pars
 
     spline = CubicSpline(x_points, y_points)

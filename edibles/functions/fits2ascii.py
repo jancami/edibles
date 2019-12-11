@@ -1,6 +1,7 @@
 from astropy.io import fits
 import numpy as np
 
+
 def fits2ascii(input_fits):
 
     """ usage:
@@ -16,8 +17,8 @@ def fits2ascii(input_fits):
     nwave = len(spec_flux)
     wave = np.arange(0, nwave, 1)
     spec_wave = (wave) * cdelt1 + crval1
-    #d=(np.round(spec_wave,4),np.round(spec_flux,6))
-    d=(spec_wave,spec_flux)
-    np.savetxt(input_fits[:-5]+".ascii",np.array(d).T, fmt=['%12.4f', '%14.6f'])
-    #return np.array(d).T
-    print("created ascii spectrum: "+input_fits[:-5]+".ascii")
+    # d=(np.round(spec_wave,4),np.round(spec_flux,6))
+    d = (spec_wave, spec_flux)
+    np.savetxt(input_fits[:-5] + ".ascii", np.array(d).T, fmt=["%12.4f", "%14.6f"])
+    # return np.array(d).T
+    print("created ascii spectrum: " + input_fits[:-5] + ".ascii")

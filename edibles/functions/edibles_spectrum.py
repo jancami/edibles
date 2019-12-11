@@ -25,7 +25,7 @@ class EdiblesSpectrum:
         self.wave_units = "AA"
         self.reference_frame = "geocentric"
         self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
-        self.bary_wave = self.wave + (self.v_bary/cst.c.to('km/s').value)*self.wave
+        self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
 
     def __init__(self, filename):
         """
@@ -38,14 +38,14 @@ class EdiblesSpectrum:
 
         if bary is True:
             if (xmin is not None) and (xmax is not None):
-                assert xmin < xmax, 'xmin must be less than xmax'
+                assert xmin < xmax, "xmin must be less than xmax"
                 idx = (self.bary_wave > xmin) * (self.bary_wave < xmax)
 
                 return self.bary_wave[np.where(idx)], self.flux[np.where(idx)]
 
         else:
             if (xmin is not None) and (xmax is not None):
-                assert xmin < xmax, 'xmin must be less than xmax'
+                assert xmin < xmax, "xmin must be less than xmax"
                 idx = (self.wave > xmin) * (self.wave < xmax)
 
                 return self.wave[np.where(idx)], self.flux[np.where(idx)]
@@ -53,16 +53,16 @@ class EdiblesSpectrum:
         return self.wave, self.flux
 
 
-if __name__ == '__main__':
-    filename = '/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits'
+if __name__ == "__main__":
+    filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
     print("Barycentric Velocity is", sp.v_bary)
     print(sp.target)
-    plt.plot(sp.wave, sp.flux, label='Geocentric')
+    plt.plot(sp.wave, sp.flux, label="Geocentric")
 
     bary_data = sp.getSpectrum(xmin=7660, xmax=7705, bary=True)
 
-    plt.plot(bary_data[0], bary_data[1], label='Barycentric')
+    plt.plot(bary_data[0], bary_data[1], label="Barycentric")
     axes = plt.gca()
     # axes.set_xlim([7660, 7705])
     # axes.set_ylim([0, 160])

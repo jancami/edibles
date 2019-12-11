@@ -14,7 +14,12 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
 
     # produce grid
     R = resolution * oversample
-    n_points = round((np.log(lambda_end/lambda_start)) / (np.log(-(1 + 2 * R)/(1-2*R)))) + 1
+    n_points = (
+        round(
+            (np.log(lambda_end / lambda_start)) / (np.log(-(1 + 2 * R) / (1 - 2 * R)))
+        )
+        + 1
+    )
     f = -(1 + 2 * R) / (1 - 2 * R)
     factor = f ** np.arange(n_points)
 
