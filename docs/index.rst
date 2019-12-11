@@ -1,16 +1,16 @@
-.. edibles documentation master file, created by
-   sphinx-quickstart on Tue Dec 10 15:41:53 2019.
+.. EDIBLES documentation master file, created by
+   sphinx-quickstart on Wed Dec 11 15:36:19 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to edibles's documentation!
+Welcome to EDIBLES's documentation!
 ===================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   'modules'
 
 Indices and tables
 ==================
