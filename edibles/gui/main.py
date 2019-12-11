@@ -12,10 +12,10 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
-from edibles.gui.gui import Ui_MainWindow
-from edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
-from edibles.gui.models import PandasModel, SelectionModel
-from edibles.edibles_settings import edibles_pythondir, datadir
+from edibles.edibles.gui.gui import Ui_MainWindow
+from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
+from edibles.edibles.gui.models import PandasModel, SelectionModel
+from edibles.edibles import EDIBLES_PYTHONDIR, DATADIR, DATARELEASE
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -129,7 +129,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_overview(self):
         # Load obslist overview into pandas frame
-        self.overview = pd.read_csv(edibles_pythondir + '/data/DR4_ObsLog.csv')
+        self.overview = pd.read_csv(EDIBLES_PYTHONDIR + '/edibles/data/' + DATARELEASE + '_ObsLog.csv')
 
     def add_mpl(self):
         # Initial MPL figure and toolbar
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                            self.selectionmodel.index(idxxx.row(), 0))
                 # Load wav and flux of corresponding spectrum
                 if self.ui.actionEnable_ASCII_format.isChecked():
-                    wav, flux = np.loadtxt(datadir+filename[:-4]+'ascii',unpack=True)
+                    wav, flux = np.loadtxt(DATADIR+filename[:-4]+'ascii',unpack=True)
                 else:
                     wav, flux = edspec(filename).getSpectrum()
 
