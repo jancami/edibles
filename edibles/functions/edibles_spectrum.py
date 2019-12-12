@@ -6,8 +6,34 @@ from edibles.edibles import DATADIR
 
 
 class EdiblesSpectrum:
-    # This object will contain a spectrum from EDIBLES,
-    # and a set of methods to operate on the data.
+    """
+    This object will contain a spectrum from EDIBLES,
+    and a set of methods to operate on the data.
+
+    Attributes
+    ----------
+    filename : str
+        name of the file, starting with the target
+    header : 
+    target : 
+    date : 
+    flux : 
+    flux_units : 
+    wave : 
+    wave_units : 
+    reference_frame : 
+    v_bary : 
+    bary_wave : 
+
+    """
+
+    def __init__(self, filename):
+        """
+        Filename is relative to the DR3 directory
+        """
+        self.filename = DATADIR + filename
+        self.loadSpectrum()
+
 
     def loadSpectrum(self):
         # Assume the file is a DR3 product here.
@@ -27,12 +53,7 @@ class EdiblesSpectrum:
         self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
         self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
 
-    def __init__(self, filename):
-        """
-        Filename is relative to the DR3 directory
-        """
-        self.filename = DATADIR + filename
-        self.loadSpectrum()
+
 
     def getSpectrum(self, xmin=None, xmax=None, bary=False):
 

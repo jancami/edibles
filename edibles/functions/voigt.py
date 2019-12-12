@@ -3,6 +3,8 @@ from scipy.special import wofz
 import astropy.constants as cst
 
 
+
+
 def voigtMath(x, alpha, gamma):
     """
     Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
@@ -105,8 +107,8 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
     Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
-    Parameters
-    ----------
+    Input:
+    -----
     lam : float64
         Wavelength grid
     lam_0 : float64
@@ -122,7 +124,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     tau_0 : float64
         Optical depth at center of line
 
-    Returns
+    Output:
     -------
     ndarray
         flux array of light transmission

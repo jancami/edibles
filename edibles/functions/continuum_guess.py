@@ -17,17 +17,6 @@ def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
 
     OUTPUT:       [Angstroms]
     y_spline:     [ndarray]                   continuum flux value array
-    
-    Graphic:
-
-    X------|-:    |    :-|-----X
-    |      |  :   |   :  |     |
-    |      |   :  X  :   |     |
-    |      |    :-|-:    |     |
-    |______|______|______|_____|
-
-    <----piece---><---piece---->
-    <-sec-><-sec-><-sec-><-sec->
 
     """
     (x, y) = data_tuple

@@ -4,14 +4,14 @@ import numpy as np
 
 from scipy.signal import find_peaks
 from heapq import nsmallest
-from edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles_settings import *
-from edibles.functions.atomic_line_tool import AtomicLines
-from edibles.functions.file_search import FilterDR
+from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles import DATADIR
+from edibles.edibles.functions.atomic_line_tool import AtomicLines
+from edibles.edibles.functions.file_search import FilterDR
 from astropy.constants import c
 import bisect
 
-from edibles.functions.peak_wavelength import largest_peak_wavelength
+from edibles.edibles.functions.functions import peak_wavelength_largest
 
 def spliceToRange(l, minimum, maximum):
     def find_gt(a, x):
@@ -57,7 +57,7 @@ def velocity_space(star, time, ion):
 
         # TODO: doesn't allow for size 1 AND size > 2
         # TODO: doesn't allow for non-adjacent peaks
-        peak_wavelength = largest_peak_wavelength(wave, flux)
+        peak_wavelength = peak_wavelength_largest(wave, flux)
         # bisector = sum(peak_wavelength) / len(peak_wavelength)
         peak_distance = abs(peak_wavelength[1] - peak_wavelength[0])
 
