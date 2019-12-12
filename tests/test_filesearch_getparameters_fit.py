@@ -7,9 +7,9 @@ from edibles.edibles.fit.models.create_model import createLine, createCont
 
 from edibles.edibles.functions.file_search import FilterDR
 from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.functions.peak_wavelength import (
-    largest_peak_wavelength,
-    all_prominent_peak_wavelength,
+from edibles.edibles.functions.functions import (
+    peak_wavelength_largest,
+    peak_wavelength_all_prominent,
 )
 
 
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     )
     wave, flux = EdiblesSpectrum(filename).getSpectrum(*wav_range)
 
-    # peak_wavelength = largest_peak_wavelength(wave, flux, n=12)
-    peak_wavelength = all_prominent_peak_wavelength(wave, flux, 0.2)
+    # peak_wavelength = peak_wavelength_largest(wave, flux, n=12)
+    peak_wavelength = peak_wavelength_all_prominent(wave, flux, 0.2)
     print(peak_wavelength)
 
     n_points = 2 * len(peak_wavelength) + 1
