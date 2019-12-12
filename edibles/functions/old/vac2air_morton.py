@@ -7,6 +7,10 @@ def vac2air_morton(vacw):
     spectra that may have been corrected using the (older) Morton
     relation.  The Ciddor relation used in vac2air_ciddor() is claimed
     to be more accurate at IR wavelengths.
+
+    example:
+    wtc = vac2air_morton(wt*10.0) #make sure wave is in \AA.
+
     """
     temp = (1e4 / vacw) ** 2
     airw = 1. / (1. + 6.4328e-5 + 2.94981e-2/(146 - temp) +
@@ -14,8 +18,3 @@ def vac2air_morton(vacw):
     return airw
 
 
-""" example:
-
-wtc = vac2air_morton(wt*10.0) #make sure wave is in \AA.
-
-"""
