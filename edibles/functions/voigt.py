@@ -16,19 +16,13 @@ def voigtMath(x, alpha, gamma):
     WARNING
     scipy.special.wofz is not compaible with np.float128 type parameters. 
 
-    Parameters
-    ----------
-    x : float64
-        Dimensionless point/array
-    alpha : float64
-        Gaussian HWHM component
-    gamma : float64
-        Lorentzian HWHM component
+    Args:
+        x (float64): Dimensionless point/array
+        alpha (float64): Gaussian HWHM component
+        gamma (float64): Lorentzian HWHM component
 
-    Returns
-    -------
-    ndarray
-        Flux array for given input
+    Returns:
+        ndarray: Flux array for given input
 
     """
 
@@ -46,23 +40,15 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     Converts parameters to make proper call to voigtMath
 
 
-    Parameters
-    ----------
-    lam : float64
-        Wavelength grid
-    lam_0 : float64
-        Central wavelength
-    b : float64
-        Gaussian standard deviation
-    d : float64
-        Damping parameter
-    Nf : float64
-        Scaling parameter, default = 1.0
+    Args:
+        lam (float64): Wavelength grid
+        lam_0 (float64): Central wavelength
+        b (float64): Gaussian standard deviation
+        d (float64): Damping parameter
+        Nf (float64): Scaling parameter, default = 1.0
 
-    Returns
-    -------
-    ndarray
-        Optical depth for given input
+    Returns:
+        ndarray: Optical depth for given input
 
     """
 
@@ -108,26 +94,17 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
     Input:
-    -----
-    lam : float64
-        Wavelength grid
-    lam_0 : float64
-        Central wavelength
-    b : float64
-        Gaussian standard deviation
-    d : float64
-        Damping parameter
-    N : float64
-        Column density
-    f : float64
-        Oscillator strength
-    tau_0 : float64
-        Optical depth at center of line
+    
+        lam (float64): Wavelength grid
+        lam_0 (float64): Central wavelength
+        b (float64): Gaussian standard deviation
+        d (float64): Damping parameter
+        N (float64): Column density
+        f (float64): Oscillator strength
+        tau_0 (float64): Optical depth at center of line
 
-    Output:
-    -------
-    ndarray
-        flux array of light transmission
+    Returns:
+        ndarray: flux array of light transmission
 
     """
 

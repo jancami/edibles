@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>edibles.functions.measure_snr &mdash; EDIBLES  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> EDIBLES
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.html">edibles package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.fit.html">edibles.fit package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.functions.html">edibles.functions package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EDIBLES</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>edibles.functions.measure_snr</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for edibles.functions.measure_snr</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="measure_snr"><a class="viewcode-back" href="../../../edibles.functions.html#edibles.functions.measure_snr.measure_snr">[docs]</a><span></span><span class="k">def</span> <span class="nf">measure_snr</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">do_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; call:</span>
+<span class="sd">      </span>
+<span class="sd">        snr = measure_snr(wave_array, flux_array)</span>
+<span class="sd"> </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#split in blocks of 1 Angstrom.</span>
+    <span class="n">block_size</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">xmin</span> <span class="o">=</span> <span class="n">wave</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">xmax</span> <span class="o">=</span> <span class="n">xmin</span> <span class="o">+</span> <span class="n">block_size</span>
+
+    <span class="n">SNR</span> <span class="o">=</span><span class="p">[]</span>
+    <span class="n">LAM</span> <span class="o">=</span><span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">xmax</span> <span class="o">&lt;</span> <span class="n">wave</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span> <span class="p">(</span><span class="n">wave</span> <span class="o">&gt;</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">wave</span> <span class="o">&lt;</span> <span class="n">xmax</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">wave_block</span> <span class="o">=</span> <span class="n">wave</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">flux_block</span> <span class="o">=</span> <span class="n">flux</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">flux_block</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="c1">#fit polynomial (1st order) to &quot;normalise&quot;</span>
+            <span class="c1">#c1 = np.polyfit(wave_block,flux_block,1)</span>
+            <span class="c1">#p1 = np.poly1d(c1)</span>
+            <span class="c1">#continuum = p1(wave_block)</span>
+            <span class="c1">#flux_block = flux_block/continuum</span>
+            <span class="c1">#compute stddev for each block</span>
+            <span class="n">sigma_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">flux_block</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">flux_block</span><span class="p">)</span>
+            <span class="n">SNR</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sigma_block</span><span class="p">)</span>
+            <span class="n">LAM</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xmin</span><span class="o">+</span><span class="p">(</span><span class="n">xmax</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="n">xmax</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">xmin</span> <span class="o">+</span> <span class="n">block_size</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">do_plot</span> <span class="o">==</span> <span class="kc">True</span><span class="p">):</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">LAM</span><span class="p">,</span><span class="n">SNR</span><span class="p">)</span>
+       <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">LAM</span><span class="p">,</span><span class="n">smooth</span><span class="p">(</span><span class="n">SNR</span><span class="p">,</span><span class="mi">20</span><span class="p">))</span>
+    
+    <span class="n">maxsnr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">smooth</span><span class="p">(</span><span class="n">SNR</span><span class="p">,</span><span class="mi">20</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">maxsnr</span><span class="p">,</span> <span class="n">SNR</span><span class="p">,</span> <span class="n">LAM</span></div>
+
+   
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jan Cami
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

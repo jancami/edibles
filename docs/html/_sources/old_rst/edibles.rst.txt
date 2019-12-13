@@ -1,0 +1,19 @@
+edibles package
+===============
+
+Subpackages
+-----------
+
+.. toctree::
+
+    edibles.functions
+    edibles.fit
+    edibles.data
+
+Module contents
+---------------
+
+.. automodule:: edibles
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -17,38 +17,18 @@ from edibles.edibles import DATADIR
 def barycorrectSpectrum(wave_array, v_bary):
     """Barycentric wavelength correction tool.
 
-    INPUT:
-        wave_array: [ndarray]   The wavelength array of the spectrum
-        v_bary:     [float]     The barycentric velocity
-                                - probably from EdiblesSpectrum
-    OUTPUT:
-        bary_wave:  [ndarray] The corrected wavelength array
+    :param wave_array: The wavelength array of the spectrum
+    :type wave_array: ndarray
+    :param v_bary: The barycentric velocity
+    :type v_bary: float64
+
+    :return: The corrected wavelength array
+    :rtype: ndarray
+
     """
     wave_array = wave_array + (v_bary / cst.c.to("km/s").value) * wave_array
 
     return wave_array
-
-
-def fits2ascii(input_fits):
-
-    """ usage:
-    fits2ascii("an_edibles_spectrum.fits")
-    """
-
-    """ note: probably needs some error catching checks to see if FITS file is valid """
-
-    hdu = fits.open(input_fits)
-    spec_flux = hdu[0].data
-    crval1 = hdu[0].header["CRVAL1"]
-    cdelt1 = hdu[0].header["CDELT1"]
-    nwave = len(spec_flux)
-    wave = np.arange(0, nwave, 1)
-    spec_wave = (wave) * cdelt1 + crval1
-    # d=(np.round(spec_wave,4),np.round(spec_flux,6))
-    d = (spec_wave, spec_flux)
-    np.savetxt(input_fits[:-5] + ".ascii", np.array(d).T, fmt=["%12.4f", "%14.6f"])
-    # return np.array(d).T
-    print("created ascii spectrum: " + input_fits[:-5] + ".ascii")
 
 
 def fitstotxt(target, filepath, writepath, xmin, xmax):
@@ -56,29 +36,30 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     Reads a FITS file, applies barycentric and cloud corrections
     and writes a subsection within a given range to a .txt file.
 
-    input:
-        sightline
-        path/to/fits/database/
-        path/to/write/folder
-        range max
-        range min
+    :param target: Name of Star
+    :type target: str
+    :param filepath: Data storage location
+    :type filepath: str
+    :param writepath: Location of wanted txt file
+    :type writepath: str
+    :param xmin: Minimum wavelength
+    :type xmin: float64
+    :param xmax: Maximum Wavelength
+    :type xmax: float64
 
-    output:
-        .txt file of spectrum within given range, tab separated, in a given folder.
+    :return: spectrum within given range, tab separated, in a given folder.
+    :rtype: txt file
 
-        example output:
+    :Example:
 
-        # HD144470
-        # Wavelength(1/cm)      Relative Intensity
-        3303.1797537322504  1.0084753
-        3303.199755852153   1.0125096
-        3303.219757972055   1.012984
-        3303.2397600919576  1.0122045
-
-    example:
-
-    fitstotxt('HD144470', '/data/DR3_fits/', '/home/txtfiles/, 6610, 6618)
-
+    >>> fitstotxt('HD144470', '/data/DR3_fits/', '/home/txtfiles/, 6610, 6618)
+    # HD144470
+    # Wavelength(1/cm)      Relative Intensity
+    3303.1797537322504  1.0084753
+    3303.199755852153   1.0125096
+    3303.219757972055   1.012984
+    3303.2397600919576  1.0122045
+    
     """
 
     c = 2.99 * (10 ** 8)  # m/s
@@ -271,21 +252,11 @@ def param_convert(params):
     Function to convert voigt parameteres from astronomical
     to mathematical version.
 
-    Parameters
-    ----------
-    cent : float
-        central wavelength
-    b_eff : float
-        velocity broadening
-    Gamma : float
-        Damping constant
-    scaling : float
-        tau_0 ???
+    :param params: (cent, b_eff, Gamma, scaling)
+    :type params: tuple
 
-    Returns
-    -------
-    list
-        converted parameters 
+    :return: converted parameters 
+    :rtype: tuple
 
     """
 
@@ -310,12 +281,23 @@ def param_convert(params):
     return converted_params
 
 
-def peak_wavelength_largest(wave, flux, n=2):
+def peak_wavelength_largest(wave, flux, n=1):
     """
-    Returns the wavelengths of the lowest n peaks of the equation
+    Function that returns the wavelengths of the lowest n peaks of the equation
+
+    :param wave: wavelength grid
+    :type wave: ndarray
+    :param flux: flux grid
+    :type flux: ndarray
+    :param n: number of peaks to return, default=1
+    :type n: int
+
+    :return: wavelengths of lowest n peaks
+    :rtype: list
+
     """
     peaks, _ = find_peaks(-flux)  # indices of peaks
-    peak_flux = nsmallest(n, flux[peaks])  # smallest two flux values at peaks
+    peak_flux = nsmallest(n, flux[peaks])  # smallest n flux values at peaks
     peak_wavelength = [
         wave[np.where(flux == peak)][0] for peak in peak_flux
     ]  # corresponding wavelengths
@@ -323,6 +305,21 @@ def peak_wavelength_largest(wave, flux, n=2):
 
 
 def peak_wavelength_all_prominent(wave, flux, prominence):
+    """
+    Function that returns the wavelengths of the lowest n peaks of the equation
+
+    :param wave: wavelength grid
+    :type : ndarray
+    :param flux: flux grid
+    :type : ndarray
+    :param prominence: prominence of points (see scipy.signal.find_peaks)
+    :type : float, between 0 and 1
+
+    :return: wavelengths of all prominent peaks
+    :rtype: list
+
+    """
+
     yrange = max(flux) - min(flux)
     peaks, _ = find_peaks(-flux, prominence=prominence * yrange)
     return [wave[peak] for peak in peaks]
@@ -332,17 +329,9 @@ def printHeader(input_fits):
     """
     A function to print out the header of a FITS file
 
-    Parameters
-    ----------
+    :param input_fits: Path to FITS file starting from DATADIR
+    :type input_fits: str
 
-    input_fits : str
-        path to FITS file starting from DATADIR
-
-
-    Returns
-    -------
-    Prints the header.
-    
     """
 
     path = DATADIR + input_fits
@@ -407,7 +396,20 @@ def smooth(y, box_pts):
 
 
 def parseTextFile(file_name, delimiter=",", header=0):
-    """ Parse a text file to a list. The file contents are delimited and have a header. """
+    """ Parse a text file to a list. The file contents are delimited and have a header. 
+
+    
+    :param file_name: The path to the file
+    :type : str
+    :param delimiter: The delimiter to use to parse the file
+    :type : str
+    :param header: The nuber of lines at the top of the file to ignore, default=0
+    :type : int
+
+    :return: Text file parsed into a list
+    :rtype: list
+        
+    """
 
     with open(file_name) as f:
 

@@ -11,16 +11,21 @@ from sherpa.plot import DataPlot, ModelPlot, FitPlot, SplitPlot
 def fit(star_name, data, model, silent=False, breakdown=False):
     """A function that will fit a given multi-part model to a given spectrum.
 
-    INPUT:
-    star_name:  [string]            Name of the target star
-    data:       [tuple]             In the form (wave, flux)
-    model:      [model instance]    Should contain CONTINUUM and ALL LINES
-                                    - an initial model of the spectrum
-    silent:     [bool - False]      If true, no plots will generate
 
-    OUTPUT:
-    fit_model:  [model instance]    Same model as input but with parameters tuned 
-                                    to match spectrum
+
+    :param star_name: Name of the target star
+    :type star_name: string
+    :param data: Spectrum data in the form (wave, flux)
+    :type data: tuple
+    :param model: An unfit spectrum model
+    :type model: object
+    :param silent:  If true, no plots will generate, defaults to False
+    :type silent: bool
+
+    :return: model that is fit to the data
+    :rtype: object
+
+
     """
 
     wave, flux = data
@@ -131,6 +136,23 @@ def fit(star_name, data, model, silent=False, breakdown=False):
 
 
 def multifit(star_name, data_list, model_list, silent=False):
+    """A function that will fit 2 models to 2 spectra simultaneously.
+        This was created to fit the NaI doublets at ~3300 and ~5890 Angstroms.
+
+    :param star_name: Name of the target star
+    :type star_name: string
+    :param data_list: List of spectrum data in the form [(wave, flux), (wave, flux),...]
+    :type data_list: tuple
+    :param model_list:  A list of unfit spectrum models
+    :type model_list: model instance
+    :param silent:  If true, no plots will generate, defaults to False
+    :type silent: bool
+
+    :return: models that are fit to the data
+    :rtype: list
+
+    """
+
 
     wave1, flux1 = data_list[0]
     wave2, flux2 = data_list[1]
@@ -138,8 +160,11 @@ def multifit(star_name, data_list, model_list, silent=False):
     model1 = model_list[0]
     model2 = model_list[1]
 
-    d1 = Data1D("Data 1", wave1, flux1)
-    d2 = Data1D("Data 2", wave2, flux2)
+    name_1 = star_name + ' 1'
+    name_2 = star_name + ' 2'
+
+    d1 = Data1D(name_1, wave1, flux1)
+    d2 = Data1D(name_2, wave2, flux2)
 
     dall = DataSimulFit("combined", (d1, d2))
     mall = SimulFitModel("combined", (model1, model2))

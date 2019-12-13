@@ -8,22 +8,19 @@ from edibles.edibles.fit.models.models import (
 
 def createCont(data, n_points=4):
     """
-    Creates an spline through a spectrum.
+    Creates an spline model through a spectrum.
 
-    Parameters
-    ----------
 
-    data : tuple
-        In the form (wave, flux) -> (ndarray, ndarray)
-    n_points : int
-        Number of anchor points to use
-        Musat be between 0 and 8!
+    :param data: Spectrum data in the form (wave, flux)
+    :type data: tuple
+    :param n_points: Number of anchor points to use - must be between 0 and 8!
+    :type n_points: int
 
-    Returns
-    -------
-    Object
-        Model of spline through anchor points
+    :return: spline model through anchor points
+    :rtype: object
     """
+
+    assert (0 <= n_points <= 8), 'n_points must be between 0 and 8!'
 
     n_piece = n_points - 1
     y_spline, y_points = generate_continuum(data, delta_v=1000, n_piece=n_piece)
@@ -61,163 +58,162 @@ def createCont(data, n_points=4):
 ###############################################################
 # OLDER CODE BELOW - Newer method available (see Sightline oblect)
 
+# def createLine(name, lam_0, b, d, tau_0):
+#     """Creates an instance of a VoigtAbsorptionLine object
 
-def createLine(name, lam_0, b, d, tau_0):
-    """Creates an instance of a VoigtAbsorptionLine object
+#     INPUT:
+#         name:
+#         data:        [tuple]  In the form (wave, flux)
+#         line params: [floats]
+#             lam_0
+#             b
+#             d
+#             tau_0
+#     OUTPUT:
+#         line model [object instance]
 
-    INPUT:
-        name:
-        data:        [tuple]  In the form (wave, flux)
-        line params: [floats]
-            lam_0
-            b
-            d
-            tau_0
-    OUTPUT:
-        line model [object instance]
+#     """
+#     line = VoigtAbsorptionLine(name=name)
+#     line.lam_0 = lam_0
+#     line.b = b
+#     line.d = d
+#     line.tau_0 = tau_0
 
-    """
-    line = VoigtAbsorptionLine(name=name)
-    line.lam_0 = lam_0
-    line.b = b
-    line.d = d
-    line.tau_0 = tau_0
-
-    return line
-
-
-def createKnownLine(name, lam_0, b, d, N, f_known):
-    """Creates an instance of a VoigtAbsorptionLine object 
-    where the oscillator strength is KNOWN
-
-    INPUT:
-        name:
-        data:        [tuple]  In the form (wave, flux)
-
-        line params: [floats]
-            lam_0
-            b
-            d
-            N
-            f_known
-    OUTPUT:
-        line model [object instance]
-
-    """
-    line = VoigtAbsorptionLine(name=name)
-
-    line.N.hidden = False
-    line.f.hidden = False
-    line.tau_0.hidden = True
-
-    line.N.frozen = False
-    line.tau_0.frozen = True
-
-    line.lam_0 = lam_0
-    line.b = b
-    line.d = d
-    line.N = N
-    line.f = f_known
-
-    return line
+#     return line
 
 
-def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
-    """Creates an instance of a KnownVelocityLine object 
-    where the oscillator strength is KNOWN and the x axis is in velocity space
+# def createKnownLine(name, lam_0, b, d, N, f_known):
+#     """Creates an instance of a VoigtAbsorptionLine object 
+#     where the oscillator strength is KNOWN
 
-    INPUT:
-        name:
-        data:        [tuple]  In the form (wave, flux)
-        line params: [floats]
-            v_cloud
-            b
-            d
-            N
-            f_known
-            lab_lam_0
+#     INPUT:
+#         name:
+#         data:        [tuple]  In the form (wave, flux)
 
-    OUTPUT:
-        line model [object instance]
-    """
+#         line params: [floats]
+#             lam_0
+#             b
+#             d
+#             N
+#             f_known
+#     OUTPUT:
+#         line model [object instance]
 
-    line = KnownVelocityLine(name=name)
-    line.v_cloud = v_cloud
-    line.b = b
-    line.d = d
-    line.N = N
-    line.f = f_known
-    line.lab_lam_0 = lab_lam_0
+#     """
+#     line = VoigtAbsorptionLine(name=name)
 
-    return line
+#     line.N.hidden = False
+#     line.f.hidden = False
+#     line.tau_0.hidden = True
 
+#     line.N.frozen = False
+#     line.tau_0.frozen = True
 
-def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
-    """Creates multiple instances of a VoigtAbsorptionLine object 
-    where the Oscillator strength is KNOWN
+#     line.lam_0 = lam_0
+#     line.b = b
+#     line.d = d
+#     line.N = N
+#     line.f = f_known
 
-    INPUT:
-        name:
-        data:        [tuple]  In the form (wave, flux)
-        num_lines:   [int]
-        line params: [lists of floats]
-            lam_0
-            b
-            d
-            N
-            f_known
-
-    OUTPUT:
-        line model [object instance]
-    """
-
-    line0 = createKnownLine(name[0], lam_0[0], b[0], d[0], N[0], f_known[0])
-    cloud = line0
-
-    if num_lines > 1:
-        for i in range(1, num_lines):
-            line = createKnownLine(name[i], lam_0[i], b[i], d[i], N[i], f_known[i])
-            line.N = line0.N
-            line.b = line0.b
-
-            cloud *= line
-
-    return cloud
+#     return line
 
 
-def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam_0):
-    """Creates multiple instances of a KnownVelocityLine object 
-    where the oscillator strength is KNOWN and the x axis is in velocity space
+# def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
+#     """Creates an instance of a KnownVelocityLine object 
+#     where the oscillator strength is KNOWN and the x axis is in velocity space
 
-    INPUT:
-        name:           [list of strings]
-        data:           [tuple]  In the form (wave, flux)
-        num_lines:      [int]
-        line params:
-            v_cloud     [float]
-            b           [list of floats]
-            d           [list of floats]
-            N           [float]
-            f_known     [list of floats]
-            lab_lam_0   [list of floats]
+#     INPUT:
+#         name:
+#         data:        [tuple]  In the form (wave, flux)
+#         line params: [floats]
+#             v_cloud
+#             b
+#             d
+#             N
+#             f_known
+#             lab_lam_0
 
-    OUTPUT:
-        line model [object instance]
-    """
+#     OUTPUT:
+#         line model [object instance]
+#     """
 
-    line0 = createKnownVelocityLine(name[0], v_cloud, b, d, N, f_known[0], lab_lam_0[0])
-    cloud = [line0]
+#     line = KnownVelocityLine(name=name)
+#     line.v_cloud = v_cloud
+#     line.b = b
+#     line.d = d
+#     line.N = N
+#     line.f = f_known
+#     line.lab_lam_0 = lab_lam_0
 
-    if num_lines > 1:
-        for i in range(1, num_lines):
-            line = createKnownVelocityLine(
-                name[i], v_cloud, b, d, N, f_known[i], lab_lam_0[i]
-            )
-            line.v_cloud = line0.v_cloud
-            line.N = line0.N
-            line.b = line0.b
-            line.d = line0.d
+#     return line
 
-            cloud.append(line)
 
-    return cloud
+# def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
+#     """Creates multiple instances of a VoigtAbsorptionLine object 
+#     where the Oscillator strength is KNOWN
+
+#     INPUT:
+#         name:
+#         data:        [tuple]  In the form (wave, flux)
+#         num_lines:   [int]
+#         line params: [lists of floats]
+#             lam_0
+#             b
+#             d
+#             N
+#             f_known
+
+#     OUTPUT:
+#         line model [object instance]
+#     """
+
+#     line0 = createKnownLine(name[0], lam_0[0], b[0], d[0], N[0], f_known[0])
+#     cloud = line0
+
+#     if num_lines > 1:
+#         for i in range(1, num_lines):
+#             line = createKnownLine(name[i], lam_0[i], b[i], d[i], N[i], f_known[i])
+#             line.N = line0.N
+#             line.b = line0.b
+
+#             cloud *= line
+
+#     return cloud
+
+
+# def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam_0):
+#     """Creates multiple instances of a KnownVelocityLine object 
+#     where the oscillator strength is KNOWN and the x axis is in velocity space
+
+#     INPUT:
+#         name:           [list of strings]
+#         data:           [tuple]  In the form (wave, flux)
+#         num_lines:      [int]
+#         line params:
+#             v_cloud     [float]
+#             b           [list of floats]
+#             d           [list of floats]
+#             N           [float]
+#             f_known     [list of floats]
+#             lab_lam_0   [list of floats]
+
+#     OUTPUT:
+#         line model [object instance]
+#     """
+
+#     line0 = createKnownVelocityLine(name[0], v_cloud, b, d, N, f_known[0], lab_lam_0[0])
+#     cloud = [line0]
+
+#     if num_lines > 1:
+#         for i in range(1, num_lines):
+#             line = createKnownVelocityLine(
+#                 name[i], v_cloud, b, d, N, f_known[i], lab_lam_0[i]
+#             )
+#             line.v_cloud = line0.v_cloud
+#             line.N = line0.N
+#             line.b = line0.b
+#             line.d = line0.d
+
+#             cloud.append(line)
+
+#     return cloud

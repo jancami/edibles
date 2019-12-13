@@ -14,12 +14,8 @@
 #
 import os
 import sys
-import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('..'))
-import mock
-MOCK_MODULES = []
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
@@ -45,7 +41,7 @@ release = ''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinx_rtd_theme'
+    'sphinx_rtd_theme',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

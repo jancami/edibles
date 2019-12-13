@@ -10,20 +10,9 @@ class EdiblesSpectrum:
     This object will contain a spectrum from EDIBLES,
     and a set of methods to operate on the data.
 
-    Attributes
-    ----------
-    filename : str
-        name of the file, starting with the target
-    header : 
-    target : 
-    date : 
-    flux : 
-    flux_units : 
-    wave : 
-    wave_units : 
-    reference_frame : 
-    v_bary : 
-    bary_wave : 
+    Args:
+        filename (str): Name of the file, starting with the target
+
 
     """
 
@@ -56,6 +45,20 @@ class EdiblesSpectrum:
 
 
     def getSpectrum(self, xmin=None, xmax=None, bary=False):
+        """
+        Function to get the wavelength and flux arrays of a particular target.
+        If xmin/xmax are not called, the data for the entire spectrum will be returned.
+
+        Args:
+            xmin (float): minimum wavelength (Optional)
+            xmax (float): Maximum wavelength (Optional)
+            bary (bool): Barycentric rest frame, default=False
+
+        Returns:
+            ndarray: wavelength grid
+            ndarray: flux grid
+
+        """
 
         if bary is True:
             if (xmin is not None) and (xmax is not None):

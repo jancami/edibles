@@ -17,25 +17,50 @@ __all__ = (
 
 class Cont1D(ArithmeticModel):
     """
-    Create a spline through a set number of anchor points.
+    Create a spline through a set number of anchor points on a spectrum.
 
-    Attributes
-    ----------
-    y1, y2, ... y8 : float64
-        y value of anchor points 
-    n_points : int
-        number of anchor points to put spline.
+    :param y1: y_point to fit
+    :type y1: float64
+    :param y2: y_point to fit
+    :type y2: float64
+    :param y3: y_point to fit
+    :type y3: float64
+    :param y4: y_point to fit
+    :type y4: float64
+    :param y5: y_point to fit
+    :type y5: float64
+    :param y6: y_point to fit
+    :type y6: float64
+    :param y7: y_point to fit
+    :type y7: float64
+    :param y8: y_point to fit
+    :type y8: float64
+    :param n_points: number of anchor points to put spline.
+    :type n_points: int
 
     """
 
     def __init__(self, name="Cont_flux"):
         """
-        Parameters
-        ----------
-        y1, y2, ... y7, y8 : float64
-            initial y_points to fit
-        n_points : int
-            number of anchor points to put spline.
+        
+        :param y1: y_point to fit
+        :type y1: float64
+        :param y2: y_point to fit
+        :type y2: float64
+        :param y3: y_point to fit
+        :type y3: float64
+        :param y4: y_point to fit
+        :type y4: float64
+        :param y5: y_point to fit
+        :type y5: float64
+        :param y6: y_point to fit
+        :type y6: float64
+        :param y7: y_point to fit
+        :type y7: float64
+        :param y8: y_point to fit
+        :type y8: float64
+        :param n_points: number of anchor points to put spline.
+        :type n_points: int
 
         """
 
@@ -60,18 +85,14 @@ class Cont1D(ArithmeticModel):
         This function fits a continuum to data separated into n sections
         where the x and y-values are the median of each section using a cubic spline
 
-        INPUT
-        -----
-        x:
-            [ndarray]               wavelength grid (angstroms)
-        pars:
-            y1 - y8:
-                [floats]            input y_points to fit spline
+        :param x: wavelength grid (angstroms)
+        :type x: ndarray
+        :param pars: [y1,...,y8] input y_points to fit spline
+        :type pars: list
 
-        OUTPUT:
-        -------
-        y_spline:
-            [ndarray]               continuum flux value array
+        :return: continuum flux value array
+        :rtype: ndarray
+
         """
 
         n_points = 0
@@ -120,7 +141,25 @@ class VoigtAbsorptionLine(ArithmeticModel):
     """
     Class for modelling Voigt absorption with astronomical parameters.
 
+    :param name: Name of the target
+    :type name: str
+    :param lam: Wavelength grid
+    :type lam: ndarray
+    :param lam_0: Central wavelength
+    :type lam_0: float64
+    :param b: Gaussian standard deviation
+    :type b: float64
+    :param d: Damping parameter
+    :type d: float64
+    :param N: Column density
+    :type N: float64
+    :param f: Oscillator strength
+    :type f: float64
+    :param tau_0: Scaling parameter
+    :type tau_0: float64
 
+    :return: Voigt absorption line transmission
+    :rtype: Object
 
     """
 
@@ -138,30 +177,6 @@ class VoigtAbsorptionLine(ArithmeticModel):
         )
 
     def calc(self, pars, x, *args, **kwargs):
-        """
-
-        Parameters
-        ----------
-        lam : float64
-            Wavelength grid
-        lam_0 : float64
-            Central wavelength
-        b : float64
-            Gaussian standard deviation
-        d : float64
-            Damping parameter
-        N : float64
-            Column density
-        f : float64
-            Oscillator strength
-        tau_0 : float64
-            Scaling parameter
-
-        Returns
-        -------
-        ndarray
-            Voigt absorption line transmission
-        """
 
         lam_0, b, d, N, f, tau_0 = pars
 
@@ -179,6 +194,29 @@ class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
     """
     Identical to VoigtAbsorptionLine but splits lam_0 into two variables, where lam_0 -> lam_0 * k
     Used for linking lam_0 to another model and changing k
+
+    :param name: Name of the target
+    :type name: float64
+    :param lam: Wavelength grid
+    :type lam: float64
+    :param lam_0: Central wavelength
+    :type lam_0: float64
+    :param b: Gaussian standard deviation
+    :type b: float64
+    :param d: Damping parameter
+    :type d: float64
+    :param N: Column density
+    :type N: float64
+    :param f: Oscillator strength
+    :type f: float64
+    :param tau_0: Scaling parameter
+    :type tau_0: float64
+    :param k: shift? TODO
+    :type k: float64
+
+    :return: Voigt absorption line transmission
+    :rtype: Object
+
     """
 
     def __init__(self, name="voigtabsorptionline"):
@@ -196,31 +234,6 @@ class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
         )
 
     def calc(self, pars, x, *args, **kwargs):
-        """
-
-        Parameters
-        ----------
-        lam : float64
-            Wavelength grid
-        lam_0 : float64
-            Central wavelength
-        b : float64
-            Gaussian standard deviation
-        d : float64
-            Damping parameter
-        N : float64
-            Column density
-        f : float64
-            Oscillator strength
-        tau_0 : float64
-            Scaling parameter
-
-        Returns
-        -------
-        ndarray
-            Voigt profile line absorption
-
-        """
 
         k, lam_0, b, d, N, f, tau_0 = pars
 
@@ -240,37 +253,31 @@ class Sightline:
     """
     An object containing continuum and all Voigt models.
 
-
     A sightline with multiple sources of lines that share the same b 
     and d parameters. Groups can be Stellar, Interstellar, Telluric, 
     or subsets of each.
 
-    Attributes
-    ----------
-    star_name : str
-        name of the target star
-    model : Object
-        Combination of continuum and 0 or more Voigt lines
-    sources : dict
-        Dict of all the sources in the sightline
-    lines : dict
-        Dict of all the lines in the sightline
-    current_source : str
-        The current source of lines
-    resolution : float64
-        The resolution of the data
-
+    :param star_name: name of the target star
+    :type star_name: str
+    :param model: Combination of continuum and 0 or more Voigt lines
+    :type model: Object
+    :param sources: Dict of all the sources in the sightline
+    :type sources: dict
+    :param lines: Dict of all the lines in the sightline
+    :type lines: dict
+    :param current_source: The current source of lines
+    :type current_source: str
+    :param resolution: The resolution of the data, defaults to 80000
+    :type resolution: 
 
     """
 
     def __init__(self, star_name, cont):
         """
-        Parameters
-        ----------
-        star_name : str
-            Name of the target star
-        cont : Object
-            Initial Continuum model of the spectrum
+        :param star_name: Name of the target star
+        :type star_name: str
+        :param cont: Initial Continuum model of the spectrum
+        :type cont: object
 
         """
 
@@ -292,16 +299,12 @@ class Sightline:
         decrease the wavelength. All other parameters are intialized to be the 
         same as the other source.
 
-
-        Parameters
-        ----------
-        old_source_name : str
-            Name of source to be duplicated
-        new_source_name : str
-            Name of new source
-        k : float64
-            relative wavelength shift?
-
+        :param old_source_name: Name of source to be duplicated
+        :type old_source_name: str
+        :param new_source_name: Name of new source
+        :type new_source_name: str
+        :param k: relative wavelength shift??? TODO
+        :type k: float64
 
         """
         b = self.sources[old_source_name].b.val
@@ -325,21 +328,16 @@ class Sightline:
 
         All lines from this source share the same b and d parameters. 
 
-        ### ???
-        Do not use k unless lam_0 is linked to another model. It is redundant
+        .. note:: Do not use k unless lam_0 is linked to another model. It is redundant
 
-
-
-        Parameters
-        ----------
-        source_name : str
-            Name of source 
-        b : float
-            Gaussian standard deviation
-        d : float
-            Damping parameter (lifetime broadening?)
-        k : float64
-            Relative wavelength shift
+        :param source_name: Name of source 
+        :type source_name: str
+        :param b: Gaussian standard deviation
+        :type b: float64
+        :param d: Damping parameter - lifetime broadening
+        :type d: float64
+        :param k: Relative wavelength shift
+        :type k: float64
 
         """
         if k is None:
@@ -373,11 +371,10 @@ class Sightline:
         """
         Changes which source a line is being added to when addLine is called
 
-        Parameters
-        ----------
-        source_name : str
-            Name of the source to switch to.
-            Source must already be initialized!
+        .. note:: Source must already be initialized!
+
+        :param source_name: Name of the source to switch to 
+        :type source_name: str
 
         """
         if source_name in self.sources.keys():
@@ -390,14 +387,12 @@ class Sightline:
         """
         Creates an instance of a VoigtAbsorptionLine object
 
-        Parameters
-        ----------
-        name : str
-            Name of line
-        lam_0 : float64
-            Central wavelength of line
-        tau_0 : float64
-            Oprical depth of center of line
+        :param name: Name of line
+        :type name: str
+        :param lam_0: Central wavelength of line
+        :type lam_0: float64
+        :param tau_0: Oprical depth at center of line
+        :type tau_0: float64
 
         """
         line = VoigtAbsorptionLine(name=name)
@@ -445,21 +440,19 @@ class Sightline:
 class KnownVelocityLine(ArithmeticModel):
     """Voigt function for modelling absorption, with KNOWN astronomical parameters.
 
-    Attributes
-    ----------
-    pars:
-        v_cloud:
-            [float64]  (km/s)       Velocity of cloud
-        b:
-            [float64]  (km/s)       Gaussian standard deviation
-        d:
-            [float64]  (units)      Damping parameter
-        N:  
-            [float64]  (1/cm^2)     Column density
-        f:
-            [float64]  (unitless)  Oscillator strength
-        lab_lam_0:
-            [float64]  (Angstroms)  Lab rest wavelength (AIR)
+    :param v_cloud: Velocity of cloud
+    :type v_cloud: float64
+    :param b: Gaussian standard deviation
+    :type b: float64
+    :param d: Damping parameter
+    :type d: float64
+    :param N: Column density
+    :type N: float64
+    :param f: Oscillator strength
+    :type f: float64
+    :param lab_lam_0: Lab rest wavelength (AIR)
+    :type lab_lam_0: float64
+
     """
 
     def __init__(self, name="Known Velocity Line"):
@@ -475,30 +468,6 @@ class KnownVelocityLine(ArithmeticModel):
         )
 
     def calc(self, pars, x, *args, **kwargs):
-        """
-        INPUT:
-
-        x:
-            [float64]  (Angstroms)  Wavelength grid
-        pars:
-            v_cloud:
-                [float64]  (km/s)       Velocity of cloud
-            b:
-                [float64]  (km/s)       Gaussian standard deviation
-            d:
-                [float64]  (units)      Damping parameter
-            N:  
-                [float64]  (1/cm^2)     Column density
-            f:
-                [float64]  (unitless)  Oscillator strength
-            lab_lam_0:
-                [float64]  (Angstroms)  Lab rest wavelength (AIR)
-
-        OUTPUT:
-
-        line:
-            [ndarray]    Voigt profile
-        """
 
         v_cloud, b, d, N, f, lab_lam_0 = pars
 

@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>edibles.fit.fit &mdash; EDIBLES  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> EDIBLES
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.html">edibles package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.fit.html">edibles.fit package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../edibles.functions.html">edibles.functions package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EDIBLES</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>edibles.fit.fit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for edibles.fit.fit</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">sherpa.data</span> <span class="k">import</span> <span class="n">Data1D</span><span class="p">,</span> <span class="n">DataSimulFit</span>
+<span class="kn">from</span> <span class="nn">sherpa.stats</span> <span class="k">import</span> <span class="n">LeastSq</span>
+<span class="kn">from</span> <span class="nn">sherpa.optmethods</span> <span class="k">import</span> <span class="n">LevMar</span>
+<span class="kn">from</span> <span class="nn">sherpa.fit</span> <span class="k">import</span> <span class="n">Fit</span><span class="p">,</span> <span class="n">SimulFitModel</span>
+<span class="kn">from</span> <span class="nn">sherpa.plot</span> <span class="k">import</span> <span class="n">DataPlot</span><span class="p">,</span> <span class="n">ModelPlot</span><span class="p">,</span> <span class="n">FitPlot</span><span class="p">,</span> <span class="n">SplitPlot</span>
+
+
+<div class="viewcode-block" id="fit"><a class="viewcode-back" href="../../../edibles.fit.html#edibles.fit.fit.fit">[docs]</a><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">star_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">breakdown</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A function that will fit a given multi-part model to a given spectrum.</span>
+
+
+
+<span class="sd">    :param star_name: Name of the target star</span>
+<span class="sd">    :type star_name: string</span>
+<span class="sd">    :param data: Spectrum data in the form (wave, flux)</span>
+<span class="sd">    :type data: tuple</span>
+<span class="sd">    :param model: An unfit spectrum model</span>
+<span class="sd">    :type model: object</span>
+<span class="sd">    :param silent:  If true, no plots will generate, defaults to False</span>
+<span class="sd">    :type silent: bool</span>
+
+<span class="sd">    :return: model that is fit to the data</span>
+<span class="sd">    :rtype: object</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">wave</span><span class="p">,</span> <span class="n">flux</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="c1"># %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Data1D</span><span class="p">(</span><span class="n">star_name</span><span class="p">,</span> <span class="n">wave</span><span class="p">,</span> <span class="n">flux</span><span class="p">)</span>
+
+    <span class="c1"># ==========================================</span>
+    <span class="c1"># Initial guesses</span>
+
+    <span class="c1"># Dataset 1</span>
+    <span class="n">dplot</span> <span class="o">=</span> <span class="n">DataPlot</span><span class="p">()</span>
+    <span class="n">dplot</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="n">mplot</span> <span class="o">=</span> <span class="n">ModelPlot</span><span class="p">()</span>
+    <span class="n">mplot</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+        <span class="n">mplot</span><span class="o">.</span><span class="n">overplot</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># =========================================</span>
+    <span class="c1"># Fitting happens here - don&#39;t break please</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">LeastSq</span><span class="p">()</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">LevMar</span><span class="p">()</span>
+
+    <span class="n">opt</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">ftol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">xtol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">gtol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">epsfcn</span> <span class="o">=</span> <span class="mf">1e-15</span>
+
+    <span class="k">if</span> <span class="n">silent</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+
+    <span class="n">vfit</span> <span class="o">=</span> <span class="n">Fit</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">silent</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">vfit</span><span class="p">)</span>
+
+    <span class="n">vres</span> <span class="o">=</span> <span class="n">vfit</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">silent</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">vres</span><span class="o">.</span><span class="n">format</span><span class="p">())</span>
+
+    <span class="c1"># =========================================</span>
+    <span class="c1"># Plotting after fit</span>
+
+    <span class="c1"># Dataset 1</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">fplot</span> <span class="o">=</span> <span class="n">FitPlot</span><span class="p">()</span>
+        <span class="n">mplot</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="n">fplot</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">dplot</span><span class="p">,</span> <span class="n">mplot</span><span class="p">)</span>
+        <span class="n">fplot</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+        <span class="c1"># residual</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">star_name</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">flux</span> <span class="o">-</span> <span class="n">model</span><span class="p">(</span><span class="n">wave</span><span class="p">))</span>
+
+        <span class="c1"># plt.xaxis(fontsize = )</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Wavelength (AA)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time taken: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">duration</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">breakdown</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">cont</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;C1&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;(&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;Cont_flux&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">line</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">()</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">line</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span> <span class="o">*</span> <span class="n">cont</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">params</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="multifit"><a class="viewcode-back" href="../../../edibles.fit.html#edibles.fit.fit.multifit">[docs]</a><span class="k">def</span> <span class="nf">multifit</span><span class="p">(</span><span class="n">star_name</span><span class="p">,</span> <span class="n">data_list</span><span class="p">,</span> <span class="n">model_list</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A function that will fit 2 models to 2 spectra simultaneously.</span>
+<span class="sd">        This was created to fit the NaI doublets at ~3300 and ~5890 Angstroms.</span>
+
+<span class="sd">    :param star_name: Name of the target star</span>
+<span class="sd">    :type star_name: string</span>
+<span class="sd">    :param data_list: List of spectrum data in the form [(wave, flux), (wave, flux),...]</span>
+<span class="sd">    :type data_list: tuple</span>
+<span class="sd">    :param model_list:  A list of unfit spectrum models</span>
+<span class="sd">    :type model_list: model instance</span>
+<span class="sd">    :param silent:  If true, no plots will generate, defaults to False</span>
+<span class="sd">    :type silent: bool</span>
+
+<span class="sd">    :return: models that are fit to the data</span>
+<span class="sd">    :rtype: list</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">wave1</span><span class="p">,</span> <span class="n">flux1</span> <span class="o">=</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">wave2</span><span class="p">,</span> <span class="n">flux2</span> <span class="o">=</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">model1</span> <span class="o">=</span> <span class="n">model_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">model2</span> <span class="o">=</span> <span class="n">model_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">name_1</span> <span class="o">=</span> <span class="n">star_name</span> <span class="o">+</span> <span class="s1">&#39; 1&#39;</span>
+    <span class="n">name_2</span> <span class="o">=</span> <span class="n">star_name</span> <span class="o">+</span> <span class="s1">&#39; 2&#39;</span>
+
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">Data1D</span><span class="p">(</span><span class="n">name_1</span><span class="p">,</span> <span class="n">wave1</span><span class="p">,</span> <span class="n">flux1</span><span class="p">)</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">Data1D</span><span class="p">(</span><span class="n">name_2</span><span class="p">,</span> <span class="n">wave2</span><span class="p">,</span> <span class="n">flux2</span><span class="p">)</span>
+
+    <span class="n">dall</span> <span class="o">=</span> <span class="n">DataSimulFit</span><span class="p">(</span><span class="s2">&quot;combined&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">))</span>
+    <span class="n">mall</span> <span class="o">=</span> <span class="n">SimulFitModel</span><span class="p">(</span><span class="s2">&quot;combined&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">model1</span><span class="p">,</span> <span class="n">model2</span><span class="p">))</span>
+
+    <span class="c1"># # ==========================================</span>
+    <span class="c1"># # Initial guesses</span>
+
+    <span class="c1"># Dataset 1</span>
+    <span class="n">dplot1</span> <span class="o">=</span> <span class="n">DataPlot</span><span class="p">()</span>
+    <span class="n">dplot1</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot1</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="n">mplot1</span> <span class="o">=</span> <span class="n">ModelPlot</span><span class="p">()</span>
+    <span class="n">mplot1</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">model1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot1</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+        <span class="n">mplot1</span><span class="o">.</span><span class="n">overplot</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># Dataset 2</span>
+    <span class="n">dplot2</span> <span class="o">=</span> <span class="n">DataPlot</span><span class="p">()</span>
+    <span class="n">dplot2</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot2</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+    <span class="n">mplot2</span> <span class="o">=</span> <span class="n">ModelPlot</span><span class="p">()</span>
+    <span class="n">mplot2</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">model2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">dplot2</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+        <span class="n">mplot2</span><span class="o">.</span><span class="n">overplot</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># # =========================================</span>
+    <span class="c1"># # Fitting happens here - don&#39;t break please</span>
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">LeastSq</span><span class="p">()</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">LevMar</span><span class="p">()</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">ftol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">xtol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">gtol</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">epsfcn</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+
+    <span class="n">vfit</span> <span class="o">=</span> <span class="n">Fit</span><span class="p">(</span><span class="n">dall</span><span class="p">,</span> <span class="n">mall</span><span class="p">,</span> <span class="n">stat</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">vfit</span><span class="p">)</span>
+    <span class="n">vres</span> <span class="o">=</span> <span class="n">vfit</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Did the fit succeed? [bool]&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">vres</span><span class="o">.</span><span class="n">succeeded</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">vres</span><span class="o">.</span><span class="n">format</span><span class="p">())</span>
+
+    <span class="c1"># # =========================================</span>
+    <span class="c1"># # Plotting after fit</span>
+    <span class="k">if</span> <span class="n">silent</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># Dataset 1</span>
+        <span class="n">fplot1</span> <span class="o">=</span> <span class="n">FitPlot</span><span class="p">()</span>
+        <span class="n">mplot1</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">model1</span><span class="p">)</span>
+        <span class="n">fplot1</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">dplot1</span><span class="p">,</span> <span class="n">mplot1</span><span class="p">)</span>
+        <span class="n">fplot1</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+        <span class="c1"># residual</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Data 1&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave1</span><span class="p">,</span> <span class="n">flux1</span> <span class="o">-</span> <span class="n">model1</span><span class="p">(</span><span class="n">wave1</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># Dataset 2</span>
+        <span class="n">fplot2</span> <span class="o">=</span> <span class="n">FitPlot</span><span class="p">()</span>
+        <span class="n">mplot2</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">model2</span><span class="p">)</span>
+        <span class="n">fplot2</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">dplot2</span><span class="p">,</span> <span class="n">mplot2</span><span class="p">)</span>
+        <span class="n">fplot2</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+        <span class="c1"># residual</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Data 2&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">wave2</span><span class="p">,</span> <span class="n">flux2</span> <span class="o">-</span> <span class="n">model2</span><span class="p">(</span><span class="n">wave2</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># both datasets - no residuals</span>
+        <span class="n">splot</span> <span class="o">=</span> <span class="n">SplitPlot</span><span class="p">()</span>
+        <span class="n">splot</span><span class="o">.</span><span class="n">addplot</span><span class="p">(</span><span class="n">fplot1</span><span class="p">)</span>
+        <span class="n">splot</span><span class="o">.</span><span class="n">addplot</span><span class="p">(</span><span class="n">fplot2</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">model_list</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jan Cami
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

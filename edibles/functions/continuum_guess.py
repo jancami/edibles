@@ -1,19 +1,17 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-# import matplotlib.pyplot as plt
-
 
 def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
     """
     This function fits a continuum to data separated into n sections
     where the x and y-values are the median of each section using a cubic spline
 
-    INPUT:        [Angstroms]
-    data_tuple:   [tuple: (ndarray, ndarray)] (wavelength grid, flux values)
-    pars:         [list]                      input y_points to fit spline
-    delta_v:      [float]                     desired resolution of continuum (in m/s)
-    n_piece:      [int, default=4]            number of sections to split data into
+    Args:
+        data_tuple (tuple): (wavelength grid, flux values)
+        pars (list): input y_points to fit spline (Optional), default=None
+        delta_v (float): desired resolution of continuum (in m/s)
+        n_piece (int): number of sections to split data into, default=2
 
     OUTPUT:       [Angstroms]
     y_spline:     [ndarray]                   continuum flux value array
