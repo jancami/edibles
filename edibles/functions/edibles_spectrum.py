@@ -3,16 +3,36 @@ from astropy.io import fits
 import astropy.constants as cst
 import matplotlib.pyplot as plt
 from edibles.edibles import DATADIR
+import pandas as pd
 
 
 class EdiblesSpectrum:
     """
-    This object will contain a spectrum from EDIBLES,
-    and a set of methods to operate on the data.
+    This class takes a spectrum file from EDIBLES, reads the header and data, and creates a DataFrame.
 
-    Args:
-        filename (str): Name of the file, starting with the target
+    The class will also contain a set of methods to operate on the data.
 
+    :param filename: Name of the file, starting with the target
+    :type filename: str
+    :param header: 
+    :param target:
+    :type target:
+    :param date:
+    :type date:
+    :param v_bary:
+    :type v_bary:
+    :param df: Pandas array containing geocentric and barycentric wavelength, and flux
+    :type df: Pandas array (pandas.core.series.Series)
+    :param wave: The wavelength grid for the spectrum, geocentric reference frame
+    :type wave: Pandas array (pandas.core.series.Series)
+    :param wave_units: The units of the wavelength array
+    :type wave_units: str
+    :param bary_wave: The wavelength grid for the spectrum, barycentric reference frame
+    :type bary_wave: Pandas array (pandas.core.series.Series)
+    :param flux: The flux data for the spectrum
+    :type flux: Pandas array (pandas.core.series.Series)
+    :param flux_units: The units of the flux data
+    :type flux_units: str
 
     """
 
@@ -30,21 +50,29 @@ class EdiblesSpectrum:
         self.header = hdu[0].header
         self.target = self.header["OBJECT"]
         self.date = self.header["DATE-OBS"]
-        self.flux = hdu[0].data
-        self.flux_units = "arbitrary"
+
+        flux = hdu[0].data
         crval1 = self.header["CRVAL1"]
         cdelt1 = self.header["CDELT1"]
-        nwave = len(self.flux)
-        grid = np.arange(0, nwave, 1)
-        self.wave = (grid) * cdelt1 + crval1
-        self.wave_units = "AA"
-        self.reference_frame = "geocentric"
+        lenwave = len(flux)
+        grid = np.arange(0, lenwave, 1)
+        wave = (grid) * cdelt1 + crval1
         self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
-        self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
+        bary_wave = wave + (self.v_bary / cst.c.to("km/s").value) * wave
+
+        d = {'wave': wave.tolist(), 'bary_wave': bary_wave.tolist(), 'flux': flux.tolist()}
+        self.df = pd.DataFrame(data=d)
+
+        self.wave = self.df['wave']
+        self.wave_units = "AA"
+
+        self.bary_wave = self.df['bary_wave']
+
+        self.flux = self.df['flux']
+        self.flux_units = "arbitrary"
 
 
-
-    def getSpectrum(self, xmin=None, xmax=None, bary=False):
+    def getSpectrum(self, xmin=None, xmax=None):
         """
         Function to get the wavelength and flux arrays of a particular target.
         If xmin/xmax are not called, the data for the entire spectrum will be returned.
@@ -60,21 +88,20 @@ class EdiblesSpectrum:
 
         """
 
-        if bary is True:
-            if (xmin is not None) and (xmax is not None):
-                assert xmin < xmax, "xmin must be less than xmax"
-                idx = (self.bary_wave > xmin) * (self.bary_wave < xmax)
+        if (xmin is not None) and (xmax is not None):
+            assert xmin < xmax, "xmin must be less than xmax"
 
-                return self.bary_wave[np.where(idx)], self.flux[np.where(idx)]
 
-        else:
-            if (xmin is not None) and (xmax is not None):
-                assert xmin < xmax, "xmin must be less than xmax"
-                idx = (self.wave > xmin) * (self.wave < xmax)
+            df_subset = self.df[self.df['wave'].between(xmin, xmax)]
 
-                return self.wave[np.where(idx)], self.flux[np.where(idx)]
+            return df_subset
 
-        return self.wave, self.flux
+
+        return self.df
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -84,12 +111,8 @@ if __name__ == "__main__":
     print(sp.target)
     plt.plot(sp.wave, sp.flux, label="Geocentric")
 
-    bary_data = sp.getSpectrum(xmin=7660, xmax=7705, bary=True)
-
-    plt.plot(bary_data[0], bary_data[1], label="Barycentric")
-    axes = plt.gca()
-    # axes.set_xlim([7660, 7705])
-    # axes.set_ylim([0, 160])
-    # plt.vlines((7667.021, 7701.093), 0, 160, linestyles='dashed', colors='r')
+    subset = sp.getSpectrum(xmin=7660, xmax=7680)
+    plt.plot(subset['wave'], subset['flux'], label='Geocentric Subset')
+    plt.plot(subset['bary_wave'], subset['flux'], label='Barycentric Subset')
     plt.legend()
     plt.show()
