@@ -8,19 +8,21 @@ import pandas as pd
 
 class EdiblesSpectrum:
     """
-    This class takes a spectrum file from EDIBLES, reads the header and data, and creates a DataFrame.
+    This class takes a spectrum file from EDIBLES, 
+    reads the header and data, and creates a DataFrame.
 
     The class will also contain a set of methods to operate on the data.
 
     :param filename: Name of the file, starting with the target
     :type filename: str
-    :param header: 
-    :param target:
-    :type target:
-    :param date:
-    :type date:
-    :param v_bary:
-    :type v_bary:
+    :param header: The header of the FITS file from the target observation
+    :type header: Object (astropy.io.fits.header.Header)
+    :param target: The name of the target
+    :type target: str
+    :param date: Date of the target observation
+    :type date: str
+    :param v_bary: Barycentric velocity of the target star
+    :type v_bary: float
     :param df: Pandas array containing geocentric and barycentric wavelength, and flux
     :type df: Pandas array (pandas.core.series.Series)
     :param wave: The wavelength grid for the spectrum, geocentric reference frame
@@ -43,7 +45,6 @@ class EdiblesSpectrum:
         self.filename = DATADIR + filename
         self.loadSpectrum()
 
-
     def loadSpectrum(self):
         # Assume the file is a DR3 product here.
         hdu = fits.open(self.filename)
@@ -60,17 +61,20 @@ class EdiblesSpectrum:
         self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
         bary_wave = wave + (self.v_bary / cst.c.to("km/s").value) * wave
 
-        d = {'wave': wave.tolist(), 'bary_wave': bary_wave.tolist(), 'flux': flux.tolist()}
+        d = {
+            "wave": wave.tolist(),
+            "bary_wave": bary_wave.tolist(),
+            "flux": flux.tolist()
+            }
         self.df = pd.DataFrame(data=d)
 
-        self.wave = self.df['wave']
+        self.wave = self.df["wave"]
         self.wave_units = "AA"
 
-        self.bary_wave = self.df['bary_wave']
+        self.bary_wave = self.df["bary_wave"]
 
-        self.flux = self.df['flux']
+        self.flux = self.df["flux"]
         self.flux_units = "arbitrary"
-
 
     def getSpectrum(self, xmin=None, xmax=None):
         """
@@ -91,28 +95,24 @@ class EdiblesSpectrum:
         if (xmin is not None) and (xmax is not None):
             assert xmin < xmax, "xmin must be less than xmax"
 
-
-            df_subset = self.df[self.df['wave'].between(xmin, xmax)]
+            df_subset = self.df[self.df["wave"].between(xmin, xmax)]
 
             return df_subset
 
-
         return self.df
-
-
-
-
 
 
 if __name__ == "__main__":
     filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
-    print("Barycentric Velocity is", sp.v_bary)
     print(sp.target)
+    print("Barycentric Velocity is", sp.v_bary)
+    plt.figure()
     plt.plot(sp.wave, sp.flux, label="Geocentric")
+    plt.figure()
 
     subset = sp.getSpectrum(xmin=7660, xmax=7680)
-    plt.plot(subset['wave'], subset['flux'], label='Geocentric Subset')
-    plt.plot(subset['bary_wave'], subset['flux'], label='Barycentric Subset')
+    plt.plot(subset["wave"], subset["flux"], label="Geocentric Subset")
+    plt.plot(subset["bary_wave"], subset["flux"], label="Barycentric Subset")
     plt.legend()
     plt.show()
