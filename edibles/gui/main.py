@@ -156,7 +156,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.ui.actionEnable_ASCII_format.isChecked():
                     wav, flux = np.loadtxt(DATADIR+filename[:-4]+'ascii',unpack=True)
                 else:
-                    wav, flux = edspec(filename).getSpectrum()
+                    df = edspec(filename).getSpectrum()
+                    wav = df['wave']
+                    flux = df['flux']
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
