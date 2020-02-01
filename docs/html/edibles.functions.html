@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>edibles.functions package &mdash; EDIBLES  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="edibles.fit.models package" href="edibles.fit.models.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> EDIBLES
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="edibles.html">edibles package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="edibles.fit.html">edibles.fit package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">edibles.functions package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions.VoigtClass">edibles.functions.VoigtClass module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-atomic-line-tool-module">edibles.functions.atomic_line_tool module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions.continuum_guess">edibles.functions.continuum_guess module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-create-synthetic-dibspectrum-module">edibles.functions.create_synthetic_DIBspectrum module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-create-synthetic-dibspectrum-hobbs-module">edibles.functions.create_synthetic_DIBspectrum_Hobbs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-edibles-spectrum-module">edibles.functions.edibles_spectrum module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-file-search-module">edibles.functions.file_search module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-functions-module">edibles.functions.functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions.local_continuum_spline">edibles.functions.local_continuum_spline module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-measure-ew-single-module">edibles.functions.measure_ew_single module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions.measure_snr">edibles.functions.measure_snr module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-plot-overview-panel-module">edibles.functions.plot_overview_panel module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-rebin-spectrum-module">edibles.functions.rebin_spectrum module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#edibles-functions-velocity-space-plot-module">edibles.functions.velocity_space_plot module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions.voigt">edibles.functions.voigt module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-edibles.functions">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EDIBLES</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="edibles.html">edibles package</a> &raquo;</li>
+        
+      <li>edibles.functions package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/edibles.functions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="edibles-functions-package">
+<h1>edibles.functions package<a class="headerlink" href="#edibles-functions-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-edibles.functions.VoigtClass">
+<span id="edibles-functions-voigtclass-module"></span><h2>edibles.functions.VoigtClass module<a class="headerlink" href="#module-edibles.functions.VoigtClass" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="edibles.functions.VoigtClass.Voigt">
+<em class="property">class </em><code class="descclassname">edibles.functions.VoigtClass.</code><code class="descname">Voigt</code><a class="reference internal" href="_modules/edibles/functions/VoigtClass.html#Voigt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.VoigtClass.Voigt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An object with different vesions of the Voigt function.</p>
+<dl class="docutils">
+<dt>type <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>type of voigt function</dd>
+</dl>
+<dl class="method">
+<dt id="edibles.functions.VoigtClass.Voigt.voigtAbsorptionLine">
+<code class="descname">voigtAbsorptionLine</code><span class="sig-paren">(</span><em>lam</em>, <em>lam_0</em>, <em>b</em>, <em>d</em>, <em>tau_0=0.1</em>, <em>N=None</em>, <em>f=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/VoigtClass.html#Voigt.voigtAbsorptionLine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.VoigtClass.Voigt.voigtAbsorptionLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that takes in physical parameters and returns an absorption line.</p>
+<p>Choose either a tau_0 parameter, or N and f together. Default is tau_0.</p>
+<dl class="docutils">
+<dt>lam <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Wavelength grid</dd>
+<dt>lam_0 <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Central wavelength</dd>
+<dt>b <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Gaussian standard deviation</dd>
+<dt>d <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Damping parameter</dd>
+<dt>N <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Column density</dd>
+<dt>f <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Oscillator strength</dd>
+<dt>tau_0 <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Optical depth at center of line</dd>
+</dl>
+<dl class="docutils">
+<dt>ndarray</dt>
+<dd>flux array of light transmission</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="edibles.functions.VoigtClass.Voigt.voigtMath">
+<code class="descname">voigtMath</code><span class="sig-paren">(</span><em>x</em>, <em>alpha</em>, <em>gamma</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/VoigtClass.html#Voigt.voigtMath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.VoigtClass.Voigt.voigtMath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
+and Gaussian component HWHM alpha.</p>
+<p>Creates a Voigt line profile using the scipy.special.wofz, which returns 
+the value of the Faddeeva function.</p>
+<p>WARNING
+scipy.special.wofz is not compaible with np.float128 type parameters.</p>
+<dl class="docutils">
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Dimensionless point/array</dd>
+<dt>alpha <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Gaussian HWHM component</dd>
+<dt>gamma <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Lorentzian HWHM component</dd>
+</dl>
+<dl class="docutils">
+<dt>ndarray</dt>
+<dd>Flux array for given input</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="edibles.functions.VoigtClass.Voigt.voigtOpticalDepth">
+<code class="descname">voigtOpticalDepth</code><span class="sig-paren">(</span><em>lam</em>, <em>lam_0</em>, <em>b</em>, <em>d</em>, <em>Nf=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/VoigtClass.html#Voigt.voigtOpticalDepth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.VoigtClass.Voigt.voigtOpticalDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts parameters to make proper call to voigtMath</p>
+<dl class="docutils">
+<dt>lam <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Wavelength grid</dd>
+<dt>lam_0 <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Central wavelength</dd>
+<dt>b <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Gaussian standard deviation</dd>
+<dt>d <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Damping parameter</dd>
+<dt>Nf <span class="classifier-delimiter">:</span> <span class="classifier">float64</span></dt>
+<dd>Scaling parameter, default = 1.0</dd>
+</dl>
+<dl class="docutils">
+<dt>ndarray</dt>
+<dd>Optical depth for given input</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="edibles-functions-atomic-line-tool-module">
+<h2>edibles.functions.atomic_line_tool module<a class="headerlink" href="#edibles-functions-atomic-line-tool-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-edibles.functions.continuum_guess">
+<span id="edibles-functions-continuum-guess-module"></span><h2>edibles.functions.continuum_guess module<a class="headerlink" href="#module-edibles.functions.continuum_guess" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="edibles.functions.continuum_guess.generate_continuum">
+<code class="descclassname">edibles.functions.continuum_guess.</code><code class="descname">generate_continuum</code><span class="sig-paren">(</span><em>data_tuple</em>, <em>pars=None</em>, <em>delta_v=1.0</em>, <em>n_piece=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/continuum_guess.html#generate_continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.continuum_guess.generate_continuum" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function fits a continuum to data separated into n sections
+where the x and y-values are the median of each section using a cubic spline</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>data_tuple (tuple): (wavelength grid, flux values)
+pars (list): input y_points to fit spline (Optional), default=None
+delta_v (float): desired resolution of continuum (in m/s)
+n_piece (int): number of sections to split data into, default=2</dd>
+</dl>
+<p>OUTPUT:       [Angstroms]
+y_spline:     [ndarray]                   continuum flux value array</p>
+</dd></dl>
+
+</div>
+<div class="section" id="edibles-functions-create-synthetic-dibspectrum-module">
+<h2>edibles.functions.create_synthetic_DIBspectrum module<a class="headerlink" href="#edibles-functions-create-synthetic-dibspectrum-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-create-synthetic-dibspectrum-hobbs-module">
+<h2>edibles.functions.create_synthetic_DIBspectrum_Hobbs module<a class="headerlink" href="#edibles-functions-create-synthetic-dibspectrum-hobbs-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-edibles-spectrum-module">
+<h2>edibles.functions.edibles_spectrum module<a class="headerlink" href="#edibles-functions-edibles-spectrum-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-file-search-module">
+<h2>edibles.functions.file_search module<a class="headerlink" href="#edibles-functions-file-search-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-functions-module">
+<h2>edibles.functions.functions module<a class="headerlink" href="#edibles-functions-functions-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-edibles.functions.local_continuum_spline">
+<span id="edibles-functions-local-continuum-spline-module"></span><h2>edibles.functions.local_continuum_spline module<a class="headerlink" href="#module-edibles.functions.local_continuum_spline" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="edibles.functions.local_continuum_spline.local_continuum">
+<code class="descclassname">edibles.functions.local_continuum_spline.</code><code class="descname">local_continuum</code><span class="sig-paren">(</span><em>data</em>, <em>positions=None</em>, <em>windows=1.0</em>, <em>spline_order=1</em>, <em>silent=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/local_continuum_spline.html#local_continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.local_continuum_spline.local_continuum" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that will fit a local continuum spline to a “spectrum” using a list of anchor points.
+Each anchor point has a “continuum” window (or the same single value for all anchor points).
+A spline (order s) is fit to the “continuum” data points.
+The continumm is then created on the input “wavelength” grid.
+The input data tuple (wave, flux) is then normalised giving (wave, normalised_flux)</p>
+<p>INPUT:
+data:         [tuple]             In the form (wave, flux)
+positions:    []                  List of spline anchor points
+windows:      []                  List of window sizes around each anchor point (in Angstrom)
+spline_order: [int - 1]           Order (s) of spline fit
+silent:       [bool - True]       If true, no plots will generate</p>
+<p>OUTPUT:
+continuum:    [tuple]             Continuum flux in the form (flux) on the same spectral grid as (wave)
+normalised:   [tuple]             Normalised input spectrum In the form (normalised_flux)
+##c1:         [?]                 polyfit_result - can be used by np.poly1d(polyfit_result) to create continuum again: continuum = p1(wave_grid)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="edibles-functions-measure-ew-single-module">
+<h2>edibles.functions.measure_ew_single module<a class="headerlink" href="#edibles-functions-measure-ew-single-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-edibles.functions.measure_snr">
+<span id="edibles-functions-measure-snr-module"></span><h2>edibles.functions.measure_snr module<a class="headerlink" href="#module-edibles.functions.measure_snr" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="edibles.functions.measure_snr.measure_snr">
+<code class="descclassname">edibles.functions.measure_snr.</code><code class="descname">measure_snr</code><span class="sig-paren">(</span><em>wave</em>, <em>flux</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/measure_snr.html#measure_snr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.measure_snr.measure_snr" title="Permalink to this definition">¶</a></dt>
+<dd><p>call:</p>
+<p>snr = measure_snr(wave_array, flux_array)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="edibles-functions-plot-overview-panel-module">
+<h2>edibles.functions.plot_overview_panel module<a class="headerlink" href="#edibles-functions-plot-overview-panel-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-rebin-spectrum-module">
+<h2>edibles.functions.rebin_spectrum module<a class="headerlink" href="#edibles-functions-rebin-spectrum-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="edibles-functions-velocity-space-plot-module">
+<h2>edibles.functions.velocity_space_plot module<a class="headerlink" href="#edibles-functions-velocity-space-plot-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-edibles.functions.voigt">
+<span id="edibles-functions-voigt-module"></span><h2>edibles.functions.voigt module<a class="headerlink" href="#module-edibles.functions.voigt" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="edibles.functions.voigt.voigtAbsorptionLine">
+<code class="descclassname">edibles.functions.voigt.</code><code class="descname">voigtAbsorptionLine</code><span class="sig-paren">(</span><em>lam</em>, <em>lam_0</em>, <em>b</em>, <em>d</em>, <em>tau_0=0.1</em>, <em>N=None</em>, <em>f=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/voigt.html#voigtAbsorptionLine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.voigt.voigtAbsorptionLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that takes in physical parameters and returns an absorption line.</p>
+<p>Choose either a tau_0 parameter, or N and f together. Default is tau_0.</p>
+<p>Input:</p>
+<blockquote>
+<div>lam (float64): Wavelength grid
+lam_0 (float64): Central wavelength
+b (float64): Gaussian standard deviation
+d (float64): Damping parameter
+N (float64): Column density
+f (float64): Oscillator strength
+tau_0 (float64): Optical depth at center of line</div></blockquote>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>ndarray: flux array of light transmission</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edibles.functions.voigt.voigtMath">
+<code class="descclassname">edibles.functions.voigt.</code><code class="descname">voigtMath</code><span class="sig-paren">(</span><em>x</em>, <em>alpha</em>, <em>gamma</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/voigt.html#voigtMath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.voigt.voigtMath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
+and Gaussian component HWHM alpha.</p>
+<p>Creates a Voigt line profile using the scipy.special.wofz, which returns 
+the value of the Faddeeva function.</p>
+<p>WARNING
+scipy.special.wofz is not compaible with np.float128 type parameters.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>x (float64): Dimensionless point/array
+alpha (float64): Gaussian HWHM component
+gamma (float64): Lorentzian HWHM component</dd>
+<dt>Returns:</dt>
+<dd>ndarray: Flux array for given input</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="edibles.functions.voigt.voigtOpticalDepth">
+<code class="descclassname">edibles.functions.voigt.</code><code class="descname">voigtOpticalDepth</code><span class="sig-paren">(</span><em>lam</em>, <em>lam_0</em>, <em>b</em>, <em>d</em>, <em>Nf=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/edibles/functions/voigt.html#voigtOpticalDepth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#edibles.functions.voigt.voigtOpticalDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts parameters to make proper call to voigtMath</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>lam (float64): Wavelength grid
+lam_0 (float64): Central wavelength
+b (float64): Gaussian standard deviation
+d (float64): Damping parameter
+Nf (float64): Scaling parameter, default = 1.0</dd>
+<dt>Returns:</dt>
+<dd>ndarray: Optical depth for given input</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-edibles.functions">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-edibles.functions" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="edibles.fit.models.html" class="btn btn-neutral float-left" title="edibles.fit.models package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jan Cami
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
