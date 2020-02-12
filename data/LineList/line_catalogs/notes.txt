@@ -1,0 +1,1 @@
+# add osscillator strengths "f" to the line list to allow to convert fitted lines to column densities.

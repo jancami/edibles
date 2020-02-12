@@ -1,5 +1,0 @@
-import os
-
-DATADIR = os.environ['EDIBLES_DATADIR']
-DATARELEASE = os.environ['EDIBLES_DATARELEASE']
-EDIBLES_PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
