@@ -1,26 +1,14 @@
-.. EDIBLES documentation master file, created by
-   sphinx-quickstart on Fri Dec 13 13:39:36 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Documentation
+=============
 
-Welcome to EDIBLES's documentation!
-===================================
+This is the documentation for EDIBLES.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+  :maxdepth: 2
 
-   installation
-   tutorial
+  edibles/index.rst
 
-
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Documentation:
-
-   edibles
-   edibles.fit
-   edibles.functions
-
+.. note:: The layout of this directory is simply a suggestion.  To follow
+          traditional practice, do *not* edit this page, but instead place
+          all documentation for the package inside ``edibles/``.
+          You can follow this practice or choose your own layout.
