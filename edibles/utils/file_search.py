@@ -23,7 +23,7 @@ class FilterDR(object):
         """
         when you put in this decorator, it will automatically return an
         instance of the object and reset the index
-        
+
         allows this:
         FilterDR().filterStar('HD170740').filterOrder(order=[12, 13])
         """
