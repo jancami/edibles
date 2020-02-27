@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import os
-import sys
 import csv
 import numpy as np
 from scipy.signal import find_peaks
@@ -59,7 +58,7 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     3303.199755852153   1.0125096
     3303.219757972055   1.012984
     3303.2397600919576  1.0122045
-    
+
     """
 
     c = 2.99 * (10 ** 8)  # m/s
@@ -184,7 +183,8 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
     cloud_vel = c * (lambda_obs - lambda_res) / lambda_res
     cloud_vel_corr = 1 - (cloud_vel / c)
 
-    # correction for wavelenth taking into account barycentric velocity and cloud velocity.
+    # correction for wavelenth taking into account
+    # barycentric velocity and cloud velocity.
     total_wavelength_correction = bary_corr * cloud_vel_corr
 
     # Scale the data in order to view desired DIB
@@ -213,7 +213,8 @@ def fitstotxt(target, filepath, writepath, xmin, xmax):
 
     # print(args)
     # if len(args) != 5:
-    #     print('\nSyntax:    python fitsto2dtxt.py target, filepath, writepath, xmin, xmax\n')
+    #     print('\nSyntax:    python fitsto2dtxt.py target, filepath,
+    #                   writepath, xmin, xmax\n')
 
     # else:
     #     fitstotxt(args[0], args[1], args[2], args[3], args[4])
@@ -255,7 +256,7 @@ def param_convert(params):
     :param params: (cent, b_eff, Gamma, scaling)
     :type params: tuple
 
-    :return: converted parameters 
+    :return: converted parameters
     :rtype: tuple
 
     """
@@ -346,20 +347,20 @@ def read_array(filename, dtype, separator=","):
          It will be cast to the given dtype at runtime
      """
     cast = np.cast
-    data = [[] for dummy in xrange(len(dtype))]
+    data = [[] for dummy in range(len(dtype))]
     for line in open(filename, "r"):
         fields = line.strip().split(separator)
         for i, number in enumerate(fields):
             data[i].append(number)
-    for i in xrange(len(dtype)):
+    for i in range(len(dtype)):
         data[i] = cast[dtype[i]](data[i])
     return np.rec.array(data, dtype=dtype)
 
 
 def read_line_catalog(input_catalog):
-
     """
-    (xpos_atoms, labels_atoms)  = read_line_catalog('auxilarary_data/line_catalogs/edibles_linelist_atoms.csv')
+    (xpos_atoms, labels_atoms) =
+        read_line_catalog('auxilarary_data/line_catalogs/edibles_linelist_atoms.csv')
     """
 
     x = np.genfromtxt(
@@ -369,7 +370,8 @@ def read_line_catalog(input_catalog):
     labels = x["f2"]
 
     """ alternative:
-    xpos,labels = np.genfromtxt(input_catalog, usecols=(0,1), skip_header=1, dtype=None, delimiter=',')
+    xpos,labels = np.genfromtxt(input_catalog, usecols=(0,1), skip_header=1,
+                                dtype=None, delimiter=',')
     """
 
     return xpos, labels
@@ -396,19 +398,20 @@ def smooth(y, box_pts):
 
 
 def parseTextFile(file_name, delimiter=",", header=0):
-    """ Parse a text file to a list. The file contents are delimited and have a header. 
+    """ Parse a text file to a list. The file contents are delimited
+    and have a header.
 
-    
+
     :param file_name: The path to the file
     :type : str
     :param delimiter: The delimiter to use to parse the file
     :type : str
-    :param header: The nuber of lines at the top of the file to ignore, default=0
+    :param header: The number of lines at the top of the file to ignore
     :type : int
 
     :return: Text file parsed into a list
     :rtype: list
-        
+
     """
 
     with open(file_name) as f:
@@ -447,7 +450,7 @@ def vac2air_ciddor(vacw):
     example:
 
     wt,ft=np.loadtxt("transmission.dat", unpack=True)
-    wtc = vac2air_ciddor(wt*10.0) #make sure wave is in \AA.
+    wtc = vac2air_ciddor(wt*10.0) #make sure wave is in Angstroms.
 
     """
     k0 = 238.0185
@@ -463,7 +466,7 @@ def vac2air_ciddor(vacw):
 
 def vac2air_morton(vacw):
     """ Convert vacuum wavelengths in Angstroms to air wavelengths.
-    
+
     This uses the relation from Morton 1991, ApJS, 77, 119. Only valid
     for wavelengths > 2000 Ang.  Use this for compatibility with older
     spectra that may have been corrected using the (older) Morton
@@ -471,21 +474,24 @@ def vac2air_morton(vacw):
     to be more accurate at IR wavelengths.
 
     example:
-    wtc = vac2air_morton(wt*10.0) #make sure wave is in \AA.
+    wtc = vac2air_morton(wt*10.0) #make sure wave is in Angstroms.
 
     """
     temp = (1e4 / vacw) ** 2
-    airw = 1. / (1. + 6.4328e-5 + 2.94981e-2/(146 - temp) +
-                 2.5540e-4/(41 - temp)) * vacw
+    airw = (
+        1.0
+        / (1.0 + 6.4328e-5 + 2.94981e-2 / (146 - temp) + 2.5540e-4 / (41 - temp))
+        * vacw
+    )
     return airw
 
 
 def write_spectrum_ascii(output_name, x, y, yerr, header):
     f = open(output_name, "w")
-    if header != None:
+    if header is not None:
         f.write(header)
     for i in range(len(x) - 1):
-        if yerr != None:
+        if yerr is not None:
             # print x
             f.write(
                 str("%6.4f" % x[i])

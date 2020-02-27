@@ -3,13 +3,12 @@ from edibles.edibles import EDIBLES_PYTHONDIR
 
 
 class AtomicLines:
-
     def __init__(self):
-        self.filename = EDIBLES_PYTHONDIR + '/edibles/data/atomic_lines.txt'
+        self.filename = EDIBLES_PYTHONDIR + "/edibles/data/atomic_lines.txt"
         with open(self.filename) as f:
 
             first_line = f.readline()
-            names = first_line.split('|')
+            names = first_line.split("|")
             indices = []
 
             for i in range(len(names)):
@@ -28,8 +27,18 @@ class AtomicLines:
             self.LVL_EN_CM_1 = []
             self.REF = []
             self.new_line = []
-            data = [self.wavelength, self.species, self.TT, self.Term, self.J_ik, self.f_ik, self.TPF, self.LVL_EN_CM_1,
-                    self.REF, self.new_line]
+            data = [
+                self.wavelength,
+                self.species,
+                self.TT,
+                self.Term,
+                self.J_ik,
+                self.f_ik,
+                self.TPF,
+                self.LVL_EN_CM_1,
+                self.REF,
+                self.new_line,
+            ]
 
             for line in f:
                 start = 0
@@ -79,13 +88,17 @@ class AtomicLines:
 
     def getAllLabWavelength(self, ion):
         # returns list of all wavelengths of the ion
-        return [float(self.data[1][i]) for i in range(len(self.data[1])) if self.data[2][i] == ion]
+        return [
+            float(self.data[1][i])
+            for i in range(len(self.data[1]))
+            if self.data[2][i] == ion
+        ]
 
 
 if __name__ == "__main__":
     obj = AtomicLines()
 
-    ion = 'Na I'
+    ion = "Na I"
     wave = 5000
 
     print(obj.get_f_known(ion, wave))

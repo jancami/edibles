@@ -57,7 +57,8 @@ class FilterDR(object):
         INPUT:          type
             star:       [string]                    ex. 'HD170740'
             date:       [string]                    ex. '20150626',
-            wavelength: [list of float] or [float]  Filters out files that do not contain any wavelengths in list
+            wavelength: [list of float] or [float]  Filters out files that do not
+                                                    contain any wavelengths in list
             order:      [list of int] or [int]      11 for _O11
             combined:   [boolean]                   If filename contains L, R or U
         """
@@ -158,7 +159,7 @@ class FilterDR(object):
         filter.filterOrder(order=[12, 13])
         print(filter.getOrders())
 
-        OUTPUT: 
+        OUTPUT:
         [12, 13]
         """
         return [int(x) for x in list(set(self.df.Order)) if x != -1]
@@ -172,8 +173,9 @@ class FilterDR(object):
         filter.filterStar('HD170740')
         print(filter.getDates())
 
-        OUTPUT: 
-        ['20150626', '20170701', '20150424', '20160613', '20140916', '20170705', '20160505', '20160612', '20140915']
+        OUTPUT:
+        ['20150626', '20170701', '20150424', '20160613', '20140916',
+        '20170705', '20160505', '20160612', '20140915']
         """
         return list(set(self.df.DateObs.apply(self.parse_time)))
 
