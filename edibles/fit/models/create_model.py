@@ -1,9 +1,5 @@
 from edibles.edibles.functions.continuum_guess import generate_continuum
-from edibles.edibles.fit.models.models import (
-    Cont1D,
-    VoigtAbsorptionLine,
-    KnownVelocityLine,
-)
+from edibles.edibles.fit.models.models import Cont1D
 
 
 def createCont(data, n_points=4):
@@ -83,7 +79,7 @@ def createCont(data, n_points=4):
 
 
 # def createKnownLine(name, lam_0, b, d, N, f_known):
-#     """Creates an instance of a VoigtAbsorptionLine object 
+#     """Creates an instance of a VoigtAbsorptionLine object
 #     where the oscillator strength is KNOWN
 
 #     INPUT:
@@ -119,7 +115,7 @@ def createCont(data, n_points=4):
 
 
 # def createKnownVelocityLine(name, v_cloud, b, d, N, f_known, lab_lam_0):
-#     """Creates an instance of a KnownVelocityLine object 
+#     """Creates an instance of a KnownVelocityLine object
 #     where the oscillator strength is KNOWN and the x axis is in velocity space
 
 #     INPUT:
@@ -149,7 +145,7 @@ def createCont(data, n_points=4):
 
 
 # def createKnownCloud(name, num_lines, lam_0, b, d, N, f_known):
-#     """Creates multiple instances of a VoigtAbsorptionLine object 
+#     """Creates multiple instances of a VoigtAbsorptionLine object
 #     where the Oscillator strength is KNOWN
 
 #     INPUT:
@@ -182,7 +178,7 @@ def createCont(data, n_points=4):
 
 
 # def createKnownVelocityCloud(name, num_lines, v_cloud, b, d, N, f_known, lab_lam_0):
-#     """Creates multiple instances of a KnownVelocityLine object 
+#     """Creates multiple instances of a KnownVelocityLine object
 #     where the oscillator strength is KNOWN and the x axis is in velocity space
 
 #     INPUT:

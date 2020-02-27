@@ -64,17 +64,17 @@ def fit(star_name, data, model, silent=False, breakdown=False):
     opt.gtol = 1e-15
     opt.epsfcn = 1e-15
 
-    if silent == False:
+    if silent is False:
         print(opt)
 
     vfit = Fit(d, model, stat=stat, method=opt)
 
-    if silent == False:
+    if silent is False:
         print(vfit)
 
     vres = vfit.fit()
 
-    if silent == False:
+    if silent is False:
         print()
         print()
         print(vres.format())
@@ -153,15 +153,14 @@ def multifit(star_name, data_list, model_list, silent=False):
 
     """
 
-
     wave1, flux1 = data_list[0]
     wave2, flux2 = data_list[1]
 
     model1 = model_list[0]
     model2 = model_list[1]
 
-    name_1 = star_name + ' 1'
-    name_2 = star_name + ' 2'
+    name_1 = star_name + " 1"
+    name_2 = star_name + " 2"
 
     d1 = Data1D(name_1, wave1, flux1)
     d2 = Data1D(name_2, wave2, flux2)

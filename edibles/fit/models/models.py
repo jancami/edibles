@@ -42,7 +42,7 @@ class Cont1D(ArithmeticModel):
 
     def __init__(self, name="Cont_flux"):
         """
-        
+
         :param y1: y_point to fit
         :type y1: float64
         :param y2: y_point to fit
@@ -80,10 +80,10 @@ class Cont1D(ArithmeticModel):
         )
 
     def calc(self, pars, x, *args, **kwargs):
-
         """
         This function fits a continuum to data separated into n sections
-        where the x and y-values are the median of each section using a cubic spline
+        where the x and y-values are the median of each section using a
+        cubic spline.
 
         :param x: wavelength grid (angstroms)
         :type x: ndarray
@@ -192,7 +192,9 @@ class VoigtAbsorptionLine(ArithmeticModel):
 
 class LinkedWavelengthVoigtAbsorptionLine(ArithmeticModel):
     """
-    Identical to VoigtAbsorptionLine but splits lam_0 into two variables, where lam_0 -> lam_0 * k
+    Identical to VoigtAbsorptionLine but splits lam_0 into two variables,
+    where lam_0 -> lam_0 * k
+
     Used for linking lam_0 to another model and changing k
 
     :param name: Name of the target
@@ -253,8 +255,8 @@ class Sightline:
     """
     An object containing continuum and all Voigt models.
 
-    A sightline with multiple sources of lines that share the same b 
-    and d parameters. Groups can be Stellar, Interstellar, Telluric, 
+    A sightline with multiple sources of lines that share the same b
+    and d parameters. Groups can be Stellar, Interstellar, Telluric,
     or subsets of each.
 
     :param star_name: name of the target star
@@ -268,7 +270,7 @@ class Sightline:
     :param current_source: The current source of lines
     :type current_source: str
     :param resolution: The resolution of the data, defaults to 80000
-    :type resolution: 
+    :type resolution: int
 
     """
 
@@ -296,7 +298,7 @@ class Sightline:
         source, creating each of the lines automatically.
 
         k is related to the velocity relative to the two sources. k=0.99995 will
-        decrease the wavelength. All other parameters are intialized to be the 
+        decrease the wavelength. All other parameters are intialized to be the
         same as the other source.
 
         :param old_source_name: Name of source to be duplicated
@@ -326,11 +328,11 @@ class Sightline:
         """
         A method to add a source of absorption lines to the sightline object.
 
-        All lines from this source share the same b and d parameters. 
+        All lines from this source share the same b and d parameters.
 
         .. note:: Do not use k unless lam_0 is linked to another model. It is redundant
 
-        :param source_name: Name of source 
+        :param source_name: Name of source
         :type source_name: str
         :param b: Gaussian standard deviation
         :type b: float64
@@ -373,7 +375,7 @@ class Sightline:
 
         .. note:: Source must already be initialized!
 
-        :param source_name: Name of the source to switch to 
+        :param source_name: Name of the source to switch to
         :type source_name: str
 
         """
