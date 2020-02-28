@@ -18,17 +18,16 @@ class Voigt:
     def __init__(self):
         self
 
-
     def voigtMath(self, x, alpha, gamma):
         """
-        Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
-        and Gaussian component HWHM alpha.
+        Function to return the Voigt line shape centered at cent with
+        Lorentzian component HWHM gamma and Gaussian component HWHM alpha.
 
-        Creates a Voigt line profile using the scipy.special.wofz, which returns 
-        the value of the Faddeeva function. 
+        Creates a Voigt line profile using the scipy.special.wofz, which
+        returns the value of the Faddeeva function.
 
         WARNING
-        scipy.special.wofz is not compaible with np.float128 type parameters. 
+        scipy.special.wofz is not compaible with np.float128 type parameters.
 
         Input:
         ----------
@@ -53,7 +52,6 @@ class Voigt:
             / sigma
             / np.sqrt(2 * np.pi)
         )
-
 
     def voigtOpticalDepth(self, lam, lam_0, b, d, Nf=1.0):
         """
@@ -89,7 +87,7 @@ class Voigt:
 
         # convert d to gamma -- [ depends on what units we want to use ]
 
-        # Currently, we are using the Lorentzian HWHM. This can easily be changed...
+        # Currently, we are using the Lorentzian HWHM. This can be changed...
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         gamma = d
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,10 +112,9 @@ class Voigt:
         # return scaled & shifted data
         return tau
 
-
     def voigtAbsorptionLine(self, lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
         """
-        Function that takes in physical parameters and returns an absorption line. 
+        Function that takes in physical parameters and returns absorption line.
 
         Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 

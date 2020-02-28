@@ -4,10 +4,12 @@
 from PyQt5.QtCore import QAbstractTableModel, Qt
 from PyQt5 import QtCore
 
+
 class PandasModel(QAbstractTableModel):
     """
     Class to populate a table view with a pandas dataframe
     """
+
     def __init__(self, data, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self._data = data
@@ -54,6 +56,7 @@ class SelectionModel(QAbstractTableModel):
     """
     Simple class to populate a table view with Selected data
     """
+
     def __init__(self, list, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.headers = ['Filename']

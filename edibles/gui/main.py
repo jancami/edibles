@@ -45,6 +45,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
       (i.e. interactive lambda selection for profile fitting, etc)
     - add more TODO points
     """
+
     def __init__(self, parent=None):
         # Initialise the Main window
         QMainWindow.__init__(self, parent=parent)
@@ -72,13 +73,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def ImportSelData(self):
         # retrieve file to load in
-        fname = QFileDialog.getOpenFileName(self, 'Open file', './')
+        fname = QFileDialog.getOpenFileName(self, "Open file", "./")
         if fname[0]:
-            with open(fname[0], 'r') as f:
+            with open(fname[0], "r") as f:
                 # for filename in file
                 for filename in f.read().splitlines():
-                    if 'ascii' in filename:
-                        filename = filename.replace('ascii', 'fits')
+                    if "ascii" in filename:
+                        filename = filename.replace("ascii", "fits")
                     if filename in self.selected_data:
                         # if filename already in selected data, skip
                         continue
@@ -91,14 +92,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def ExportSelData(self):
         # create file to export selected data to
-        fname = QFileDialog.getSaveFileName(self, 'Save file', './')
+        fname = QFileDialog.getSaveFileName(self, "Save file", "./")
         if fname[0]:
-            with open(fname[0], 'w') as f:
+            with open(fname[0], "w") as f:
                 for row in self.selected_data:
                     if self.ui.actionEnable_ASCII_format.isChecked():
-                        f.write(row[:-4] + 'ascii\n')
+                        f.write(row[:-4] + "ascii\n")
                     else:
-                        f.write(row + '\n')
+                        f.write(row + "\n")
 
     def keyPressEvent(self, event):
         # Delete key used to remove highlighted spectra from selected sidebar
@@ -113,8 +114,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # ( TODO probably a nicer way to do this?)
         filenames = []
         for idxxx in idx:
-            filenames.append(self.selectionmodel.data(
-                             self.selectionmodel.index(idxxx.row(), 0)))
+            filenames.append(
+                self.selectionmodel.data(self.selectionmodel.index(idxxx.row(), 0))
+            )
 
         # Iterate over highlighted files, remove rom selection list
         for filename in filenames:
@@ -129,15 +131,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def load_overview(self):
         # Load obslist overview into pandas frame
-        self.overview = pd.read_csv(EDIBLES_PYTHONDIR + '/edibles/data/' + DATARELEASE + '_ObsLog.csv')
+        self.overview = pd.read_csv(
+            EDIBLES_PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
+        )
 
     def add_mpl(self):
         # Initial MPL figure and toolbar
         self.fig = Figure()
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvas(self.fig)
-        self.toolbar = NavigationToolbar(self.canvas, self.ui.matplotlib,
-                                         coordinates=True)
+        self.toolbar = NavigationToolbar(
+            self.canvas, self.ui.matplotlib, coordinates=True
+        )
         # Add MPL canvas and toolbar to Main window
         self.ui.mpl_layout.addWidget(self.toolbar)
         self.ui.mpl_layout.addWidget(self.canvas)
@@ -151,25 +156,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ax = self.fig.add_subplot(111)
             for idxxx in idx:
                 filename = self.selectionmodel.data(
-                           self.selectionmodel.index(idxxx.row(), 0))
+                    self.selectionmodel.index(idxxx.row(), 0)
+                )
                 # Load wav and flux of corresponding spectrum
                 if self.ui.actionEnable_ASCII_format.isChecked():
-                    wav, flux = np.loadtxt(DATADIR+filename[:-4]+'ascii',unpack=True)
+                    wav, flux = np.loadtxt(
+                        DATADIR + filename[:-4] + "ascii", unpack=True
+                    )
                 else:
                     df = edspec(filename).getSpectrum()
-                    wav = df['wave']
-                    flux = df['flux']
+                    wav = df["wave"]
+                    flux = df["flux"]
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
-                self.ax.set_xlabel(r'Wavelength ($\AA$)')
-                self.ax.set_ylabel(r'Flux')
+                self.ax.set_xlabel(r"Wavelength ($\AA$)")
+                self.ax.set_ylabel(r"Flux")
 
             self.canvas.draw()
-        except(AttributeError, IndexError):
+        except (AttributeError, IndexError):
             pass
-        except(FileNotFoundError):
-            print('FileNotFoundError: \"' + filename + '\" not found...')
+        except (FileNotFoundError):
+            print('FileNotFoundError: "' + filename + '" not found...')
 
     def filtertab(self, input):
         # Initialise overview table from pandas dataframe, and show the dialog
@@ -177,32 +185,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ui.FiltertableView.setModel(self.model)
 
     def filter_add(self):
-            idx = self.ui.FiltertableView.selectionModel().selectedRows()
-            skiptotal = 0
-            for idxxx in idx:
-                filename = self.model.data(self.model.index(idxxx.row(), 7))
+        idx = self.ui.FiltertableView.selectionModel().selectedRows()
+        skiptotal = 0
+        for idxxx in idx:
+            filename = self.model.data(self.model.index(idxxx.row(), 7))
 
-                if len(self.selected_data):
-                    if filename in self.selected_data:
-                        skiptotal += 1
-                        continue
-                self.selected_data.append(filename)
             if len(self.selected_data):
-                self.selectionmodel = SelectionModel(self.selected_data)
-                self.ui.SelectedDataTable.setModel(self.selectionmodel)
+                if filename in self.selected_data:
+                    skiptotal += 1
+                    continue
+            self.selected_data.append(filename)
+        if len(self.selected_data):
+            self.selectionmodel = SelectionModel(self.selected_data)
+            self.ui.SelectedDataTable.setModel(self.selectionmodel)
 
-            if skiptotal:
-                if skiptotal == len(idx):
-                    statustext = str(skiptotal) + ' spectra already added...'
-                else:
-                    statustext = (str(skiptotal) + ' spectra already added. ' +
-                                  str(len(idx)-skiptotal) +
-                                  ' new spectra added...')
-            elif len(idx):
-                statustext = str(len(idx))+' spectra addded...'
+        if skiptotal:
+            if skiptotal == len(idx):
+                statustext = str(skiptotal) + " spectra already added..."
             else:
-                statustext = ''
-            self.ui.statusBar.showMessage(statustext, 3000)
+                statustext = (
+                    str(skiptotal)
+                    + " spectra already added. "
+                    + str(len(idx) - skiptotal)
+                    + " new spectra added..."
+                )
+        elif len(idx):
+            statustext = str(len(idx)) + " spectra addded..."
+        else:
+            statustext = ""
+        self.ui.statusBar.showMessage(statustext, 3000)
 
     def Objectfilter(self):
         newdata = self.overview
@@ -210,26 +221,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         wav_in = self.ui.WavLineEdit.text()
 
         if len(obj_in):
-            newdata = newdata[newdata['Object'].str.contains(obj_in, na=False,
-                                                             case=False)]
+            newdata = newdata[
+                newdata["Object"].str.contains(obj_in, na=False, case=False)
+            ]
 
         if len(wav_in):
-            if '-' in wav_in:
-                wav_min, wav_max = wav_in.split('-')
+            if "-" in wav_in:
+                wav_min, wav_max = wav_in.split("-")
                 try:
-                    newdata = newdata[((newdata['WaveMin'] < float(wav_min)) &
-                                      (newdata['WaveMax'] > float(wav_min))) |
-                                      ((newdata['WaveMin'] < float(wav_max)) &
-                                      (newdata['WaveMax'] > float(wav_max))) |
-                                      ((newdata['WaveMin'] < float(wav_max)) &
-                                      (newdata['WaveMax'] > float(wav_min)))]
-                except(ValueError):
+                    newdata = newdata[
+                        (
+                            (newdata["WaveMin"] < float(wav_min))
+                            & (newdata["WaveMax"] > float(wav_min))
+                        )
+                        | (
+                            (newdata["WaveMin"] < float(wav_max))
+                            & (newdata["WaveMax"] > float(wav_max))
+                        )
+                        | (
+                            (newdata["WaveMin"] < float(wav_max))
+                            & (newdata["WaveMax"] > float(wav_min))
+                        )
+                    ]
+                except (ValueError):
                     pass
             else:
                 try:
-                    newdata = newdata[(newdata['WaveMin'] < float(wav_in)) &
-                                      (newdata['WaveMax'] > float(wav_in))]
-                except(ValueError):
+                    newdata = newdata[
+                        (newdata["WaveMin"] < float(wav_in))
+                        & (newdata["WaveMax"] > float(wav_in))
+                    ]
+                except (ValueError):
                     pass
         self.filtertab(newdata)
 

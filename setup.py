@@ -1,22 +1,81 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-from setuptools import setup, find_packages
+# NOTE: The configuration for the package, including the name, version, and
+# other information are set in the setup.cfg file.
+
+import os
+import sys
+
+from setuptools import setup
+
+from extension_helpers import get_extensions
 
 
-with open('README.rst') as f:
-    readme = f.read()
+# First provide helpful messages if contributors try and run legacy commands
+# for tests or docs.
 
-with open('LICENSE.rst') as f:
-    license = f.read()
+TEST_HELP = """
+Note: running tests is no longer done using 'python setup.py test'. Instead
+you will need to run:
 
-setup(
-    name='edibles',
-    version='0.1.0',
-    description='Software for EDIBLES data analysis and plotting.',
-    long_description=readme,
-    author='Jan Cami',
-    author_email='jcami@uwo.ca',
-    url='https://github.com/jancami/edibles',
-    license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
-)
+    tox -e test
+
+If you don't already have tox installed, you can install it with:
+
+    pip install tox
+
+If you only want to run part of the test suite, you can also use pytest
+directly with::
+
+    pip install -e .[test]
+    pytest
+
+For more information, see:
+
+  http://docs.astropy.org/en/latest/development/testguide.html#running-tests
+"""
+
+if 'test' in sys.argv:
+    print(TEST_HELP)
+    sys.exit(1)
+
+DOCS_HELP = """
+Note: building the documentation is no longer done using
+'python setup.py build_docs'. Instead you will need to run:
+
+    tox -e build_docs
+
+If you don't already have tox installed, you can install it with:
+
+    pip install tox
+
+You can also build the documentation with Sphinx directly using::
+
+    pip install -e .[docs]
+    cd docs
+    make html
+
+For more information, see:
+
+  http://docs.astropy.org/en/latest/install.html#builddocs
+"""
+
+if 'build_docs' in sys.argv or 'build_sphinx' in sys.argv:
+    print(DOCS_HELP)
+    sys.exit(1)
+
+VERSION_TEMPLATE = """
+# Note that we need to fall back to the hard-coded version if either
+# setuptools_scm can't be imported or setuptools_scm can't determine the
+# version, so we catch the generic 'Exception'.
+try:
+    from setuptools_scm import get_version
+    version = get_version(root='..', relative_to=__file__)
+except Exception:
+    version = '{version}'
+""".lstrip()
+
+setup(use_scm_version={'write_to': os.path.join('edibles', 'version.py'),
+                       'write_to_template': VERSION_TEMPLATE},
+      ext_modules=get_extensions())

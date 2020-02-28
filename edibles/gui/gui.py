@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -34,7 +35,9 @@ class Ui_MainWindow(object):
         self.splitter.setHandleWidth(5)
         self.splitter.setObjectName("splitter")
         self.SelectedData = QtWidgets.QTabWidget(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.SelectedData.sizePolicy().hasHeightForWidth())
@@ -46,13 +49,19 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.SelectedDataFrame)
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        spacerItem = QtWidgets.QSpacerItem(20, 3, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            20, 3, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        )
         self.verticalLayout_3.addItem(spacerItem)
         self.SelectedLabel1 = QtWidgets.QLabel(self.SelectedDataFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.SelectedLabel1.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.SelectedLabel1.sizePolicy().hasHeightForWidth()
+        )
         self.SelectedLabel1.setSizePolicy(sizePolicy)
         self.SelectedLabel1.setObjectName("SelectedLabel1")
         self.verticalLayout_3.addWidget(self.SelectedLabel1)
@@ -199,23 +208,37 @@ class Ui_MainWindow(object):
         self.Selectedpushbutton.setPalette(palette)
         self.Selectedpushbutton.setObjectName("Selectedpushbutton")
         self.verticalLayout_3.addWidget(self.Selectedpushbutton)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        )
         self.verticalLayout_3.addItem(spacerItem1)
         self.SelectedDataTable = QtWidgets.QTableView(self.SelectedDataFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.SelectedDataTable.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.SelectedDataTable.sizePolicy().hasHeightForWidth()
+        )
         self.SelectedDataTable.setSizePolicy(sizePolicy)
         self.SelectedDataTable.setFocusPolicy(QtCore.Qt.NoFocus)
         self.SelectedDataTable.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.SelectedDataTable.setFrameShadow(QtWidgets.QFrame.Plain)
         self.SelectedDataTable.setLineWidth(0)
-        self.SelectedDataTable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.SelectedDataTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.SelectedDataTable.setSizeAdjustPolicy(
+            QtWidgets.QAbstractScrollArea.AdjustToContents
+        )
+        self.SelectedDataTable.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
         self.SelectedDataTable.setAlternatingRowColors(True)
-        self.SelectedDataTable.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.SelectedDataTable.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        self.SelectedDataTable.setSelectionMode(
+            QtWidgets.QAbstractItemView.ExtendedSelection
+        )
+        self.SelectedDataTable.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectItems
+        )
         self.SelectedDataTable.setObjectName("SelectedDataTable")
         self.SelectedDataTable.horizontalHeader().setCascadingSectionResizes(False)
         self.SelectedDataTable.horizontalHeader().setDefaultSectionSize(100)
@@ -235,7 +258,9 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.SearchBox = QtWidgets.QFrame(self.FilterData)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.SearchBox.sizePolicy().hasHeightForWidth())
@@ -246,10 +271,14 @@ class Ui_MainWindow(object):
         self.SearchBox.setObjectName("SearchBox")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.SearchBox)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem2)
         self.ObjLabel = QtWidgets.QLabel(self.SearchBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.ObjLabel.sizePolicy().hasHeightForWidth())
@@ -261,7 +290,9 @@ class Ui_MainWindow(object):
         self.ObjLineEdit.setClearButtonEnabled(True)
         self.ObjLineEdit.setObjectName("ObjLineEdit")
         self.horizontalLayout_2.addWidget(self.ObjLineEdit)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem3 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem3)
         self.WavLabel = QtWidgets.QLabel(self.SearchBox)
         self.WavLabel.setObjectName("WavLabel")
@@ -273,7 +304,9 @@ class Ui_MainWindow(object):
         self.WavLabel2 = QtWidgets.QLabel(self.SearchBox)
         self.WavLabel2.setObjectName("WavLabel2")
         self.horizontalLayout_2.addWidget(self.WavLabel2)
-        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem4 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem4)
         self.SearchPushButton = QtWidgets.QPushButton(self.SearchBox)
         self.SearchPushButton.setMinimumSize(QtCore.QSize(200, 0))
@@ -559,23 +592,35 @@ class Ui_MainWindow(object):
         self.FilterAddButton.setFlat(False)
         self.FilterAddButton.setObjectName("FilterAddButton")
         self.verticalLayout.addWidget(self.FilterAddButton)
-        spacerItem5 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem5 = QtWidgets.QSpacerItem(
+            20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        )
         self.verticalLayout.addItem(spacerItem5)
         self.FiltertableView = QtWidgets.QTableView(self.FilterData)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.FiltertableView.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.FiltertableView.sizePolicy().hasHeightForWidth()
+        )
         self.FiltertableView.setSizePolicy(sizePolicy)
         self.FiltertableView.setFocusPolicy(QtCore.Qt.NoFocus)
         self.FiltertableView.setAcceptDrops(False)
         self.FiltertableView.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.FiltertableView.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.FiltertableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        self.FiltertableView.setSizeAdjustPolicy(
+            QtWidgets.QAbstractScrollArea.AdjustIgnored
+        )
         self.FiltertableView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.FiltertableView.setAlternatingRowColors(True)
-        self.FiltertableView.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.FiltertableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.FiltertableView.setSelectionMode(
+            QtWidgets.QAbstractItemView.ExtendedSelection
+        )
+        self.FiltertableView.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectRows
+        )
         self.FiltertableView.setSortingEnabled(True)
         self.FiltertableView.setObjectName("FiltertableView")
         self.FiltertableView.horizontalHeader().setCascadingSectionResizes(False)
@@ -732,7 +777,9 @@ class Ui_MainWindow(object):
         self.PlotButton.setObjectName("PlotButton")
         self.verticalLayout_2.addWidget(self.PlotButton)
         self.matplotlib = QtWidgets.QWidget(self.PlotSpectra)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.matplotlib.sizePolicy().hasHeightForWidth())
@@ -791,18 +838,42 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.SelectedLabel1.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">Highlighted files can also be removed</p></body></html>"))
-        self.SelectedLabel2.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">using DELETE key.</p></body></html>"))
-        self.Selectedpushbutton.setText(_translate("MainWindow", "Remove highlighted files"))
-        self.SelectedData.setTabText(self.SelectedData.indexOf(self.SelectedDataFrame), _translate("MainWindow", "Selected Data"))
+        self.SelectedLabel1.setText(
+            _translate(
+                "MainWindow",
+                '<html><head/><body><p align="center">Highlighted files can also \
+                be removed</p></body></html>',
+            )
+        )
+        self.SelectedLabel2.setText(
+            _translate(
+                "MainWindow",
+                '<html><head/><body><p align="center">using DELETE key.</p></body></html>',
+            )
+        )
+        self.Selectedpushbutton.setText(
+            _translate("MainWindow", "Remove highlighted files")
+        )
+        self.SelectedData.setTabText(
+            self.SelectedData.indexOf(self.SelectedDataFrame),
+            _translate("MainWindow", "Selected Data"),
+        )
         self.ObjLabel.setText(_translate("MainWindow", "Object"))
         self.WavLabel.setText(_translate("MainWindow", "Wavelength (Å)"))
         self.WavLabel2.setText(_translate("MainWindow", "(e.g. 4000 or 4000-6000)"))
         self.SearchPushButton.setText(_translate("MainWindow", "Search"))
-        self.FilterAddButton.setText(_translate("MainWindow", "  Add highlighted choices to the sidebar"))
-        self.GuiTabs.setTabText(self.GuiTabs.indexOf(self.FilterData), _translate("MainWindow", "Filter Data"))
+        self.FilterAddButton.setText(
+            _translate("MainWindow", "  Add highlighted choices to the sidebar")
+        )
+        self.GuiTabs.setTabText(
+            self.GuiTabs.indexOf(self.FilterData),
+            _translate("MainWindow", "Filter Data"),
+        )
         self.PlotButton.setText(_translate("MainWindow", "Plot"))
-        self.GuiTabs.setTabText(self.GuiTabs.indexOf(self.PlotSpectra), _translate("MainWindow", "View Spectra"))
+        self.GuiTabs.setTabText(
+            self.GuiTabs.indexOf(self.PlotSpectra),
+            _translate("MainWindow", "View Spectra"),
+        )
         self.menuFile.setTitle(_translate("MainWindow", "F&ile"))
         self.menuSelectedData.setTitle(_translate("MainWindow", "Selected &Data"))
         self.menuSettings.setTitle(_translate("MainWindow", "Setti&ngs"))
@@ -811,5 +882,6 @@ class Ui_MainWindow(object):
         self.menuExit.setText(_translate("MainWindow", "&Exit"))
         self.menuSelectedDataImport.setText(_translate("MainWindow", "&Import..."))
         self.menuSelectedDataExport.setText(_translate("MainWindow", "&Export..."))
-        self.actionEnable_ASCII_format.setText(_translate("MainWindow", "Enable ASCII format"))
-
+        self.actionEnable_ASCII_format.setText(
+            _translate("MainWindow", "Enable ASCII format")
+        )

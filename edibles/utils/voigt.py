@@ -3,18 +3,16 @@ from scipy.special import wofz
 import astropy.constants as cst
 
 
-
-
 def voigtMath(x, alpha, gamma):
     """
-    Function to return the Voigt line shape centered at cent with Lorentzian component HWHM gamma
-    and Gaussian component HWHM alpha.
+    Function to return the Voigt line shape centered at cent with Lorentzian
+    component HWHM gamma and Gaussian component HWHM alpha.
 
-    Creates a Voigt line profile using the scipy.special.wofz, which returns 
-    the value of the Faddeeva function. 
+    Creates a Voigt line profile using the scipy.special.wofz, which returns
+    the value of the Faddeeva function.
 
     WARNING
-    scipy.special.wofz is not compaible with np.float128 type parameters. 
+    scipy.special.wofz is not compaible with np.float128 type parameters.
 
     Args:
         x (float64): Dimensionless point/array
@@ -61,7 +59,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
     # convert d to gamma -- [ depends on what units we want to use ]
 
-    # Currently, we are using the Lorentzian HWHM. This can easily be changed...
+    # Currently, we are using the Lorentzian HWHM. This can easily be changed.
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     gamma = d
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,12 +87,12 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
 def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     """
-    Function that takes in physical parameters and returns an absorption line. 
+    Function that takes in physical parameters and returns an absorption line.
 
     Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
     Input:
-    
+
         lam (float64): Wavelength grid
         lam_0 (float64): Central wavelength
         b (float64): Gaussian standard deviation

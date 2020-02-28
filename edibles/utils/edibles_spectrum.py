@@ -8,7 +8,7 @@ import pandas as pd
 
 class EdiblesSpectrum:
     """
-    This class takes a spectrum file from EDIBLES, 
+    This class takes a spectrum file from EDIBLES,
     reads the header and data, and creates a DataFrame.
 
     The class will also contain a set of methods to operate on the data.
@@ -64,8 +64,8 @@ class EdiblesSpectrum:
         d = {
             "wave": wave.tolist(),
             "bary_wave": bary_wave.tolist(),
-            "flux": flux.tolist()
-            }
+            "flux": flux.tolist(),
+        }
         self.df = pd.DataFrame(data=d)
 
         self.wave = self.df["wave"]
