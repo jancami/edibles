@@ -1,7 +1,7 @@
 from edibles.edibles.fit.fit import multifit
 from edibles.edibles.fit.models.create_model import createKnownVelocityCloud, createCont
-from edibles.edibles.functions.atomic_line_tool import AtomicLines
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.atomic_line_tool import AtomicLines
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 def NaILinesFit():

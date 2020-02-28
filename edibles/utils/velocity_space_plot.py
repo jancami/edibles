@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 from astropy.constants import c
 import bisect
 
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.functions.atomic_line_tool import AtomicLines
-from edibles.edibles.functions.file_search import FilterDR
-from edibles.edibles.functions.functions import peak_wavelength_largest
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.atomic_line_tool import AtomicLines
+from edibles.edibles.utils.file_search import FilterDR
+from edibles.edibles.utils.utils import peak_wavelength_largest
 
 
 def spliceToRange(l, minimum, maximum):

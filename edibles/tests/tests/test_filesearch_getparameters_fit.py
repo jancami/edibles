@@ -5,9 +5,9 @@ import numpy as np
 from edibles.edibles.fit.fit import fit
 from edibles.edibles.fit.models.create_model import createLine, createCont
 
-from edibles.edibles.functions.file_search import FilterDR
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.functions.functions import (
+from edibles.edibles.utils.file_search import FilterDR
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.utils import (
     peak_wavelength_largest,
     peak_wavelength_all_prominent,
 )

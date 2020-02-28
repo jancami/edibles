@@ -2,7 +2,7 @@ import os
 import numpy as np
 import csv
 from edibles.edibles import DATADIR, EDIBLES_PYTHONDIR, DATARELEASE
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 def createObsList():

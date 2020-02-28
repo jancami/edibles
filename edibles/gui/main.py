@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
 from edibles.edibles.gui.gui import Ui_MainWindow
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum as edspec
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.edibles.gui.models import PandasModel, SelectionModel
 from edibles.edibles import EDIBLES_PYTHONDIR, DATADIR, DATARELEASE
 

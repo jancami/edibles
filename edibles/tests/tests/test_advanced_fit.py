@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from edibles.edibles.fit.models.create_model import *
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles.fit.models.models import Sightline
 from edibles.edibles.fit.fit import fit
 import matplotlib.pyplot as plt

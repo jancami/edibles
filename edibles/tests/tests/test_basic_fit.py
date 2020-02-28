@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from edibles.edibles.functions.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.edibles.fit.models.create_model import createCont
 from edibles.edibles.fit.models.models import Sightline
 from edibles.edibles.fit.fit import fit
@@ -12,8 +12,9 @@ def testBasicFit():
     xmin = 7661.5
     xmax = 7669.0
 
-    data = sp1.getSpectrum(xmin=xmin, xmax=xmax, bary=False)
-
+    subset = sp1.getSpectrum(xmin=xmin, xmax=xmax)
+    data = (subset["wave"], subset["flux"])
+    
     cont = createCont(data, n_points=4)
     sightline = Sightline(star_name=sp1.target, cont=cont)
     sightline.addSource(source_name="Telluric", b=0.001, d=0.05)

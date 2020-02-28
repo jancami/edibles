@@ -1,4 +1,4 @@
-from edibles.edibles.functions.continuum_guess import generate_continuum
+from edibles.edibles.utils.continuum_guess import generate_continuum
 from edibles.edibles.fit.models.models import Cont1D
 
 
