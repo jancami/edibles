@@ -1,10 +1,14 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
+from scipy.signal import find_peaks, peak_prominences
 import astropy.constants as cst
+import edibles.src.math as eMath
+
 
 
 ##### Continuum Fitting Related #####
-mode_all = ['spline', 'polynomial']
+mode_all = ["spline", "s", "polynomial", "p"]
 
 
 def polynomial_continuum(data_tuple, n_order=3, errweight = True):
@@ -128,18 +132,18 @@ def iterate_continuum(data_tuple,
 
     # chosing mode
     assert mode in mode_all, 'Fitting method not available!'
-    if mode == 'spline':npiece = n
-    if mode == 'polynomial':norder = n
+    if mode[0].lower() == "s":npiece = n
+    if mode[0].lower() == "p":norder = n
 
     while do_flag:
         idx = [i for i in range(len(x)) if -usigma <= y_nsigma[i] <= lsigma and mask[i] == 0]
         x_fit = np.copy(x[idx])
         y_fit = np.copy(y[idx])
 
-        if mode == 'spline':
+        if mode[0].lower() == "s":
             (y_count, y_points) = spline_continuum((x_fit,y_fit), pars=None, n_piece=npiece)
 
-        if mode == 'polynomial':
+        if mode[0].lower() == "p":
             y_count = polynomial_continuum((x_fit,y_fit),norder, errweight= True)
 
         y_res = y_count(x) - y
@@ -171,6 +175,63 @@ def iterate_continuum(data_tuple,
     return y_count, idx
 
 
+def estimateSNR(wave, flux, normalized=True, n=None, silenced=False):
+    """
+    Estimate the SNR at continuum region of input data from continuum region defined by a a constant continuum
+    It's recommended that input data have been normalized. If not, will fit a spline continuum first
+    A plot showing the continuum region will be given, but can be silenced
+    The approach is different from what was in the repo, which was based on spectrum slicing
+
+    :param wave: input wavelength grid
+    :type wave: nparray
+    :param flux: input flux, normalized or not normalized, same length as wave
+    :type flux: nparray
+    :param normalized: if the input flux has been normalized
+    :type normalized: bool
+    :param silenced: if set true, no figure will be given for visual examine
+    :type silenced: bool
+
+    :return: SNR, idx, estimated SNR and index of points identified as continuum region
+    :rtype: float, int list
+    """
+
+    assert len(wave) == len(flux), "input data must have same length"
+    n_points = len(wave)
+    # normalized input data first
+    if not normalized:
+        if n is None:
+            print("input data not normalized")
+            n=float(input("type the number of sections for your spline continuum"))
+        (cont, idx_spline) = iterate_continuum((wave,flux), mode="spline", n=n)
+
+        flux = flux/cont(wave)
+        idx_masked = [i for i in range(n_points) if i not in idx_spline]
+    else:
+        idx_masked = []
+
+    std_res = np.std(np.abs(np.ones(n_points) - flux))
+    idx_masked = idx_masked + [i for i in range(n_points) if np.abs(flux[i] - 1.) > 0.5 * std_res]
+    idx_masked = np.unique(idx_masked)
+    mask = np.zeros(n_points)
+    mask[idx_masked] = 1
+    (cont, idx_cont) = iterate_continuum((wave,flux), mode='polynomial', n=0, min_sigma=0.1, mask=mask)
+    SNR = (1 / np.std(flux[idx_cont]))
+
+    if not silenced:
+        idx_cont_split = continous_idx(idx_cont)
+
+        fig, ax = plt.subplots(1,1)
+        ax.plot(wave,flux,color="k")
+        for i in range(len(idx_cont_split)):
+            ax.plot(wave[idx_cont_split[i]], flux[idx_cont_split[i]], marker="x", markersize=3, color="red")
+        ax.set_ylabel("Normalized Flux")
+        ax.set_xlabel("AA")
+        ax.grid()
+        plt.show()
+
+    return SNR, idx_cont
+
+
 ##### Wavelength shifting, convert between AA and km/s #####
 def velocityShift(wave_array, v_shift):
     """
@@ -185,7 +246,7 @@ def velocityShift(wave_array, v_shift):
     :return: wave_out, shifted wavelength grid
     :rtype: ndarray
     """
-    wave_out = wave_array + (v_shift / cst.c.to("km's").value) * wave_array
+    wave_out = wave_array + (v_shift / cst.c.to("km/s").value) * wave_array
     return wave_out
 
 
@@ -220,6 +281,34 @@ def waveVelocity(x_in, center=None, mode="wave2velocity"):
     return x_out, center
 
 
+
+
+def vac2air(vacw, mode="Ciddor"):
+    """
+    Convert Vacuum wavelengths to air wavelengths, both in AA, for wavleength > 2000AA
+    Two modes are provided:
+    Ciddor, based on Ciddor 1996, Applied Optics LP, Vol.35, Issue 9, pp 1556, claimed to be more accurate in IR
+    Morton, based on Morton 1991, ApJS, 77, 119
+
+    :param vacw: vacuum wavelengths to be converted
+    :type param: nparray
+    :param mode: mode to use, Ciddor or Morton, Ciddor by default
+    :type mode: str
+
+    :return: airw, converted air wavelength
+    :rtype: nparray
+    """
+    mode_all = ["ciddor", "morton"]
+    assert mode.lower() in mode_all, "Available Modes: {mode_all}".format(mode_all = mode_all)
+
+    if mode == "Ciddor":
+        airw = eMath.vac2air_ciddor(vacw)
+
+    if mode == "Morton":
+        airw = eMath.vac2air_morton(vacw)
+
+    return airw
+
 ##### User Interaction and Other Small U#####
 def go_message(message):
     """
@@ -252,7 +341,8 @@ def within_boundaries(x, boundary_left, boundary_right):
     :param boundary_right: list of right boundaries, same length as boundary_left
     :type boundary_right: ndarray
 
-    :return: within_all, result for each element in input x, one if within
+    :return: within_all, idx_all: within_all is a 1/0 array where 1 means the elements is in the boundaries;
+                                  idx are the index of all points within the boundaries
     :rtype: list
     """
     try:len(x)
@@ -263,7 +353,10 @@ def within_boundaries(x, boundary_left, boundary_right):
     except: boundary_right = [boundary_right]
 
     assert len(boundary_left) == len(boundary_right), "Lengths of boundary lists do not match!"
-    assert (boundary_left <= boundary_right).all(0), "Left boundary must be smaller than right boundary"
+    if len(boundary_left) > 1:
+        assert (boundary_left <= boundary_right).all(0), "Left boundary must be smaller than right boundary"
+    else:
+        assert boundary_left <= boundary_right, "Left boundary must be smaller than right boundary"
 
     within_all = []
     for i in range(len(x)):
@@ -275,7 +368,9 @@ def within_boundaries(x, boundary_left, boundary_right):
 
         within_all.append(within)
 
-    return within_all
+    idx_all = [i for i in range(len(within_all)) if within_all[i] == 1]
+
+    return np.array(within_all), idx_all
 
 
 def continous_idx(idx, sort=True):
@@ -309,6 +404,127 @@ def continous_idx(idx, sort=True):
     idx_cont.append(idx_cont_tmp)
 
     return idx_cont
+
+
+def nearest_point(point_array, spec_array, scale=True):
+    """
+    Find a point on the spectrum that is closest to each of the input points
+
+    :param point_array: coordinates of input points, a tuple of two lists of the same length
+    :type point_array: tuple
+    :param spec_array: coordinates of input points, a tuple of two lists of wave and flux
+    :type spec_array: tuple
+    :param scale: if set true, the coordinates will be scaled to span over 0 and 1, default to true
+    :type scal: bool
+
+    :return: point_idx, the index of points in the spec that are most close to the input points
+    :rtype: int array
+    """
+    assert len(point_array) == 2, "Inputs must have 2 dimension"
+    assert len(spec_array) == 2, "Inputs must have 2 dimension"
+
+    n_points = len(point_array[0])
+
+    x_min = np.min(spec_array[0])
+    x_span = np.max(spec_array[0]) - x_min
+    y_min = np.min(spec_array[1])
+    y_span = np.max(spec_array[1]) - y_min
+    if scale:
+        point_array_scal = ((point_array[0] - x_min) / x_span,)
+        point_array_scal = point_array_scal + ((point_array[1] - y_min) / y_span,)
+
+        spec_array_scal = ((spec_array[0] - x_min) / x_span,)
+        spec_array_scal = spec_array_scal + ((spec_array[1] - y_min) / y_span,)
+
+    else:
+        point_array_scal = point_array
+        spec_array_scal = spec_array
+
+    d_matrix_all = eMath.all_distance(point_array_scal, spec_array_scal)
+    point_idx = []
+
+    for n in range(n_points):
+        d_matrix_point = d_matrix_all[n]
+        point_idx.append(np.where(d_matrix_point == np.min(d_matrix_point))[0][0])
+
+    return point_idx
+
+def searchPeak(flux, n_peaks=None, normalized=True, SNR=None, prominence=3):
+    """
+    Searh for peaks in the input flux. Each peak should be significant enough, as defined by SNR and prominence.
+    Flux will be normalized if not. SNR will be estimated if not given.
+
+    :param flux: input flux array
+    :type flux: nparray
+    :param n_peaks: number of peaks to be raised, if set, will return the index of the most significant n peaks
+    :type n_peaks: int
+    :param normalized: if input flux has been normalized, if not, will be normalized first
+    :type normalized: bool
+    :param SNR: SNR of input flux, used to define the sigma if prominence
+    :type SNR: float
+    :param prominence: required n-sigma significance, default to 3
+    :type prominence: float
+
+    :return: peak_idx, the index of peaks int he flux array
+    :rtype: index array
+    """
+    if not normalized:
+        x = np.arange(len(flux))
+        (cont, idx_spline) = iterate_continuum((x, flux), mode="spline", n=7)
+        flux = flux / cont(x)
+
+    if SNR is None:
+        x = np.arange(len(flux))
+        (SNR, idx_cont) = estimateSNR(x, flux, normalized=False, n=7, silenced=True)
+
+    # find the peaks
+    flux = -flux # in emission
+    peak_idx, _ = find_peaks(flux, prominence = prominence/SNR)
+    prominences =peak_prominences(flux,peak_idx)[0]
+
+    # if number of peaks specificed, find the most significant peaks
+    if n_peaks is not None and n_peaks < len(peak_idx):
+        threshold = np.sort(prominences)[-n_peaks]
+        idx = [i for i in range(len(peak_idx)) if prominences[i] >= threshold]
+        peak_idx = peak_idx[idx]
+
+    return peak_idx
+
+def parseInput(n,*inputs, checklen=True):
+    """
+    Sort the inputs and duplicate them into list of length n (iterable).
+    If already iterable (list or np.array), check if they have the length n.
+    This function is to be used in methods of ediblesSpectrum that might handle multiple spectrum panels
+
+    :param n: required length of the inputs
+    :type n: in
+    :param inputs: all inputs that need to be duplicated and examined
+    :type inputs: tuple
+    :param checklen: if set, check if length of all list type inputs equal to n, set to False when convert "panels"
+    :type checklen: bool
+    :return: inputs_out: duplicated inputs
+    :rtype: tuple
+    """
+
+    inputs_out = ()
+    iterable_types = [type([1,2]), type(np.array([1,2])), (1,2)]
+
+    for input in inputs:
+        if type(input) in iterable_types:
+            if checklen:
+                assert len(input) == n, "Length of each input must be 1 or the same as panel numbers"
+            inputs_out = inputs_out + (np.array(input),)
+        else:
+            if type(input) is list:
+                if len(input) == 1:
+                    inputs_out = inputs_out + (input * n,)
+                else:
+                    assert len(input) == n, "Length of each input must be 1 or the same as panel numbers"
+            else:
+                inputs_out = inputs_out + ([input] * n,)
+
+    if len(inputs_out) == 1: inputs_out = inputs_out[0]
+    return inputs_out
 
 
 if __name__ == '__main__':

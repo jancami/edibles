@@ -27,7 +27,7 @@ sp.showSpectrum()
 # before we fit the continuum it is better to mask the telluric region, which might affect the fitting
 sp.addMask(n=1)
 # fit the continuum with method "fitContinuum", set n=5 and everything else as default, but feel free to explore
-sp.fitContinuum(n=5)
+sp.fitContinuum(n=5, apply_mask=True)
 # you can also use "addMask" to remove some "bad" region from fitting, where n is number of regions
 #sp.addMask(n=n)
 #sp.fitContinuum(n=5, apply_mask=True)

@@ -118,5 +118,102 @@ def voigtOpticalDepthAbsorption(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
     return transmission
 
 
+def euclidean_distance(point1,point2):
+    """
+    Calculate the Euclidean distance between point A and point B
+
+    :param point1: coordinate array of point A
+    :type point1: tuple
+    :param point2: coordinate array of point B
+    :type point2: tuple of same length as point 1
+
+    :return: distance, the Euclidean distance
+    :rtype: float
+    """
+    assert len(point1) == len(point2), "Inputs points must have the same dimensions"
+    dist_ndim = 0
+    for i in range(len(point1)):
+        dist_ndim = dist_ndim + (point1[i] - point2[i])**2
+
+    dist = np.sqrt(dist_ndim)
+
+    return dist
+
+
+def all_distance(point_array1, point_array2):
+    """
+    Calculate the distance matrix of point arraies 1 and 2
+
+    :param point_array1: coordinates for point array A, a tuple containing d (dimension) lists with length of N (points)
+    :type point_array1: tuple
+    :param point_array2: coordinates for point array A, a tuple containing d (dimension) lists with length of M (points)
+    :type point_array2: tuple of same length as point_array1
+
+    :return: d_matrix, the N*M distance matrix
+    :rtype: 2d-array
+    """
+    assert len(point_array1) == len(point_array2), "Inputs points must have the same dimensions"
+
+    d_total = len(point_array1)
+    N, M = len(point_array1[0]), len(point_array2[0])
+
+    d_matrix = np.zeros(shape=(N, M))
+    for i in range(N):
+        point1 = ()
+        for d in range(d_total):
+            point1 = point1 + (point_array1[d][i],)
+
+        for j in range(M):
+            point2 = ()
+            for d in range(d_total):
+                point2 = point2 + (point_array2[d][j],)
+
+            d_matrix[i][j] = euclidean_distance(point1, point2)
+
+    return d_matrix
+
+
+def vac2air_morton(vacw):
+    """
+    Convert vaccum wavelengths to air wavelengths, both in AA
+    Uses relations from Morton 1991, ApJS, 77, 119, valid for wavelengths > 2000 AA
+
+    :param vacw: vaccum wavelegnths
+    :type vacw: nparray
+    :return: airw, converted air wavelength
+    :rtype: nparray
+    """
+
+    temp = (1e4 / vacw) ** 2
+    airw = 1. / (1. + 6.4328e-5 + 2.94981e-2 / (146 - temp) +
+                 2.5540e-4 / (41 - temp)) * vacw
+    return airw
+
+
+def vac2air_ciddor(vacw):
+    """
+    Convert vaccum wavelengths to air wavelengths, both in AA
+    users relations from Ciddor 1996, Applied Optics LP, vol. 35, Issue 9, pp1566
+    Only for wavelengths > 2000 AA
+
+    :param vacw: vaccum wavelengths
+    :type vacw: nparray
+
+    :return: airw
+    :rtype: nparray
+    """
+
+    k0 = 238.0185
+    k1 = 1e-8 * 5792105.
+    k2 = 57.362
+    k3 = 1e-8 * 167917.
+    s2 = (1e4 / vacw) ** 2
+    n = 1 + k1 / (k0 - s2) + k3 / (k2 - s2)
+    airw = vacw / n
+
+    return airw
+
+
+
 if __name__ == '__main__':
     print("Math modular for EDIBLES spectrum")
