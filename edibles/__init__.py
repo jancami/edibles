@@ -16,3 +16,5 @@ if 'EDIBLES_PYTHONDIR' in os.environ:
     DATADIR = os.environ['EDIBLES_PYTHONDIR']
 else:
     DATADIR = '~/python/edibles/'
+
+__version__ = ''
