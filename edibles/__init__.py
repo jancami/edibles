@@ -1,5 +1,18 @@
 import os
 
-DATADIR = os.environ['EDIBLES_DATADIR']
-DATARELEASE = os.environ['EDIBLES_DATARELEASE']
-EDIBLES_PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
+if os.environ['EDIBLES_DATADIR']:
+    DATADIR = os.environ['EDIBLES_DATADIR']
+else:
+    DATADIR = '/data/DR4'
+
+
+if os.environ['EDIBLES_DATARELEASE']:
+    DATADIR = os.environ['EDIBLES_DATARELEASE']
+else:
+    DATADIR = 'DR4'
+
+
+if os.environ['EDIBLES_PYTHONDIR']:
+    DATADIR = os.environ['EDIBLES_PYTHONDIR']
+else:
+    DATADIR = '~/python/edibles/'
