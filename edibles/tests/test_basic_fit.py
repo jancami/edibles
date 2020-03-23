@@ -1,12 +1,10 @@
-from __future__ import print_function
-
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.fit.models.create_model import createCont
-from edibles.edibles.fit.models.models import Sightline
-from edibles.edibles.fit.fit import fit
-
-
 def testBasicFit():
+
+    from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+    from edibles.edibles.fit.models.create_model import createCont
+    from edibles.edibles.fit.models.models import Sightline
+    from edibles.edibles.fit.fit import fit
+
     file1 = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp1 = EdiblesSpectrum(file1)
     xmin = 7661.5
@@ -14,7 +12,7 @@ def testBasicFit():
 
     subset = sp1.getSpectrum(xmin=xmin, xmax=xmax)
     data = (subset["wave"], subset["flux"])
-    
+
     cont = createCont(data, n_points=4)
     sightline = Sightline(star_name=sp1.target, cont=cont)
     sightline.addSource(source_name="Telluric", b=0.001, d=0.05)
@@ -27,8 +25,9 @@ def testBasicFit():
 
     fit_model = fit(sp1.target, data, sightline.model, breakdown=False, silent=False)
 
-    print(fit_model)
+    return fit_model
 
 
 if __name__ == "__main__":
-    testBasicFit()
+    fit_model = testBasicFit()
+    print(fit_model)

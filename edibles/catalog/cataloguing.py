@@ -1,4 +1,3 @@
-import pandas as pd
 import csv
 
 
@@ -8,7 +7,3 @@ def catalog_maker(row):
         writer.writerow(row)
 
     csvFile.close()
-    
-
-
-

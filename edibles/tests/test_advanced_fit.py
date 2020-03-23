@@ -1,13 +1,11 @@
-from __future__ import print_function
-
-from edibles.edibles.fit.models.create_model import *
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.fit.models.models import Sightline
-from edibles.edibles.fit.fit import fit
-import matplotlib.pyplot as plt
-
-
 def testAdvancedFit():
+
+    from edibles.edibles.fit.models.create_model import createCont
+    from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+    from edibles.edibles.fit.models.models import Sightline
+    from edibles.edibles.fit.fit import fit
+    import matplotlib.pyplot as plt
+
     star_name = "HD170740"
     file = "/HD170740/RED_860/HD170740_w860_redl_20140916_O12.fits"
     xmin = 7661.0
@@ -50,8 +48,9 @@ def testAdvancedFit():
 
     fit_model = fit(star, (wave, flux), slightline.model, breakdown=True)
 
-    return
+    return fit_model
 
 
 if __name__ == "__main__":
-    testAdvancedFit()
+    fit_model = testAdvancedFit()
+    print(fit_model)

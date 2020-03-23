@@ -1,5 +1,4 @@
 import astropy.constants as cst
-import matplotlib.pyplot as plt
 import numpy as np
 
 from edibles.edibles.fit.fit import fit
@@ -7,10 +6,7 @@ from edibles.edibles.fit.models.create_model import createLine, createCont
 
 from edibles.edibles.utils.file_search import FilterDR
 from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
-from edibles.edibles.utils.utils import (
-    peak_wavelength_largest,
-    peak_wavelength_all_prominent,
-)
+from edibles.edibles.utils.utils import peak_wavelength_all_prominent
 
 
 def line_parameters(peak_wavelength):
