@@ -111,7 +111,7 @@ def voigtOpticalDepthAbsorption(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
         # Convert cm to angstroms
         tau_0 *= 1e8
 
-    voigt_opticaldepth = voigtAbsorption(lam, lam_0, b, d, tau_0)
+    voigt_opticaldepth = voigtAbsorption(lam, lam_0, b, d, area = tau_0)
 
     transmission = np.exp(voigt_opticaldepth)
 

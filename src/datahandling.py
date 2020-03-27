@@ -152,12 +152,12 @@ def iterate_continuum(data_tuple,
 
         # narrow down the fitting region by more restrict criteria
         if y_sigma >= sigma_old:
-            usigma = usigma / 2
-            lsigma = lsigma / 2
+            usigma = np.max([usigma / 2, min_sigma])
+            lsigma = np.max([lsigma / 2, min_sigma])
         sigma_old = y_sigma
 
         # if iteration should be stopped
-        if usigma <= min_sigma or lsigma <= min_sigma:
+        if usigma == min_sigma and lsigma == min_sigma:
             do_flag = False
             #print('sigma < 0.1')
 

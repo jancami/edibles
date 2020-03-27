@@ -3,9 +3,13 @@ from astropy.io import fits
 import astropy.constants as cst
 import matplotlib.pyplot as plt
 import os
+import math
 
 import edibles.edibles_settings as Setting
 import edibles.src.datahandling as DataHandling
+import edibles.src.math as eMath
+import edibles.src.model as eM
+
 datadir = '/media/EDIBLES/EDIBLES_DATADIR'
 #filename = '/HD169454/RED_860/HD169454_w860_redl_20160808_O12.fits'
 
@@ -20,7 +24,7 @@ class EdiblesSpectrum:
         self.__clearAll__()
         self.color_map = ["m", "g", "c", "y", "tan", "teal"]
 
-        self.__loadLineList__()
+        self.loadLineList()
 
         if not isresult:
             self.loadSpectrum(filename, panel_name=panel_name)
@@ -30,15 +34,15 @@ class EdiblesSpectrum:
             filename = resultdir + filename
             self.loadResult(filename)
 
-    def loadSpectrum(self, filename, clear_all=False, panel_name=""):
+    def loadSpectrum(self, filename, clear_all=False, panel_name="", POP_mode=False):
         if clear_all: self.__clearLabels__()
 
         filenames = DataHandling.parseInput(1, filename, checklen=False)
-        panel_names = DataHandling.parseInput(len(filenames), panel_name)
+        panel_names, POP_modes = DataHandling.parseInput(len(filenames), panel_name, POP_mode)
 
         # basic info
         for i, filename in enumerate(filenames):
-            hdu = fits.open(Setting.datadir + filename)
+            hdu = fits.open(os.path.join(Setting.datadir,filename))
             header = hdu[0].header
             self.header.append(header)
             self.target.append(header["OBJECT"])
@@ -117,6 +121,7 @@ class EdiblesSpectrum:
         # other attributes that are not list (only one for the whole class)
         self.model = None
         self.model_fit = False
+        self.conv_offset = None
         self.line_marker = np.array([])
         self.log = ""
         self.spec_count = 0
@@ -258,14 +263,14 @@ class EdiblesSpectrum:
         self.__addLog__(log_str + panels_str)
         return None
 
-    def __loadLineList__(self, list=None, reset=False):
+    def loadLineList(self, list_name=None, reset=False):
         if reset:
             self.linelist = {}
 
-        if list is None:
-            list = Setting.edibles_linelist
+        if list_name is None:
+            list_name = Setting.edibles_linelist
 
-        with open(list) as f:
+        with open(list_name) as f:
 
             while True:
                 line = f.readline().replace("\n", "")
@@ -276,7 +281,7 @@ class EdiblesSpectrum:
         for item in self.linelist.keys():
             self.linelistspecies.append(item)
 
-        self.__addLog__(">>addLineList(list='{list}', reset=reset".format(list=list, reset=reset))
+        self.__addLog__(">>loadLineList(list_name='{list_name}', reset={reset}".format(list_name=list_name, reset=reset))
         return None
 
     def addLinelist(self, species=None, wavelengths=None):
@@ -408,6 +413,90 @@ class EdiblesSpectrum:
                   ", panels={panel}".format(panel=panels)
         self.__addLog__(log_str)
         return None
+
+    def getPosition_visual(self, n=None, wavelength=None, tau_0=False, panels=None):
+        panels = self.__parsePanelsInput__(panels)
+        n = DataHandling.parseInput(len(panels), n)
+
+        point_x_all, point_y_all = np.array([]), np.array([])
+
+        # an interactive backends will be needed
+        import matplotlib
+        matplotlib.use('Qt5Agg', warn=False, force=True)
+        import matplotlib.pyplot as tmp_plt
+
+        for i, panel in enumerate(panels):
+            x = np.copy(self.wave_working[panel])
+            y = np.copy(self.flux_working[panel])
+
+            while True:
+                n_now = n[i]
+                if n_now is None:
+                    n_now = np.int(input('How many points to be taken from Panel {panel}?'.format(panel=panel)))
+
+                if n_now == 0:
+                    break
+                else:
+                    fig1, ax = tmp_plt.subplots(1, 1)
+                    ax.plot(x, y)
+                    ax.set_xlim(1.1 * np.min(x) - 0.1 * np.max(x), 1.1 * np.max(x) - 0.1 * np.min(x))
+                    self.__XYLabel__(ax=ax, x_label="AA", panel=panel)
+
+                    print("Select target points\nLeft = add; Right = pop; Middle = stop")
+                    points = tmp_plt.ginput(n_now, mouse_add=1, mouse_pop=3, mouse_stop=2)
+
+                    # find the points on spectrum that are most close to the mouse-clicks
+                    points_x, points_y = [], []
+                    for j in range(len(points)):
+                        points_x.append(points[j][0])
+                        points_y.append(points[j][1])
+                    points_idx = DataHandling.nearest_point((points_x, points_y), (x, y))
+                    point_x_all = np.append(point_x_all, x[points_idx])
+                    point_y_all = np.append(point_y_all, y[points_idx])
+                    break
+
+        # switch back to the normal backend and user interaction
+        tmp_plt.close(fig1)
+        matplotlib.use("module://backend_interagg")
+        import matplotlib.pyplot as plt
+
+        sort_idx = np.argsort(point_x_all)
+        point_x_all, point_y_all = point_x_all[sort_idx], point_y_all[sort_idx]
+
+        if wavelength is None:
+            x_out = point_x_all
+        else:
+            x_out = []
+            wavelength = DataHandling.parseInput(1, wavelength, checklen=False)
+            if len(wavelength) == 1:
+                x_out = point_x_all / wavelength[0]
+            else:
+                sub_length = math.floor(len(point_x_all) / len(wavelength))
+                n_subs = math.floor(len(point_x_all)/sub_length)
+                boundary = (np.arange(n_subs) + 1) * sub_length
+                point_x_all_split = np.split(point_x_all,boundary)
+                for i in range(n_subs):
+                    x_out.append( (point_x_all_split[i] / wavelength[i] - 1) * cst.c.to('km/s').value)
+
+        if not tau_0:
+            return x_out
+        else:
+            y_out = []
+            for i, x in enumerate(point_x_all):
+                b = 1.5
+                sigma = b * x / cst.c.to('km/s').value
+                alpha = sigma * np.sqrt(2. * np.log(2.))
+                d = 0.0005
+                gamma = d
+                voigt_peak = eMath.voigtMath(0, alpha, gamma)
+                y_out.append(-1 * math.log(point_y_all[i]) / voigt_peak)
+            if wavelength is not None and len(wavelength) > 1:
+                y_out = np.array(y_out)
+                y_out_split = np.split(y_out, boundary)
+                y_out = []
+                for i in range(n_subs):
+                    y_out.append(y_out_split[i])
+            return x_out, y_out
 
     def baryCorrection(self, panels=None):
         panels = self.__parsePanelsInput__(panels)
@@ -639,7 +728,7 @@ class EdiblesSpectrum:
         return SNR_all
 
     def fitContinuum(self, mode='spline', n=3,
-                     lsigma=1, usigma=2, iterates=30, min_sigma = 0.1,
+                     lsigma=1, usigma=2, iterates=30, min_sigma = 0.2,
                      silence=False, apply_mask=False, panels=None):
 
         panels = self.__parsePanelsInput__(panels)
@@ -718,6 +807,69 @@ class EdiblesSpectrum:
 
         return None
 
+    def getKernel(self, resolution=80000, n_sigma=5, apply_mask=False, panels=None):
+        panels = self.__parsePanelsInput__(panels)
+        x, masked = np.array([]), np.array([])
+        for panel in panels:
+            x = np.append(x, self.wave_working[panel])
+            masked = np.append(masked, self.masked[panel])
+
+        if apply_mask:
+            idx = (masked == 0).nonzero()
+            x=x[idx]
+
+        x_uniq = np.unique(x)
+        if len(x_uniq) < len(x):
+            idx_uniq = np.array([]).astype("int64")
+            for i in range(len(x_uniq)):
+                idx_uniq = np.append(idx_uniq, (x == x_uniq[i]).nonzero()[0][0])
+            x = x[idx_uniq]
+
+        x_mean = np.median(x)
+        dx_array = x[1:] - x[0:-1]
+        dx = np.median(dx_array)
+
+        k_sigma = x_mean / resolution / 2.35482
+        n_steps = (n_sigma * k_sigma) // dx + 1
+        k_x = np.arange(-n_steps, n_steps + 1, 1) * dx
+        z = (k_x / k_sigma) ** 2
+        kernel = np.exp(- z / 2)
+        kernel = kernel / np.sum(kernel)
+
+        self.__getKernelOffset__(kernel=kernel,xlength=len(x), apply_mask=apply_mask, panels=panels)
+
+        return kernel
+
+    def __getKernelOffset__(self, kernel=None, xlength=None, apply_mask=False, panels=None):
+        panels = self.__parsePanelsInput__(panels)
+        if kernel is None:
+            kernel = self.getKernel()
+        if xlength is None:
+            x, masked = np.array([]), np.array([])
+            for panel in panels:
+                x = np.append(x, self.wave_working[panel])
+                masked = np.append(masked, self.masked[panel])
+
+            if apply_mask:
+                idx = (masked == 0).nonzero()
+                x = x[idx]
+
+            xlength = len(np.unique(x))
+
+        crval1 = self.header[panels[0]]["CRVAL1"]
+        cdelt1 = self.header[panels[0]]["CDELT1"]
+        grid = np.arange(0, xlength, 1)
+        x_test = (grid) * cdelt1 + crval1
+        idx_peak = math.floor(xlength/2)
+        x_peak = x_test[idx_peak]
+
+        model_test = eM.Cloud(name="Kernel_Test")
+        model_test.addLines(x_peak, b=1.0)
+        model_test.importInstrumental(kernel)
+        conv_model = model_test.compileModel(add_instrumental=True)
+        idx_peak_conv = np.argmin(conv_model(x_test))
+        self.conv_offset = idx_peak_conv - idx_peak
+
     def fitModel(self, stat="LeastSq", opt="NelderMead", apply_mask=False, panels=None):
         stat_lib = ['LeastSq']
         opt_lib = ['LevMar', 'NelderMead']
@@ -793,7 +945,8 @@ class EdiblesSpectrum:
             axs.plot(x_plot, -1 * np.ones_like(x_plot) / self.SNR[panel], linestyle='--', color="orange")
             axs.grid()
             if apply_mask and 1 in self.masked[panel]:
-                axs.scatter(x_plot[self.masked[panel] == 1], model2fit( self.wave_working[panel][self.masked[panel] == 1] ),
+                axs.scatter(x_plot[self.masked[panel] == 1],
+                            (model2fit(self.wave_working[panel]) - self.flux_working[panel])[self.masked[panel] == 1],
                             marker="x", color="red")
             if i == n_rows - 1:
                 axs.set_xlabel("Residuals")
@@ -1085,38 +1238,55 @@ class EdiblesSpectrum:
         panels = self.__parsePanelsInput__(panels)
         for panel in panels:
             # header
-            print("="*15 + "  Panels {panel}  ".format(panel=panel) + "="*15)
-
-            # filename and panel name
-            if self.panel_names[panel] != "":
-                print("Panel Name: " + self.panel_names[panel])
-            print(self.filename[panel])
-
-            # X
-            x_str = "X: "
-            x = self.__parseX__(panel=panel)
-            xmin, xmax = np.min(x), np.max(x)
-            if self.velocity_center[panel] is None:
-                x_str+= "Wavelength, between {xmin:.2f} and {xmax:.2f} AA".format(xmin=xmin, xmax=xmax)
-            else:
-                x_str+= "Velocity Grid, between {xmin:.2f} and {xmax:.2f} km/s, ".format(xmin=xmin, xmax=xmax)
-                x_str+= "center at {center} AA".format(center = self.velocity_center[panel])
-            print(x_str)
-
-            #Y
-            y_str = "Y: "
-            if not self.normalized[panel]:
-                y_str+= "Flux"
-            else:
-                if self.optical_depth:
-                    y_str+= "Optical Depth"
-                else:
-                    y_str+= "Normalized Flux"
-            print(y_str)
-
-            # frame
-            print("In "+ self.reference_frame[panel] + " frame")
+            print(self.__panenameStr__(panel))
+            print(self.__xStr__(panel))
+            print(self.__yStr__(panel))
+            print(self.__frameStr__(panel))
             print("")
+
+    def __panenameStr__(self, panel):
+        str = "="*15 + "  Panels {panel}  ".format(panel=panel) + "="*15 + "\n"
+        if self.panel_names[panel] != "":
+            str += "Panel Name: " + self.panel_names[panel] + "\n"
+        str += self.filename[panel] + "\n"
+        return  str
+
+    def __xStr__(self, panel):
+        x_str = "X: "
+        x = self.__parseX__(panel=panel)
+        xmin, xmax = np.min(x), np.max(x)
+        if self.velocity_center[panel] is None:
+            x_str += "Wavelength Grid, between {xmin:.2f} and {xmax:.2f} AA\n".format(xmin=xmin, xmax=xmax)
+        else:
+            x_str += "Velocity Grid, between {xmin:.2f} and {xmax:.2f} km/s, ".format(xmin=xmin, xmax=xmax)
+            x_str += "center at {center} AA\n".format(center=self.velocity_center[panel])
+        return x_str
+
+    def __yStr__(self, panel):
+        y_str = "Y: "
+        if not self.normalized[panel]:
+            y_str += "Flux\n"
+        else:
+            if self.optical_depth:
+                y_str += "Optical Depth\n"
+            else:
+                y_str += "Normalized Flux\n"
+        return y_str
+
+    def __frameStr__(self, panel):
+        return "In " + self.reference_frame[panel] + " frame\n"
+
+    def __str__(self):
+        panels = self.__parsePanelsInput__(None)
+        str_all = ""
+        for panel in panels:
+            str_all += self.__panenameStr__(panel)
+            str_all += self.__xStr__(panel)
+            str_all += self.__yStr__(panel)
+            str_all += self.__frameStr__(panel)
+
+        return str_all
+
 
     def outputResult(self, path=None, filename=None, panels=None):
         panels = self.__parsePanelsInput__(panels)
