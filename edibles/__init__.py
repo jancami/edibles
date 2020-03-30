@@ -7,14 +7,14 @@ else:
 
 
 if 'EDIBLES_DATARELEASE' in os.environ:
-    DATADIR = os.environ['EDIBLES_DATARELEASE']
+    DATARELEASE = os.environ['EDIBLES_DATARELEASE']
 else:
-    DATADIR = 'DR4'
+    DATARELEASE = 'DR4'
 
 
 if 'EDIBLES_PYTHONDIR' in os.environ:
-    DATADIR = os.environ['EDIBLES_PYTHONDIR']
+    PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
 else:
-    DATADIR = '~/python/edibles/'
+    PYTHONDIR = '~/python/edibles/'
 
 __version__ = ''
