@@ -29,30 +29,28 @@ def testAdvancedFit():
 
     fit_model = fit(star_name, data, slightline.model)
 
+    file = "/HD148937/BLUE_346/HD148937_w346_blue_20150817_O11.fits"
+    star = "HD148937"
+    subset2 = EdiblesSpectrum(file).getSpectrum(3301.5, 3304)
+    data2 = (subset2["wave"], subset2["flux"])
 
-    ## Below is broken for some reason... ?
+    cont = createCont(data2, n_points=3)
+    slightline2 = Sightline(star_name=star, cont=cont)
+    slightline2.addSource("Source 1", 1.42631e-07, 0.036356)
+    slightline2.addLine("NaI_1", lam_0=3302.46, tau_0=0.06)
+    slightline2.addLine("NaI_2", lam_0=3303.1, tau_0=0.03)
 
-    # file = "/HD148937/BLUE_346/HD148937_w346_blue_20150817_O11.fits"
-    # star = "HD148937"
-    # subset2 = EdiblesSpectrum(file).getSpectrum(3301.5, 3304)
-    # data2 = (subset2["wave"], subset2["flux"])
+    slightline2.dupSource("Source 1", "Source 2", 1.00005)
+    slightline2.dupSource("Source 1", "Source 3", 0.99995)
 
-    # cont = createCont(data2, n_points=3)
-    # slightline2 = Sightline(star_name=star, cont=cont)
-    # slightline2.addSource("Source 1", 1.42631e-07, 0.036356)
-    # slightline2.addLine("NaI_1", lam_0=3302.46, tau_0=0.06)
-    # slightline2.addLine("NaI_2", lam_0=3303.1, tau_0=0.03)
+    print(data2[:0])
 
-    # slightline2.dupSource("Source 1", "Source 2", 1.00005)
-    # slightline2.dupSource("Source 1", "Source 3", 0.99995)
+    fit_model2 = fit(star, data2, slightline2.model)
 
-    # print(data2[:0])
-
-    # fit_model = fit(star, data2, slightline2.model)
-
-    return fit_model
+    return fit_model, fit_model2
 
 
 if __name__ == "__main__":
-    fit_model = testAdvancedFit()
+    fit_model, fit_model2 = testAdvancedFit()
     print(fit_model)
+    print(fit_model2)
