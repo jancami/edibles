@@ -18,7 +18,7 @@ class EdiblesOracle:
         filename = PYTHONDIR + "/edibles/data/DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
         # print(self.obslog.dtypes)
-        total_rows = len(self.obslog.index)
+        # total_rows = len(self.obslog.index)
         # print(total_rows)
 
     def GetObsListByWavelength(self, wave=None):
