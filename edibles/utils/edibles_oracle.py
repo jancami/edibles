@@ -21,14 +21,26 @@ class EdiblesOracle:
         # total_rows = len(self.obslog.index)
         # print(total_rows)
 
-    def GetObsListByWavelength(self, wave=None):
+    def GetObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         # This function filters the list of Observations to return only those
         # that include the requested wavelength.
+        # We will create a set of boolean arrays that we will then combined
+        # as the filter.
 
+        # Boolean matches for wavelength.
         if wave is None:
             wave = 5000
-        wave_matches = (self.obslog.WaveMin < wave) & (self.obslog.WaveMax > wave)
-        ind = np.where(wave_matches)
+        bool_wave_matches = (self.obslog.WaveMin < wave) & (self.obslog.WaveMax > wave)
+
+        # Do we have to filter out merged or single-order spectra? Note that if both
+        # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
+        bool_order = self.obslog != "Z"
+        if OrdersOnly is True:
+            bool_order = self.obslog.Order != "ALL"
+        if MergedOnly is True:
+            bool_order = self.obslog.Order == "ALL"
+
+        ind = np.where(bool_wave_matches & bool_order)
         # print(ind)
         return self.obslog.iloc[ind].Filename
 
@@ -36,11 +48,13 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
-    List = pythia.GetObsListByWavelength(5000)
+    List = pythia.GetObsListByWavelength(5000, MergedOnly=True)
     # print(List)
     for filename in List:
         sp = EdiblesSpectrum(filename)
         plt.figure()
+        plt.title(filename)
+        plt.xlabel("Wavelength (" + r"$\AA$" + ")")
         plt.xlim(5000, 5100)
         plt.plot(sp.wave, sp.flux)
         plt.show()
