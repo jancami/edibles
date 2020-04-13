@@ -1,17 +1,17 @@
-from edibles.edibles import DATADIR
-from edibles.edibles import PYTHONDIR
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from edibles.edibles import DATADIR
+from edibles.edibles import PYTHONDIR
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+
 
 class EdiblesOracle:
-    #   ""
-    # This class will pocess the EDIBLES obs log and target info files.
-    # Users can then query the oracle for observations matching specific criteria.
-
-    # ""
+    """
+    This class will pocess the EDIBLES obs log and target info files.
+    Users can then query the oracle for observations matching specific criteria.
+    """
 
     def __init__(self):
         print(DATADIR)
@@ -22,10 +22,20 @@ class EdiblesOracle:
         # print(total_rows)
 
     def GetObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
-        # This function filters the list of Observations to return only those
-        # that include the requested wavelength.
-        # We will create a set of boolean arrays that we will then combined
-        # as the filter.
+        """
+        This function filters the list of Observations to return only those
+        that include the requested wavelength.
+        We will create a set of boolean arrays that we will then combined
+        as the filter.
+
+        :param wave: Wavelength that the returned files will include
+        :type wave: float
+        :param MergedOnly: Only include spectra from merged orders
+        :type MergedOnly: bool
+        :param OrdersOnly: Only include individual spectrum orders
+        :type OrdersOnly: bool
+
+        """
 
         # Boolean matches for wavelength.
         if wave is None:
@@ -34,6 +44,10 @@ class EdiblesOracle:
 
         # Do we have to filter out merged or single-order spectra? Note that if both
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
+
+        if MergedOnly and OrdersOnly:
+            print("ONLY RETURNING MERGED SPECTRA")
+
         bool_order = self.obslog != "Z"
         if OrdersOnly is True:
             bool_order = self.obslog.Order != "ALL"
