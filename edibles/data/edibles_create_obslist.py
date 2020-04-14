@@ -18,7 +18,7 @@ def createObsList():
         for file in files:
             if file.endswith(".fits"):
                 fullfilename = os.path.join(path, file)
-                relative_filename = fullfilename[len(DATADIR) :]
+                relative_filename = fullfilename[len(DATADIR):]
                 # print(relative_filename)
                 allfitsfiles.append(relative_filename)
 
@@ -57,7 +57,7 @@ def createObsList():
         if idx_O != -1:
             # print(idx)
             idx_dot = allfitsfiles[count].find(".")
-            full_list[count].order = (allfitsfiles[count])[idx_O + 2 : idx_dot]
+            full_list[count].order = (allfitsfiles[count])[idx_O + 2: idx_dot]
         else:
             full_list[count].order = "ALL"
         if "HIERARCH ESO INS GRAT1 WLEN" in spec.header:
@@ -66,7 +66,6 @@ def createObsList():
             full_list[count].setting = int(spec.header["HIERARCH ESO INS GRAT2 WLEN"])
         struct = spec.getSpectrum()
         wave = struct["wave"]
-        flux = struct["flux"]
         full_list[count].wave_min = "{:.1f}".format(np.min(wave))
         full_list[count].wave_max = "{:.1f}".format(np.max(wave))
         del spec
@@ -103,7 +102,7 @@ def createObsList():
     # Time to print things out! Let's use csv format to do that.
     outfile = PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
     length_checker = np.vectorize(len)
-    all_lengths = length_checker(allfitsfiles)
+    # all_lengths = length_checker(allfitsfiles)
     # print(np.max(all_lengths))
     with open(outfile, "w") as csvFile:
         writer = csv.writer(csvFile)
