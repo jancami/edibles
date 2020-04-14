@@ -101,7 +101,7 @@ def createObsList():
 
     # Time to print things out! Let's use csv format to do that.
     outfile = PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
-    length_checker = np.vectorize(len)
+    # length_checker = np.vectorize(len)
     # all_lengths = length_checker(allfitsfiles)
     # print(np.max(all_lengths))
     with open(outfile, "w") as csvFile:
