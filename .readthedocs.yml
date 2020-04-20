@@ -5,12 +5,7 @@ build:
 
 python:
   version: 3.7
-#   setup_py_install: false
-#   install:
-#     - method: pip
-#       path: .
-#       extra_requirements:
-#         - docs
-#         - all
+  install:
+    - requirements: requirements.txt
 
-formats: []
+formats: all
