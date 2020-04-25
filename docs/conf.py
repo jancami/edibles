@@ -30,6 +30,8 @@ import sys
 import datetime
 from importlib import import_module
 
+sys.path.insert(0, os.path.abspath('..'))
+
 try:
     from sphinx_astropy.conf.v1 import *  # noqa
 except ImportError:
