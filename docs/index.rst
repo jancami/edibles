@@ -1,13 +1,21 @@
-Documentation
-=============
+Welcome to EDIBLES' Documentation
+=================================
 
-This is the documentation for EDIBLES.
+Software for EDIBLES data analysis and plotting.
 
 .. toctree::
   :maxdepth: 2
-
+  :caption: Installation
   install.rst
-  edibles/index.rst
+
+
+
+.. toctree::
+  :maxdepth: 2
+  :caption: User Documentation
+
+  edibles/edibles
+
 
 
 .. note:: The layout of this directory is simply a suggestion.  To follow
