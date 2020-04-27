@@ -2,8 +2,9 @@ import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
 import matplotlib.pyplot as plt
-from edibles.edibles import DATADIR
 import pandas as pd
+
+from edibles.edibles import DATADIR
 
 
 class EdiblesSpectrum:

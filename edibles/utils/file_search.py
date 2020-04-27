@@ -1,12 +1,12 @@
 import pandas as pd
-from edibles.edibles import EDIBLES_PYTHONDIR, DATARELEASE
+from edibles.edibles import PYTHONDIR, DATARELEASE
 
 
 class FilterDR(object):
     def __init__(self, init_df=None):
         if init_df is None:
             self.df = pd.read_csv(
-                EDIBLES_PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
+                PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
             )
             self.df.Object = self.df.Object.apply(
                 lambda x: x.replace(" ", "")
