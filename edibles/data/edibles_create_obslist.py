@@ -2,15 +2,21 @@ import os
 import numpy as np
 import csv
 from edibles.edibles import DATADIR, PYTHONDIR, DATARELEASE
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils import EdiblesSpectrum
 
 
-def createObsList():
+def createObsList(dryrun=True):
     """Set up of the list of FITS files in the data directory with the necessary
     information that we need to supply to the oracle to work. Essentially, we
     will recursively list all of the FITS files first, then open each of them
     to read the header and extract the information. Finally, store everything
-    in a text file."""
+    in a text file.
+
+    :param dryrun: If True, dont save list. Default=True
+    :type drtyrun: bool
+
+
+    """
 
     print("Data Release in " + DATADIR)
     allfitsfiles = []
@@ -104,9 +110,12 @@ def createObsList():
     # length_checker = np.vectorize(len)
     # all_lengths = length_checker(allfitsfiles)
     # print(np.max(all_lengths))
-    with open(outfile, "w") as csvFile:
-        writer = csv.writer(csvFile)
-        writer.writerows(pstrings)
+
+    if dryrun is False:
+        with open(outfile, "w") as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerows(pstrings)
+            print('Wrote to file!')
 
     return
 
