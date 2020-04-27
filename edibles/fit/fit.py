@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import time
-
 from sherpa.data import Data1D, DataSimulFit
 from sherpa.stats import LeastSq
 from sherpa.optmethods import LevMar
@@ -14,7 +13,7 @@ def fit(star_name, data, model, silent=False, breakdown=False):
 
 
     :param star_name: Name of the target star
-    :type star_name: string
+    :type star_name: str
     :param data: Spectrum data in the form (wave, flux)
     :type data: tuple
     :param model: An unfit spectrum model
@@ -140,11 +139,11 @@ def multifit(star_name, data_list, model_list, silent=False):
         This was created to fit the NaI doublets at ~3300 and ~5890 Angstroms.
 
     :param star_name: Name of the target star
-    :type star_name: string
+    :type star_name: str
     :param data_list: List of spectrum data in the form [(wave, flux), (wave, flux),...]
     :type data_list: tuple
     :param model_list:  A list of unfit spectrum models
-    :type model_list: model instance
+    :type model_list: list
     :param silent:  If true, no plots will generate, defaults to False
     :type silent: bool
 
