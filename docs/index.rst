@@ -6,7 +6,8 @@ Software for EDIBLES data analysis and plotting.
 .. toctree::
   :maxdepth: 2
   :caption: Installation
-  install.rst
+  
+  install
 
 
 

@@ -68,26 +68,10 @@ edibles.utils.local\_continuum\_spline module
    :undoc-members:
    :show-inheritance:
 
-edibles.utils.plot\_overview\_panel module
-------------------------------------------
-
-.. automodule:: edibles.utils.plot_overview_panel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 edibles.utils.rebin\_spectrum module
 ------------------------------------
 
 .. automodule:: edibles.utils.rebin_spectrum
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-edibles.utils.velocity\_space\_plot module
-------------------------------------------
-
-.. automodule:: edibles.utils.velocity_space_plot
    :members:
    :undoc-members:
    :show-inheritance:
