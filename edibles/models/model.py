@@ -4,7 +4,7 @@ import astropy.constants as cst
 from sherpa.models.model import ArithmeticModel
 from sherpa.models.parameter import Parameter
 
-from edibles.edibles.utils.voigt import voigtAbsorptionLine
+from edibles.edibles.utils import voigtAbsorptionLine
 
 __all__ = (
     "Cont1D",
