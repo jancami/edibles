@@ -1,4 +1,4 @@
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.edibles.utils import EdiblesSpectrum
 import matplotlib.pyplot as plt
 
 
