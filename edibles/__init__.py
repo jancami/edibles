@@ -1,3 +1,5 @@
+from .fitter import *
+
 import os
 
 if 'EDIBLES_DATADIR' in os.environ:
@@ -18,6 +20,3 @@ else:
     PYTHONDIR = '~/python/edibles/'
 
 __version__ = '0.1'
-
-
-from .fitter import *
