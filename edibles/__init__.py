@@ -20,4 +20,4 @@ else:
 __version__ = '0.1'
 
 
-from edibles.edibles.fitter import *
+from .fitter import *
