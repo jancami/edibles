@@ -26,22 +26,16 @@ class Voigt:
         Creates a Voigt line profile using the scipy.special.wofz, which
         returns the value of the Faddeeva function.
 
-        WARNING
-        scipy.special.wofz is not compaible with np.float128 type parameters.
+        WARNING:
+            scipy.special.wofz is not compaible with np.float128 input type.
 
-        Input:
-        ----------
-        x : float64
-            Dimensionless point/array
-        alpha : float64
-            Gaussian HWHM component
-        gamma : float64
-            Lorentzian HWHM component
+        Args:
+            x (float64): Dimensionless point/array
+            alpha (float64): Gaussian HWHM component
+            gamma (float64): Lorentzian HWHM component
 
-        Output:
-        -------
-        ndarray
-            Flux array for given input
+        Returns:
+            ndarray: Flux array for given input
 
         """
 
@@ -58,23 +52,15 @@ class Voigt:
         Converts parameters to make proper call to voigtMath
 
 
-        Input:
-        ----------
-        lam : float64
-            Wavelength grid
-        lam_0 : float64
-            Central wavelength
-        b : float64
-            Gaussian standard deviation
-        d : float64
-            Damping parameter
-        Nf : float64
-            Scaling parameter, default = 1.0
+        Args:
+            lam (float64): Wavelength grid
+            lam_0 (float64): Central wavelength
+            b (float64): Gaussian standard deviation
+            d (float64): Damping parameter
+            Nf (float64): Scaling parameter, default = 1.0
 
-        Output:
-        -------
-        ndarray
-            Optical depth for given input
+        Returns:
+            ndarray: Optical depth for given input
 
         """
 
@@ -118,27 +104,18 @@ class Voigt:
 
         Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
-        Input:
-        -----
-        lam : float64
-            Wavelength grid
-        lam_0 : float64
-            Central wavelength
-        b : float64
-            Gaussian standard deviation
-        d : float64
-            Damping parameter
-        N : float64
-            Column density
-        f : float64
-            Oscillator strength
-        tau_0 : float64
-            Optical depth at center of line
 
-        Output:
-        -------
-        ndarray
-            flux array of light transmission
+        Args:
+            lam (float64): Wavelength grid
+            lam_0 (float64): Central wavelength
+            b (float64): Gaussian standard deviation
+            d (float64): Damping parameter
+            N (float64): Column density
+            f (float64): Oscillator strength
+            tau_0 (float64): Optical depth at center of line
+
+        Returns:
+            ndarray: flux array of light transmission
 
         """
 

@@ -13,8 +13,8 @@ def generate_continuum(data_tuple, pars=None, delta_v=1.0, n_piece=2):
         delta_v (float): desired resolution of continuum (in m/s)
         n_piece (int): number of sections to split data into, default=2
 
-    OUTPUT:       [Angstroms]
-    y_spline:     [ndarray]                   continuum flux value array
+    Returns:
+        ndarray: Continuum flux value array
 
     """
     (x, y) = data_tuple

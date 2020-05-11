@@ -1,5 +1,5 @@
-from edibles.edibles.utils import generate_continuum
-from edibles.edibles.models import Cont1D
+from edibles.edibles.utils.continuum_guess import generate_continuum
+from edibles.edibles.models.model import Cont1D
 
 
 def createCont(data, n_points=4):

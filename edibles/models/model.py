@@ -4,15 +4,7 @@ import astropy.constants as cst
 from sherpa.models.model import ArithmeticModel
 from sherpa.models.parameter import Parameter
 
-from edibles.edibles.utils import voigtAbsorptionLine
-
-__all__ = (
-    "Cont1D",
-    "VoigtAbsorptionLine",
-    "LinkedWavelengthVoigtAbsorptionLine",
-    "Sightline",
-    "KnownVelocityLine",
-)
+from edibles.edibles.utils.voigt import voigtAbsorptionLine
 
 
 class Cont1D(ArithmeticModel):

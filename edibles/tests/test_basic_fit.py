@@ -1,9 +1,9 @@
 def testBasicFit():
 
-    from edibles.edibles.utils import EdiblesSpectrum
-    from edibles.edibles.models import createCont
-    from edibles.edibles.models import Sightline
-    from edibles.edibles import fit
+    from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+    from edibles.edibles.models.create_model import createCont
+    from edibles.edibles.models.model import Sightline
+    from edibles.edibles.fitter import fit
 
     file1 = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp1 = EdiblesSpectrum(file1)

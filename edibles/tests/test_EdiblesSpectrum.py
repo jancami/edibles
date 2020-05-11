@@ -1,5 +1,6 @@
-from edibles.edibles.utils import EdiblesSpectrum
 import matplotlib.pyplot as plt
+
+from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 def testEdiblesSpectrum():

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from edibles.edibles import DATADIR
 from edibles.edibles import PYTHONDIR
-from edibles.edibles import utils
+from edibles_spectrum import EdiblesSpectrum
 
 
 class EdiblesOracle:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     List = pythia.GetObsListByWavelength(5000, MergedOnly=True)
     # print(List)
     for filename in List:
-        sp = utils.EdiblesSpectrum(filename)
+        sp = EdiblesSpectrum(filename)
         plt.figure()
         plt.title(filename)
         plt.xlabel("Wavelength (" + r"$\AA$" + ")")

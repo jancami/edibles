@@ -10,9 +10,6 @@ import astropy.units as u
 from heapq import nsmallest
 
 
-from edibles.edibles import DATADIR
-
-
 def barycorrectSpectrum(wave_array, v_bary):
     """Barycentric wavelength correction tool.
 
@@ -334,6 +331,7 @@ def printHeader(input_fits):
     :type input_fits: str
 
     """
+    from edibles.edibles import DATADIR
 
     path = DATADIR + input_fits
 

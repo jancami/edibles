@@ -91,8 +91,8 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
     Choose either a tau_0 parameter, or N and f together. Default is tau_0.
 
-    Input:
 
+    Args:
         lam (float64): Wavelength grid
         lam_0 (float64): Central wavelength
         b (float64): Gaussian standard deviation
