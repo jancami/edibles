@@ -1,9 +1,6 @@
 edibles.tests package
 =====================
 
-Submodules
-----------
-
 edibles.tests.test\_EdiblesSpectrum module
 ------------------------------------------
 
@@ -24,15 +21,6 @@ edibles.tests.test\_basic\_fit module
 -------------------------------------
 
 .. automodule:: edibles.tests.test_basic_fit
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: edibles.tests
    :members:
    :undoc-members:
    :show-inheritance:

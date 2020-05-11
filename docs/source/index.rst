@@ -11,7 +11,7 @@ Welcome to EDIBLES's documentation!
    :caption: Contents:
 
    install
-   modules
+   edibles
 
 
 

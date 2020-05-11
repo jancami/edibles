@@ -1,6 +1,6 @@
-************
-Installation
-************
+***************
+Getting Started
+***************
 
 Requirements
 ============
@@ -11,7 +11,7 @@ EDIBLES has the following strict requirements:
 
 * `Numpy <https://numpy.org/>`_ 
 
-* `Astropy`_ 3.2 or later
+* `Astropy <https://www.astropy.org>`_ 3.2 or later
 
 * `Matplotlib <https://matplotlib.org/>`_
 
@@ -59,15 +59,13 @@ Then to build and install EDIBLES, run::
     python setup.py install
 
 
-Testing an installed EDIBLES
-==============================
+Testing after installation
+==========================
 
 Testing is currently under development.
 
 The easiest way to test your installed version of EDIBLES is running
 correctly is to use the :func:`edibles.test.test_basic_fit.testBasicFit` function:
-
-.. doctest-skip::
 
     >>> import edibles.test.test_basic_fit as test
     >>> test.testBasicFit()

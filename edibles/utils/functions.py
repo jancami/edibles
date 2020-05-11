@@ -307,11 +307,11 @@ def peak_wavelength_all_prominent(wave, flux, prominence):
     Function that returns the wavelengths of the lowest n peaks of the equation
 
     :param wave: wavelength grid
-    :type : ndarray
+    :type wave: ndarray
     :param flux: flux grid
-    :type : ndarray
+    :type flux: ndarray
     :param prominence: prominence of points (see scipy.signal.find_peaks)
-    :type : float, between 0 and 1
+    :type prominence: float, between 0 and 1
 
     :return: wavelengths of all prominent peaks
     :rtype: list
@@ -401,11 +401,11 @@ def parseTextFile(file_name, delimiter=",", header=0):
 
 
     :param file_name: The path to the file
-    :type : str
+    :type file_name: str
     :param delimiter: The delimiter to use to parse the file
-    :type : str
+    :type delimiter: str
     :param header: The number of lines at the top of the file to ignore
-    :type : int
+    :type header: int
 
     :return: Text file parsed into a list
     :rtype: list

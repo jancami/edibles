@@ -10,19 +10,20 @@ def local_continuum(data, positions=None, windows=1.0, spline_order=1, silent=Tr
     "wavelength" grid. The input data tuple (wave, flux) is then normalised
     giving (wave, normalised_flux).
 
-    INPUT:
-    data:         [tuple]             In the form (wave, flux)
-    positions:    []                  List of spline anchor points
-    windows:      []                  List of window sizes around each anchor point (in Angstrom)
-    spline_order: [int - 1]           Order (s) of spline fit
-    silent:       [bool - True]       If true, no plots will generate
+    Args:
+        data (tuple): In the form (wave, flux)
+        positions (list): List of spline anchor points
+        windows (list): List of window sizes around each anchor point (in Angstrom)
+        spline_order (int): Order (s) of spline fit
+        silent (bool): If true, no plots will generate. Default: True
 
-    OUTPUT:
-    continuum:    [tuple]             Continuum flux in the form (flux) on the same
-                                      spectral grid as (wave)
-    normalised:   [tuple]             Normalised input spectrum In the form (normalised_flux)
-    ##c1:         [?]                 polyfit_result - can be used by np.poly1d(polyfit_result)
-                                      to create continuum again: continuum = p1(wave_grid)
+    Returns:
+        tuple: tuple containing:
+
+            tuple: Continuum flux in the form (flux) on the same spectral grid as (wave)
+
+            tuple: Normalised input spectrum In the form (normalised_flux)
+
     """
 
     wave, flux = data
@@ -61,4 +62,4 @@ def local_continuum(data, positions=None, windows=1.0, spline_order=1, silent=Tr
         plt.plot(wave, continuum)
         plt.show()
 
-    return normalised_flux, continuum  # , c1
+    return normalised_flux, continuum 

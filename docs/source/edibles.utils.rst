@@ -1,9 +1,6 @@
 edibles.utils package
 =====================
 
-Submodules
-----------
-
 edibles.utils.VoigtClass module
 -------------------------------
 
@@ -80,15 +77,6 @@ edibles.utils.voigt module
 --------------------------
 
 .. automodule:: edibles.utils.voigt
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: edibles.utils
    :members:
    :undoc-members:
    :show-inheritance:
