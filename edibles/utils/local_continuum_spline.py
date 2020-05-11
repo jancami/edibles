@@ -62,4 +62,4 @@ def local_continuum(data, positions=None, windows=1.0, spline_order=1, silent=Tr
         plt.plot(wave, continuum)
         plt.show()
 
-    return normalised_flux, continuum 
+    return normalised_flux, continuum
