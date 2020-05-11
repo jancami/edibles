@@ -1,2 +1,4 @@
-from .model import *
-from .create_model import *
+__all__ = [
+    "create_model",
+    "model"
+]
