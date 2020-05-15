@@ -16,6 +16,8 @@ class EdiblesSpectrum:
 
     :param filename: Name of the file, starting with the target
     :type filename: str
+    :param noDATADIR: If true, DATADIR will not be added to the front of the filename
+    :type noDATADIR: Bool
     :param header: The header of the FITS file from the target observation
     :type header: Object (astropy.io.fits.header.Header)
     :param target: The name of the target
@@ -39,11 +41,15 @@ class EdiblesSpectrum:
 
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, noDATADIR=False):
         """
         Filename is relative to the DR3 directory
         """
         self.filename = DATADIR + filename
+
+        if noDATADIR is True:
+            self.filename = filename
+
         self.loadSpectrum()
 
     def loadSpectrum(self):
