@@ -14,7 +14,7 @@ with open("README.rst", 'r') as f:
 setup(
     name='EDIBLES',
     version='0.0.1',
-    description='A useful module',
+    description='Software for EDIBLES data analysis and plotting',
     license="BSD",
     long_description=long_description,
     author='Jan Cami',
