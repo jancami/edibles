@@ -6,10 +6,10 @@ def testAdvancedFit():
     from edibles.edibles.fitter import fit
 
     star_name = "HD170740"
-    file = "/HD170740/RED_860/HD170740_w860_redl_20140916_O12.fits"
+    file = "tests/testdata/HD170740_w860_redl_20140915_O12.fits"
     xmin = 7661.0
     xmax = 7670.0
-    sp = EdiblesSpectrum(file)
+    sp = EdiblesSpectrum(file, noDATADIR=True)
     subset = sp.getSpectrum(xmin, xmax)
     data = (subset["wave"], subset["flux"])
 
@@ -27,11 +27,11 @@ def testAdvancedFit():
     slightline.addLine(name="KI_1", lam_0=7665.3, tau_0=0.1)
     slightline.addLine(name="KI_2", lam_0=7665.35, tau_0=0.05)
 
-    fit_model = fit(star_name, data, slightline.model)
+    fit_model = fit(star_name, data, slightline.model, silent=True)
 
-    file = "/HD148937/BLUE_346/HD148937_w346_blue_20150817_O11.fits"
+    file = "tests/testdata/HD148937_w346_blue_20150817_O11.fits"
     star = "HD148937"
-    subset2 = EdiblesSpectrum(file).getSpectrum(3301.5, 3304)
+    subset2 = EdiblesSpectrum(file, noDATADIR=True).getSpectrum(3301.5, 3304)
     data2 = (subset2["wave"], subset2["flux"])
 
     cont = createCont(data2, n_points=3)
@@ -43,9 +43,7 @@ def testAdvancedFit():
     slightline2.dupSource("Source 1", "Source 2", 1.00005)
     slightline2.dupSource("Source 1", "Source 3", 0.99995)
 
-    print(data2[:0])
-
-    fit_model2 = fit(star, data2, slightline2.model)
+    fit_model2 = fit(star, data2, slightline2.model, silent=True)
 
     return fit_model, fit_model2
 

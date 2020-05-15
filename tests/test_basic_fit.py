@@ -5,8 +5,8 @@ def testBasicFit():
     from edibles.edibles.models.model import Sightline
     from edibles.edibles.fitter import fit
 
-    file1 = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
-    sp1 = EdiblesSpectrum(file1)
+    file1 = "tests/testdata/HD170740_w860_redl_20140915_O12.fits"
+    sp1 = EdiblesSpectrum(file1, noDATADIR=True)
     xmin = 7661.5
     xmax = 7669.0
 
@@ -23,7 +23,7 @@ def testBasicFit():
     sightline.addLine(name="int1", lam_0=7665.2, tau_0=0.2)
     sightline.addLine(name="int2", lam_0=7665.3, tau_0=0.01)
 
-    fit_model = fit(sp1.target, data, sightline.model, breakdown=False, silent=False)
+    fit_model = fit(sp1.target, data, sightline.model, breakdown=False, silent=True)
 
     return fit_model
 
