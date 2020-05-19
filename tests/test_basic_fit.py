@@ -1,12 +1,12 @@
-def testBasicFit():
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.models.create_model import createCont
+from edibles.models.model import Sightline
+from edibles.fitter import fit
 
-    from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
-    from edibles.edibles.models.create_model import createCont
-    from edibles.edibles.models.model import Sightline
-    from edibles.edibles.fitter import fit
 
-    file1 = "tests/testdata/HD170740_w860_redl_20140915_O12.fits"
-    sp1 = EdiblesSpectrum(file1, noDATADIR=True)
+def testBasicFit(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
+
+    sp1 = EdiblesSpectrum(filename, noDATADIR=True)
     xmin = 7661.5
     xmax = 7669.0
 
@@ -29,5 +29,8 @@ def testBasicFit():
 
 
 if __name__ == "__main__":
-    fit_model = testBasicFit()
+
+    filename = "HD170740_w860_redl_20140915_O12.fits"
+
+    fit_model = testBasicFit(filename)
     print(fit_model)
