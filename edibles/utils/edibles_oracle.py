@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from edibles import DATADIR
 from edibles import PYTHONDIR
-from edibles_spectrum import EdiblesSpectrum
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 class EdiblesOracle:
