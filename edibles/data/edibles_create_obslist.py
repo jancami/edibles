@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import csv
-from edibles.edibles import DATADIR, PYTHONDIR, DATARELEASE
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles import DATADIR, PYTHONDIR, DATARELEASE
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 def createObsList(dryrun=True):

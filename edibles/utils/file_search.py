@@ -1,5 +1,5 @@
 import pandas as pd
-from edibles.edibles import PYTHONDIR, DATARELEASE
+from edibles import PYTHONDIR, DATARELEASE
 
 
 class FilterDR(object):

@@ -139,7 +139,7 @@ class Voigt:
 
 if __name__ == "__main__":
 
-    from edibles.edibles.utils.functions import make_grid
+    from edibles.utils.functions import make_grid
     import matplotlib.pyplot as plt
 
     # set params

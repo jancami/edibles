@@ -12,10 +12,10 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
-from edibles.edibles.gui.gui import Ui_MainWindow
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum as edspec
-from edibles.edibles.gui.models import PandasModel, SelectionModel
-from edibles.edibles import EDIBLES_PYTHONDIR, DATADIR, DATARELEASE
+from edibles.gui.gui import Ui_MainWindow
+from edibles.utils.edibles_spectrum import EdiblesSpectrum as edspec
+from edibles.gui.models import PandasModel, SelectionModel
+from edibles import PYTHONDIR, DATADIR, DATARELEASE
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_overview(self):
         # Load obslist overview into pandas frame
         self.overview = pd.read_csv(
-            EDIBLES_PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
+            PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
         )
 
     def add_mpl(self):

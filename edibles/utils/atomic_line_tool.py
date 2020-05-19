@@ -1,5 +1,5 @@
 import numpy as np
-from edibles.edibles import PYTHONDIR
+from edibles import PYTHONDIR
 
 
 class AtomicLines:

@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from edibles.edibles import DATADIR
-from edibles.edibles import PYTHONDIR
+from edibles import DATADIR
+from edibles import PYTHONDIR
 from edibles_spectrum import EdiblesSpectrum
 
 
