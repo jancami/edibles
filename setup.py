@@ -2,7 +2,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("README.rst", 'r') as f:
@@ -16,7 +16,7 @@ setup(
     long_description=long_description,
     author='Jan Cami',
     author_email='jcami@uwo.ca',
-    packages=['edibles'],  # same as name
+    packages=find_packages(),  # same as name
     install_requires=[
         'numpy',
         'matplotlib',

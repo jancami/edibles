@@ -4,7 +4,7 @@ import astropy.constants as cst
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from edibles.edibles import DATADIR
+from edibles import DATADIR
 
 
 class EdiblesSpectrum:

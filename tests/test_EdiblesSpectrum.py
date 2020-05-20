@@ -1,12 +1,12 @@
 import pandas
 import astropy
 import numpy as np
-from edibles.edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
-def testEdiblesSpectrum():
+def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
 
-    sp = EdiblesSpectrum("tests/testdata/HD170740_w860_redl_20140915_O12.fits", noDATADIR=True)
+    sp = EdiblesSpectrum(filename=filename, noDATADIR=True)
     assert isinstance(sp.header, astropy.io.fits.header.Header)
     assert isinstance(sp.target, str)
     assert isinstance(sp.date, str)
@@ -37,4 +37,6 @@ def testEdiblesSpectrum():
 
 
 if __name__ == "__main__":
-    testEdiblesSpectrum()
+
+    filename = "HD170740_w860_redl_20140915_O12.fits"
+    testEdiblesSpectrum(filename=filename)

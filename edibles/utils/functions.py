@@ -331,7 +331,7 @@ def printHeader(input_fits):
     :type input_fits: str
 
     """
-    from edibles.edibles import DATADIR
+    from edibles import DATADIR
 
     path = DATADIR + input_fits
 
