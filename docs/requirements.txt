@@ -1,3 +1,5 @@
 numpy
 astropy
 sphinx_astropy
+synphot
+sherpa
