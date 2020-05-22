@@ -1,5 +1,5 @@
 EDIBLES Reference
-===============
+=================
 
 Subpackages
 -----------
@@ -8,7 +8,6 @@ Subpackages
 
    edibles.data
    edibles.models
-   edibles.tests
    edibles.utils
 
 Submodules

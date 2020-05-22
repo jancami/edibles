@@ -65,14 +65,6 @@ edibles.utils.local\_continuum\_spline module
    :undoc-members:
    :show-inheritance:
 
-edibles.utils.rebin\_spectrum module
-------------------------------------
-
-.. automodule:: edibles.utils.rebin_spectrum
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 edibles.utils.voigt module
 --------------------------
 
