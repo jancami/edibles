@@ -7,9 +7,9 @@ about: Create a report describing unexpected or incorrect behavior in astropy.
 so you do not need to remove them! -->
 
 <!-- Please be sure to check out our contributing guidelines,
-https://github.com/jancami/edibles/CONTRIBUTING.md .
+https://github.com/jancami/edibles/tree/master/.github/CONTRIBUTING.md .
 Please be sure to check out our code of conduct,
-https://github.com/jancami/edibles/CODE_OF_CONDUCT.md . -->
+https://github.com/jancami/edibles/tree/master/.github/CODE_OF_CONDUCT.md . -->
 
 <!-- Please have a search on our GitHub repository to see if a similar
 issue has already been posted.
