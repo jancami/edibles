@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report describing unexpected or incorrect behavior in astropy.
+about: Create a report describing unexpected or incorrect behavior in EDIBLES.
 ---
 
 <!-- This comments are hidden when you submit the issue,
