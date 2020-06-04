@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea to improve astropy
+about: Suggest an idea to improve EDIBLES.
 ---
 
 <!-- This comments are hidden when you submit the issue,
