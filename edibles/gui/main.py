@@ -191,7 +191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if '4' in DATARELEASE:
                 filename = self.model.data(self.model.index(idxxx.row(), 8))
             elif '3' in DATARELEASE:
-                filename = self.model.data(self.model.index(idxxx.row(), 7))
+                filename = self.model.data(self.model.index(idxxx.row(), 0))
 
             if len(self.selected_data):
                 if filename in self.selected_data:
