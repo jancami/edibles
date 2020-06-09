@@ -1,4 +1,4 @@
-.. image:: https://github.com/jancami/edibles/tree/master/docs/dibs_banner.png
+.. image:: docs/dibs_banner.png
 
 EDIBLES
 -------
