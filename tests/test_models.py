@@ -29,10 +29,7 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     for name in cont_model.param_names:
         assert cont_pars[name].value is not None
 
-    result = cont_model.fit(data=subset.flux, params=cont_pars, x=subset.wave, method=method)
-    assert len(result.params) == n_anchors
-
-    out = cont_model.eval(data=subset.flux, params=result.params, x=subset.wave)
+    out = cont_model.eval(data=subset.flux, params=cont_pars, x=subset.wave)
     assert len(out) == len(subset.flux)
 
 
