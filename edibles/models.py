@@ -119,8 +119,8 @@ class ContinuumModel(Model):
         def cont(x, y_0=1, y_1=1, y_2=1, y_3=1, y_4=1, y_5=1, y_6=1, y_7=1, y_8=1, y_9=1):
 
             spacing = np.linspace(np.min(x), np.max(x), self.n_anchors)
-            spacing_idx = [np.argmin(np.abs(x - space)) for space in spacing]
             x = np.asarray(x)
+            spacing_idx = [np.argmin(np.abs(x - space)) for space in spacing]
             x_anchors = [x[i] for i in spacing_idx]
 
             y_all = [y_0, y_1, y_2, y_3, y_4, y_5, y_6, y_7, y_8, y_9]
