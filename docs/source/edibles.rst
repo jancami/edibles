@@ -9,8 +9,6 @@ Subpackages
    edibles.data
    edibles.utils
 
-Submodules
-----------
 
 edibles.models module
 ---------------------

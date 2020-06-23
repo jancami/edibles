@@ -112,19 +112,11 @@ If you plan to develop the package, you should use the developer mode of pip ins
 Your edibles Python package is now setup, and you are ready for some science!
 
 
-Testing after installation
-==========================
+Examples
+========
 
-Testing is currently under development.
+After cloning the repo, `model_example <https://github.com/jancami/edibles/blob/master/tests/model_example.py>`_ inside the tests folder can be used to see usage.
 
-The easiest way to test your installed version of EDIBLES is running
-correctly is to use the :func:`edibles.test.test_basic_fit.testBasicFit` function:
-
-    >>> import edibles.test.test_basic_fit as test
-    >>> test.testBasicFit()
-
-Note that this may not work if you start Python from within the
-EDIBLES source distribution directory.
 
 
 
