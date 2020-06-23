@@ -17,14 +17,6 @@ edibles.utils.atomic\_line\_tool module
    :undoc-members:
    :show-inheritance:
 
-edibles.utils.continuum\_guess module
--------------------------------------
-
-.. automodule:: edibles.utils.continuum_guess
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 edibles.utils.edibles\_oracle module
 ------------------------------------
 
