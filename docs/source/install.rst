@@ -17,7 +17,7 @@ EDIBLES has the following strict requirements:
 
 * `Pandas <https://pandas.pydata.org/>`_ 
 
-* `Sherpa <https://sherpa.readthedocs.io/en/latest/>`_ 
+* `lmfit <https://pypi.org/project/lmfit/>`_ 
 
 EDIBLES also optionally depends on other packages for some features:
 
