@@ -29,10 +29,6 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     for name in cont_model.param_names:
         assert cont_pars[name].value is not None
 
-    out = cont_model.eval(data=subset.flux, params=cont_pars, x=subset.wave)
-    assert len(out) == len(subset.flux)
-
-
 
 
     voigt = VoigtModel(prefix='voigt_')
