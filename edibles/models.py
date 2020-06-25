@@ -55,7 +55,6 @@ class VoigtModel(Model):
         self.set_param_hint('b', min=0)
         self.set_param_hint('d', min=0)
         self.set_param_hint('tau_0', min=0)
-        self.set_param_hint('tau_0', max=1)
 
 
     def guess(self, data, x=None, **kwargs):
