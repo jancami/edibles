@@ -33,13 +33,13 @@ def voigtMath(x, alpha, gamma):
     )
 
 
-def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
+def voigtOpticalDepth(x, lam_0, b, d, Nf=1.0):
     """
     Converts parameters to make proper call to voigtMath
 
 
     Args:
-        lam (float64): Wavelength grid
+        x (float64): Wavelength grid
         lam_0 (float64): Central wavelength
         b (float64): Gaussian standard deviation
         d (float64): Damping parameter
@@ -50,8 +50,8 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
 
     """
 
-    # convert lam & lam_0 to x
-    x = lam - lam_0
+    # convert x & lam_0 to x
+    x = x - lam_0
 
     # convert b to sigma, then alpha
     sigma = b * lam_0 / cst.c.to("km/s").value
@@ -85,7 +85,7 @@ def voigtOpticalDepth(lam, lam_0, b, d, Nf=1.0):
     return tau
 
 
-def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
+def voigtAbsorptionLine(x, lam_0, b, d, tau_0=0.1, N=None, f=None):
     """
     Function that takes in physical parameters and returns an absorption line.
 
@@ -93,7 +93,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
 
     Args:
-        lam (float64): Wavelength grid
+        x (float64): Wavelength grid
         lam_0 (float64): Central wavelength
         b (float64): Gaussian standard deviation
         d (float64): Damping parameter
@@ -117,7 +117,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
             / (np.pi * (cst.e.esu.value) ** 2 * (1e-8 * lam_0) ** 2)
         )
 
-    tau = voigtOpticalDepth(lam, lam_0, b, d, Nf)
+    tau = voigtOpticalDepth(x, lam_0, b, d, Nf)
 
     transmission = np.exp(-tau)
 
@@ -126,7 +126,7 @@ def voigtAbsorptionLine(lam, lam_0, b, d, tau_0=0.1, N=None, f=None):
 
 if __name__ == "__main__":
 
-    from edibles.utils.make_grid import make_grid
+    from edibles.utils.functions import make_grid
     import matplotlib.pyplot as plt
 
     # set params
@@ -150,11 +150,11 @@ if __name__ == "__main__":
     plt.plot(x, one)
     plt.show()
 
-    two = voigtOpticalDepth(lam=lam, lam_0=lam_0, b=b, d=d, Nf=Nf)
+    two = voigtOpticalDepth(x=lam, lam_0=lam_0, b=b, d=d, Nf=Nf)
     plt.plot(lam, two)
     plt.show()
 
-    three = voigtAbsorptionLine(lam=lam, lam_0=lam_0, b=b, d=d, tau_0=tau_0)
+    three = voigtAbsorptionLine(x=lam, lam_0=lam_0, b=b, d=d, tau_0=tau_0)
     plt.plot(lam, three)
 
     plt.show()

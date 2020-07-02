@@ -27,9 +27,6 @@ release = '0.0.1'
 
 master_doc = 'index'
 
-autodoc_mock_imports = ['sherpa']
-
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
