@@ -22,7 +22,7 @@ We strongly encourage contributions of useful code to the EDIBLES repository for
 
 General
 -------
-Any suggestions or bug reports can be made through GitHub Issues. Contributions should be done through the GitHub Pull Request system (for more information, see the `help page <https://help.github.com/articles/using-pull-requests>`_). Code submitted to EDIBLES should conform to a BSD-style license, and follow the PEP8 style guide.
+Any suggestions or bug reports can be made through GitHub Issues. Contributions should be done through the GitHub Pull Request system (for more information, see the `help page <https://help.github.com/articles/using-pull-requests>`_). Code submitted to EDIBLES should conform to a GNU-style license, and follow the PEP8 style guide.
 
 Documentation and Examples
 --------------------------
