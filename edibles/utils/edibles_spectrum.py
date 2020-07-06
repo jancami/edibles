@@ -59,52 +59,48 @@ class EdiblesSpectrum:
         self.target = self.header["OBJECT"]
         self.date = self.header["DATE-OBS"]
 
-        flux = hdu[0].data
+        self.flux = hdu[0].data
         crval1 = self.header["CRVAL1"]
         cdelt1 = self.header["CDELT1"]
-        lenwave = len(flux)
+        lenwave = len(self.flux)
         grid = np.arange(0, lenwave, 1)
-        wave = (grid) * cdelt1 + crval1
+        self.wave = (grid) * cdelt1 + crval1
         self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
-        bary_wave = wave + (self.v_bary / cst.c.to("km/s").value) * wave
+        self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
 
         d = {
-            "wave": wave.tolist(),
-            "bary_wave": bary_wave.tolist(),
-            "flux": flux.tolist(),
+            "wave": self.wave,
+            "bary_wave": self.bary_wave,
+            "flux": self.flux,
         }
         self.df = pd.DataFrame(data=d)
 
-        self.wave = self.df["wave"]
         self.wave_units = "AA"
-
-        self.bary_wave = self.df["bary_wave"]
-
-        self.flux = self.df["flux"]
         self.flux_units = "arbitrary"
 
+
     def getSpectrum(self, xmin=None, xmax=None):
-        """
-        Function to get the wavelength and flux arrays of a particular target.
-        If xmin/xmax are not called, the data for the entire spectrum will be returned.
+        """Function to update the wavelength region held in an EdiblesSpectrum object.
 
         Args:
             xmin (float): minimum wavelength (Optional)
             xmax (float): Maximum wavelength (Optional)
-            bary (bool): Barycentric rest frame, default=False
-
-        Returns:
-            ndarray: wavelength grid
-            ndarray: flux grid
 
         """
 
-        if (xmin is not None) and (xmax is not None):
-            assert xmin < xmax, "xmin must be less than xmax"
+        assert xmin is not None, "xmin is not defined"
+        assert xmax is not None, "xmax is not defined"
+        assert xmin < xmax, "xmin must be less than xmax"
 
-            df_subset = self.df[self.df["wave"].between(xmin, xmax)]
+        idx = np.where(np.logical_and(self.wave > xmin, self.wave < xmax))
+        idxmin = np.min(idx)
+        idxmax = np.max(idx)
 
-            return df_subset
+        self.wave = self.wave[idxmin:idxmax]
+        self.bary_wave = self.bary_wave[idxmin:idxmax]
+        self.flux = self.flux[idxmin:idxmax]
+        self.df = self.df[idxmin:idxmax]
+
 
         return self.df
 
@@ -114,12 +110,11 @@ if __name__ == "__main__":
     sp = EdiblesSpectrum(filename)
     print(sp.target)
     print("Barycentric Velocity is", sp.v_bary)
-    plt.figure()
     plt.plot(sp.wave, sp.flux, label="Geocentric")
-    plt.figure()
+    plt.show()
 
-    subset = sp.getSpectrum(xmin=7660, xmax=7680)
-    plt.plot(subset["wave"], subset["flux"], label="Geocentric Subset")
-    plt.plot(subset["bary_wave"], subset["flux"], label="Barycentric Subset")
+    sp.getSpectrum(xmin=7660, xmax=7680)
+    plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
+    plt.plot(sp.bary_wave, sp.flux, label="Barycentric Subset")
     plt.legend()
     plt.show()

@@ -10,7 +10,7 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     method = 'least_squares'
 
     sp = EdiblesSpectrum(filename, noDATADIR=True)
-    subset = sp.getSpectrum(xmin=7661, xmax=7670)
+    sp.getSpectrum(xmin=7661, xmax=7670)
 
     n_anchors = 4
 
@@ -23,7 +23,7 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     with pytest.raises(TypeError):
         assert ContinuumModel(n_anchors=11)
 
-    cont_pars = cont_model.guess(subset.flux, x=subset.wave)
+    cont_pars = cont_model.guess(sp.flux, x=sp.wave)
     assert len(cont_pars) == len(cont_model.param_names)
 
     for name in cont_model.param_names:
@@ -35,14 +35,14 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     assert voigt.prefix == 'voigt_'
     assert len(voigt.param_names) == 4
 
-    voigt_pars = voigt.guess(subset.flux, x=subset.wave)
+    voigt_pars = voigt.guess(sp.flux, x=sp.wave)
     assert len(voigt_pars) == len(voigt.param_names)
 
-    result = voigt.fit(data=subset.flux, params=voigt_pars, x=subset.wave, method=method)
+    result = voigt.fit(data=sp.flux, params=voigt_pars, x=sp.wave, method=method)
     assert len(result.params) == n_anchors
 
-    out = voigt.eval(data=subset.flux, params=result.params, x=subset.wave)
-    assert len(out) == len(subset.flux)
+    out = voigt.eval(data=sp.flux, params=result.params, x=sp.wave)
+    assert len(out) == len(sp.flux)
 
 
 
