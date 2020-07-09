@@ -164,9 +164,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         DATADIR + filename[:-4] + "ascii", unpack=True
                     )
                 else:
-                    df = edspec(filename).getSpectrum()
-                    wav = df["wave"]
-                    flux = df["flux"]
+                    sp = edspec(filename)
+                    wav = sp.wave
+                    flux = sp.flux
 
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
