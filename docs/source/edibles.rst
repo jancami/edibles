@@ -17,3 +17,12 @@ edibles.models module
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+edibles.sightline module
+---------------------
+
+.. automodule:: edibles.sightline
+   :members:
+   :undoc-members:
+   :show-inheritance:
