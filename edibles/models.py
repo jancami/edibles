@@ -167,7 +167,7 @@ class ContinuumModel(Model):
                 ymax = i + int(len(x) / self.n_anchors)
                 y_anchors.append(np.median(data[ymin:ymax]))
 
-        for i, coef in enumerate(y_anchors[::-1]):
+        for i, coef in enumerate(y_anchors[::1]):
             pars['%sy_%i' % (self.prefix, i)].set(value=coef)
 
         return update_param_vals(pars, self.prefix, **kwargs)
