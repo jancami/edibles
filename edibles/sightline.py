@@ -144,9 +144,9 @@ if __name__ == "__main__":
     d = {'d': 0.01, 'tau_0': 0.6, 'lam_0': 7664.8}
     sightline.add_line(name='line2', pars=d, source='telluric')
 
-    # Add line with undefined source
-    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
-
+    # Add line with different source
+    # d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
+    sightline.add_source('interstellar', similar={'b': 1.9})
     sightline.add_line(name='line3', source='interstellar')
 
     # Add line with no source & user defined pars
