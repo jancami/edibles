@@ -101,16 +101,20 @@ class Sightline():
 
 
 
-    def fit(self, report=False, plot=False):
+    def fit(self, report=False, plot=False, method='leastsq'):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
             report (bool): default False: If true, prints the report from the fit.
             plot (bool): default False: If true, plots the data and the fit model.
+            method (str): The method of fitting. default: leastsq
 
         '''
 
-        self.result = self.model.fit(data=self.flux, params=self.model_pars, x=self.wave)
+        self.result = self.model.fit(data=self.flux,
+                                     params=self.model_pars,
+                                     x=self.wave,
+                                     method=method)
 
         if report:
             print(self.result.fit_report())
