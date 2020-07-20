@@ -101,16 +101,20 @@ class Sightline():
 
 
 
-    def fit(self, report=False, plot=False):
+    def fit(self, report=False, plot=False, method='leastsq'):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
             report (bool): default False: If true, prints the report from the fit.
             plot (bool): default False: If true, plots the data and the fit model.
+            method (str): The method of fitting. default: leastsq
 
         '''
 
-        self.result = self.model.fit(data=self.flux, params=self.model_pars, x=self.wave)
+        self.result = self.model.fit(data=self.flux,
+                                     params=self.model_pars,
+                                     x=self.wave,
+                                     method=method)
 
         if report:
             print(self.result.fit_report())
@@ -144,9 +148,9 @@ if __name__ == "__main__":
     d = {'d': 0.01, 'tau_0': 0.6, 'lam_0': 7664.8}
     sightline.add_line(name='line2', pars=d, source='telluric')
 
-    # Add line with undefined source
-    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
-
+    # Add line with different source
+    # d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
+    sightline.add_source('interstellar', similar={'b': 1.9})
     sightline.add_line(name='line3', source='interstellar')
 
     # Add line with no source & user defined pars
