@@ -56,7 +56,7 @@ The first step should be to create a folder somewhere on your computer that all 
 
 The next step is to add some environment variables to your system. This can be done by modifying the hidden file .bashrc in your home directory.
 
-The syntax to create the example variable VARIABLE is as follows::
+The syntax to create the example variable ``VARIABLE`` is as follows::
 
     VARIABLE='/path/to/folder'
     export VARIABLE
@@ -70,7 +70,7 @@ There are 4 environment variables required to install and use the EDIBLES packag
 
 The 3 environment variables beginning with ``EDIBLES_`` are there to tell the edibles package where your data is, your data version, and the explicit path to the edibles project folder.
 
-The PYTHONPATH variable represents a user defined path to the parent folder where python looks when trying to import python packages (in addition to the default path where pip would install packages). Ideally, all of your python coding should be done within this folder. The edibles python package will also reside within this folder.
+The ``PYTHONPATH`` variable represents a user defined path to the parent folder where python looks when trying to import python packages (in addition to the default path where pip would install packages). Ideally, all of your python coding should be done within this folder. The edibles python package will also reside within this folder.
 
 once completed, your .bashrc file should look something like this::
 
@@ -115,7 +115,7 @@ Your edibles Python package is now setup, and you are ready for some science!
 Examples
 ========
 
-After cloning the repo, `model_example <https://github.com/jancami/edibles/blob/master/tests/model_example.py>`_ inside the tests folder can be used to see usage.
+After cloning the repo, you can view the `examples folder <https://github.com/jancami/edibles/blob/master/examples>`_ to see some examples of basic and more advanced usage.
 
 
 
