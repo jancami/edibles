@@ -20,7 +20,7 @@ edibles.models module
 
 
 edibles.sightline module
----------------------
+------------------------
 
 .. automodule:: edibles.sightline
    :members:
