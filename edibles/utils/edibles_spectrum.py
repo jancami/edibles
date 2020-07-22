@@ -104,13 +104,16 @@ class EdiblesSpectrum:
         assert xmin is not None, "xmin is not defined"
         assert xmax is not None, "xmax is not defined"
         assert xmin < xmax, "xmin must be less than xmax"
+        assert xmin > np.min(self.raw_wave), "xmin outside bounds"
+        assert xmax < np.max(self.raw_wave), "xmax outside bounds"
 
-        t_idx = np.where(np.logical_and(self.wave > xmin, self.wave < xmax))
+
+        t_idx = np.where(np.logical_and(self.raw_wave > xmin, self.raw_wave < xmax))
         self.wave = self.raw_wave[t_idx]
         self.flux = self.raw_flux[t_idx]
 
-        b_idx = np.where(np.logical_and(self.bary_wave > xmin, self.bary_wave < xmax))
-        self.bary_wave = self.bary_wave[b_idx]
+        b_idx = np.where(np.logical_and(self.raw_bary_wave > xmin, self.raw_bary_wave < xmax))
+        self.bary_wave = self.raw_bary_wave[b_idx]
         self.bary_flux = self.raw_flux[b_idx]
 
         grid = self.spec_grid()
@@ -143,6 +146,8 @@ if __name__ == "__main__":
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
     plt.legend()
     plt.show()
+
+    sp.getSpectrum(xmin=7659, xmax=7681)
 
     plt.plot(sp.grid, sp.interp_flux, label='Geocentric Interpolation')
     plt.plot(sp.grid, sp.interp_bary_flux, label='Barycentric Interpolation')
