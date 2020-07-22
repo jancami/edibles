@@ -80,12 +80,14 @@ class EdiblesSpectrum:
 
     def spec_grid(self):
 
-        cent = 7240
+        xmin = np.min(self.raw_wave)
+        xmax = np.max(self.raw_wave)
+        cent = np.mean([xmin, xmax])
         R = 80000
         oversample = 2
 
         spacing = cent / R / oversample
-        grid = np.arange(7566, 7685, spacing)
+        grid = np.arange(3000, 10500, spacing)
 
         return grid
 
