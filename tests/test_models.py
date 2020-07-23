@@ -15,7 +15,7 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     n_anchors = 4
 
     cont_model = ContinuumModel(n_anchors=n_anchors)
-    assert len(cont_model.param_names) == n_anchors
+    assert len(cont_model.param_names) == n_anchors * 2
     assert cont_model.n_anchors == n_anchors
 
     with pytest.raises(TypeError):
