@@ -38,24 +38,24 @@ def fit_NaI_Lines(target, date):
 
     sp = EdiblesSpectrum(files[0])
     print(sp.target)
-    subset = sp.getSpectrum(xmin=3300, xmax=3305)
+    sp.getSpectrum(xmin=3300, xmax=3305)
 
 
-    sigma = np.std(subset.flux)
+    sigma = np.std(sp.flux)
     prominence = sigma
-    peaks, _ = find_peaks(-subset.flux, prominence=prominence)
-    peak_wavelengths = [subset.wave.iloc[i] for i in peaks]
+    peaks, _ = find_peaks(-sp.flux, prominence=prominence)
+    peak_wavelengths = [sp.wave[i] for i in peaks]
 
     # #########################################################################
 
     cont = ContinuumModel(n_anchors=4)
-    cont_pars = cont.guess(subset.flux, x=subset.wave)
+    cont_pars = cont.guess(sp.flux, x=sp.wave)
 
     # #########################################################################
 
     voigt1 = VoigtModel(prefix='v1_')
     # voigt1_pars = voigt1.make_params(lam_0=3302, b=1, d=0.001, tau_0=0.01)
-    voigt1_pars = voigt1.guess(subset.flux, x=subset.wave)
+    voigt1_pars = voigt1.guess(sp.flux, x=sp.wave)
 
     # #########################################################################
 
@@ -70,7 +70,7 @@ def fit_NaI_Lines(target, date):
     model = cont * voigt1 * voigt2
     pars = cont_pars + voigt1_pars + voigt2_pars
 
-    result = model.fit(data=subset.flux, params=pars, x=subset.wave)
+    result = model.fit(data=sp.flux, params=pars, x=sp.wave)
 
     # #########################################################################
 
@@ -103,23 +103,23 @@ def fit_NaI_Lines(target, date):
 
     sp = EdiblesSpectrum(files[1])
     print(sp.target)
-    subset = sp.getSpectrum(xmin=5885, xmax=5900)
+    sp.getSpectrum(xmin=5885, xmax=5900)
 
     # #########################################################################
 
     cont = ContinuumModel(n_anchors=4)
-    cont_pars = cont.guess(subset.flux, x=subset.wave)
+    cont_pars = cont.guess(sp.flux, x=sp.wave)
 
     # #########################################################################
 
-    prominence = (np.max(subset.flux) - np.min(subset.flux)) * 0.5
-    peaks, _ = find_peaks(-subset.flux, prominence=prominence)
-    peak_wavelengths = [subset.wave.iloc[i] for i in peaks]
+    prominence = (np.max(sp.flux) - np.min(sp.flux)) * 0.5
+    peaks, _ = find_peaks(-sp.flux, prominence=prominence)
+    peak_wavelengths = [sp.wave[i] for i in peaks]
 
 
     voigt3 = VoigtModel(prefix='v3_')
     voigt3_pars = voigt3.make_params(lam_0=peak_wavelengths[0], b=1, d=0.001, tau_0=0.4)
-    # voigt3_pars = voigt3.guess(subset.flux, x=subset.wave)
+    # voigt3_pars = voigt3.guess(sp.flux, x=sp.wave)
 
     # #########################################################################
 
@@ -134,7 +134,7 @@ def fit_NaI_Lines(target, date):
     model = cont * voigt3 * voigt4
     pars = cont_pars + voigt3_pars + voigt4_pars
 
-    result = model.fit(data=subset.flux, params=pars, x=subset.wave)
+    result = model.fit(data=sp.flux, params=pars, x=sp.wave)
 
     # #########################################################################
 
