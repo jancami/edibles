@@ -181,23 +181,23 @@ if __name__ == "__main__":
     filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
-    subset = sp.getSpectrum(xmin=7661, xmax=7670)
-    # subset.flux = subset.flux / np.median(subset.flux)
+    sp.getSpectrum(xmin=7661, xmax=7670)
+    # sp.flux = sp.flux / np.median(sp.flux)
 
     cont_model = ContinuumModel(n_anchors=4)
-    cont_pars = cont_model.guess(subset.flux, x=subset.wave)
+    cont_pars = cont_model.guess(sp.flux, x=sp.wave)
 
-    result = cont_model.fit(data=subset.flux, params=cont_pars, x=subset.wave)
+    result = cont_model.fit(data=sp.flux, params=cont_pars, x=sp.wave)
     result.plot_fit()
     plt.show()
 
     voigt_model = VoigtModel()
-    voigt_pars = voigt_model.guess(subset.flux, x=subset.wave)
+    voigt_pars = voigt_model.guess(sp.flux, x=sp.wave)
 
     model = cont_model * voigt_model
     pars = cont_pars + voigt_pars
 
-    result = model.fit(data=subset.flux, params=pars, x=subset.wave)
+    result = model.fit(data=sp.flux, params=pars, x=sp.wave)
 
     result.plot_fit()
     print(result.fit_report())
