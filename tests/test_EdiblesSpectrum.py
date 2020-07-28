@@ -1,4 +1,3 @@
-import pandas
 import astropy
 import pytest
 import numpy as np
@@ -13,7 +12,6 @@ def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     assert isinstance(sp.date, str)
     assert isinstance(sp.v_bary, float)
 
-    assert isinstance(sp.df, pandas.core.frame.DataFrame)
     print(type(sp.wave))
     assert isinstance(sp.wave, np.ndarray)
     assert isinstance(sp.wave_units, str)
@@ -27,11 +25,9 @@ def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
 
     xmin = 7660
     xmax = 7680
-    subset = sp.getSpectrum(xmin=xmin, xmax=xmax)
-    assert isinstance(sp.df, pandas.core.frame.DataFrame)
+    sp.getSpectrum(xmin=xmin, xmax=xmax)
     assert isinstance(sp.wave, np.ndarray)
     assert isinstance(sp.flux, np.ndarray)
-    assert isinstance(subset, pandas.core.frame.DataFrame)
 
     assert np.min(sp.wave) > xmin
     assert np.max(sp.wave) < xmax
