@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 
 from edibles import DATADIR
+from edibles.utils.functions import make_grid
 
 
 class EdiblesSpectrum:
@@ -80,12 +81,7 @@ class EdiblesSpectrum:
 
     def spec_grid(self):
 
-        cent = 7000
-        R = 80000
-        oversample = 2
-
-        spacing = cent / R / oversample
-        grid = np.arange(3000, 10500, spacing)
+        grid = make_grid(3000, 10500, resolution=80000, oversample=2)
 
         return grid
 
