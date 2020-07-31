@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
@@ -99,7 +100,6 @@ class EdiblesSpectrum:
         '''Creates a grid used for interpolation.
 
         '''
-
         grid = make_grid(3000, 10500, resolution=80000, oversample=2)
 
         self.raw_grid = grid
@@ -109,8 +109,8 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-
-        filename = PYTHONDIR + "/edibles/data/auxillary_data/sky_transmission/transmission.dat"
+        os.chdir(PYTHONDIR)
+        filename = "edibles/data/auxillary_data/sky_transmission/transmission.dat"
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
@@ -130,7 +130,6 @@ class EdiblesSpectrum:
             xmax (float): Maximum wavelength (Optional)
 
         """
-
         assert xmin is not None, "xmin is not defined"
         assert xmax is not None, "xmax is not defined"
         assert xmin < xmax, "xmin must be less than xmax"
