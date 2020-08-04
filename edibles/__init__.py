@@ -15,7 +15,7 @@ else:
 if 'EDIBLES_PYTHONDIR' in os.environ:
     PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
 else:
-    PYTHONDIR = '~/python/edibles/'
+    PYTHONDIR = '~/python/edibles'
 
 __version__ = '0.1'
 
