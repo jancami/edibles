@@ -11,13 +11,15 @@ EDIBLES has the following strict requirements:
 
 * `Numpy <https://numpy.org/>`_ 
 
-* `Astropy <https://www.astropy.org>`_ 3.2 or later
+* `Astropy <https://www.astropy.org>`_ 4.0 or later
 
 * `Matplotlib <https://matplotlib.org/>`_
 
 * `Pandas <https://pandas.pydata.org/>`_ 
 
 * `lmfit <https://pypi.org/project/lmfit/>`_ 
+
+* `specutils <https://pypi.org/project/specutils/>`_
 
 EDIBLES also optionally depends on other packages for some features:
 
@@ -115,7 +117,7 @@ Your edibles Python package is now setup, and you are ready for some science!
 Examples
 ========
 
-After cloning the repo, `model_example <https://github.com/jancami/edibles/blob/master/tests/model_example.py>`_ inside the tests folder can be used to see usage.
+After cloning the repo, the `examples <https://github.com/jancami/edibles/blob/master/examples/>`_ folder contains basic and advanced usage examples.
 
 
 
