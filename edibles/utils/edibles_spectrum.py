@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
@@ -18,9 +17,11 @@ class EdiblesSpectrum:
     This class takes a spectrum file from EDIBLES,
     reads the header and data, and creates a DataFrame.
     The class will also contain a set of methods to operate on the data.
+
     Args:
         filename (str): Name of the file, starting with the target
         noDATADIR (bool): If true, DATADIR will not be added to the front of the filename
+
     Attributes:
         header (astropy.io.fits.header.Header): The header of the FITS file from the observation
         target (str): The name of the target
@@ -41,11 +42,13 @@ class EdiblesSpectrum:
             will be updated by the functions
         flux (1darray): The flux data for the spectrum,
             will be updated by the functions
+        xmin (float): minimum wavelength boundary of data subset - input to getSpectrum
+        xmax (float): maximum wavelength boundary of data subset - input to getSpectrum
         sky_wave (1darray): Telluric transmission data - created and updated by getSpectrum
         sky_flux (1darray): Telluric transmission data - created and updated by getSpectrum
-        grid (1darray): Interpolation grid - created and updated by getSpectrum
-        interp_flux (1darray): Interpolated geocentric flux - created by getSpectrum
-        interp_bary_flux (1darray): Interpolated barycentric flux - created by getSpectrum
+        grid (1darray): Interpolation grid - created by _interpolate
+        interp_flux (1darray): Interpolated geocentric flux - created by _interpolate
+        interp_bary_flux (1darray): Interpolated barycentric flux - created by _interpolate
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
 
@@ -60,12 +63,12 @@ class EdiblesSpectrum:
         if noDATADIR is True:
             self.filename = filename
 
-        self.loadSpectrum()
-        self.spec_grid()
-        self.sky_transmission()
+        self._loadSpectrum()
+        self._spec_grid()
+        self._sky_transmission()
 
 
-    def loadSpectrum(self):
+    def _loadSpectrum(self):
 
         hdu = fits.open(self.filename)
         self.header = hdu[0].header
@@ -90,14 +93,15 @@ class EdiblesSpectrum:
         self.flux_units = "arbitrary"
 
 
-    def spec_grid(self):
+    def _spec_grid(self):
         '''Creates a grid used for interpolation.
+
         '''
         grid = make_grid(3000, 10500, resolution=80000, oversample=2)
         self.raw_grid = grid
 
 
-    def sky_transmission(self):
+    def _sky_transmission(self):
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
@@ -113,15 +117,14 @@ class EdiblesSpectrum:
         self.raw_sky_flux = sky_flux
 
 
-    def getSpectrum(self, xmin=None, xmax=None):
+    def getSpectrum(self, xmin, xmax):
         """Function to update the wavelength region held in an EdiblesSpectrum object.
+
         Args:
-            xmin (float): Minimum wavelength (Optional)
-            xmax (float): Maximum wavelength (Optional)
+            xmin (float): Minimum wavelength
+            xmax (float): Maximum wavelength
 
         """
-        assert xmin is not None, "xmin is not defined"
-        assert xmax is not None, "xmax is not defined"
         assert xmin < xmax, "xmin must be less than xmax"
         assert xmin > np.min(self.raw_wave), "xmin outside bounds"
         assert xmax < np.max(self.raw_wave), "xmax outside bounds"
@@ -144,72 +147,81 @@ class EdiblesSpectrum:
         self.sky_wave = self.raw_sky_wave[sky_idx]
         self.sky_flux = self.raw_sky_flux[sky_idx]
 
-        # Interpolation grid data
-        interp_idx = np.where(np.logical_and(self.raw_grid > xmin, self.raw_grid < xmax))
-        self.grid = self.raw_grid[interp_idx]
-
-        # Interpolation geocentric flux data
-        f = interp1d(self.raw_wave, self.raw_flux)
-        i_flux = f(self.grid)
-        self.interp_flux = i_flux
-
-        # Interpolation barycentric flux data
-        bf = interp1d(self.raw_bary_wave, self.raw_flux)
-        b_flux = bf(self.grid)
-        self.interp_bary_flux = b_flux
+        self._interpolate(initial=True)
 
 
-    def interpolate(self, xmin, xmax):
+    def _interpolate(self, initial=False):
+        '''Interpolation function used in shift().
+
+        Warning:
+            This function has not been tested for use on its own.
+            It is implemented in getSpectrum and shift.
+
+        '''
+        xmin = np.max([np.min(self.wave), np.min(self.bary_wave)])
+        xmax = np.min([np.max(self.wave), np.max(self.bary_wave)])
 
         grid_idx = np.where(np.logical_and(self.raw_grid > xmin,
                                            self.raw_grid < xmax))
         self.grid = self.raw_grid[grid_idx]
 
-        func = interp1d(self.wave, self.flux)
-        self.interp_flux = func(self.grid)
+        if initial:
+            # Interpolate geocentric flux data
+            f = interp1d(self.raw_wave, self.raw_flux)
+            self.interp_flux = f(self.grid)
 
-        bary_grid_idx = np.where(np.logical_and(self.raw_grid > xmin,
-                                                self.raw_grid < xmax))
+            # Interpolate barycentric flux data
+            bf = interp1d(self.raw_bary_wave, self.raw_flux)
+            self.interp_bary_flux = bf(self.grid)
 
-        bary_grid = self.raw_grid[bary_grid_idx]
-        bfunc = interp1d(self.bary_wave, self.bary_flux)
-        self.interp_bary_flux = bfunc(bary_grid)
+        else:
+            # Interpolate geocentric flux data
+            func = interp1d(self.wave, self.flux)
+            self.interp_flux = func(self.grid)
+
+            # Interpolate barycentric flux data
+            bfunc = interp1d(self.bary_wave, self.bary_flux)
+            self.interp_bary_flux = bfunc(self.grid)
 
 
-    def shift(self, shift, xmin, xmax):
-        '''Update the wavelength data and reinterpolates after shifting.
+    def shift(self, shift, zoom_xmin, zoom_xmax):
+        '''Shift the geocentric and update the barycentric wavelength data.
+Reinterpolates after shifting.
+
+        Args:
+            shift (float or 1darray): Amount to shift wavelength grid by.
+If shift is an array, it must be the same length as the wavelength grid.
+            zoom_xmin (float): New minimum wavelength (must be > old xmin)
+            zoom_xmax (float): New maximum wavelength (must be < old xmax)
 
         '''
+
         # Add shift to wavelength data
         new_wave = self.wave + shift
+
+        # Input checking
+        assert (zoom_xmin > self.xmin) and (
+            zoom_xmin > np.min(self.wave)
+        ), 'zoom_xmin must be greater than ' + str(np.max([self.xmin, np.min(new_wave)]))
+        assert (zoom_xmax < self.xmax) and (
+            zoom_xmax < np.max(self.wave)
+        ), 'zoom_xmax must be less than ' + str(np.min([self.xmax, np.max(new_wave)]))
+        if isinstance(shift, np.ndarray):
+            assert len(self.wave) == len(shift), 'Length of shift not equal to length of wave'
 
         self.wave = new_wave
         self.bary_wave = new_wave + (self.v_bary / cst.c.to("km/s").value) * new_wave
 
-        # make sure bary data has same length
-        if len(self.bary_wave) != len(self.bary_flux):
-            length = np.min([len(self.bary_wave), len(self.bary_flux)]) - 1
-            self.bary_wave = self.bary_wave[0:length]
-            self.bary_flux = self.bary_flux[0:length]
-
-        assert (xmin > self.xmin) and (xmin > np.min(self.wave))
-        assert (xmax < self.xmax) and (xmax < np.max(self.wave))
-
-        self.interpolate(xmin, xmax)
-
         # Cutoff 'edges' of data
-        b_idx = np.where(np.logical_and(self.bary_wave > xmin, self.bary_wave < xmax))
+        b_idx = np.where(np.logical_and(self.bary_wave > zoom_xmin, self.bary_wave < zoom_xmax))
         self.bary_wave = self.bary_wave[b_idx]
         self.bary_flux = self.flux[b_idx]
 
-        t_idx = np.where(np.logical_and(self.wave > xmin, self.wave < xmax))
+        t_idx = np.where(np.logical_and(self.wave > zoom_xmin, self.wave < zoom_xmax))
         self.wave = self.wave[t_idx]
         self.flux = self.flux[t_idx]
 
-        # grid_idx = np.where(np.logical_and(self.grid > xmin, self.grid < xmax))
-        # self.grid = self.grid[grid_idx]
-        # self.interp_flux = self.interp_flux[grid_idx]
-        # self.interp_bary_flux = self.interp_bary_flux[grid_idx]
+        self._interpolate()
 
 
 if __name__ == "__main__":
@@ -219,35 +231,41 @@ if __name__ == "__main__":
     print(sp.datetime.date())
     print("Barycentric Velocity is", sp.v_bary)
     plt.plot(sp.wave, sp.flux, label="Geocentric")
+    plt.title('Entire Order')
+    plt.xlabel(r'Wavelength ($\AA$)')
+    plt.ylabel('Flux')
+    plt.legend()
     plt.show()
 
     sp.getSpectrum(xmin=7660, xmax=7680)
     plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
-    plt.legend()
-    plt.show()
-
     plt.plot(sp.grid, sp.interp_flux, label='Geocentric Interpolation')
     plt.plot(sp.grid, sp.interp_bary_flux, label='Barycentric Interpolation')
+    plt.title('Data and Interpolations')
+    plt.xlabel(r'Wavelength ($\AA$)')
+    plt.ylabel('Flux')
     plt.legend()
     plt.show()
 
-
-
-    # plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
-    # plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
-
+    plt.plot(sp.wave, sp.flux, label="Geocentric")
+    plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric")
     shift = 0.05
-    sp.shift(shift, 7661, 7679)
-
-    plt.plot(sp.wave, sp.flux, label='shifted Geocentric')
-    plt.plot(sp.grid, sp.interp_flux, label='shifted Interpolation')
-
-    plt.plot(sp.bary_wave, sp.bary_flux, label="shifted Barycentric")
-    plt.plot(sp.grid, sp.interp_bary_flux, label='shifted Barycentric Interpolation')
+    sp.shift(shift=shift, zoom_xmin=7661, zoom_xmax=7679)
+    plt.plot(sp.wave, sp.flux, label='Shifted Geocentric')
+    plt.plot(sp.bary_wave, sp.bary_flux, label="Shifted Barycentric")
+    plt.title('Data and Shifted Data')
+    plt.xlabel(r'Wavelength ($\AA$)')
+    plt.ylabel('Flux')
     plt.legend()
     plt.show()
 
-
-
-
+    plt.plot(sp.wave, sp.flux, label='Shifted Geocentric')
+    plt.plot(sp.bary_wave, sp.bary_flux, label="Shifted Barycentric")
+    plt.plot(sp.grid, sp.interp_flux, label='Shifted Geocentric Interpolation')
+    plt.plot(sp.grid, sp.interp_bary_flux, label='Shifted Barycentric Interpolation')
+    plt.title('Shifted Data and Shifted Interpolations')
+    plt.xlabel(r'Wavelength ($\AA$)')
+    plt.ylabel('Flux')
+    plt.legend()
+    plt.show()
