@@ -1,11 +1,15 @@
+import os
 import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
+import astropy.units as u
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from datetime import datetime
+from specutils.utils.wcs_utils import vac_to_air
 
 from edibles import DATADIR
+from edibles import PYTHONDIR
 from edibles.utils.functions import make_grid
 
 
@@ -25,20 +29,31 @@ class EdiblesSpectrum:
         target (str): The name of the target
         datetime (datetime.datetime): The date of the target observation
         v_bary (float): Barycentric velocity of the target star
-        wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
-            will be updated by the functions
-        bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
-            will be updated by the functions
-        flux (1darray): The flux data for the spectrum,
-            will be updated by the functions
-        wave_units (str): The units of the wavelength data
-        flux_units (str): The units of the flux data
+
         raw_wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
             will not be updated by the functions
         raw_bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
             will not be updated by the functions
         raw_flux (1darray): The flux data for the spectrum,
             will not be updated by the functions
+        raw_grid (1darray): A grid covering the entire spectral range used for interpolation
+        raw_sky_wave (1darray): Telluric transmission data covering the entire spectral range
+        raw_sky_flux (1darray): Telluric transmission data covering the entire spectral range
+
+        wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
+            will be updated by the functions
+        bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
+            will be updated by the functions
+        flux (1darray): The flux data for the spectrum,
+            will be updated by the functions
+        sky_wave (1darray): Telluric transmission data - created and updated by getSpectrum
+        sky_flux (1darray): Telluric transmission data - created and updated by getSpectrum
+        grid (1darray): Interpolation grid - created and updated by getSpectrum
+        interp_flux (1darray): Interpolated geocentric flux - created by getSpectrum
+        interp_bary_flux (1darray): Interpolated barycentric flux - created by getSpectrum
+
+        wave_units (str): The units of the wavelength data
+        flux_units (str): The units of the flux data
 
     """
 
@@ -52,6 +67,8 @@ class EdiblesSpectrum:
             self.filename = filename
 
         self.loadSpectrum()
+        self.spec_grid()
+        self.sky_transmission()
 
 
     def loadSpectrum(self):
@@ -80,10 +97,29 @@ class EdiblesSpectrum:
 
 
     def spec_grid(self):
+        '''Creates a grid used for interpolation.
 
+        '''
         grid = make_grid(3000, 10500, resolution=80000, oversample=2)
 
-        return grid
+        self.raw_grid = grid
+
+
+    def sky_transmission(self):
+        '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
+
+        '''
+        os.chdir(PYTHONDIR)
+        filename = "edibles/data/auxillary_data/sky_transmission/transmission.dat"
+        sky_transmission = np.loadtxt(filename)
+
+        vac_wave = sky_transmission[:, 0] * 10
+        sky_wave = vac_to_air(vac_wave * u.AA, method='Ciddor1996').value
+
+        sky_flux = sky_transmission[:, 1]
+
+        self.raw_sky_wave = sky_wave
+        self.raw_sky_flux = sky_flux
 
 
     def getSpectrum(self, xmin=None, xmax=None):
@@ -94,35 +130,43 @@ class EdiblesSpectrum:
             xmax (float): Maximum wavelength (Optional)
 
         """
-
         assert xmin is not None, "xmin is not defined"
         assert xmax is not None, "xmax is not defined"
         assert xmin < xmax, "xmin must be less than xmax"
         assert xmin > np.min(self.raw_wave), "xmin outside bounds"
         assert xmax < np.max(self.raw_wave), "xmax outside bounds"
 
+        self.xmin = xmin
+        self.xmax = xmax
 
+        # Geocentric data
         t_idx = np.where(np.logical_and(self.raw_wave > xmin, self.raw_wave < xmax))
         self.wave = self.raw_wave[t_idx]
         self.flux = self.raw_flux[t_idx]
 
+        # Barycentric data
         b_idx = np.where(np.logical_and(self.raw_bary_wave > xmin, self.raw_bary_wave < xmax))
         self.bary_wave = self.raw_bary_wave[b_idx]
         self.bary_flux = self.raw_flux[b_idx]
 
-        grid = self.spec_grid()
-        interp_idx = np.where(np.logical_and(grid > xmin, grid < xmax))
-        self.grid = grid[interp_idx]
+        # Sky transmission data
+        sky_idx = np.where(np.logical_and(self.raw_sky_wave > xmin, self.raw_sky_wave < xmax))
+        self.sky_wave = self.raw_sky_wave[sky_idx]
+        self.sky_flux = self.raw_sky_flux[sky_idx]
 
+        # Interpolation grid data
+        interp_idx = np.where(np.logical_and(self.raw_grid > xmin, self.raw_grid < xmax))
+        self.grid = self.raw_grid[interp_idx]
+
+        # Interpolation geocentric flux data
         f = interp1d(self.raw_wave, self.raw_flux)
         i_flux = f(self.grid)
         self.interp_flux = i_flux
 
+        # Interpolation barycentric flux data
         bf = interp1d(self.raw_bary_wave, self.raw_flux)
         b_flux = bf(self.grid)
         self.interp_bary_flux = b_flux
-
-
 
 
 if __name__ == "__main__":
@@ -138,6 +182,7 @@ if __name__ == "__main__":
 
     plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
+    plt.plot(sp.sky_wave, sp.sky_flux, label='Sky Transmission')
     plt.legend()
     plt.show()
 

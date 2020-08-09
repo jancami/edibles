@@ -23,6 +23,7 @@ setup(
         'pandas',
         'astropy',
         'scipy',
-        'lmfit'
+        'lmfit',
+        'specutils'
     ],  # external packages as dependencies
 )

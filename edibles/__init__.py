@@ -15,18 +15,15 @@ else:
 if 'EDIBLES_PYTHONDIR' in os.environ:
     PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
 else:
-    PYTHONDIR = '~/python/edibles/'
+    PYTHONDIR = os.getcwd()
 
 __version__ = '0.1'
 
 __all__ = [
     "catalog",
     "data",
-    "extern",
     "gui",
     "models",
     "tests",
-    "utils",
-
-    "fitter"
+    "utils"
 ]
