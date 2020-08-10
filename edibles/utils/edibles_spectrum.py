@@ -105,7 +105,7 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = PYTHONDIR + "/data/auxillary_data/sky_transmission/transmission.dat"
+        filename = PYTHONDIR + "/data/auxiliary_data/sky_transmission/transmission.dat"
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
