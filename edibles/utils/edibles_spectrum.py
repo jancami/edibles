@@ -106,7 +106,6 @@ class EdiblesSpectrum:
 
         '''
         filename = PYTHONDIR + "/data/auxillary_data/sky_transmission/transmission.dat"
-        print(filename)
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
