@@ -8,11 +8,9 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 class Sightline():
     '''A model of the sightline between the telescope and the target star.
 
-
     Args:
         spectrum (EdiblesSpectrum): The input spectrum object
-
-
+        n_anchors (int): Optional, The number of anchors in the ContinuumSpline
     '''
 
     def __init__(self, spectrum, init_cont=True, n_anchors=4):
@@ -22,11 +20,9 @@ class Sightline():
         self.wave = spectrum.wave
         self.flux = spectrum.flux
 
-
         if init_cont:
             cont_model = ContinuumModel(n_anchors=n_anchors)
             cont_pars = cont_model.guess(self.flux, x=self.wave)
-
 
         self.model = cont_model
         self.model_pars = cont_pars
@@ -54,8 +50,6 @@ class Sightline():
         par.add(name + '_b', value=similar['b'], min=0)
 
         self.model_pars = self.model_pars + par
-
-        # print(list(par.valuesdict().keys())[0])
 
 
     def add_line(self, name, source=None, pars=None, guess_data=None):
@@ -98,7 +92,6 @@ class Sightline():
 
         self.model = self.model * new_line
         self.model_pars = self.model_pars + new_pars
-
 
 
     def fit(self, report=False, plot=False, method='leastsq'):
@@ -159,7 +152,7 @@ if __name__ == "__main__":
 
     # ###############################################################
     # Fit and plot
-    sightline.fit(report=True, plot=True)
+    sightline.fit(report=True, plot=True, method='leastsq')
 
     out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     resid = sp1.flux - out
@@ -176,7 +169,7 @@ if __name__ == "__main__":
 
     # ###############################################################
     # Fit and plot
-    sightline.fit(report=True, plot=True)
+    sightline.fit(report=True, plot=True, method='leastsq')
 
     out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     resid = sp1.flux - out

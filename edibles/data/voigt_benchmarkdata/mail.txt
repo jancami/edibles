@@ -1,0 +1,185 @@
+
+
+Hi, Jan,
+
+
+Attached is a tar file containing 2-column ascii versions of the high-res spectra for
+
+CN 3874, Ca II 3933, Ca I 4226, CH 4300, Na I 5895, and K I 7698 that I have for omi Per,
+
+zet Per, sig Sco, and zet Oph.  The file files.txt gives the instrumental FWHM (in km/s)
+
+for each spectrum.  The CH spectra denoted "cls" are from Crane et al. 1995; the
+
+K I spectra denoted "lf" were obtained by Lemoine & Ferlet with the UHRF (but
+
+they donated them to our 2001 K I survey).  The spectra denoted "kxx" were
+
+obtained with the KPNO coude feed, "mxx" were obtained with the McDonald
+
+double-pass, and "axx" were obtained with the AAT UHRF.  Some of the component
+
+structures have been listed in our high-res surveys.  Note that there may be slight
+
+velocity zero point offsets (of order 0.1-0.3 km/s) for some of the spectra. 
+
+
+The rest wavelengths, f-values, and Gamma values that I have used are
+
+3874.468  CN_BSXSv  2.030e-2  1.610e+7   (R1)
+3874.607  CN_BSXS0  3.380e-2  1.610e+7   (R0)
+
+3933.6614 Ca_II  6.267e-1  1.444e+8  M03
+
+4226.728  Ca_I   1.770e00  2.200e+8  M03
+
+4300.3132 CH_ADXP0  5.060e-3  1.000e+8  G93 (mean of lambda-doubled comps)
+4300.3032 CH_ADXP0  2.530e-3  1.000e+8  G93
+4300.3233 CH_ADXP0  2.530e-3  1.000e+8  G93 
+
+5895.9108 Na_I_D1  1.226e-1  6.280e+7  WHK
+5895.9321 Na_I_D1  2.044e-1  6.280e+7  WHK
+5895.9242 Na_I_D1  3.270e-1  6.280e+7  M03 (mean of hyperfine comps)
+
+7698.9682 K_I_1   1.272e-1  3.820e+7  WHK
+7698.9775 K_I_1   2.121e-1  3.820e+7  WHK
+7698.974  K_I_1    3.393e-1  3.820e+7  WHK (mean of hyperfine comps)
+
+If you send me the corresponding EDIBLES profiles, I can fit them with my code,
+
+for comparison.
+
+
+Let me know if you have any questions,
+
+
+Dan
+
+
+Dan Welty
+Support Scientist (INS/STIS)
+Space Telescope Science Institute
+From: Jan Cami <jcami@uwo.ca>
+Sent: Tuesday, June 16, 2020 7:26:36 AM
+To: Daniel Welty
+
+
+Subject: Re: Benchmark
+ 
+External Email - Use Caution
+
+Dear Dan,
+
+Thank you for your response and for sharing your site! Wow, what a
+treasure trove!
+
+For the benchmarking, I'm thinking that it would be best if we pick out
+perhaps 2-3 different targets for which we have both high-resolution and
+medium-resolution observations, and for which we have EDIBLES spectra in
+addition to your data. That should be insightful I believe. There is
+probably no need to go for very saturated lines (although that's
+probably wishful thinking for the Na D lines) or for very confusing
+sightlines. I have not used any of the other pieces of software for
+Voigt profile fitting, so I'm new to the game....
+
+So from having a look at the high-res observations, I'm thinking perhaps
+sigma Sco and zeta Per to start with. You know the sightlines a lot
+better than I do though so if you feel there would be better choices,
+let me know!
+
+Thanks again!
+
+Jan
+
+On 2020-06-09 2:23 p.m., Daniel Welty wrote:
+> Hi, Jan,
+>
+> Yes, I am aware of the EDIBLES project, but had not known that you are now
+> the PI.  I have seen the initial papers from the project, and look forward to
+> what is to come.
+>
+> Regarding the profile fits, I would be happy to supply higher resolution spectra
+> and to perform fits with my code for comparison (either the high-res spectra or
+> the UVES spectra).  For the natural line broadening, my code uses the Gamma
+> parameter (derived from the Einstein A), as tabulated in Don Morton's atomic
+> data compilations (2000, 2003).  My code is pretty old (I started adapting a
+> previous code back in the mid-1970s), and I know that there have been more
+> recent approaches to calculating the Voigt function -- so it will be interesting
+> to compare results for the same spectra.  I have thought for some time that it
+> would be good to compare my code with others (e.g., xvoigt, vapid, vpfit,
+> owens, ismod, ...) -- similar to what has been done for PDR codes -- but have
+> never had the time to do that.  Various papers discussing high-res optical
+> spectra (including some of ours) have included the component structures
+> derived from the fits -- but it might be best to just do new fits to a common
+> set of profiles (both high-res and UVES).
+>
+> I have just transferred my web pages to www.stsci.edu/~dwelty.  Among the
+> items there are lists of high-res spectra (with plots, equivalent widths, and
+> overall column densities for various atomic and molecular species) -- so you
+> can look for sight lines in common for comparisons.  I have performed fits to
+> a number of the profiles; some (but not all) have been published in our high-res
+> surveys of the atomic species.
+>
+> Take a look and let me know how you would like to proceed.
+>
+> Dan
+>
+> p.s., Just out of curiosity, a (possibly impolitic) question or two:
+> Is there a time frame for the release of the processed EDIBLES spectra?
+> What is the status of the EDIBLES C2 survey (led by Martin Cordiner?)?
+>
+> ﻿On 6/9/20, 9:53 AM, "Jan Cami" <jcami@uwo.ca> wrote:
+>
+>      External Email - Use Caution
+>
+>      Dear Dan,
+>
+>      I hope this message finds you well!
+>
+>      I am sure you are aware of the EDIBLES project of which I became the PI
+>      -- a set of high S/N UVES (R~80,000) spectra of DIB targets. One of the
+>      long-term goals of the project is to correlate the DIB strengths with
+>      interstellar depletions and column densities of atoms and molecules. The
+>      first step is of course to measure all the interstellar atomic lines. We
+>      are developing some python codes to do this, and one issue that I
+>      currently have is that I think that I have a working code that produces
+>      the correct output (i.e. column densities etcetera using Voigt profiles
+>      for the optical depths), but I have not found good bench marks to
+>      compare to. Ideally, it would be good if we would have a set of
+>      observations at different resolving powers of the same target (e.g. zeta
+>      Oph), where all cloud components and their parameters have been
+>      presented in the literature. One detail on which I have not found much
+>      in the literature for example is what values are typically used for the
+>      Lorentz broadening factor when dealing with atoms. Is this typically
+>      based on the Einstein A values?
+>
+>      If you are aware of a paper that contains such possible benchmarks, I
+>      would appreciate some pointers. Alternatively, if you would be willing
+>      to share some of your spectra and the resulting fits and their
+>      parameters for comparison, that would also be greatly appreciated!
+>
+>      All the best,
+>
+>      Jan
+>
+>      --
+>      #end
+>      Dr. Jan Cami, Associate Professor
+>      Department of Physics & Astronomy, Room 203
+>      Director, Hume Cronyn Memorial Observatory
+>      Associate Director (Operations), Institute for Earth and Space Exploration
+>      University of Western Ontario
+>      London, ON N6A 3K7, Canada
+>      Tel : +1 519 661 2111 ext. 80978
+>
+>
+--
+#end
+Dr. Jan Cami, Associate Professor
+Department of Physics & Astronomy, Room 203
+Director, Hume Cronyn Memorial Observatory
+Associate Director (Operations), Institute for Earth and Space Exploration
+University of Western Ontario
+London, ON N6A 3K7, Canada
+Tel : +1 519 661 2111 ext. 80978
+

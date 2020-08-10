@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from astropy.io import fits
 import astropy.constants as cst
@@ -94,6 +95,7 @@ class EdiblesSpectrum:
 
 
     def _spec_grid(self):
+
         '''Creates a grid used for interpolation.
 
         '''
@@ -103,6 +105,7 @@ class EdiblesSpectrum:
 
     def _sky_transmission(self):
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
+
 
         '''
         filename = PYTHONDIR + "/data/auxiliary_data/sky_transmission/transmission.dat"
@@ -232,11 +235,6 @@ If shift is an array, it must be the same length as the wavelength grid.
         self.sky_flux = self.raw_sky_flux[sky_idx]
 
 
-
-
-
-
-
 if __name__ == "__main__":
     filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
@@ -259,6 +257,7 @@ if __name__ == "__main__":
     plt.title('Data and Interpolations')
     plt.xlabel(r'Wavelength ($\AA$)')
     plt.ylabel('Flux')
+
     plt.legend()
     plt.show()
 

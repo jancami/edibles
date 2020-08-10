@@ -108,19 +108,26 @@ class ContinuumModel(Model):
         if n_anchors > 10:
             raise TypeError(self.ANCHORS_ERR % n_anchors)
 
-
-        pnames = ["y_%i" % (i) for i in range(n_anchors)]
-        kwargs["param_names"] = pnames
+        ynames = ["y_%i" % (i) for i in range(n_anchors)]
+        xnames = ["x_%i" % (i) for i in range(n_anchors)]
+        kwargs["param_names"] = xnames + ynames
 
         self.n_anchors = n_anchors
 
 
-        def cont(x, y_0=1, y_1=1, y_2=1, y_3=1, y_4=1, y_5=1, y_6=1, y_7=1, y_8=1, y_9=1):
+        def cont(x, y_0=1, y_1=1, y_2=1, y_3=1, y_4=1, y_5=1, y_6=1, y_7=1, y_8=1, y_9=1,
+                 x_0=-999, x_1=-999, x_2=-999, x_3=-999, x_4=-999,
+                 x_5=-999, x_6=-999, x_7=-999, x_8=-999, x_9=-999):
 
             spacing = np.linspace(np.min(x), np.max(x), self.n_anchors)
             x = np.asarray(x)
             spacing_idx = [np.argmin(np.abs(x - space)) for space in spacing]
-            x_anchors = [x[i] for i in spacing_idx]
+
+            x_all = [x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9]
+            x_anchors = x_all[:n_anchors]
+
+            if all(anchor is -999 for anchor in x_anchors):
+                x_anchors = [x[i] for i in spacing_idx]
 
             y_all = [y_0, y_1, y_2, y_3, y_4, y_5, y_6, y_7, y_8, y_9]
             y_anchors = y_all[:n_anchors]
@@ -151,6 +158,10 @@ class ContinuumModel(Model):
         spacing_idx = [(np.abs(x - space)).argmin() for space in spacing]
 
         data = np.asarray(data)
+
+        x_anchors = [x[i] for i in spacing_idx]
+        for i, coef in enumerate(x_anchors[::1]):
+            pars['%sx_%i' % (self.prefix, i)].set(value=coef, vary=False)
 
         y_anchors = []
         for i in spacing_idx:
