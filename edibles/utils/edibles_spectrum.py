@@ -221,7 +221,16 @@ If shift is an array, it must be the same length as the wavelength grid.
         self.wave = self.wave[t_idx]
         self.flux = self.flux[t_idx]
 
+        # Sky transmission data
+        sky_idx = np.where(np.logical_and(self.raw_sky_wave > zoom_xmin,
+                                          self.raw_sky_wave < zoom_xmax))
+        self.sky_wave = self.raw_sky_wave[sky_idx]
+        self.sky_flux = self.raw_sky_flux[sky_idx]
+
         self._interpolate()
+
+        self.xmin = zoom_xmin
+        self.xmax = zoom_xmax
 
 
 if __name__ == "__main__":
@@ -242,6 +251,7 @@ if __name__ == "__main__":
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
     plt.plot(sp.grid, sp.interp_flux, label='Geocentric Interpolation')
     plt.plot(sp.grid, sp.interp_bary_flux, label='Barycentric Interpolation')
+    plt.plot(sp.sky_wave, sp.sky_flux, 'k')
     plt.title('Data and Interpolations')
     plt.xlabel(r'Wavelength ($\AA$)')
     plt.ylabel('Flux')
