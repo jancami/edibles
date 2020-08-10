@@ -12,8 +12,8 @@ else:
     DATARELEASE = 'DR4'
 
 if 'EDIBLES_PYTHONDIR' in os.environ:
-    PYTHONDIR = os.environ['EDIBLES_PYTHONDIR']
+    PYTHONDIR = os.environ['EDIBLES_PYTHONDIR'] + '/edibles'
 else:
-    PYTHONDIR = os.path.dirname(os.getcwd())
+    PYTHONDIR = os.getcwd()
 
 __version__ = '0.1'

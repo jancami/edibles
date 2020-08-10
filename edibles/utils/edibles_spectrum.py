@@ -105,7 +105,8 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = PYTHONDIR + "/edibles/data/auxillary_data/sky_transmission/transmission.dat"
+        filename = PYTHONDIR + "/data/auxillary_data/sky_transmission/transmission.dat"
+        print(filename)
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
@@ -158,11 +159,12 @@ class EdiblesSpectrum:
             It is implemented in getSpectrum and shift.
 
         '''
-        xmin = np.max([np.min(self.wave), np.min(self.bary_wave)])
-        xmax = np.min([np.max(self.wave), np.max(self.bary_wave)])
 
-        grid_idx = np.where(np.logical_and(self.raw_grid > xmin,
-                                           self.raw_grid < xmax))
+        # xmin = np.max([np.min(self.wave), np.min(self.bary_wave)])
+        # xmax = np.min([np.max(self.wave), np.max(self.bary_wave)])
+
+        grid_idx = np.where(np.logical_and(self.raw_grid > self.xmin,
+                                           self.raw_grid < self.xmax))
         self.grid = self.raw_grid[grid_idx]
 
         if initial:
@@ -180,7 +182,7 @@ class EdiblesSpectrum:
             self.interp_flux = func(self.grid)
 
             # Interpolate barycentric flux data
-            bfunc = interp1d(self.bary_wave, self.bary_flux)
+            bfunc = interp1d(self.bary_wave, self.flux)
             self.interp_bary_flux = bfunc(self.grid)
 
 
@@ -197,22 +199,26 @@ If shift is an array, it must be the same length as the wavelength grid.
         '''
 
         # Add shift to wavelength data
-        new_wave = self.wave + shift
+        self.wave = np.add(self.wave, shift)
 
         # Input checking
         assert (zoom_xmin > self.xmin) and (
             zoom_xmin > np.min(self.wave)
-        ), 'zoom_xmin must be greater than ' + str(np.max([self.xmin, np.min(new_wave)]))
+        ), 'zoom_xmin must be greater than ' + str(np.max([self.xmin, np.min(self.wave)]))
         assert (zoom_xmax < self.xmax) and (
             zoom_xmax < np.max(self.wave)
-        ), 'zoom_xmax must be less than ' + str(np.min([self.xmax, np.max(new_wave)]))
+        ), 'zoom_xmax must be less than ' + str(np.min([self.xmax, np.max(self.wave)]))
         if isinstance(shift, np.ndarray):
             assert len(self.wave) == len(shift), 'Length of shift not equal to length of wave'
 
-        self.wave = new_wave
-        self.bary_wave = new_wave + (self.v_bary / cst.c.to("km/s").value) * new_wave
+        self.xmin = zoom_xmin
+        self.xmax = zoom_xmax
 
-        # Cutoff 'edges' of data
+        self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
+
+        self._interpolate()
+
+        # Zoom
         b_idx = np.where(np.logical_and(self.bary_wave > zoom_xmin, self.bary_wave < zoom_xmax))
         self.bary_wave = self.bary_wave[b_idx]
         self.bary_flux = self.flux[b_idx]
@@ -221,16 +227,15 @@ If shift is an array, it must be the same length as the wavelength grid.
         self.wave = self.wave[t_idx]
         self.flux = self.flux[t_idx]
 
-        # Sky transmission data
         sky_idx = np.where(np.logical_and(self.raw_sky_wave > zoom_xmin,
                                           self.raw_sky_wave < zoom_xmax))
         self.sky_wave = self.raw_sky_wave[sky_idx]
         self.sky_flux = self.raw_sky_flux[sky_idx]
 
-        self._interpolate()
 
-        self.xmin = zoom_xmin
-        self.xmax = zoom_xmax
+
+
+
 
 
 if __name__ == "__main__":
