@@ -94,19 +94,29 @@ class Sightline():
         self.model_pars = self.model_pars + new_pars
 
 
-    def fit(self, report=False, plot=False, method='leastsq'):
+    def fit(self, data=None, params=None,
+            x=None, report=False, plot=False, method='leastsq'):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
+            data (1darray): Flux data to fit
+            params (lmfit.parameter.Parameters): Initial parameters to fit
+            x (1darray): Wavelength data to fit
             report (bool): default False: If true, prints the report from the fit.
             plot (bool): default False: If true, plots the data and the fit model.
             method (str): The method of fitting. default: leastsq
 
         '''
+        if data is None:
+            data = self.flux
+        if params is None:
+            params = self.model_pars
+        if x is None:
+            x = self.wave
 
-        self.result = self.model.fit(data=self.flux,
-                                     params=self.model_pars,
-                                     x=self.wave,
+        self.result = self.model.fit(data=data,
+                                     params=params,
+                                     x=x,
                                      method=method)
 
         if report:
@@ -116,7 +126,6 @@ class Sightline():
         if plot:
             self.result.plot_fit()
             plt.show()
-
 
 
 if __name__ == "__main__":
