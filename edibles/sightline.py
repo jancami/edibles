@@ -5,20 +5,20 @@ from edibles.models import ContinuumModel, VoigtModel
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
-class Sightline():
+class Sightline:
     '''A model of the sightline between the telescope and the target star.
 
     Args:
-        spectrum (EdiblesSpectrum): The input spectrum object
+        Spectrum (EdiblesSpectrum): The input spectrum object
         n_anchors (int): Optional, The number of anchors in the ContinuumSpline
     '''
 
-    def __init__(self, spectrum, init_cont=True, n_anchors=4):
+    def __init__(self, Spectrum, init_cont=True, n_anchors=4):
 
-        self.__dict__.update(spectrum.__dict__)
+        self.__dict__.update(Spectrum.__dict__)
 
-        self.wave = spectrum.wave
-        self.flux = spectrum.flux
+        self.wave = Spectrum.wave
+        self.flux = Spectrum.flux
 
         if init_cont:
             cont_model = ContinuumModel(n_anchors=n_anchors)
@@ -95,7 +95,7 @@ class Sightline():
 
 
     def fit(self, data=None, params=None,
-            x=None, report=False, plot=False, method='leastsq'):
+            x=None, report=False, plot=False, method='leastsq', bary=False):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
@@ -105,6 +105,7 @@ class Sightline():
             report (bool): default False: If true, prints the report from the fit.
             plot (bool): default False: If true, plots the data and the fit model.
             method (str): The method of fitting. default: leastsq
+            bary (bool): If true, creates bary_result instead of result
 
         '''
         if data is None:
@@ -114,18 +115,29 @@ class Sightline():
         if x is None:
             x = self.wave
 
-        self.result = self.model.fit(data=data,
-                                     params=params,
-                                     x=x,
-                                     method=method)
+        if bary:
+            self.bary_result = self.model.fit(data=data,
+                                              params=params,
+                                              x=x,
+                                              method=method)
+            if report:
+                print(self.bary_result.fit_report())
+                self.bary_result.params.pretty_print()
+            if plot:
+                self.bary_result.plot_fit()
+                plt.show()
 
-        if report:
-            print(self.result.fit_report())
-            self.result.params.pretty_print()
-
-        if plot:
-            self.result.plot_fit()
-            plt.show()
+        else:
+            self.result = self.model.fit(data=data,
+                                         params=params,
+                                         x=x,
+                                         method=method)
+            if report:
+                print(self.result.fit_report())
+                self.result.params.pretty_print()
+            if plot:
+                self.result.plot_fit()
+                plt.show()
 
 
 if __name__ == "__main__":
