@@ -9,13 +9,13 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 class EdiblesOracle:
     """
-    This class will pocess the EDIBLES obs log and target info files.
+    This class will process the EDIBLES obs log and target info files.
     Users can then query the oracle for observations matching specific criteria.
     """
 
     def __init__(self):
         print(DATADIR)
-        filename = PYTHONDIR + "/edibles/data/DR4_ObsLog.csv"
+        filename = PYTHONDIR + "/data/DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
         # print(self.obslog.dtypes)
         # total_rows = len(self.obslog.index)
@@ -48,7 +48,7 @@ class EdiblesOracle:
         if MergedOnly and OrdersOnly:
             print("ONLY RETURNING MERGED SPECTRA")
 
-        bool_order = self.obslog != "Z"
+        bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:
             bool_order = self.obslog.Order != "ALL"
         if MergedOnly is True:
