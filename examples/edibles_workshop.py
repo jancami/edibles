@@ -11,6 +11,7 @@ from edibles.sightline import Sightline
 # GUI!!!!
 # %%%%%%%
 
+
 # #########################################################################
 # Create a spectrum from a fits file
 

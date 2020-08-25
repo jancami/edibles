@@ -131,3 +131,8 @@ plt.scatter(result_x_pars, result_y_pars, marker='x',
 plt.scatter(init_x, init_y, marker='x', s=80, color='k', label='Initial params')
 plt.legend()
 plt.show()
+
+
+# this is a comment
+
+
