@@ -21,7 +21,7 @@ class EdiblesOracle:
         # total_rows = len(self.obslog.index)
         # print(total_rows)
 
-    def GetObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
+    def getObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         """
         This function filters the list of Observations to return only those
         that include the requested wavelength.
@@ -59,7 +59,7 @@ class EdiblesOracle:
         return self.obslog.iloc[ind].Filename
         
 
-    def GetObsListByTarget(self, target=None, MergedOnly=False, OrdersOnly=False):
+    def getObsListByTarget(self, target=None, MergedOnly=False, OrdersOnly=False):
     
         """
         This function filters the list of Observations to return only those
@@ -80,7 +80,7 @@ class EdiblesOracle:
         if target is None:
             target = 'HD164073'
         bool_target_matches = (self.obslog.Object == target)
-        print(target)
+        
         # Do we have to filter out merged or single-order spectra? Note that if both
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
 
@@ -101,7 +101,7 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
-    List = pythia.GetObsListByWavelength(5000, MergedOnly=True)
+    List = pythia.getObsListByWavelength(5000, MergedOnly=True)
     # print(List)
     for filename in List:
         sp = EdiblesSpectrum(filename)
