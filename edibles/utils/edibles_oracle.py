@@ -17,11 +17,11 @@ class EdiblesOracle:
         print(DATADIR)
         filename = PYTHONDIR + "/data/DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
-        # print(self.obslog.dtypes)
+        #print(self.obslog.dtypes)
         # total_rows = len(self.obslog.index)
         # print(total_rows)
 
-    def GetObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
+    def getObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         """
         This function filters the list of Observations to return only those
         that include the requested wavelength.
@@ -57,12 +57,51 @@ class EdiblesOracle:
         ind = np.where(bool_wave_matches & bool_order)
         # print(ind)
         return self.obslog.iloc[ind].Filename
+        
+
+    def getObsListByTarget(self, target=None, MergedOnly=False, OrdersOnly=False):
+    
+        """
+        This function filters the list of Observations to return only those
+        of the requested target.
+        We will create a set of boolean arrays that we will then combined
+        as the filter.
+
+        :param target: Target name that the returned files will include
+        :type target: object
+        :param MergedOnly: Only include spectra from merged orders
+        :type MergedOnly: bool
+        :param OrdersOnly: Only include individual spectrum orders
+        :type OrdersOnly: bool
+
+        """
+        
+        # Boolean matches for wavelength.
+        if target is None:
+            target = 'HD164073'
+        bool_target_matches = (self.obslog.Object == target)
+        
+        # Do we have to filter out merged or single-order spectra? Note that if both
+        # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
+
+        if MergedOnly and OrdersOnly:
+            print("ONLY RETURNING MERGED SPECTRA")
+
+        bool_order = self.obslog.Order != "Z"
+        if OrdersOnly is True:
+            bool_order = self.obslog.Order != "ALL"
+        if MergedOnly is True:
+            bool_order = self.obslog.Order == "ALL"
+
+        ind = np.where(bool_target_matches & bool_order)
+        # print(ind)
+        return self.obslog.iloc[ind].Filename
 
 
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
-    List = pythia.GetObsListByWavelength(5000, MergedOnly=True)
+    List = pythia.getObsListByWavelength(5000, MergedOnly=True)
     # print(List)
     for filename in List:
         sp = EdiblesSpectrum(filename)
@@ -72,3 +111,4 @@ if __name__ == "__main__":
         plt.xlim(5000, 5100)
         plt.plot(sp.wave, sp.flux)
         plt.show()
+
