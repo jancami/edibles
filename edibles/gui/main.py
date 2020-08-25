@@ -132,7 +132,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_overview(self):
         # Load obslist overview into pandas frame
         self.overview = pd.read_csv(
-            PYTHONDIR + "/edibles/data/" + DATARELEASE + "_ObsLog.csv"
+            PYTHONDIR + "/data/" + DATARELEASE + "_ObsLog.csv"
         )
 
     def add_mpl(self):
