@@ -4,9 +4,17 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
 
 class Continuum():
+    '''A class that has multiple methods for fitting different types of continua.
+
+    Args:
+        Spectrum (EdiblesSpectrum): The input EiblesSpectrum data
+        method (str): The method of continuum fitting. spline (default), alphashape, polynomial
 
 
-    def __init__(self, Spectrum, method, *args, **kwargs):
+    '''
+
+
+    def __init__(self, Spectrum, method='spline', *args, **kwargs):
 
         self.method = method
         self.Spectrum = Spectrum
