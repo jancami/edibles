@@ -1,4 +1,4 @@
-target,value_SpType,unc_lower,unc_upper,reference_id,preferred_flag
+object,value,unc_lower,unc_upper,reference_id,preferred_flag
 HD 101065,B5,NaN,NaN,3,0
 HD 101065,roAp(F3Ho),NaN,NaN,4,0
 HD 103779,B0.5 III,NaN,NaN,3,0
