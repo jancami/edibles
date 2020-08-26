@@ -17,9 +17,67 @@ class EdiblesOracle:
         print(DATADIR)
         filename = PYTHONDIR + "/data/DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
-        #print(self.obslog.dtypes)
-        # total_rows = len(self.obslog.index)
+        filename = PYTHONDIR + "/data/sightline_data/Targets_EBV.csv"
+        self.ebvlog = pd.read_csv(filename)
+        
+        
+        print(self.ebvlog.dtypes)
+        # total_rows = len(self.ebvlog.index)
         # print(total_rows)
+        
+    def getFilteredObsList(self,object=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None):
+        #load in proper files.
+       
+        #params: EBV, EBV_min,EBV_max, EBV_reference
+        #if reference not specified, take preferrred value
+        if object:
+            bool_object_matches = (self.ebvlog.object == object)
+        
+        if EBV:
+            bool_ebv_matches = (self.ebvlog.value < EBV_max) & (self.ebvlog.value > EBV_min)
+    #reference flag not working yet
+        '''
+        #bool_prefer = self.ebvlog.preferred_flag != 100
+        if EBV_reference:
+            bool_prefer = self.ebvlog.preferred_flag == EBV_reference
+        else:
+            EBV_reference=1
+            bool_prefer = self.ebvlog.preferred_flag == EBV_reference
+        print(bool_prefer)
+        '''
+        '''
+        bool_order = self.obslog.Order != "Z"
+        if OrdersOnly is True:
+            bool_order = self.obslog.Order != "ALL"
+        if MergedOnly is True:
+            bool_order = self.obslog.Order == "ALL"
+        '''
+      
+        
+        ind = np.where(bool_object_matches & bool_ebv_matches)
+        # print(ind)
+        return (self.ebvlog.iloc[ind].object,self.ebvlog.iloc[ind].value)
+        
+        
+        
+        #returns desired values.
+        
+        
+        
+        #creation of small data frame to be returned.
+        
+        
+       #Returns list of filtered observations
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
     def getObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         """
@@ -101,6 +159,10 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
+    List=pythia.getFilteredObsList(object="b'HD 101065'",MergedOnly=True,EBV=0.8,EBV_min=0.7,EBV_max=1,EBV_reference=0)
+    print(List)
+    
+    '''
     List = pythia.getObsListByWavelength(5000, MergedOnly=True)
     # print(List)
     for filename in List:
@@ -111,4 +173,4 @@ if __name__ == "__main__":
         plt.xlim(5000, 5100)
         plt.plot(sp.wave, sp.flux)
         plt.show()
-
+    '''
