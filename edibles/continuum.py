@@ -39,6 +39,8 @@ class Continuum():
 
         result = model.fit(data=self.Spectrum.flux, params=cont_pars, x=self.Spectrum.wave)
 
+        print(result.params)
+
         result.plot_fit()
         plt.show()
         return model
