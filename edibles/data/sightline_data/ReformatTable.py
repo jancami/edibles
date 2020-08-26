@@ -52,7 +52,7 @@ for i in inputs:
 
     parameter = i[5:-4]
 
-    df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["target","value_"+parameter,"unc_lower","unc_upper","reference_id","preferred_flag"])
+    df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
     df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
 
     for c in np.arange(1,nr_cols):
