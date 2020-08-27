@@ -8,8 +8,10 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
-from edibles import DATADIR
 from edibles import PYTHONDIR
+from edibles import DATADIR
+
+
 from edibles.utils.functions import make_grid
 
 
