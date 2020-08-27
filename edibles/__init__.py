@@ -1,4 +1,5 @@
 import os
+from sys import platform
 
 
 if 'EDIBLES_DATADIR' in os.environ:
@@ -12,8 +13,13 @@ else:
     DATARELEASE = 'DR4'
 
 if 'EDIBLES_PYTHONDIR' in os.environ:
-    PYTHONDIR = os.environ['EDIBLES_PYTHONDIR'] + '/edibles'
+    if platform == "win32":
+        PYTHONDIR = os.environ['EDIBLES_PYTHONDIR'] + '\edibles'
+    else:
+        PYTHONDIR = os.environ['EDIBLES_PYTHONDIR'] + '/edibles'
+    
 else:
     PYTHONDIR = os.path.dirname(__file__)
+    
 
 __version__ = '0.1'

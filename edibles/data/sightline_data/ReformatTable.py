@@ -43,16 +43,19 @@ for i in inputs:
            if col != 'False':
 
                object_id.append(data[row][0].astype(str))
+
                value.append(data[row][col])
+               value.append(data[row][col].astype(str))
                unc_lower.append(np.nan)
                unc_upper.append(np.nan)
 
                reference_id.append(col+ref)
-               preferred_flag.append(0) # not setting the PREFERED VALUE flag yet.
+               preferred_flag.append(0)# not setting the PREFERED VALUE flag yet.
 
     parameter = i[5:-4]
 
     df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
+
     df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
 
     for c in np.arange(1,nr_cols):

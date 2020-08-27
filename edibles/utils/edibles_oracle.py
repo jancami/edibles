@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sys import platform
 
 from edibles import DATADIR
 from edibles import PYTHONDIR
@@ -15,7 +16,11 @@ class EdiblesOracle:
 
     def __init__(self):
         print(DATADIR)
-        filename = PYTHONDIR + "/data/DR4_ObsLog.csv"
+        if platform == "linux":
+            filename = PYTHONDIR + "/data/DR4_ObsLog.csv"
+        elif platform == "win32":
+            filename = PYTHONDIR + "\data\DR4_ObsLog.csv"
+        
         self.obslog = pd.read_csv(filename)
         filename = PYTHONDIR + "/data/sightline_data/Targets_EBV.csv"
         self.ebvlog = pd.read_csv(filename)
@@ -25,26 +30,49 @@ class EdiblesOracle:
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
         
-    def getFilteredObsList(self,object=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None):
-        #load in proper files.
-       
-        #params: EBV, EBV_min,EBV_max, EBV_reference
-        #if reference not specified, take preferrred value
+    def getFilteredObsList(self,object=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None,WaveMin=None, WaveMax=None):
+     	
+    	#This method will provide a filtered list of observations that match 
+    	#the specified criteria on sightline/target parameters as well as
+    	#on observation criteria (e.g. wavelength range). 
+
+    	#Each sightline parameter is processed in the same way to produce boolean 
+    	#arrays to filter the sightlines. In a second step, we then search the 
+    	#obs log for matching objects within the additional criteria. 
+
+
+        # Note that the below statement will only work if there is a single object specified. 
+        # We probably need to consider an array of objects as well. 
         if object:
             bool_object_matches = (self.ebvlog.object == object)
-        
-        if EBV:
-            bool_ebv_matches = (self.ebvlog.value < EBV_max) & (self.ebvlog.value > EBV_min)
-    #reference flag not working yet
-        '''
-        #bool_prefer = self.ebvlog.preferred_flag != 100
-        if EBV_reference:
-            bool_prefer = self.ebvlog.preferred_flag == EBV_reference
         else:
-            EBV_reference=1
-            bool_prefer = self.ebvlog.preferred_flag == EBV_reference
-        print(bool_prefer)
-        '''
+            bool_object_matches = np.ones(len(self.ebvlog.index),dtype=bool)
+            
+            
+        # Initialize a boolean array to match all entries in the sightline file. 
+        # Work through each of the criteria and add the corresponding filter criterion. 
+        bool_ebv_matches = np.ones(len(self.ebvlog.index),dtype=bool)
+        if EBV:
+            # Only keep sightline if the value is an exact match. 
+            bool_ebv_matches = self.ebvlog.value == EBV
+        if EBV_min:
+            bool_ebv_matches = (self.ebvlog.value > EBV_min) & bool_ebv_matches
+        if EBV_max:
+            bool_ebv_matches = (self.ebvlog.value < EBV_max) & bool_ebv_matches
+        if EBV_reference:
+            # If reference is "All", we should not apply an additional filter. 
+            # If reference is specified, filter on that reference. 
+            # If no reference is specified, use the preferred value. 
+            if EBV_reference=='All':
+                pass
+            else:
+                #check if proper ref. is given [1,2] for EBV, [3,4] fpr SpT.
+                bool_ebv_matches = (self.ebvlog.reference_id == EBV_reference) & bool_ebv_matches
+        else:
+            bool_ebv_matches = (self.ebvlog.preferred_flag == 1) & bool_ebv_matches
+        
+
+
         '''
         bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:
@@ -53,27 +81,26 @@ class EdiblesOracle:
             bool_order = self.obslog.Order == "ALL"
         '''
       
-        
+        #print(bool_object_matches)  
+        #print(bool_ebv_matches)  
         ind = np.where(bool_object_matches & bool_ebv_matches)
-        # print(ind)
-        return (self.ebvlog.iloc[ind].object,self.ebvlog.iloc[ind].value)
+        matching_objects = self.ebvlog.object.values[ind]
+      
+        # Now push this list through for further filtering based on obs log
+
+        '''
+        bool_obslog_match=np.zeros(len(self.obslog.index),dtype=bool)
+        obslog_objects=self.obslog.Object.values
+        print(type(obslog_objects))
+        print(type(self.ebvlog.iloc[ind].object))
+        for i in ind:
+            bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) or bool_obslog_match
+        print(bool_obslog_match)
+        '''
+        return (matching_objects)
         
         
-        
-        #returns desired values.
-        
-        
-        
-        #creation of small data frame to be returned.
-        
-        
-       #Returns list of filtered observations
-        
-        
-        
-        
-        
-        
+  
         
         
         
@@ -159,8 +186,10 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
-    List=pythia.getFilteredObsList(object="b'HD 101065'",MergedOnly=True,EBV=0.8,EBV_min=0.7,EBV_max=1,EBV_reference=0)
+    List=pythia.getFilteredObsList(object=["HD 103779","HD 104705"],MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+    print("Results from getFilteredObsList: ")
     print(List)
+    
     
     '''
     List = pythia.getObsListByWavelength(5000, MergedOnly=True)
