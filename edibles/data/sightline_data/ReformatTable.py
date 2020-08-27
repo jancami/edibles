@@ -42,7 +42,7 @@ for i in inputs:
 
            if col != 'False':
 
-               object_id.append(data[row][0])
+               object_id.append(data[row][0].astype(str))
                value.append(data[row][col])
                unc_lower.append(np.nan)
                unc_upper.append(np.nan)

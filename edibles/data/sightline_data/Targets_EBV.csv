@@ -1,4 +1,4 @@
-target,value_EBV,unc_lower,unc_upper,reference_id,preferred_flag
+object,value,unc_lower,unc_upper,reference_id,preferred_flag
 HD 101065,0.91,NaN,NaN,1,0
 HD 101065,0.91,NaN,NaN,2,0
 HD 103779,0.24,NaN,NaN,1,0
