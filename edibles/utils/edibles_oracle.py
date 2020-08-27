@@ -29,7 +29,39 @@ class EdiblesOracle:
         print(self.ebvlog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
+
+    def getObsList(self, WaveMin=None, WaveMax=None, MergedOnly=False, OrdersOnly=False):
+        '''Combine wavelength and object search
+        first select files based on the object lists produced by
+        getFilteredObsList and then select the correct wavelength regime'''
         
+        # Boolean matches for wavelength.
+        
+        bool_object_matches = np.zeros(len(self.obslog.index),dtype=bool)
+        for obj in self.matching_objects:
+            bool_object_matches = (self.obslog.Object == obj) or bool_object_matches
+         
+        # Do we have to filter out merged or single-order spectra? Note that if both
+        # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
+
+        if MergedOnly and OrdersOnly:
+            print("ONLY RETURNING MERGED SPECTRA")
+
+        bool_order = self.obslog.Order != "Z"
+        if OrdersOnly is True:
+            bool_order = self.obslog.Order != "ALL"
+        if MergedOnly is True:
+            bool_order = self.obslog.Order == "ALL"
+
+        print(bool_order)
+        ind = np.where(bool_object_matches & bool_order)
+
+        print(ind)
+        print(' result', self.obslog.iloc[ind].Filename)
+        return self.obslog.iloc[ind].Filename        
+
+
+
     def getFilteredObsList(self,object=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None,WaveMin=None, WaveMax=None):
      	
     	#This method will provide a filtered list of observations that match 
@@ -84,27 +116,52 @@ class EdiblesOracle:
         #print(bool_object_matches)  
         #print(bool_ebv_matches)  
         ind = np.where(bool_object_matches & bool_ebv_matches)
+<<<<<<< HEAD
         matching_objects = self.ebvlog.object.values[ind]
+        matching_ebv = self.ebvlog.value.values[ind]
+=======
+        self.matching_objects = self.ebvlog.object.values[ind]
       
+>>>>>>> c3a2a45a145f1a5233f79a489fa195b4e11d21b3
         # Now push this list through for further filtering based on obs log
-
         '''
         bool_obslog_match=np.zeros(len(self.obslog.index),dtype=bool)
         obslog_objects=self.obslog.Object.values
-        print(type(obslog_objects))
-        print(type(self.ebvlog.iloc[ind].object))
+        #print(type(obslog_objects))
+        #print(type(self.ebvlog.iloc[ind].object))
         for i in ind:
+<<<<<<< HEAD
             bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) or bool_obslog_match
         print(bool_obslog_match)
+=======
+            bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) | bool_obslog_match
+        inds = np.where(bool_obslog_match)
+        
+        matching_objects_obs = self.obslog.Object.values[inds]
+        print(matching_objects_obs)
         '''
-        return (matching_objects)
+<<<<<<< HEAD
+>>>>>>> 9c6972e7ef8657a59d0df7507360206a513f473e
+        '''
+        matched_files=[]
+        for i in range(len(matching_objects)):
+            matched_files.append(self.getObsList(target=matching_objects[i],MergedOnly=True))
+        print(matched_files)
+        '''
+        
+        return (matching_objects,matching_ebv)
         
         
   
         
         
+=======
+        self.getObsList(WaveMin=None, WaveMax=None, MergedOnly=False, OrdersOnly=False)
+        return (self.matching_objects)
+>>>>>>> c3a2a45a145f1a5233f79a489fa195b4e11d21b3
         
         
+
 
     def getObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         """
@@ -186,14 +243,23 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
+<<<<<<< HEAD
     List=pythia.getFilteredObsList(object=["HD 103779","HD 104705"],MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+=======
+<<<<<<< HEAD
+    List=pythia.getFilteredObsList(EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+=======
+    List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+>>>>>>> c3a2a45a145f1a5233f79a489fa195b4e11d21b3
+>>>>>>> 9c6972e7ef8657a59d0df7507360206a513f473e
     print("Results from getFilteredObsList: ")
     print(List)
     
     
-    '''
+
     List = pythia.getObsListByWavelength(5000, MergedOnly=True)
-    # print(List)
+    print(List)
+    '''
     for filename in List:
         sp = EdiblesSpectrum(filename)
         plt.figure()
