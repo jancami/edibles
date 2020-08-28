@@ -190,16 +190,12 @@ class EdiblesOracle:
         #print('getFilteredObslist: Found a total of ', bool_ebv_matches.sum(), ' E(B-V) matches.')  
         #print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
         
-<<<<<<< HEAD
         ####################################
         ####### in FilterEngine#############
         ####################################
         
         
         print(matching_objects)
-=======
-        #print(matching_objects)
->>>>>>> 0474324211808dcbcc2620874a330653a14d97e7
         
         # Now push this list of objects through for further filtering based on obs log
         FilteredObsList = self._getObsListFilteredByObsLogParameters(object=matching_objects, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
@@ -351,10 +347,8 @@ if __name__ == "__main__":
     List=pythia.getFilteredObsList(EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
     List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
 
-<<<<<<< HEAD
     print("1. Results from getFilteredObsList: ")
     List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.7,EBV_max=0.8, SpType='B0.5 III')    
-=======
     List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8, object='HD 145502')
     List = pd.DataFrame(List).T
     List.columns = ['Object', 'EBV']
@@ -365,7 +359,6 @@ if __name__ == "__main__":
     List = pd.DataFrame(List).T
     List.columns = ['Object', 'EBV']
     print("Results from getFilteredObsList: ")
->>>>>>> 0474324211808dcbcc2620874a330653a14d97e7
     print(List)
     
 #    print("2. Results from getFilteredObsList: ")
