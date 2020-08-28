@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from astropy.io import fits
 import numpy as np
+import os
+from datetime import datetime
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
@@ -16,7 +18,6 @@ class Continuum():
 
     '''
 
-
     def __init__(self, Spectrum, method='spline', *args, **kwargs):
 
         self.method = method
@@ -29,8 +30,6 @@ class Continuum():
         elif method == 'polynomial':
             self.polynomial(*args, **kwargs)
 
-
-
     def spline(self, *args, **kwargs):
         print("method: ", self.method)
 
@@ -38,7 +37,6 @@ class Continuum():
 
         model = ContinuumModel(n_anchors=n_anchors)
         cont_pars = model.guess(self.Spectrum.flux, x=self.Spectrum.wave)
-
 
         result = model.fit(data=self.Spectrum.flux, params=cont_pars, x=self.Spectrum.wave)
 
@@ -48,7 +46,6 @@ class Continuum():
         plt.show()
         return model
 
-
     def alphashape(self):
         print("method: ", self.method)
 
@@ -56,84 +53,61 @@ class Continuum():
         print("method: ", self.method)
 
 
+def copy_to_FITS(filename, x_points, y_points, comment=False):
+    # filename = "/Users/haoyufan/test.fits"
 
-def copy_to_FITS(filename, x_points, y_points, name, initial=False):
-
-
+    # TODO: automatically read in filename, from edibles-spectrum class?
     hdulist = fits.open(filename)
     spectrum = hdulist['PRIMARY']
 
-    # INITIAL
-    if len(hdulist) == 1:
-
-        print('Adding INITIAL continuum points.')
-
-
-
+    # create continuum_hdu to add, by initializing or appending to existing data
+    try:
+        continuum_hdu = hdulist["SPLINE-CONTINUUM"]
+        continuum_header = continuum_hdu.header
+        print("Adding NEW spline anchor points")
+        # data = continuum_hdu.data
+        batch_idx = str(len(continuum_hdu.data.columns) // 2)
+        new_column = fits.ColDefs(
+            [fits.Column(name='x_' + batch_idx, format='D', array=x_points),
+             fits.Column(name='y_' + batch_idx, format='D', array=y_points)]
+        )
+        continuum_hdu = fits.BinTableHDU.from_columns(continuum_hdu.data.columns + new_column)
+        continuum_hdu.header = continuum_header
+    except:
+        print('Adding INITIAL spline anchor points.')
+        batch_idx = "0"
         columns = fits.ColDefs(
-            [fits.Column(name='initial_x', format='D10.4', array=x_points),
-             fits.Column(name='initial_y', format='D10.4', array=y_points)]
+            [fits.Column(name='x_' + batch_idx, format='D10.4', array=x_points),
+             fits.Column(name='y_' + batch_idx, format='D10.4', array=y_points)]
         )
         continuum_hdu = fits.BinTableHDU.from_columns(columns)
+        continuum_hdu.header["DICT"] = " "
 
+    # edit header of continuum_hdu
+    continuum_hdu.name = "SPLINE-CONTINUUM"
+    user_name = input("Please type your user name:")
+    continuum_hdu.header["USER_" + batch_idx] = user_name
+    continuum_hdu.header["DATE_" + batch_idx] = datetime.today().strftime('%Y-%m-%d')
+    if comment:
+        comment_str = input("Please type your comment:")
+    else:
+        comment_str = ""
+    continuum_hdu.header['CMT_' + batch_idx] = comment_str
+    continuum_hdu.header["DICT"] = continuum_hdu.header["DICT"] + \
+                                   batch_idx + ":" + user_name + "-" + datetime.today().strftime('%Y')
 
+    # create new hdulist and write to file
+    # TODO: update filename to save to, read from edibles_spectrum class?
+    if len(hdulist) == 1:
         hdulist.append(continuum_hdu)
-
-
-
-
-        hdulist[1].name = 'CONTINUUM'
-        hdulist['CONTINUUM'].header['METHOD'] = 'spline'
-
-
-
-        # TODO: update filename to save to
-
-        hdulist.writeto('test.fits', overwrite=True)
-
-        hdulist.info()
-
-
-    # ADD LOCAL SOLINE POINTS
-    elif len(hdulist) > 1:
-
-        print('Adding NEW continuum points.')
-
-        continuum_hdu = hdulist['CONTINUUM']
-        data = continuum_hdu.data
-
-
-        new_column = fits.ColDefs(
-            [fits.Column(name=name + '_x', format='D', array=x_points),
-             fits.Column(name=name + '_y', format='D', array=y_points)]
-        )
-
-        data = fits.BinTableHDU.from_columns(data.columns + new_column)
-
-
-        # hdulist['CONTINUUM'] = fits.BinTableHDU.from_columns(cols + new_column)
-
-        data.name = 'CONTINUUM'
-
-
-        hdulist = fits.HDUList([spectrum, data])
-        hdulist.info()
-        print('\n\n')
-
-
-        # TODO: update filename to save to
-
-        hdulist.writeto('test.fits', overwrite=True)
-
-
-
-    print('Saved to file: ', filename)
-    print('\n\n\n')
-
+    else:
+        hdulist[1] = continuum_hdu
+    hdulist.writeto(filename, overwrite=True)
+    hdulist.info()
+    hdulist.close()
 
 
 if __name__ == '__main__':
-
     # sp = EdiblesSpectrum("/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits")
     # sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
 
@@ -142,24 +116,15 @@ if __name__ == '__main__':
     # # Continuum(x, y, method='spline', anchors=4)
     # model = Continuum(sp, method='spline', n_anchors=4)
 
-
-
     init_x = [1, 2, 3]
     init_y = [4004.56767336737, 5, 6]
 
     filename = 'HD23466_w346_blue_20180731_O11.fits'
 
-
     copy_to_FITS(filename=filename, name='init', x_points=init_x, y_points=init_y)
-
-
-
-
-
 
     next_x = [7, 8, 9]
     next_y = [34, 678, 23.646345]
-
 
     filename = 'test.fits'
 
