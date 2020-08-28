@@ -112,27 +112,27 @@ def copy_to_FITS(filename, x_points, y_points, comment=False):
 
 if __name__ == '__main__':
     # sp = EdiblesSpectrum("/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits")
-    # sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
+    sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
 
-    # subset = sp.getSpectrum(xmin=3270, xmax=3305)
+    subset = sp.getSpectrum(xmin=3270, xmax=3305)
 
-    # # Continuum(x, y, method='spline', anchors=4)
-    # cont = Continuum(sp, method='spline', n_anchors=4)
+    # Continuum(x, y, method='spline', anchors=4)
+    cont = Continuum(sp, method='spline', n_anchors=4)
 
-    # print(cont.result.params)
+    print(cont.result.params)
 
 
 
-    init_x = [1, 2, 3]
-    init_y = [4004.56767336737, 5, 6]
+    # init_x = [1, 2, 3]
+    # init_y = [4004.56767336737, 5, 6]
 
-    filename = 'HD23466_w346_blue_20180731_O11.fits'
+    # filename = 'HD23466_w346_blue_20180731_O11.fits'
 
-    copy_to_FITS(filename=filename, name='init', x_points=init_x, y_points=init_y)
+    # copy_to_FITS(filename=filename, name='init', x_points=init_x, y_points=init_y)
 
-    next_x = [7, 8, 9]
-    next_y = [34, 678, 23.646345]
+    # next_x = [7, 8, 9]
+    # next_y = [34, 678, 23.646345]
 
-    filename = 'test.fits'
+    # filename = 'test.fits'
 
-    copy_to_FITS(filename=filename, name='test', x_points=next_x, y_points=next_y)
+    # copy_to_FITS(filename=filename, name='test', x_points=next_x, y_points=next_y)
