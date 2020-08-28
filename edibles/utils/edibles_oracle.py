@@ -42,7 +42,7 @@ class EdiblesOracle:
         bool_object_matches = np.zeros(len(self.obslog.index),dtype=bool)
         #print(object.dtype)
         if object is None:
-            pass
+            bool_object_matches = np.ones(len(self.ebvlog.index),dtype=bool)
         elif (isinstance(object, np.ndarray) | isinstance(object, list)):
                 for thisobject in object:
                     #print("Object in loop:", thisobject)
@@ -50,7 +50,7 @@ class EdiblesOracle:
                     bool_object_matches = (self.obslog.Object == thisobject) | (bool_object_matches)
                     #print(bool_object_matches.sum())
         else: 
-            print("EDIBLES Oracle is Panicking in getObsListFilteredByObsLogParameters: don't know what I'm dealing with!")
+             bool_object_matches = self.ebvlog.object == object
 
         #print('Inside the function: number of matches is ', bool_object_matches.sum())
 
@@ -66,11 +66,9 @@ class EdiblesOracle:
         if MergedOnly is True:
             bool_order_matches = self.obslog.Order == "ALL"
 
-        # Boolean matches for wavelength.
-        # If Wave is specified, we will interpret the query as requiring that particular 
-        # wavelength to be included in the range covered by the observation. 
-        # If WaveMin is specified, we include observations that have wavelengths
-        # Above WaveMin. Similar for WaveMax
+        #print(bool_order_matches)
+        ind = np.where(bool_object_matches & bool_order_matches)
+        
         bool_wave_matches = np.ones(len(self.obslog.index),dtype=bool)
         if Wave: 
             bool_wave_matches = (self.obslog.WaveMin < Wave) & (self.obslog.WaveMax > Wave)
@@ -79,15 +77,9 @@ class EdiblesOracle:
         if WaveMax: 
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
-
-        # Now combine all filters
-        bool_filter = bool_object_matches & bool_order_matches & bool_wave_matches
-        print('Total filter results: ', bool_filter.sum())
-        ind = np.where(bool_filter)
-
         #print(ind)
         #print(' result', self.obslog.iloc[ind].Filename)
-        return self.obslog.Filename.values[ind]        
+        return self.obslog.iloc[ind].Filename            
 
 
     def FilterEngine(self, object, log, value, unc_lower, unc_upper, reference_id):
@@ -165,9 +157,9 @@ class EdiblesOracle:
                     bool_object_matches = (self.ebvlog.object == thisobject) | (bool_object_matches)
                     #print(bool_object_matches.sum())
         else: 
-            print("EDIBLES Oracle is Panicking in getFilteredObsList: don't know what I'm dealing with!")
+            bool_object_matches = self.ebvlog.object == object
             
-            
+    
         # Initialize a boolean array to match all entries in the sightline file. 
         # Work through each of the criteria and add the corresponding filter criterion. 
         bool_ebv_matches = np.ones(len(self.ebvlog.index),dtype=bool)
@@ -194,21 +186,42 @@ class EdiblesOracle:
         ind = np.where(bool_combined_matches)
         matching_objects = self.ebvlog.object.values[ind]
 
-        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
-        print('getFilteredObslist: Found a total of ', bool_ebv_matches.sum(), ' E(B-V) matches.')  
-        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
+        #print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
+        #print('getFilteredObslist: Found a total of ', bool_ebv_matches.sum(), ' E(B-V) matches.')  
+        #print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
         
+<<<<<<< HEAD
         ####################################
         ####### in FilterEngine#############
         ####################################
         
         
         print(matching_objects)
+=======
+        #print(matching_objects)
+>>>>>>> 0474324211808dcbcc2620874a330653a14d97e7
         
         # Now push this list of objects through for further filtering based on obs log
         FilteredObsList = self._getObsListFilteredByObsLogParameters(object=matching_objects, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
         #print(FilteredObsList)
+
+        '''
+        bool_order = self.obslog.Order != "Z"
+        if OrdersOnly is True:
+            bool_order = self.obslog.Order != "ALL"
+        if MergedOnly is True:
+            bool_order = self.obslog.Order == "ALL"
+        '''
+      
+        #print(bool_object_matches)  
+        #print(bool_ebv_matches)  
+        ind = np.where(bool_object_matches & bool_ebv_matches)
+        matching_objects = self.ebvlog.object.values[ind]
+        matching_ebv = self.ebvlog.value.values[ind]
+        self.matching_objects = self.ebvlog.object.values[ind]
+      
+        # Now push this list through for further filtering based on obs log
 
         '''
         bool_obslog_match=np.zeros(len(self.obslog.index),dtype=bool)
@@ -220,19 +233,37 @@ class EdiblesOracle:
             bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) or bool_obslog_match
         print(bool_obslog_match)
 
+            bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) or bool_obslog_match
+        print(bool_obslog_match)
+
             bool_obslog_match =  (self.obslog.Object.values == self.ebvlog.iloc[ind].object.values) | bool_obslog_match
         inds = np.where(bool_obslog_match)
         
         matching_objects_obs = self.obslog.Object.values[inds]
         print(matching_objects_obs)
+        '''
 
-    
+        '''
+
+
         matched_files=[]
         for i in range(len(matching_objects)):
             matched_files.append(self.getObsList(target=matching_objects[i],MergedOnly=True))
         print(matched_files)
         '''
         
+
+        return (matching_objects,matching_ebv)
+        
+        
+  
+        
+        
+        self.getObsList(WaveMin=None, WaveMax=None, MergedOnly=False, OrdersOnly=False)
+        return (self.matching_objects)
+        
+        
+
         return (FilteredObsList)
 
 
@@ -316,9 +347,25 @@ class EdiblesOracle:
 if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
+    List=pythia.getFilteredObsList(object="HD 103779",MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+    List=pythia.getFilteredObsList(EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
+    List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=1)
 
+<<<<<<< HEAD
     print("1. Results from getFilteredObsList: ")
     List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.7,EBV_max=0.8, SpType='B0.5 III')    
+=======
+    List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8, object='HD 145502')
+    List = pd.DataFrame(List).T
+    List.columns = ['Object', 'EBV']
+    print("Results from getFilteredObsList: ")
+    print(List)
+
+    List=pythia.getFilteredObsList(object=['HD 145502', 'HD 149757'], MergedOnly=True, Wave=6614)
+    List = pd.DataFrame(List).T
+    List.columns = ['Object', 'EBV']
+    print("Results from getFilteredObsList: ")
+>>>>>>> 0474324211808dcbcc2620874a330653a14d97e7
     print(List)
     
 #    print("2. Results from getFilteredObsList: ")
