@@ -22,9 +22,11 @@ class EdiblesOracle:
         self.obslog = pd.read_csv(filename)
         filename=folder /"sightline_data"/"Targets_EBV.csv"
         self.ebvlog = pd.read_csv(filename)
+        filename=folder /"sightline_data"/"Targets_SpType.csv"
+        self.sptypelog = pd.read_csv(filename)
         
         
-        print(self.ebvlog.dtypes)
+        print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
@@ -88,7 +90,54 @@ class EdiblesOracle:
         return self.obslog.Filename.values[ind]        
 
 
-    def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None,WaveMin=None, WaveMax=None):
+    def FilterEngine(self, object, log, value, unc_lower, unc_upper, reference_id):
+        
+        bool_object_matches = np.zeros(len(log.index),dtype=bool)
+        if object is None:
+             bool_object_matches = np.ones(len(log.index),dtype=bool)
+        elif (isinstance(object, np.ndarray) | isinstance(object, list)):
+                for thisobject in object:
+                    bool_object_matches = (log.object == thisobject) | (bool_object_matches)
+                    #print(bool_object_matches.sum())
+        else: 
+            print("EDIBLES Oracle is Panicking in getFilteredObsList: don't know what I'm dealing with!")
+            
+            
+        # Initialize a boolean array to match all entries in the sightline file. 
+        # Work through each of the criteria and add the corresponding filter criterion. 
+        bool_value_matches = np.ones(len(log.index),dtype=bool)
+        if value:
+            # Only keep sightline if the value is an exact match. 
+            bool_value_matches = log.value == value
+        if unc_lower:
+            bool_value_matches = (log.value > unc_lower) & bool_value_matches
+        if unc_upper:
+            bool_value_matches = (log.value < unc_upper) & bool_value_matches
+        # Now process the references or "preferred" values. 
+        # If reference is "All", we should not apply an additional filter. 
+        # If reference is specified, filter on that reference. 
+        # If no reference is specified, use the preferred value. 
+        if reference_id is None:
+            bool_value_matches = (log.preferred_flag == 1) & bool_value_matches
+        elif reference_id=='All':
+                pass
+        else:
+                #check if proper ref. is given [1,2] for EBV, [3,4] fpr SpT.
+                bool_value_matches = (log.reference_id == reference_id) & bool_value_matches
+        
+        bool_combined_matches = bool_object_matches & bool_value_matches
+        ind = np.where(bool_combined_matches)
+        matching_objects = log.object.values[ind]
+
+        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
+        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' E(B-V) matches.')  
+        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
+        
+        return matching_objects
+
+
+
+    def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None, SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, WaveMin=None, WaveMax=None):
         
         #This method will provide a filtered list of observations that match 
         #the specified criteria on sightline/target parameters as well as
@@ -98,9 +147,19 @@ class EdiblesOracle:
         #arrays to filter the sightlines. In a second step, we then search the 
         #obs log for matching objects within the additional criteria. 
 
+        matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
+        matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
+        
+        # set(lst1).intersection(lst2) to check 
+        print(matching_objects_ebv)
+        print(matching_objects_sptype)
+        
+        ####### in FilterEngine#############
+        ####################################
+        ####################################
         bool_object_matches = np.zeros(len(self.ebvlog.index),dtype=bool)
         if object is None:
-             pass
+             bool_object_matches = np.ones(len(self.ebvlog.index),dtype=bool)
         elif (isinstance(object, np.ndarray) | isinstance(object, list)):
                 for thisobject in object:
                     bool_object_matches = (self.ebvlog.object == thisobject) | (bool_object_matches)
@@ -138,6 +197,11 @@ class EdiblesOracle:
         print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
         print('getFilteredObslist: Found a total of ', bool_ebv_matches.sum(), ' E(B-V) matches.')  
         print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
+        
+        ####################################
+        ####### in FilterEngine#############
+        ####################################
+        
         
         print(matching_objects)
         
@@ -253,13 +317,17 @@ if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
 
-    List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.2,EBV_max=0.8, object='HD 145502')
-    print("Results from getFilteredObsList: ")
+    print("1. Results from getFilteredObsList: ")
+    List=pythia.getFilteredObsList(MergedOnly=True,EBV_min=0.7,EBV_max=0.8, SpType='B0.5 III')    
     print(List)
-
-    List=pythia.getFilteredObsList(object=['HD 145502', 'HD 149757'], MergedOnly=True, Wave=6614)
-    print("Results from getFilteredObsList: ")
-    print(List)
+    
+#    print("2. Results from getFilteredObsList: ")
+#    List=pythia.getFilteredObsList(MergedOnly=True,EBV=0.6,EBV_max=0.9)    
+#    print(List)
+#
+#    print("3. Results from getFilteredObsList: ")
+#    List=pythia.getFilteredObsList(object=['HD 145502', 'HD 149757'], MergedOnly=True, Wave=6614)
+#    print(List)
 '''
     for filename in List:
         sp = EdiblesSpectrum(filename)
