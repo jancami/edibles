@@ -35,16 +35,19 @@ class Continuum():
 
         n_anchors = kwargs['n_anchors']
 
-        model = ContinuumModel(n_anchors=n_anchors)
-        cont_pars = model.guess(self.Spectrum.flux, x=self.Spectrum.wave)
+        self.model = ContinuumModel(n_anchors=n_anchors)
+        cont_pars = self.model.guess(self.Spectrum.flux, x=self.Spectrum.wave)
 
-        result = model.fit(data=self.Spectrum.flux, params=cont_pars, x=self.Spectrum.wave)
+        self.result = self.model.fit(
+            data=self.Spectrum.flux,
+            params=cont_pars,
+            x=self.Spectrum.wave
+        )
 
-        print(result.params)
+        print(self.result.params)
 
-        result.plot_fit()
+        self.result.plot_fit()
         plt.show()
-        return model
 
     def alphashape(self):
         print("method: ", self.method)
@@ -114,7 +117,11 @@ if __name__ == '__main__':
     # subset = sp.getSpectrum(xmin=3270, xmax=3305)
 
     # # Continuum(x, y, method='spline', anchors=4)
-    # model = Continuum(sp, method='spline', n_anchors=4)
+    # cont = Continuum(sp, method='spline', n_anchors=4)
+
+    # print(cont.result.params)
+
+
 
     init_x = [1, 2, 3]
     init_y = [4004.56767336737, 5, 6]
