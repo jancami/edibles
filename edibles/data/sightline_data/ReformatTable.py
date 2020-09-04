@@ -4,11 +4,18 @@ small routine to reformat the multi-column sightline info to multi-row sightline
 
 """
 remark: can we rename the target id to 'target' instead of 'object'. object is a thing in python...
+But object is also a thing in SIMBAD. 
+
+We will also set prefereed values here. 
+For E(B-V): preferred = E(B-V)_Simbad
+
 """
 
 import numpy as np
 import glob
 import pandas as pd
+
+EBV_preferred = 'E(B-V)_Simbad'
 
 inputs=glob.glob('Input*.csv')
 
@@ -42,17 +49,20 @@ for i in inputs:
 
            if col != 'False':
 
-               object_id.append(data[row][0])
+               object_id.append(data[row][0].astype(str))
+
                value.append(data[row][col])
+               value.append(data[row][col].astype(str))
                unc_lower.append(np.nan)
                unc_upper.append(np.nan)
 
                reference_id.append(col+ref)
-               preferred_flag.append(0) # not setting the PREFERED VALUE flag yet.
+               preferred_flag.append(1)# not setting the PREFERED VALUE flag yet.
 
     parameter = i[5:-4]
 
-    df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["target","value_"+parameter,"unc_lower","unc_upper","reference_id","preferred_flag"])
+    df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
+
     df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
 
     for c in np.arange(1,nr_cols):

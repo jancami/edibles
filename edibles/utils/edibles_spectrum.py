@@ -9,8 +9,10 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
-from edibles import DATADIR
 from edibles import PYTHONDIR
+from edibles import DATADIR
+
+
 from edibles.utils.functions import make_grid
 
 
@@ -55,10 +57,10 @@ class EdiblesSpectrum:
         flux_innitial (1darray): The initial flux data for the telluric corrected spectrum - created by corrected_spectrum
         flux_corrO2 (1array): The O2 corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
         flux_corrO2_H2O (1array): The O2 and H2O corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
-        
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
-        
+        continuum_points (): x and y values describing the continuum of the spectrum
+        continuum_header (astropy.io.fits.header.Header): Header for continuum points
 
     """
 
@@ -79,27 +81,36 @@ class EdiblesSpectrum:
 
     def _loadSpectrum(self):
 
-        hdu = fits.open(self.filename)
-        self.header = hdu[0].header
-        self.target = self.header["OBJECT"]
-        self.date = self.header["DATE-OBS"]
-        self.datetime = datetime.strptime(self.header["DATE-OBS"], '%Y-%m-%dT%H:%M:%S.%f')
-        self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
+        with fits.open(self.filename) as hdulist:
+            self.header = hdulist[0].header
+            self.target = self.header["OBJECT"]
+            self.date = self.header["DATE-OBS"]
+            self.datetime = datetime.strptime(self.header["DATE-OBS"], '%Y-%m-%dT%H:%M:%S.%f')
+            self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
 
-        self.flux = hdu[0].data
-        crval1 = self.header["CRVAL1"]
-        cdelt1 = self.header["CDELT1"]
-        lenwave = len(self.flux)
-        grid = np.arange(0, lenwave, 1)
-        self.wave = (grid) * cdelt1 + crval1
-        self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
+            self.flux = hdulist[0].data
+            crval1 = self.header["CRVAL1"]
+            cdelt1 = self.header["CDELT1"]
+            lenwave = len(self.flux)
+            grid = np.arange(0, lenwave, 1)
+            self.wave = (grid) * cdelt1 + crval1
+            self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
 
-        self.raw_wave = (grid) * cdelt1 + crval1
-        self.raw_bary_wave = self.raw_wave + (self.v_bary / cst.c.to("km/s").value) * self.raw_wave
-        self.raw_flux = hdu[0].data
+            self.raw_wave = (grid) * cdelt1 + crval1
+            self.raw_bary_wave = self.raw_wave + \
+                (self.v_bary / cst.c.to("km/s").value) * \
+                self.raw_wave
 
-        self.wave_units = "AA"
-        self.flux_units = "arbitrary"
+            self.raw_flux = hdulist[0].data
+
+            self.wave_units = "AA"
+            self.flux_units = "arbitrary"
+
+            if len(hdulist) > 1:
+                continuum_hdu = hdulist['CONTINUUM']
+                self.continuum_points = continuum_hdu.data
+                self.continuum_header = continuum_hdu.header
+                print(self.continuum_header)
 
 
     def _spec_grid(self):

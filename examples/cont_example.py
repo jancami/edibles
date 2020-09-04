@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from edibles.models import ContinuumModel
-
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 # #################################################################################
 # Example 1
@@ -72,17 +72,21 @@ plt.show()
 # Example 2
 # #################################################################################
 
-x = np.linspace(0, 8)
-y = np.sin(x)
+sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
 
-cont_model = ContinuumModel(n_anchors=5)
-cont_pars = cont_model.guess(y, x=x)
+xmin = 3270
+xmax = 3305
 
+sp.getSpectrum(xmin=xmin, xmax=xmax)
+
+
+cont_model = ContinuumModel(n_anchors=4)
+cont_pars = cont_model.guess(sp.flux, x=sp.wave)
 
 # ##############################
 # Show initial model
 
-out = cont_model.eval(data=y, params=cont_pars, x=x)
+out = cont_model.eval(data=sp.flux, params=cont_pars, x=sp.wave)
 
 y_param_names = []
 for i in range(cont_model.n_anchors):
@@ -100,8 +104,8 @@ init_x = []
 for par_name in x_param_names:
     init_x.append(cont_pars[par_name].value)
 
-plt.scatter(x, y)
-plt.plot(x, out, 'C1')
+plt.scatter(sp.wave, sp.flux)
+plt.plot(sp.wave, out, 'C1')
 plt.scatter(init_x, init_y, marker='x', s=80, color='k')
 plt.show()
 
@@ -109,8 +113,8 @@ plt.show()
 # ##############################
 # Fit
 
-result = cont_model.fit(data=y, params=cont_pars, x=x)
-out = cont_model.eval(data=y, params=result.params, x=x)
+result = cont_model.fit(data=sp.flux, params=cont_pars, x=sp.wave)
+out = cont_model.eval(data=sp.flux, params=result.params, x=sp.wave)
 # print(result.fit_report())
 
 
@@ -131,8 +135,3 @@ plt.scatter(result_x_pars, result_y_pars, marker='x',
 plt.scatter(init_x, init_y, marker='x', s=80, color='k', label='Initial params')
 plt.legend()
 plt.show()
-
-
-# this is a comment
-
-
