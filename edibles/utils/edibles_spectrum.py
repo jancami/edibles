@@ -51,8 +51,14 @@ class EdiblesSpectrum:
         grid (1darray): Interpolation grid - created by _interpolate
         interp_flux (1darray): Interpolated geocentric flux - created by _interpolate
         interp_bary_flux (1darray): Interpolated barycentric flux - created by _interpolate
+        corrected_wave (1darray): The wavelength data for the telluric corrected spectrum - created by corrected_spectrum
+        flux_innitial (1darray): The initial flux data for the telluric corrected spectrum - created by corrected_spectrum
+        flux_corrO2 (1array): The O2 corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
+        flux_corrO2_H2O (1array): The O2 and H2O corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
+        
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
+        
 
     """
 
@@ -126,25 +132,29 @@ class EdiblesSpectrum:
         
         '''
         wavelength,flux_initial=[],[]
-        flux_corrO2,flux_corrO2_h20=[],[]
+        flux_corrO2,flux_corrO2_h2O=[],[]
         stripped_date=self.date[:10].replace('-','')
 
-        filename =  glob.glob(PYTHONDIR+ "/data/telluric_corrected_data/"+self.target+"*"+stripped_date+"*.ascii")[0]
-        print(filename)
-        f=open(filename)
-        lines=f.readlines()[1:]
-        f.close()
+        filename =  glob.glob(PYTHONDIR+ "/data/telluric_corrected_data/"+self.target+"*"+stripped_date+"*.ascii")
+        if len(filename)!=0:
+            filename=filename[0]
+            #print(filename)
+            f=open(filename)
+            lines=f.readlines()[1:]
+            f.close()
 
-        for line in lines:
-            wavelength.append(line.split()[0])
-            flux_initial.append(line.split()[1])
-            flux_corrO2.append(line.split()[2])
-            flux_corrO2_h20.append(line.split()[3])
-            
-        self.corrected_wave=np.array(wavelength).astype(np.float)
-        self.flux_initial=np.array(flux_initial).astype(np.float)
-        self.flux_corrO2=np.array(flux_corrO2).astype(np.float)
-        self.flux_corrO2_h20=np.array(flux_corrO2_h20).astype(np.float)
+            for line in lines:
+                wavelength.append(line.split()[0])
+                flux_initial.append(line.split()[1])
+                flux_corrO2.append(line.split()[2])
+                flux_corrO2_h2O.append(line.split()[3])
+                
+            self.corrected_wave=np.array(wavelength).astype(np.float)
+            self.flux_initial=np.array(flux_initial).astype(np.float)
+            self.flux_corrO2=np.array(flux_corrO2).astype(np.float)
+            self.flux_corrO2_h2O=np.array(flux_corrO2_h2O).astype(np.float)
+        else:
+            print('no corrected spectra available')
 
         
 
@@ -264,7 +274,7 @@ If shift is an array, it must be the same length as the wavelength grid.
 
 
 if __name__ == "__main__":
-    #filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
+    #filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"
     filename = "/HD170740/RED_564/HD170740_w564_n2_20160505_L.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
@@ -272,7 +282,7 @@ if __name__ == "__main__":
     print("Barycentric Velocity is", sp.v_bary)
     
     
-    '''
+    
     plt.plot(sp.wave, sp.flux, label="Geocentric")
     plt.title('Entire Order')
     plt.xlabel(r'Wavelength ($\AA$)')
@@ -280,7 +290,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    sp.getSpectrum(xmin=7660, xmax=7680)
+    sp.getSpectrum(xmin=5000, xmax=5020)
     plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
     plt.plot(sp.grid, sp.interp_flux, label='Geocentric Interpolation')
@@ -296,7 +306,7 @@ if __name__ == "__main__":
     plt.plot(sp.wave, sp.flux, label="Geocentric")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric")
     shift = 0.05
-    sp.shift(shift=shift, zoom_xmin=7661, zoom_xmax=7679)
+    sp.shift(shift=shift, zoom_xmin=5001, zoom_xmax=5019)
     plt.plot(sp.wave, sp.flux, label='Shifted Geocentric')
     plt.plot(sp.bary_wave, sp.bary_flux, label="Shifted Barycentric")
     plt.title('Data and Shifted Data')
@@ -314,10 +324,10 @@ if __name__ == "__main__":
     plt.ylabel('Flux')
     plt.legend()
     plt.show()
-    '''
+    
     plt.plot(sp.corrected_wave,sp.flux_initial,'r',label='Initial Flux')
     plt.plot(sp.corrected_wave,sp.flux_corrO2,'g--',label='Corrected Flux O2')
-    plt.plot(sp.corrected_wave,sp.flux_corrO2_h20,'b--', label='Corrected Flux H2O and O2')
+    plt.plot(sp.corrected_wave,sp.flux_corrO2_h2O,'b--', label='Corrected Flux H2O and O2')
     plt.legend(fontsize='small')
     plt.xlabel(r'Wavelength ($\AA$)')
     plt.ylabel('Flux')
