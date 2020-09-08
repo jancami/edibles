@@ -1,4 +1,6 @@
 import numpy as np
+import inspect
+import collections
 from scipy.interpolate import CubicSpline
 from lmfit import Model
 from lmfit.models import update_param_vals
@@ -105,37 +107,64 @@ class ContinuumModel(Model):
 
         if not isinstance(n_anchors, int):
             raise TypeError(self.ANCHORS_ERR % n_anchors)
-        if n_anchors > 10:
-            raise TypeError(self.ANCHORS_ERR % n_anchors)
 
         ynames = ["y_%i" % (i) for i in range(n_anchors)]
         xnames = ["x_%i" % (i) for i in range(n_anchors)]
         kwargs["param_names"] = xnames + ynames
 
+        params = {}
+        for name in kwargs['param_names']:
+            if name[0] == 'y':
+                params[name] = 1
+            if name[0] == 'x':
+                params[name] = -999
+
         self.n_anchors = n_anchors
 
 
-        def cont(x, y_0=1, y_1=1, y_2=1, y_3=1, y_4=1, y_5=1, y_6=1, y_7=1, y_8=1, y_9=1,
-                 x_0=-999, x_1=-999, x_2=-999, x_3=-999, x_4=-999,
-                 x_5=-999, x_6=-999, x_7=-999, x_8=-999, x_9=-999):
+        def cont(x, x_0=-999, y_0=1, **kwargs):
 
             spacing = np.linspace(np.min(x), np.max(x), self.n_anchors)
             x = np.asarray(x)
             spacing_idx = [np.argmin(np.abs(x - space)) for space in spacing]
 
-            x_all = [x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9]
-            x_anchors = x_all[:n_anchors]
+            x_anchors = []
+            y_anchors = []
+
+            for arg in kwargs:
+                if arg[0] == 'x':
+                    x_anchors.append(kwargs[arg])
+                elif arg[0] == 'y':
+                    y_anchors.append(kwargs[arg])
 
             if all(anchor is -999 for anchor in x_anchors):
                 x_anchors = [x[i] for i in spacing_idx]
-
-            y_all = [y_0, y_1, y_2, y_3, y_4, y_5, y_6, y_7, y_8, y_9]
-            y_anchors = y_all[:n_anchors]
 
             spline = CubicSpline(x_anchors, y_anchors)
 
             return spline(x)
 
+
+        sig = inspect.signature(cont)
+
+        base_par = inspect.signature(cont).parameters['x_0']
+
+        d = {'x': sig.parameters['x']}
+
+        for i in range(n_anchors):
+
+            y_key = 'y_' + str(i)
+            x_key = 'x_' + str(i)
+
+            y_val = base_par.replace(name=y_key)
+            x_val = base_par.replace(name=x_key)
+
+            d[y_key] = y_val
+            d[x_key] = x_val
+
+        d = collections.OrderedDict(d)
+
+        cont.__signature__ = sig.replace(parameters=tuple(d.values()))
 
         super().__init__(cont, **kwargs)
 
@@ -189,7 +218,7 @@ if __name__ == "__main__":
 
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
-    filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
+    filename = "/data/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
     sp.getSpectrum(xmin=7661, xmax=7670)

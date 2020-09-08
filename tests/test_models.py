@@ -20,16 +20,12 @@ def testModels(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
 
     with pytest.raises(TypeError):
         assert ContinuumModel()
-    with pytest.raises(TypeError):
-        assert ContinuumModel(n_anchors=11)
 
     cont_pars = cont_model.guess(sp.flux, x=sp.wave)
     assert len(cont_pars) == len(cont_model.param_names)
 
     for name in cont_model.param_names:
         assert cont_pars[name].value is not None
-
-
 
     voigt = VoigtModel(prefix='voigt_')
     assert voigt.prefix == 'voigt_'
