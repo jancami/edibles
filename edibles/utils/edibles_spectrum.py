@@ -32,20 +32,20 @@ class EdiblesSpectrum:
         datetime (datetime.datetime): The date of the target observation
         v_bary (float): Barycentric velocity of the target star
         raw_wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
-            will not be updated by the functions
+will not be updated by the functions
         raw_bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
-            will not be updated by the functions
+will not be updated by the functions
         raw_flux (1darray): The flux data for the spectrum,
-            will not be updated by the functions
+will not be updated by the functions
         raw_grid (1darray): A grid covering the entire spectral range used for interpolation
         raw_sky_wave (1darray): Telluric transmission data covering the entire spectral range
         raw_sky_flux (1darray): Telluric transmission data covering the entire spectral range
         wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
-            will be updated by the functions
+will be updated by the functions
         bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
-            will be updated by the functions
+will be updated by the functions
         flux (1darray): The flux data for the spectrum,
-            will be updated by the functions
+will be updated by the functions
         xmin (float): minimum wavelength boundary of data subset - input to getSpectrum
         xmax (float): maximum wavelength boundary of data subset - input to getSpectrum
         sky_wave (1darray): Telluric transmission data - created and updated by getSpectrum
@@ -53,10 +53,14 @@ class EdiblesSpectrum:
         grid (1darray): Interpolation grid - created by _interpolate
         interp_flux (1darray): Interpolated geocentric flux - created by _interpolate
         interp_bary_flux (1darray): Interpolated barycentric flux - created by _interpolate
-        corrected_wave (1darray): The wavelength data for the telluric corrected spectrum - created by corrected_spectrum
-        flux_innitial (1darray): The initial flux data for the telluric corrected spectrum - created by corrected_spectrum
-        flux_corrO2 (1array): The O2 corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
-        flux_corrO2_H2O (1array): The O2 and H2O corrected flux data for the telluric corrected spectrum - created by corrected_spectrum
+        corrected_wave (1darray): The wavelength data for the telluric corrected spectrum,
+created by corrected_spectrum
+        flux_initial (1darray): The initial flux data for the telluric corrected spectrum,
+created by corrected_spectrum
+        flux_corrO2 (1array): The O2 corrected flux data for the telluric corrected spectrum,
+created by corrected_spectrum
+        flux_corrO2_H2O (1array): O2 and H2O corrected flux for the telluric corrected spectrum,
+created by corrected_spectrum
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
         continuum_points (): x and y values describing the continuum of the spectrum
@@ -137,21 +141,26 @@ class EdiblesSpectrum:
 
         self.raw_sky_wave = sky_wave
         self.raw_sky_flux = sky_flux
-        
+
+
     def _corrected_spectrum(self):
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
-        
-        '''
-        wavelength,flux_initial=[],[]
-        flux_corrO2,flux_corrO2_h2O=[],[]
-        stripped_date=self.date[:10].replace('-','')
 
-        filename =  glob.glob(PYTHONDIR+ "/data/telluric_corrected_data/"+self.target+"*"+stripped_date+"*.ascii")
-        if len(filename)!=0:
-            filename=filename[0]
-            #print(filename)
-            f=open(filename)
-            lines=f.readlines()[1:]
+        '''
+        wavelength, flux_initial = [], []
+        flux_corrO2, flux_corrO2_h2O = [], []
+        stripped_date = self.date[:10].replace('-', '')
+
+        filename = glob.glob(
+            PYTHONDIR + "/data/telluric_corrected_data/" +
+            self.target + "*" + stripped_date + "*.ascii"
+        )
+
+        if len(filename) != 0:
+            filename = filename[0]
+
+            f = open(filename)
+            lines = f.readlines()[1:]
             f.close()
 
             for line in lines:
@@ -159,15 +168,14 @@ class EdiblesSpectrum:
                 flux_initial.append(line.split()[1])
                 flux_corrO2.append(line.split()[2])
                 flux_corrO2_h2O.append(line.split()[3])
-                
-            self.corrected_wave=np.array(wavelength).astype(np.float)
-            self.flux_initial=np.array(flux_initial).astype(np.float)
-            self.flux_corrO2=np.array(flux_corrO2).astype(np.float)
-            self.flux_corrO2_h2O=np.array(flux_corrO2_h2O).astype(np.float)
+
+            self.corrected_wave = np.array(wavelength).astype(np.float)
+            self.flux_initial = np.array(flux_initial).astype(np.float)
+            self.flux_corrO2 = np.array(flux_corrO2).astype(np.float)
+            self.flux_corrO2_h2O = np.array(flux_corrO2_h2O).astype(np.float)
         else:
             print('no corrected spectra available')
 
-        
 
     def getSpectrum(self, xmin, xmax):
         """Function to update the wavelength region held in an EdiblesSpectrum object.
@@ -285,15 +293,13 @@ If shift is an array, it must be the same length as the wavelength grid.
 
 
 if __name__ == "__main__":
-    #filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"
+    # filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"
     filename = "/HD170740/RED_564/HD170740_w564_n2_20160505_L.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
     print(sp.datetime.date())
     print("Barycentric Velocity is", sp.v_bary)
-    
-    
-    
+
     plt.plot(sp.wave, sp.flux, label="Geocentric")
     plt.title('Entire Order')
     plt.xlabel(r'Wavelength ($\AA$)')
@@ -335,13 +341,12 @@ if __name__ == "__main__":
     plt.ylabel('Flux')
     plt.legend()
     plt.show()
-    
-    plt.plot(sp.corrected_wave,sp.flux_initial,'r',label='Initial Flux')
-    plt.plot(sp.corrected_wave,sp.flux_corrO2,'g--',label='Corrected Flux O2')
-    plt.plot(sp.corrected_wave,sp.flux_corrO2_h2O,'b--', label='Corrected Flux H2O and O2')
+
+    plt.plot(sp.corrected_wave, sp.flux_initial, 'r', label='Initial Flux')
+    plt.plot(sp.corrected_wave, sp.flux_corrO2, 'g--', label='Corrected Flux O2')
+    plt.plot(sp.corrected_wave, sp.flux_corrO2_h2O, 'b--', label='Corrected Flux H2O and O2')
     plt.legend(fontsize='small')
     plt.xlabel(r'Wavelength ($\AA$)')
     plt.ylabel('Flux')
     plt.title('Data and Telluric Data')
     plt.show()
-    
