@@ -108,9 +108,9 @@ class ContinuumModel(Model):
         if not isinstance(n_anchors, int):
             raise TypeError(self.ANCHORS_ERR % n_anchors)
 
-        ynames = ["y_%i" % (i) for i in range(n_anchors)]
-        xnames = ["x_%i" % (i) for i in range(n_anchors)]
-        kwargs["param_names"] = xnames + ynames
+        self.ynames = ["y_%i" % (i) for i in range(n_anchors)]
+        self.xnames = ["x_%i" % (i) for i in range(n_anchors)]
+        kwargs["param_names"] = self.xnames + self.ynames
 
         params = {}
         for name in kwargs['param_names']:
@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
-    filename = "/data/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
+    filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
     sp.getSpectrum(xmin=7661, xmax=7670)
