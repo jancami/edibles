@@ -27,7 +27,7 @@ with open('eggs.csv', newline='') as csvfile:
         # check existing the available continuum csv files
         if Spectrum.continuum_filename:
             verbos_count = 0
-            with open('HD23466_w346_blue_20180731_O11.csv') as csvfile:
+            with open(Spectrum.continuum_filename) as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 for row in spamreader:
                     if len(row) > 0:
