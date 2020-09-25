@@ -17,7 +17,7 @@ import pandas as pd
 
 EBV_preferred = 'E(B-V)_Simbad'
 
-inputs=glob.glob('Input*.csv')
+inputs=glob.glob('InputEBV.csv')
 
 ref=0
 references=[]
@@ -29,6 +29,8 @@ for i in inputs:
     print(i)
 
     data = np.genfromtxt(i, dtype=None, delimiter=",", names=True)
+    data2 = np.genfromtxt(i, dtype='U10', delimiter=",", names=True)
+    print(data2)
 
     colnames=data.dtype.names
 
@@ -56,12 +58,12 @@ for i in inputs:
 
                reference_id.append(col+ref)
                preferred_flag.append(1)# not setting the PREFERED VALUE flag yet.
-
+             
     parameter = i[5:-4]
 
     df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
 
-    df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
+#    df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
 
     for c in np.arange(1,nr_cols):
         references_counter.append(ref_counter)
@@ -72,4 +74,4 @@ for i in inputs:
     ref=ref+nr_cols-1
 
 dfr=pd.DataFrame(list(zip(references_counter, references)), columns=["reference_id","source"])
-dfr.to_csv('References.csv', index=False, na_rep='NaN')
+#dfr.to_csv('References.csv', index=False, na_rep='NaN')
