@@ -4,8 +4,8 @@
 EDIBLES
 =======
 
-.. image:: https://travis-ci.org/jancami/edibles.svg?branch=master
-    :target: https://travis-ci.org/jancami/edibles
+.. image:: https://travis-ci.com/jancami/edibles.svg?branch=master
+    :target: https://travis-ci.com/jancami/edibles
 .. image:: https://readthedocs.org/projects/edibles/badge/?version=latest
     :target: https://edibles.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
