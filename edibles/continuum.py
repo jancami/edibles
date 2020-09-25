@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import csv
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
@@ -14,11 +15,27 @@ class Continuum:
         plot (bool): If true, plots the continuum fit
         verbose (int): If > 0, display more status messages
 
+with open('eggs.csv', newline='') as csvfile:
+    
+    
+        print(', '.join(row))
 
     """
 
     def __init__(self, Spectrum, method="spline", plot=False, verbose=0, *args, **kwargs):
-
+        
+        # check existing the available continuum csv files
+        if Spectrum.continuum_filename:
+            verbos_count = 0
+            with open(Spectrum.continuum_filename) as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in spamreader:
+                    if len(row) > 0:
+                        if row[0] == '######':
+                            verbos_count += 1
+            verbos = verbos_count  
+            
+            
         self.method = method
         self.Spectrum = Spectrum
         self.plot = plot
