@@ -5,6 +5,7 @@ from astropy.io import fits
 import astropy.constants as cst
 import astropy.units as u
 import matplotlib.pyplot as plt
+import pandas as pd
 from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
@@ -91,6 +92,7 @@ created by corrected_spectrum
             self.date = self.header["DATE-OBS"]
             self.datetime = datetime.strptime(self.header["DATE-OBS"], '%Y-%m-%dT%H:%M:%S.%f')
             self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
+            
 
             self.flux = hdulist[0].data
             crval1 = self.header["CRVAL1"]
@@ -158,21 +160,17 @@ created by corrected_spectrum
 
         if len(filename) != 0:
             filename = filename[0]
-
-            f = open(filename)
-            lines = f.readlines()[1:]
-            f.close()
-
-            for line in lines:
-                wavelength.append(line.split()[0])
-                flux_initial.append(line.split()[1])
-                flux_corrO2.append(line.split()[2])
-                flux_corrO2_h2O.append(line.split()[3])
-
-            self.corrected_wave = np.array(wavelength).astype(np.float)
-            self.flux_initial = np.array(flux_initial).astype(np.float)
-            self.flux_corrO2 = np.array(flux_corrO2).astype(np.float)
-            self.flux_corrO2_h2O = np.array(flux_corrO2_h2O).astype(np.float)
+            data = pd.read_csv(filename,sep=" |:",header=0,engine="python")
+            wavelength = data["lamedibles105"]
+            flux_initial = data["edibles105_ini"]
+            flux_corrO2 = data["edibles105_corrO2"]
+            flux_corrO2_h2O = data["edibles105_corrO2_H2O"]
+            
+            self.corrected_wave = wavelength.to_numpy()
+            self.flux_initial = flux_initial.to_numpy()
+            self.flux_corrO2 = flux_corrO2.to_numpy()
+            self.flux_corrO2_h2O = flux_corrO2_h2O.to_numpy()
+            
         else:
             print('no corrected spectra available')
 
@@ -299,7 +297,7 @@ if __name__ == "__main__":
     print(sp.target)
     print(sp.datetime.date())
     print("Barycentric Velocity is", sp.v_bary)
-
+    
     plt.plot(sp.wave, sp.flux, label="Geocentric")
     plt.title('Entire Order')
     plt.xlabel(r'Wavelength ($\AA$)')
@@ -341,7 +339,7 @@ if __name__ == "__main__":
     plt.ylabel('Flux')
     plt.legend()
     plt.show()
-
+    
     plt.plot(sp.corrected_wave, sp.flux_initial, 'r', label='Initial Flux')
     plt.plot(sp.corrected_wave, sp.flux_corrO2, 'g--', label='Corrected Flux O2')
     plt.plot(sp.corrected_wave, sp.flux_corrO2_h2O, 'b--', label='Corrected Flux H2O and O2')
