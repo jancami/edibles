@@ -160,11 +160,11 @@ created by corrected_spectrum
 
         if len(filename) != 0:
             filename = filename[0]
-            data = pd.read_csv(filename,sep=" |:",header=0,engine="python")
-            wavelength = data["lamedibles105"]
-            flux_initial = data["edibles105_ini"]
-            flux_corrO2 = data["edibles105_corrO2"]
-            flux_corrO2_h2O = data["edibles105_corrO2_H2O"]
+            data = pd.read_csv(filename,sep=" |:",header=0,names=["wave","init","O2","H2O"],engine="python")
+            wavelength = data["wave"]
+            flux_initial = data["init"]
+            flux_corrO2 = data["O2"]
+            flux_corrO2_h2O = data["H2O"]
             
             self.corrected_wave = wavelength.to_numpy()
             self.flux_initial = flux_initial.to_numpy()
