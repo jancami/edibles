@@ -161,15 +161,11 @@ created by corrected_spectrum
         if len(filename) != 0:
             filename = filename[0]
             data = pd.read_csv(filename,sep=" |:",header=0,names=["wave","init","O2","H2O"],engine="python")
-            wavelength = data["wave"]
-            flux_initial = data["init"]
-            flux_corrO2 = data["O2"]
-            flux_corrO2_h2O = data["H2O"]
-            
-            self.corrected_wave = wavelength.to_numpy()
-            self.flux_initial = flux_initial.to_numpy()
-            self.flux_corrO2 = flux_corrO2.to_numpy()
-            self.flux_corrO2_h2O = flux_corrO2_h2O.to_numpy()
+
+            self.corrected_wave = data["wave"].to_numpy()
+            self.flux_initial = data["init"].to_numpy()
+            self.flux_corrO2 = data["O2"].to_numpy()
+            self.flux_corrO2_h2O = data["H2O"].to_numpy()
             
         else:
             print('no corrected spectra available')
