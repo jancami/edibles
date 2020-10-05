@@ -160,7 +160,7 @@ created by corrected_spectrum
 
         if len(filename) != 0:
             filename = filename[0]
-            data = pd.read_csv(filename,sep=" |:",header=0,names=["wave","init","O2","H2O"],engine="python")
+            data = pd.read_csv(filename, sep = " |:", header = 0, names = ["wave","init","O2","H2O"], engine = "python")
 
             self.corrected_wave = data["wave"].to_numpy()
             self.flux_initial = data["init"].to_numpy()
