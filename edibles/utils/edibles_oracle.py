@@ -26,7 +26,7 @@ class EdiblesOracle:
         self.sptypelog = pd.read_csv(filename)
         
         
-        print(self.sptypelog.dtypes)
+        # print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
