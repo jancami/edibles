@@ -9,7 +9,7 @@ from edibles.models import ContinuumModel
 
 
 class Continuum:
-    """A class that has multiple methods for fitting different types of continuua.
+    """A class that has multiple methods for fitting different types of continua.
 
     Args:
         Spectrum (EdiblesSpectrum): The input EiblesSpectrum data
@@ -24,11 +24,11 @@ class Continuum:
         # check existing the available continuum csv files
         try:
             if Spectrum.continuum_filename:
-                self.num_saved_continuua = 0
+                self.num_saved_continua = 0
                 with open(Spectrum.continuum_filename) as f:
                     for row in f:
                         if "######" in row:
-                            self.num_saved_continuua += 1
+                            self.num_saved_continua += 1
         except AttributeError:
             print("No previously saved data")
 
@@ -90,8 +90,8 @@ class Continuum:
         except AttributeError:
             print("'EdiblesSpectrum' object has no attribute 'continuum_filename'")
 
-        assert chosen_save_num < self.num_saved_continuua, (
-            "There are only " + str(self.num_saved_continuua) + " saved continuua."
+        assert chosen_save_num < self.num_saved_continua, (
+            "There are only " + str(self.num_saved_continua) + " saved continua."
         )
 
         saves_counter = 0
