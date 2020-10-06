@@ -19,23 +19,18 @@ class Continuum:
 
     """
 
-
     def __init__(self, Spectrum, method="None", plot=False, verbose=0, *args, **kwargs):
 
         # check existing the available continuum csv files
         try:
             if Spectrum.continuum_filename:
-                num_saved_continuua = 0
+                self.num_saved_continuua = 0
                 with open(Spectrum.continuum_filename) as f:
-                    # reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                     for row in f:
-                        print(row)
-                        if len(row) > 0:
-                            if row[0] == '######':
-                                num_saved_continuua += 1
+                        if "######" in row:
+                            self.num_saved_continuua += 1
         except AttributeError:
-            print('No previously saved data')
-
+            print("No previously saved data")
 
         self.method = method
         self.Spectrum = Spectrum
@@ -48,7 +43,6 @@ class Continuum:
             self.alphashape(*args, **kwargs)
         elif method == "polynomial":
             self.polynomial(*args, **kwargs)
-
 
     def spline(self, *args, **kwargs):
         """A spline function through a set number of anchor points
@@ -75,7 +69,6 @@ class Continuum:
             self.result.plot_fit()
             plt.show()
 
-
     def alphashape(self):
         if self.verbose > 0:
             print("method: ", self.method)
@@ -83,18 +76,23 @@ class Continuum:
 
         print("This method is not available yet.")
 
-
     def polynomial(self):
         if self.verbose > 0:
             print("method: ", self.method)
             print()
         print("This method is not available yet.")
 
-
     def prebuilt_model(self, chosen_save_num=0, plot=False, verbose=0):
 
         # read and parse file contents
-        csv_file = self.Spectrum.continuum_filename
+        try:
+            csv_file = self.Spectrum.continuum_filename
+        except AttributeError:
+            print("'EdiblesSpectrum' object has no attribute 'continuum_filename'")
+
+        assert chosen_save_num < self.num_saved_continuua, (
+            "There are only " + str(self.num_saved_continuua) + " saved continuua."
+        )
 
         saves_counter = 0
         saves_dict = {}
@@ -122,22 +120,23 @@ class Continuum:
 
                     else:
                         if saves_dict[name]["x"] is None:
-                            saves_dict[name]["x"] = [float(item) for item in line.split(',')]
+                            saves_dict[name]["x"] = [
+                                float(item) for item in line.split(",")
+                            ]
                         else:
-                            saves_dict[name]["y"] = [float(item) for item in line.split(',')]
-
+                            saves_dict[name]["y"] = [
+                                float(item) for item in line.split(",")
+                            ]
 
         if verbose > 0:
             print("Number of saved continuum datasets: ", saves_counter)
-
 
         chosen_save = saves_dict["save" + str(chosen_save_num)]
 
         print(chosen_save)
 
-
         # Create spline
-        spline = CubicSpline(chosen_save['x'], chosen_save['y'])
+        spline = CubicSpline(chosen_save["x"], chosen_save["y"])
         out = spline(self.Spectrum.wave)
 
         # TODO: Implement this with a ContinuumModel - almost done, still buggy
@@ -160,9 +159,8 @@ class Continuum:
         if plot:
             plt.plot(self.Spectrum.wave, self.Spectrum.flux)
             plt.plot(self.Spectrum.wave, out)
-            plt.scatter(chosen_save['x'], chosen_save['y'], marker='x', s=80, color='k')
+            plt.scatter(chosen_save["x"], chosen_save["y"], marker="x", s=80, color="k")
             plt.show()
-
 
     def add_to_csv(self, user, comments=False):
 
@@ -173,7 +171,6 @@ class Continuum:
         assert isinstance(comments, str)
         assert isinstance(cont.model.n_anchors, int)
         assert isinstance(datetime.now(), datetime)
-
 
         csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
             "/DR4/data/", "/DR4/continuum/"
@@ -206,11 +203,16 @@ if __name__ == "__main__":
     cont = Continuum(sp, method="spline", n_anchors=5, plot=False, verbose=2)
 
     print("X names: ", cont.model.xnames)
-    print("X values: ", [cont.result.params[param].value for param in cont.model.xnames])
+    print(
+        "X values: ", [cont.result.params[param].value for param in cont.model.xnames]
+    )
     print("Y names: ", cont.model.ynames)
-    print("Y values: ", [cont.result.params[param].value for param in cont.model.ynames])
+    print(
+        "Y values: ", [cont.result.params[param].value for param in cont.model.ynames]
+    )
 
-
-    cont.add_to_csv(user="First Last", comments="These are test points and should not be used.")
+    cont.add_to_csv(
+        user="First Last", comments="These are test points and should not be used."
+    )
 
     cont = Continuum(sp).prebuilt_model(chosen_save_num=1, plot=True, verbose=1)
