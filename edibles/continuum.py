@@ -8,34 +8,32 @@ from edibles.models import ContinuumModel
 
 
 class Continuum:
-    """A class that has multiple methods for fitting different types of continua.
+    """A class that has multiple methods for fitting different types of continuua.
 
     Args:
         Spectrum (EdiblesSpectrum): The input EiblesSpectrum data
         plot (bool): If true, plots the continuum fit
         verbose (int): If > 0, display more status messages
 
-with open('eggs.csv', newline='') as csvfile:
-    
-    
-        print(', '.join(row))
-
     """
 
     def __init__(self, Spectrum, method="spline", plot=False, verbose=0, *args, **kwargs):
-        
+
         # check existing the available continuum csv files
-        if Spectrum.continuum_filename:
-            verbos_count = 0
-            with open(Spectrum.continuum_filename) as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-                for row in spamreader:
+        try:
+            # if Spectrum.continuum_filename:
+            num_saved_continuua = 0
+            with open("/home/kulik/python/ediblesdr4/DR4/continuum/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.csv") as f:
+                # reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                for row in f:
+                    print(row)
                     if len(row) > 0:
                         if row[0] == '######':
-                            verbos_count += 1
-            verbos = verbos_count  
-            
-            
+                            num_saved_continuua += 1
+        except AttributeError:
+            print('No previously saved data')
+
+
         self.method = method
         self.Spectrum = Spectrum
         self.plot = plot
@@ -135,5 +133,5 @@ if __name__ == "__main__":
     print("Y values: ", [cont.result.params[param].value for param in cont.model.ynames])
 
 
-    # cont.add_to_csv(user="First Last", comments="These are test points and should not be used.")
+    cont.add_to_csv(user="First Last", comments="These are test points and should not be used.")
 
