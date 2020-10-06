@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
-from scipy.interpolate import CubicSpline
 from lmfit.models import update_param_vals
+from pprint import pprint
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
@@ -128,33 +128,25 @@ class Continuum:
                                 float(item) for item in line.split(",")
                             ]
 
-        if verbose > 0:
-            print("Number of saved continuum datasets: ", saves_counter)
 
         chosen_save = saves_dict["save" + str(chosen_save_num)]
 
-        print(chosen_save)
 
-        # Create spline
-        spline = CubicSpline(chosen_save["x"], chosen_save["y"])
-        out = spline(self.Spectrum.wave)
+        if verbose > 0:
+            print("Number of saved continuum datasets: ", saves_counter)
+            print("Save chosen: save" + str(chosen_save_num))
+            pprint(chosen_save)
 
-        # TODO: Implement this with a ContinuumModel - almost done, still buggy
+        cont_model = ContinuumModel(n_anchors=chosen_save['n_anchors'])
 
-        # cont = ContinuumModel(n_anchors=chosen_save['n_anchors'])
+        params = cont_model.make_params()
+        for i in range(cont_model.n_anchors):
+            params['%sx_%i' % (cont_model.prefix, i)].set(value=chosen_save["x"][i], vary=False)
+            params['%sy_%i' % (cont_model.prefix, i)].set(value=chosen_save["y"][i], vary=False)
 
-        # params = cont.make_params()
-        # for i in range(cont.n_anchors):
-        #     # params.add(name="x_" + str(i), )
-        #     params['%sx_%i' % (cont.prefix, i)].set(value=chosen_save["x"][i], vary=False)
-        #     params['%sy_%i' % (cont.prefix, i)].set(value=chosen_save["y"][i], vary=False)
-        # update_param_vals(params, cont.prefix)
+        params = update_param_vals(params, cont_model.prefix)
 
-        # print(cont.param_names)
-        # print([params["x_" + str(i)].value for i in range(cont.n_anchors)])
-        # print([params["y_" + str(i)].value for i in range(cont.n_anchors)])
-
-        # out = cont.eval(params=params, x=self.Spectrum.wave)
+        out = cont_model.eval(params=params, x=self.Spectrum.wave)
 
         if plot:
             plt.plot(self.Spectrum.wave, self.Spectrum.flux)
@@ -200,19 +192,28 @@ if __name__ == "__main__":
     sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
     sp.getSpectrum(xmin=3270, xmax=3305)
 
-    cont = Continuum(sp, method="spline", n_anchors=5, plot=False, verbose=2)
+    cont = Continuum(sp, method="spline", n_anchors=4, plot=False, verbose=2)
+    params = cont.model.guess(sp.flux, x=sp.wave)
 
-    print("X names: ", cont.model.xnames)
-    print(
-        "X values: ", [cont.result.params[param].value for param in cont.model.xnames]
-    )
-    print("Y names: ", cont.model.ynames)
-    print(
-        "Y values: ", [cont.result.params[param].value for param in cont.model.ynames]
-    )
+    out = cont.model.eval(params=params, x=sp.wave)
+    # print(params)
+
+
+    plt.plot(sp.wave, sp.flux)
+    plt.plot(sp.wave, out)
+    plt.show()
+
+    # print("X names: ", cont.model.xnames)
+    # print(
+    #     "X values: ", [cont.result.params[param].value for param in cont.model.xnames]
+    # )
+    # print("Y names: ", cont.model.ynames)
+    # print(
+    #     "Y values: ", [cont.result.params[param].value for param in cont.model.ynames]
+    # )
 
     cont.add_to_csv(
         user="First Last", comments="These are test points and should not be used."
     )
 
-    cont = Continuum(sp).prebuilt_model(chosen_save_num=1, plot=True, verbose=1)
+    cont = Continuum(sp).prebuilt_model(chosen_save_num=0, plot=True, verbose=1)
