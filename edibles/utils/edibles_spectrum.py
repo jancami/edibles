@@ -109,7 +109,7 @@ created by corrected_spectrum
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
-            csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
+            csv_file = self.filename.replace(".fits", ".csv").replace(
                 "/DR4/data/", "/DR4/continuum/"
             )
 
