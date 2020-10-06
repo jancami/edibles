@@ -30,10 +30,10 @@ for i in inputs:
 
     print(i) # prints the input file name
     
-    data = np.genfromtxt(i, dtype=None, delimiter=",", names=True) # read the input CSV file
+    data = np.genfromtxt(i, dtype=None, delimiter=",", names=True, encoding='utf-8-sig') # read the input CSV file
 
     colnames=data.dtype.names
-
+    print(colnames)
     nr_rows = data.shape[0]
 
     # initialize the output target data
@@ -67,7 +67,7 @@ for i in inputs:
     df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
 
     # write the pandas dataframe to CSV
-    df.to_csv('Formatted_'+parameter+'.csv', index=False, na_rep='NaN')
+    #df.to_csv('Formatted_'+parameter+'.csv', index=False, na_rep='NaN')
 
     # create the reference list
     for c in np.arange(1,nr_cols):
@@ -80,4 +80,4 @@ for i in inputs:
 
 # craete pandas dataframe for the reference and write to CSV
 dfr=pd.DataFrame(list(zip(references_counter, references)), columns=["reference_id","source"])
-dfr.to_csv('References.csv', index=False, na_rep='NaN')
+#dfr.to_csv('References.csv', index=False, na_rep='NaN')
