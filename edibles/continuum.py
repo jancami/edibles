@@ -24,15 +24,15 @@ class Continuum:
 
         # check existing the available continuum csv files
         try:
-            # if Spectrum.continuum_filename:
-            num_saved_continuua = 0
-            with open("/home/kulik/python/ediblesdr4/DR4/continuum/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.csv") as f:
-                # reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-                for row in f:
-                    print(row)
-                    if len(row) > 0:
-                        if row[0] == '######':
-                            num_saved_continuua += 1
+            if Spectrum.continuum_filename:
+                num_saved_continuua = 0
+                with open(Spectrum.continuum_filename) as f:
+                    # reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                    for row in f:
+                        print(row)
+                        if len(row) > 0:
+                            if row[0] == '######':
+                                num_saved_continuua += 1
         except AttributeError:
             print('No previously saved data')
 
@@ -203,12 +203,12 @@ if __name__ == "__main__":
     sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
     sp.getSpectrum(xmin=3270, xmax=3305)
 
-    # cont = Continuum(sp, method="spline", n_anchors=5, plot=False, verbose=2)
+    cont = Continuum(sp, method="spline", n_anchors=5, plot=False, verbose=2)
 
-    # print("X names: ", cont.model.xnames)
-    # print("X values: ", [cont.result.params[param].value for param in cont.model.xnames])
-    # print("Y names: ", cont.model.ynames)
-    # print("Y values: ", [cont.result.params[param].value for param in cont.model.ynames])
+    print("X names: ", cont.model.xnames)
+    print("X values: ", [cont.result.params[param].value for param in cont.model.xnames])
+    print("Y names: ", cont.model.ynames)
+    print("Y values: ", [cont.result.params[param].value for param in cont.model.ynames])
 
 
     cont.add_to_csv(user="First Last", comments="These are test points and should not be used.")
