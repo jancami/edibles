@@ -67,7 +67,7 @@ for i in inputs:
     df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
 
     # write the pandas dataframe to CSV
-    df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
+    df.to_csv('Formatted_'+parameter+'.csv', index=False, na_rep='NaN')
 
     # create the reference list
     for c in np.arange(1,nr_cols):
