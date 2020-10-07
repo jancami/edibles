@@ -66,7 +66,7 @@ for objloop in range(n_obj):
         this_EBV_SIMBAD = float(match['EBV_Simbad'].values[0])
         if not math.isnan(this_EBV_SIMBAD): 
             if preferred_flag_assigned[objloop] == 'False':
-                is_preffered=1 
+                is_preferred=1 
             else:
                 is_preferred=0
             df_out.loc[counter] = (this_object, this_EBV_SIMBAD, np.NaN, np.NaN, ref_id_SIMBAD, is_preferred)
@@ -76,7 +76,7 @@ for objloop in range(n_obj):
         this_EBV_Tycho = float(match['EBV_Tycho'].values[0])
         if not math.isnan(this_EBV_Tycho): 
             if preferred_flag_assigned[objloop] == 'False':
-                is_preffered=1 
+                is_preferred=1 
             else:
                 is_preferred=0
             df_out.loc[counter] = (this_object, this_EBV_SIMBAD, np.NaN, np.NaN, ref_id_Tycho, is_preferred)
