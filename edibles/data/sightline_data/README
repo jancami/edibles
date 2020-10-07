@@ -1,0 +1,50 @@
+This directory contains all sorts of information related to the
+EDIBLES sightlines; this information needs to be prepared and
+formatted in such a way that the EDIBLES oracle class can read and use
+the information. 
+
+For all parameters, the oracle will expect a file called
+"Formatted_XXX.csv" where XXX is the parameter name. Each of those
+files should look like this (these are the first few lines of the
+Formatted_EBV.csv file): 
+
+object,value,unc_lower,unc_upper,reference_id,preferred_flag
+HD 22951,0.23,NaN,NaN,4,0
+HD 22951,0.23,NaN,NaN,2,0
+HD 23016,0.06,NaN,NaN,4,0
+HD 23016,0.06,NaN,NaN,2,0
+HD 23180,0.3,0.04,0.04,3,1
+HD 23180,0.31,NaN,NaN,4,0
+HD 23180,0.31,NaN,NaN,2,0
+
+The reference_id is a number that refers to the file
+ParameterReferences.csv: 
+
+reference_ID,nickname,doi,url,comments
+1,SIMBAD,,"http://simbad.u-strasbg.fr/simbad/sim-fid","Directly taken from SIMBAD"
+2,Tycho,,,
+3,Valencic04,"https://ui.adsabs.harvard.edu/link_gateway/2004ApJ...616..912V/doi:10.1086/424922","https://iopscience.iop.org/article/10.1086/424922/fulltext/60787.tables.html"
+4,EBV_SIMBAD,,"http://simbad.u-strasbg.fr/simbad/sim-fid","(B-V) from SIMBAD; intrinsic colors from FitzGerald 1970"
+99,Unknown,,,
+
+The preferred_flag is 1 is that particular row corresponds to the
+value that is to be preferred. 
+
+Since many of the parameters have their own set of source data and
+differences in preferred values, it makes sense to process each
+parameter independently in its own script. This is done e.g. in
+"Format_EBV.py". 
+
+An older script ('ReformatTable.py') aimed to accomplish the same by
+starting from a set of Input*.csv files that were essentially created
+from the Master google target spreadsheet and that created
+corresponding "Targets_*.csv" files. This, however, is not sufficient
+to process everything we need, and eventually, we will remove the
+Targets*.csv files as well as the ReformatTable.py script. 
+
+
+
+
+
+
+
