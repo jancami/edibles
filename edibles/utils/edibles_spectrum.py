@@ -64,8 +64,7 @@ created by corrected_spectrum
 created by corrected_spectrum
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
-        continuum_points (): x and y values describing the continuum of the spectrum
-        continuum_header (astropy.io.fits.header.Header): Header for continuum points
+        continuum_filename (astropy.io.fits.header.Header): Name of file with continuum points
 
     """
 
@@ -112,11 +111,13 @@ created by corrected_spectrum
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
-            if len(hdulist) > 1:
-                continuum_hdu = hdulist['CONTINUUM']
-                self.continuum_points = continuum_hdu.data
-                self.continuum_header = continuum_hdu.header
-                print(self.continuum_header)
+            csv_file = self.filename.replace(".fits", ".csv").replace(
+                "/DR4/data/", "/DR4/continuum/"
+            )
+
+            if os.path.isfile(csv_file):
+                self.continuum_filename = csv_file
+
 
 
     def _spec_grid(self):
