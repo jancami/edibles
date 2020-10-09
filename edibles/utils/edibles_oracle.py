@@ -24,9 +24,9 @@ class EdiblesOracle:
         self.ebvlog = pd.read_csv(filename)
         filename=folder /"sightline_data"/"Targets_SpType.csv"
         self.sptypelog = pd.read_csv(filename)
+
         
-        
-        # print(self.sptypelog.dtypes)
+        print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
@@ -121,14 +121,15 @@ class EdiblesOracle:
                 bool_value_matches = (log.reference_id == reference_id) & bool_value_matches
         
         bool_combined_matches = bool_object_matches & bool_value_matches
-        ind = np.where(bool_combined_matches)
-        matching_objects = log.object.values[ind]
+        #ind = np.where(bool_combined_matches)
+        #matching_objects = log.object.values[ind]
+        matching_objects_df = log.loc[bool_combined_matches, ['object','value']]
 
         print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
         print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter matches.')  
         print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
         
-        return matching_objects
+        return matching_objects_df
 
 
 
@@ -146,19 +147,35 @@ class EdiblesOracle:
         # STEP 1: Filter objects for each of the parameters. 
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
+
+        if matching_objects_ebv.size == 0:
+            print("None")
+        else:
+            print(matching_objects_ebv)
+
+        if matching_objects_sptype.size == 0:
+            print("None")
+        else:
+            print(matching_objects_sptype)
         
         # STEP 2: Find the common objects
-        common_objects = set(matching_objects_ebv).intersection(matching_objects_sptype)
-         
-        print(matching_objects_ebv)
-        print(matching_objects_sptype)
-        print(common_objects)
+        ebv_objects = matching_objects_ebv['object']
+        sptype_objects = matching_objects_sptype['object']
+        #print(ebv_objects.tolist())
+        #print(sptype_objects.tolist())
+        common_objects_set = set(ebv_objects.tolist()).intersection(sptype_objects.tolist())
+        common_objects_list= list(common_objects_set)
+        print("***Common Objects***")
+        if len(common_objects_list) == 0:
+            print("None")
+        else:
+            print(common_objects_list)
         
         # STEP 3
         # Now push this list of objects through for further filtering based on obs log
-        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
+        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_set, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
-        #print(FilteredObsList)
+        print(FilteredObsList)
 
         return (FilteredObsList)
 
