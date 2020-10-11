@@ -67,7 +67,6 @@ class EdiblesOracle:
             bool_order_matches = self.obslog.Order == "ALL"
 
         #print(bool_order_matches)
-        ind = np.where(bool_object_matches & bool_order_matches)
         
         bool_wave_matches = np.ones(len(self.obslog.index),dtype=bool)
         if Wave: 
@@ -77,6 +76,7 @@ class EdiblesOracle:
         if WaveMax: 
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
+        ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
         #print(ind)
         #print(' result', self.obslog.iloc[ind].Filename)
         return self.obslog.iloc[ind].Filename            
@@ -173,7 +173,7 @@ class EdiblesOracle:
         
         # STEP 3
         # Now push this list of objects through for further filtering based on obs log
-        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_set, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
+        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
         print(FilteredObsList)
 
