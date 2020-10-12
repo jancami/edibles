@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+from lmfit.models import update_param_vals
+from pprint import pprint
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
@@ -11,13 +13,24 @@ class Continuum:
 
     Args:
         Spectrum (EdiblesSpectrum): The input EiblesSpectrum data
+        method (str): The method of fitting
         plot (bool): If true, plots the continuum fit
         verbose (int): If > 0, display more status messages
 
-
     """
 
-    def __init__(self, Spectrum, method="spline", plot=False, verbose=0, *args, **kwargs):
+    def __init__(self, Spectrum, method="None", plot=False, verbose=0, *args, **kwargs):
+
+        # check existing the available continuum csv files
+        try:
+            if Spectrum.continuum_filename:
+                self.num_saved_continua = 0
+                with open(Spectrum.continuum_filename) as f:
+                    for row in f:
+                        if "######" in row:
+                            self.num_saved_continua += 1
+        except AttributeError:
+            print("No previously saved data")
 
         self.method = method
         self.Spectrum = Spectrum
@@ -46,10 +59,10 @@ class Continuum:
         n_anchors = kwargs["n_anchors"]
 
         self.model = ContinuumModel(n_anchors=n_anchors)
-        cont_pars = self.model.guess(self.Spectrum.flux, x=self.Spectrum.wave)
+        self.cont_pars = self.model.guess(self.Spectrum.flux, x=self.Spectrum.wave)
 
         self.result = self.model.fit(
-            data=self.Spectrum.flux, params=cont_pars, x=self.Spectrum.wave
+            data=self.Spectrum.flux, params=self.cont_pars, x=self.Spectrum.wave
         )
 
         if self.plot:
@@ -69,6 +82,77 @@ class Continuum:
             print()
         print("This method is not available yet.")
 
+    def prebuilt_model(self, chosen_save_num=0, plot=False, verbose=0):
+
+        # read and parse file contents
+        try:
+            csv_file = self.Spectrum.continuum_filename
+        except AttributeError:
+            print("'EdiblesSpectrum' object has no attribute 'continuum_filename'")
+
+        assert chosen_save_num < self.num_saved_continua, (
+            "There are only " + str(self.num_saved_continua) + " saved continua."
+        )
+
+        saves_counter = 0
+        saves_dict = {}
+        with open(csv_file, mode="r") as f:
+            for line in f:
+                line = line.split("\n")[0]
+
+                # initialize new save group
+                if len(line) > 0:
+                    if line == "######":
+                        name = "save" + str(saves_counter)
+                        saves_counter += 1
+                        saves_dict[name] = {"x": None, "y": None}
+
+                    # update dict
+                    elif line[0:2] == "# ":
+                        key, val = line.split("# ")[1].split("=")
+
+                        if key == "n_anchors":
+                            val = int(val)
+                        if key == "datetime":
+                            val = datetime.strptime(val, "%Y-%m-%d %H:%M:%S.%f")
+
+                        saves_dict[name][key] = val
+
+                    else:
+                        if saves_dict[name]["x"] is None:
+                            saves_dict[name]["x"] = [
+                                float(item) for item in line.split(",")
+                            ]
+                        else:
+                            saves_dict[name]["y"] = [
+                                float(item) for item in line.split(",")
+                            ]
+
+
+        chosen_save = saves_dict["save" + str(chosen_save_num)]
+
+
+        if verbose > 0:
+            print("Number of saved continuum datasets: ", saves_counter)
+            print("Save chosen: save" + str(chosen_save_num))
+            pprint(chosen_save)
+
+        cont_model = ContinuumModel(n_anchors=chosen_save['n_anchors'])
+
+        params = cont_model.make_params()
+        for i in range(cont_model.n_anchors):
+            params['%sx_%i' % (cont_model.prefix, i)].set(value=chosen_save["x"][i], vary=False)
+            params['%sy_%i' % (cont_model.prefix, i)].set(value=chosen_save["y"][i], vary=False)
+
+        params = update_param_vals(params, cont_model.prefix)
+
+        out = cont_model.eval(params=params, x=self.Spectrum.wave)
+
+        if plot:
+            plt.plot(self.Spectrum.wave, self.Spectrum.flux)
+            plt.plot(self.Spectrum.wave, out)
+            plt.scatter(chosen_save["x"], chosen_save["y"], marker="x", s=80, color="k")
+            plt.show()
 
     def add_to_csv(self, user, comments=False):
 
@@ -80,23 +164,21 @@ class Continuum:
         assert isinstance(cont.model.n_anchors, int)
         assert isinstance(datetime.now(), datetime)
 
-
         csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
             "/DR4/data/", "/DR4/continuum/"
-        )
-
-        line1 = "method=" + self.method + ", " + "n_anchors=" + str(self.model.n_anchors)
-        line2 = (
-            "datetime=" + str(datetime.now()) + ", "
-            + "user=" + user + ", " + "Comments: " + comments
         )
 
         x_points = [self.result.params[xname].value for xname in self.model.xnames]
         y_points = [self.result.params[yname].value for yname in self.model.ynames]
 
-        header = line1 + "\n" + line2
         with open(csv_file, mode="a") as f:
-            np.savetxt(f, (x_points, y_points), delimiter=",", header=header, comments="# ")
+            f.write("######\n")
+            f.write("# method=" + str(self.method) + "\n")
+            f.write("# n_anchors=" + str(self.model.n_anchors) + "\n")
+            f.write("# datetime=" + str(datetime.now()) + "\n")
+            f.write("# user=" + str(user) + "\n")
+            f.write("# comments=" + str(comments) + "\n")
+            np.savetxt(f, (x_points, y_points), delimiter=",")
             f.write("\n")
 
         if self.verbose > 0:
@@ -108,15 +190,30 @@ class Continuum:
 if __name__ == "__main__":
 
     sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
-    subset = sp.getSpectrum(xmin=3270, xmax=3305)
+    sp.getSpectrum(xmin=3270, xmax=3305)
 
-    cont = Continuum(sp, method="spline", n_anchors=5, plot=True, verbose=2)
+    cont = Continuum(sp, method="spline", n_anchors=4, plot=False, verbose=2)
+    params = cont.model.guess(sp.flux, x=sp.wave)
 
-    print("X names: ", cont.model.xnames)
-    print("X values: ", [cont.result.params[param].value for param in cont.model.xnames])
-    print("Y names: ", cont.model.ynames)
-    print("Y values: ", [cont.result.params[param].value for param in cont.model.ynames])
+    out = cont.model.eval(params=params, x=sp.wave)
+    # print(params)
 
 
-    # cont.add_to_csv(user="First Last", comments="These are test points and should not be used.")
+    plt.plot(sp.wave, sp.flux)
+    plt.plot(sp.wave, out)
+    plt.show()
 
+    # print("X names: ", cont.model.xnames)
+    # print(
+    #     "X values: ", [cont.result.params[param].value for param in cont.model.xnames]
+    # )
+    # print("Y names: ", cont.model.ynames)
+    # print(
+    #     "Y values: ", [cont.result.params[param].value for param in cont.model.ynames]
+    # )
+
+    cont.add_to_csv(
+        user="First Last", comments="These are test points and should not be used."
+    )
+
+    cont = Continuum(sp).prebuilt_model(chosen_save_num=0, plot=True, verbose=1)
