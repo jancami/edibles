@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import bisect
 from lmfit import Parameters
 
 from edibles.models import ContinuumModel, VoigtModel
@@ -26,6 +27,8 @@ class Sightline:
 
         self.model = cont_model
         self.model_pars = cont_pars
+
+        self.peaks = []
 
         self.num_sources = 0
         self.source_names = []
@@ -87,11 +90,27 @@ class Sightline:
                 par_name = source + '_' + name + '_' + par  # telluric_line1_lam_0...
                 new_pars[par_name].set(value=pars[par])
 
-        par_name = source + '_b'
-        new_pars[source + '_' + name + '_b'].set(expr=par_name)
+        b_name = source + '_b'
+        new_pars[source + '_' + name + '_b'].set(expr=b_name)
 
         self.model = self.model * new_line
         self.model_pars = self.model_pars + new_pars
+
+        lambda_name = source + '_' + name + '_lam_0'
+        index = bisect.bisect(self.peaks, new_pars[lambda_name])
+        self.peaks.insert(index, new_pars[lambda_name])
+
+        if len(self.peaks) > 1:
+            for idx in range(len(self.peaks)):
+                if idx == 0:
+                    self.model_pars[self.peaks[idx].name].set(max=self.peaks[idx + 1].value)
+                elif idx == len(self.peaks) - 1:
+                    self.model_pars[self.peaks[idx].name].set(min=self.peaks[idx - 1].value)
+                else:
+                    self.model_pars[self.peaks[idx].name].set(
+                        min=self.peaks[idx - 1].value,
+                        max=self.peaks[idx + 1].value
+                    )
 
 
     def fit(self, data=None, params=None,
@@ -163,13 +182,13 @@ if __name__ == "__main__":
     sightline.add_line(name='line2', pars=d, source='telluric')
 
     # Add line with different source
-    # d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
+    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
     sightline.add_source('interstellar', similar={'b': 1.9})
-    sightline.add_line(name='line3', source='interstellar')
+    sightline.add_line(name='line3', source='interstellar', pars=d)
 
     # Add line with no source & user defined pars
-    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7662}
-    sightline.add_line(name='line4', pars=d)
+    # d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7662}
+    # sightline.add_line(name='line4', pars=d)
 
     # ###############################################################
     # Fit and plot
