@@ -26,3 +26,12 @@ edibles.sightline module
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+edibles.continuum module
+------------------------
+
+.. automodule:: edibles.continuum
+   :members:
+   :undoc-members:
+   :show-inheritance:

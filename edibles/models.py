@@ -128,8 +128,8 @@ class ContinuumModel(Model):
             x = np.asarray(x)
             spacing_idx = [np.argmin(np.abs(x - space)) for space in spacing]
 
-            x_anchors = []
-            y_anchors = []
+            x_anchors = [x_0]
+            y_anchors = [y_0]
 
             for arg in kwargs:
                 if arg[0] == 'x':
