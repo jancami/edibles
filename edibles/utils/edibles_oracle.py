@@ -22,7 +22,7 @@ class EdiblesOracle:
         self.obslog = pd.read_csv(filename)
         filename=folder /"sightline_data"/"Formatted_EBV.csv"
         self.ebvlog = pd.read_csv(filename)
-        filename=folder /"sightline_data"/"Targets_SpType.csv"
+        filename=folder /"sightline_data"/"Formatted_SpType.csv"
         self.sptypelog = pd.read_csv(filename)
 
         
