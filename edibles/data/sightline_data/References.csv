@@ -1,4 +1,6 @@
 reference_id,source
+<<<<<<< HEAD
+=======
 1,EBV
 2,Sigma_EBV
 3,EBV_Tycho
@@ -12,3 +14,4 @@ reference_id,source
 11,fH2
 12,SpType_MK
 13,SpType_EDIBLES
+>>>>>>> d59be8a31c3aed0a56017321265152a8bd2594ac
