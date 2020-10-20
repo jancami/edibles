@@ -20,13 +20,13 @@ class EdiblesOracle:
         folder = Path(PYTHONDIR+"/data")
         filename=folder /"DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
-        filename=folder /"sightline_data"/"Targets_EBV.csv"
+        filename=folder /"sightline_data"/"Formatted_EBV.csv"
         self.ebvlog = pd.read_csv(filename)
-        filename=folder /"sightline_data"/"Targets_SpType.csv"
+        filename=folder /"sightline_data"/"Formatted_SpType.csv"
         self.sptypelog = pd.read_csv(filename)
+
         
-        
-        print(self.sptypelog.dtypes)
+        #print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
@@ -58,7 +58,7 @@ class EdiblesOracle:
         # Do we have to filter out merged or single-order spectra? Note that if both
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
         if MergedOnly and OrdersOnly:
-            print("WARNING: ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle WARNING: ONLY RETURNING MERGED SPECTRA")
 
         bool_order_matches = self.obslog.Order != "Z"
         if OrdersOnly is True:
@@ -67,7 +67,6 @@ class EdiblesOracle:
             bool_order_matches = self.obslog.Order == "ALL"
 
         #print(bool_order_matches)
-        ind = np.where(bool_object_matches & bool_order_matches)
         
         bool_wave_matches = np.ones(len(self.obslog.index),dtype=bool)
         if Wave: 
@@ -77,6 +76,7 @@ class EdiblesOracle:
         if WaveMax: 
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
+        ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
         #print(ind)
         #print(' result', self.obslog.iloc[ind].Filename)
         return self.obslog.iloc[ind].Filename            
@@ -121,14 +121,15 @@ class EdiblesOracle:
                 bool_value_matches = (log.reference_id == reference_id) & bool_value_matches
         
         bool_combined_matches = bool_object_matches & bool_value_matches
-        ind = np.where(bool_combined_matches)
-        matching_objects = log.object.values[ind]
+        #ind = np.where(bool_combined_matches)
+        #matching_objects = log.object.values[ind]
+        matching_objects_df = log.loc[bool_combined_matches, ['object','value']]
 
-        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
-        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter matches.')  
-        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
+        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object match(es).')  
+        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
+        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
         
-        return matching_objects
+        return matching_objects_df
 
 
 
@@ -146,19 +147,35 @@ class EdiblesOracle:
         # STEP 1: Filter objects for each of the parameters. 
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
+
+        if matching_objects_ebv.size == 0:
+            print("None")
+        else:
+            print(matching_objects_ebv)
+
+        if matching_objects_sptype.size == 0:
+            print("None")
+        else:
+            print(matching_objects_sptype)
         
         # STEP 2: Find the common objects
-        common_objects = set(matching_objects_ebv).intersection(matching_objects_sptype)
-         
-        print(matching_objects_ebv)
-        print(matching_objects_sptype)
-        print(common_objects)
+        ebv_objects = matching_objects_ebv['object']
+        sptype_objects = matching_objects_sptype['object']
+        #print(ebv_objects.tolist())
+        #print(sptype_objects.tolist())
+        common_objects_set = set(ebv_objects.tolist()).intersection(sptype_objects.tolist())
+        common_objects_list= list(common_objects_set)
+        print("***Common Objects***")
+        if len(common_objects_list) == 0:
+            print("None")
+        else:
+            print(common_objects_list)
         
         # STEP 3
         # Now push this list of objects through for further filtering based on obs log
-        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
+        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
-        #print(FilteredObsList)
+        print(FilteredObsList)
 
         return (FilteredObsList)
 
@@ -188,7 +205,7 @@ class EdiblesOracle:
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
 
         if MergedOnly and OrdersOnly:
-            print("ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle: ONLY RETURNING MERGED SPECTRA")
 
         bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:
@@ -227,7 +244,7 @@ class EdiblesOracle:
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
 
         if MergedOnly and OrdersOnly:
-            print("ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle: ONLY RETURNING MERGED SPECTRA")
 
         bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:
