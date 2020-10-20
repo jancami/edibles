@@ -7,7 +7,7 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
 
     # Spectrum information
-    sp = EdiblesSpectrum(filename=filename, noDATADIR=True)
+    sp = EdiblesSpectrum(filename=filename, fully_featured=True, noDATADIR=True)
     assert isinstance(sp.header, astropy.io.fits.header.Header)
     assert isinstance(sp.target, str)
     assert isinstance(sp.date, str)
@@ -33,7 +33,6 @@ def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     assert isinstance(sp.wave, np.ndarray)
     assert isinstance(sp.bary_wave, np.ndarray)
     assert isinstance(sp.flux, np.ndarray)
-
 
     # getSpectrum
     xmin = 7660
@@ -98,11 +97,6 @@ def testEdiblesSpectrum(filename="tests/HD170740_w860_redl_20140915_O12.fits"):
     assert len(sp.sky_wave) == len(sp.sky_flux)
     assert np.min(sp.sky_wave) > sp.xmin
     assert np.max(sp.sky_wave) < sp.xmax
-
-
-
-
-
 
 
 if __name__ == "__main__":
