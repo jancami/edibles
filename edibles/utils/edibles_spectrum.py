@@ -145,7 +145,7 @@ created by corrected_spectrum
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
 
         '''
-        stripped_date = self.date[:10].replace('-', '')
+        stripped_date = self.datetime.date().replace('-', '')
 
         filename = glob.glob(
             PYTHONDIR + "/data/telluric_corrected_data/" +
@@ -195,11 +195,13 @@ created by corrected_spectrum
         self.bary_wave = self.raw_bary_wave[b_idx]
         self.bary_flux = self.raw_flux[b_idx]
 
-        if self.fully_featured:
+        try:
             # Sky transmission data
             sky_idx = np.where(np.logical_and(self.raw_sky_wave > xmin, self.raw_sky_wave < xmax))
             self.sky_wave = self.raw_sky_wave[sky_idx]
             self.sky_flux = self.raw_sky_flux[sky_idx]
+        except AttributeError:
+            pass
 
         self._interpolate(initial=True)
 
@@ -278,11 +280,24 @@ If shift is an array, it must be the same length as the wavelength grid.
         self.wave = self.wave[t_idx]
         self.flux = self.flux[t_idx]
 
-        if self.fully_featured:
+        try:
             sky_idx = np.where(np.logical_and(self.raw_sky_wave > zoom_xmin,
                                               self.raw_sky_wave < zoom_xmax))
             self.sky_wave = self.raw_sky_wave[sky_idx]
             self.sky_flux = self.raw_sky_flux[sky_idx]
+        except AttributeError:
+            pass
+
+    def get_extra_data(self):
+        '''Get sky transmission and atmosphere corrected data about EdiblesSpectrum if
+fully_featured is False
+        '''
+
+        assert not self.fully_featured, 'EdiblesSpectrum is already fully_featured!'
+
+        self._sky_transmission()
+        self._corrected_spectrum()
+        self.fully_featured = True
 
 
 if __name__ == "__main__":
@@ -300,6 +315,14 @@ if __name__ == "__main__":
     plt.ylabel('Flux')
     plt.legend()
     plt.show()
+
+
+
+
+    # sp.get_extra_data()
+
+
+
 
     sp.getSpectrum(xmin=3275, xmax=3305)
     plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
@@ -335,6 +358,13 @@ if __name__ == "__main__":
     plt.ylabel('Flux')
     plt.legend()
     plt.show()
+
+
+
+    sp.get_extra_data()
+
+
+
 
     if sp.fully_featured:
         plt.plot(sp.corrected_wave, sp.flux_initial, 'r', label='Initial Flux')
