@@ -145,7 +145,9 @@ created by corrected_spectrum
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
 
         '''
-        stripped_date = self.datetime.date().replace('-', '')
+        print(self.datetime.date())
+
+        stripped_date = str(self.datetime.date()).replace('-', '')
 
         filename = glob.glob(
             PYTHONDIR + "/data/telluric_corrected_data/" +
