@@ -65,21 +65,22 @@ for objloop in range(n_obj):
         # Check whether we have a real value!! 
         this_EBV_SIMBAD = float(match['EBV_Simbad'].values[0])
         if not math.isnan(this_EBV_SIMBAD): 
-            if preferred_flag_assigned[objloop] == 'False':
-                is_preferred=1 
+            if (preferred_flag_assigned[objloop] == False):
+                is_preferred=1
             else:
                 is_preferred=0
+            #print(observed_objects[objloop], preferred_flag_assigned[objloop], preferred_flag_assigned[objloop] == False, is_preferred)
             df_out.loc[counter] = (this_object, this_EBV_SIMBAD, np.NaN, np.NaN, ref_id_SIMBAD, is_preferred)
             counter += 1
             preferred_flag_assigned[objloop] = True
         # Then the Tycho values
         this_EBV_Tycho = float(match['EBV_Tycho'].values[0])
         if not math.isnan(this_EBV_Tycho): 
-            if preferred_flag_assigned[objloop] == 'False':
+            if preferred_flag_assigned[objloop] == False:
                 is_preferred=1 
             else:
                 is_preferred=0
-            df_out.loc[counter] = (this_object, this_EBV_SIMBAD, np.NaN, np.NaN, ref_id_Tycho, is_preferred)
+            df_out.loc[counter] = (this_object, this_EBV_Tycho, np.NaN, np.NaN, ref_id_Tycho, is_preferred)
             counter += 1
             preferred_flag_assigned[objloop] = True
 
