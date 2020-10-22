@@ -129,7 +129,7 @@ class Sightline:
 
 
     def fit(self, data=None, params=None,
-            x=None, report=False, plot=False, method='leastsq', bary=False):
+            x=None, report=False, plot=False, weights=None, method='leastsq', bary=False):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
@@ -153,6 +153,7 @@ class Sightline:
             self.bary_result = self.model.fit(data=data,
                                               params=params,
                                               x=x,
+                                              weights=weights,
                                               method=method)
             if report:
                 print(self.bary_result.fit_report())
@@ -165,6 +166,7 @@ class Sightline:
             self.result = self.model.fit(data=data,
                                          params=params,
                                          x=x,
+                                         weights=weights,
                                          method=method)
             if report:
                 print(self.result.fit_report())
