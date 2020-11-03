@@ -55,7 +55,7 @@ class VoigtModel(Model):
     def _set_paramhints_prefix(self):
         self.set_param_hint('lam_0', min=0, max=12000)
         self.set_param_hint('b', min=0, max=30)
-        self.set_param_hint('d', min=-10, max=10)
+        self.set_param_hint('d', min=0, max=10)
         self.set_param_hint('tau_0', min=0, max=5)
 
 
