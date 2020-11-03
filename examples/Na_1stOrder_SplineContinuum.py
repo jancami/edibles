@@ -7,6 +7,7 @@ from edibles.continuum import Continuum
 from edibles import DATADIR
 
 pythia = EdiblesOracle()
+dirs = [f for f in os.listdir(DATADIR) if not f.startswith(".")]
 dirs = os.listdir(DATADIR)
 figure_output = DATADIR.replace("/data", "/Na3302Plots")
 if not os.path.isdir(figure_output):
