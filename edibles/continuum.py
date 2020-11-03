@@ -252,11 +252,11 @@ class Continuum:
         """
 
         # Tests not in testing folder beceause we dont want to write the testing data
-        assert isinstance(cont.model, ContinuumModel)
+        assert isinstance(self.model, ContinuumModel)
         assert isinstance(user, str)
         assert len(user) > 0, "A name must be entered"
         assert isinstance(comments, str)
-        assert isinstance(cont.model.n_anchors, int)
+        assert isinstance(self.model.n_anchors, int)
         assert isinstance(datetime.now(), datetime)
 
         csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
