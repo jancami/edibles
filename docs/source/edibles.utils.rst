@@ -66,7 +66,7 @@ edibles.utils.voigt module
    :show-inheritance:
 
 edibles.utils.voigt\_profile module
---------------------------
+-----------------------------------
 
 .. automodule:: edibles.utils.voigt_profile
    :members:
