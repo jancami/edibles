@@ -34,35 +34,47 @@ class Sightline:
 
                 cont_pars[yname].set(min=ymin, max=ymax)
 
-        self.model = cont_model
-        self.model_pars = cont_pars
+        self.cont_model = cont_model
+        self.cont_model_pars = cont_pars
+
+        self.complete_model = cont_model
+        self.all_pars = cont_pars
 
         self.peaks = []
 
-        self.num_sources = 0
         self.n_anchors = n_anchors
+        self.n_lines = 0
         self.source_names = []
 
+        self.add_source("Telluric", similar={'b': 3})
+        self.add_source("Nontelluric", similar=None)
 
-    def add_source(self, name, similar={'b': 3}):
+
+    def add_source(self, name, similar=None):
         '''Adds a new source of absorption to the sightline.
 
-        The purpose of a source is to house parameters similar across multiple lines- ex: b
+        The purpose of a source is to hold multiple line models
+together, sometiimes with similar parameters
 
         Args:
             name (str): The name of the absorption source
             similar (dict): A dict of parameters that change with the source,
-                not the specific line, default: {'b': 3}
+not the specific line, default: None, example: similar={'b': 3}
 
         '''
 
-        self.num_sources += 1
         self.source_names.append(name)
 
-        par = Parameters()
-        par.add(name + '_b', value=similar['b'], min=0, max=30)
 
-        self.model_pars = self.model_pars + par
+
+        if name == "Telluric" and similar is not None:
+
+            par = Parameters()
+            for key in similar:
+                par.add(name + '_' + key, value=similar[key], min=0, max=30)
+
+            self.telluric_pars = par
+            self.all_pars = self.all_pars + par
 
 
     def add_line(self, name, source=None, pars=None, guess_data=None):
@@ -77,16 +89,13 @@ class Sightline:
 
         '''
 
-        if source is None:
-            self.add_source(name)
-            source = name
+        assert source is not None, "Source must not be None"
 
-        if source is not None:
-            if source not in self.source_names:
-                print()
-                print('Could not find source \'{}\' in source_names.'.format(source))
-                print('Creating source \'{}\''.format(source))
-                self.add_source(source)
+        if source not in self.source_names:
+            print()
+            print('Could not find source \'{}\' in source_names.'.format(source))
+            print('Creating source \'{}\''.format(source))
+            self.add_source(source)
 
         new_line = VoigtModel(prefix=source + '_' + name + '_')
 
@@ -100,36 +109,51 @@ class Sightline:
                 par_name = source + '_' + name + '_' + par  # telluric_line1_lam_0...
                 new_pars[par_name].set(value=pars[par])
 
-        b_name = source + '_b'
-        new_pars[source + '_' + name + '_b'].set(expr=b_name)
+        if source == "Telluric":
+            b_name = source + '_b'
+            new_pars[source + '_' + name + '_b'].set(expr=b_name)
 
         new_pars[source + '_' + name + '_lam_0'].set(
             min=self.Spectrum.xmin, max=self.Spectrum.xmax
         )
 
-        self.model = self.model * new_line
-        self.model_pars = self.model_pars + new_pars
+
+        self.complete_model = self.complete_model * new_line
+        self.all_pars = self.all_pars + new_pars
+
+        if source == "Telluric":
+            try:
+                self.telluric_model = self.telluric_model * new_line
+            except AttributeError:
+                self.telluric_model = new_line
+
+            try:
+                self.telluric_pars = self.telluric_pars + new_pars
+            except AttributeError:
+                print('Something bad is probably happening')
+                self.telluric_pars = new_pars
+
+        else:
+            try:
+                self.nontelluric_model = self.nontelluric_model * new_line
+            except AttributeError:
+                self.nontelluric_model = new_line
+            try:
+                self.nontelluric_pars = self.nontelluric_pars + new_pars
+            except AttributeError:
+                self.nontelluric_pars = new_pars
+
 
         lambda_name = source + '_' + name + '_lam_0'
         index = bisect.bisect(self.peaks, new_pars[lambda_name])
         self.peaks.insert(index, new_pars[lambda_name])
 
-
-        if len(self.peaks) > 1:
-            for idx in range(len(self.peaks)):
-                if idx == 0:
-                    self.model_pars[self.peaks[idx].name].set(max=self.peaks[idx + 1].value)
-                elif idx == len(self.peaks) - 1:
-                    self.model_pars[self.peaks[idx].name].set(min=self.peaks[idx - 1].value)
-                else:
-                    self.model_pars[self.peaks[idx].name].set(
-                        min=self.peaks[idx - 1].value,
-                        max=self.peaks[idx + 1].value
-                    )
+        self.most_recent = source + '_' + name
+        self.n_lines += 1
 
 
     def fit(self, data=None, params=None,
-            x=None, report=False, plot=False, method='leastsq', bary=False):
+            x=None, report=False, plot=False, weights=None, method='leastsq', bary=False):
         '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
 
         Args:
@@ -145,33 +169,136 @@ class Sightline:
         if data is None:
             data = self.flux
         if params is None:
-            params = self.model_pars
+            params = self.all_pars
         if x is None:
             x = self.wave
 
-        if bary:
-            self.bary_result = self.model.fit(data=data,
+
+        self.result = self.complete_model.fit(data=data,
                                               params=params,
                                               x=x,
+                                              weights=weights,
                                               method=method)
-            if report:
-                print(self.bary_result.fit_report())
-                self.bary_result.params.pretty_print()
-            if plot:
-                self.bary_result.plot_fit()
-                plt.show()
+        if report:
+            print(self.result.fit_report())
+            self.result.params.pretty_print()
+        if plot:
+            self.result.plot_fit()
+            plt.show()
+
+
+        # ##################################################
+        # Update parameter values after fit - for use in model separation
+
+        self.all_pars = self.result.params
+
+        # create new parameters object and add to it from the results parameters
+        try:
+            tell_pars = Parameters()
+            for par_name in self.telluric_pars:
+                tell_pars.add(self.result.params[par_name])
+
+            # update attribute
+            assert len(self.telluric_pars) == len(tell_pars)
+            self.telluric_pars = tell_pars
+        except AttributeError:
+            pass
+
+        try:
+            non_tell_pars = Parameters()
+            for par_name in self.nontelluric_pars:
+                non_tell_pars.add(self.result.params[par_name])
+            assert len(self.nontelluric_pars) == len(non_tell_pars)
+            self.nontelluric_pars = non_tell_pars
+        except AttributeError:
+            pass
+
+        try:
+            cont_pars = Parameters()
+            for par_name in self.cont_model_pars:
+                cont_pars.add(self.result.params[par_name])
+            assert len(self.cont_model_pars) == len(cont_pars)
+            self.cont_model_pars = cont_pars
+        except AttributeError:
+            pass
+
+
+    def freeze(self, prefix=None, freeze_cont=True):
+        '''Freezes the current params, so you can still add to the
+model but the 'old' parameters will not change
+
+        Args:
+            prefix (str): Prefix of parameters to freeze, default: None, example: 'Telluric'
+            freeze_cont (bool): Freeze the continuum or not, default: True
+
+        '''
+
+        if prefix:
+            for par in self.all_pars:
+                if prefix in par:
+                    self.all_pars[par].set(vary=False)
+                if 'y_' in par:
+                    self.all_pars[par].set(vary=False)
 
         else:
-            self.result = self.model.fit(data=data,
-                                         params=params,
-                                         x=x,
-                                         method=method)
-            if report:
-                print(self.result.fit_report())
-                self.result.params.pretty_print()
-            if plot:
-                self.result.plot_fit()
-                plt.show()
+            for par in self.all_pars:
+                self.all_pars[par].set(vary=False)
+
+        if not freeze_cont:
+            for par in self.all_pars:
+                if 'y_' in par:
+                    self.all_pars[par].set(vary=True)
+
+
+    def separate(self, data, x):
+        '''Separate the sources
+
+        '''
+
+        assert len(self.telluric_pars) > 0
+        assert len(self.nontelluric_pars) > 0
+
+        if len(self.source_names) == 2:
+            complete_out = self.complete_model.eval(
+                data=data,
+                params=self.result.params,
+                x=x
+            )
+            telluric_out = self.telluric_model.eval(
+                data=data,
+                params=self.telluric_pars,
+                x=x
+            )
+            nontelluric_out = self.nontelluric_model.eval(
+                data=data,
+                params=self.nontelluric_pars,
+                x=x
+            )
+            cont_out = self.cont_model.eval(
+                data=data,
+                params=self.cont_model_pars,
+                x=x
+            )
+
+            fig, axs = plt.subplots(1, 2)
+
+            axs[0].plot(x, data, label='Data')
+            axs[0].plot(x, complete_out, label='Complete model')
+            axs[0].plot(x, cont_out, label='Continuum model')
+            axs[0].plot(x, (data - complete_out), label='Residual')
+            axs[0].legend()
+
+
+            norm_data = data / cont_out
+
+            axs[1].plot(x, norm_data, label='Continuum-Normalized data')
+            axs[1].plot(x, telluric_out, label='Telluric model')
+            axs[1].plot(x, nontelluric_out, label='Non-Telluric model')
+            axs[1].plot(x, (norm_data - telluric_out), label='Non-telluric data')
+            axs[1].plot(x, (norm_data - nontelluric_out), label='Telluric data')
+            axs[1].legend()
+
+            plt.show()
 
 
 if __name__ == "__main__":
@@ -186,51 +313,38 @@ if __name__ == "__main__":
 
     sightline = Sightline(sp1)
 
-    # Add source
-    sightline.add_source('telluric')
 
     # Add line with auto-guessed params
-    sightline.add_line(name='line1', source='telluric')
+    sightline.add_line(name='line1', source='Telluric')
 
     # Add line with user defined params
     d = {'d': 0.01, 'tau_0': 0.6, 'lam_0': 7664.8}
-    sightline.add_line(name='line2', pars=d, source='telluric')
+    sightline.add_line(name='line2', pars=d, source='Telluric')
 
     # Add line with different source
-    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.2}
-    sightline.add_source('interstellar', similar={'b': 1.9})
-    sightline.add_line(name='line3', source='interstellar', pars=d)
+    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.1}
+    sightline.add_line(name='line3', source='Nontelluric', pars=d)
 
-    # Add line with no source & user defined pars
-    # d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7662}
-    # sightline.add_line(name='line4', pars=d)
-
-    # ###############################################################
-    # Fit and plot
+    # # ###############################################################
+    # # Fit and plot
     sightline.fit(report=True, plot=True, method='leastsq')
 
-    out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
+    out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     resid = sp1.flux - out
 
     plt.plot(sp1.wave, sp1.flux)
     plt.plot(sp1.wave, out)
     plt.plot(sp1.wave, resid)
     plt.show()
-    # ###############################################################
+
+    # sightline.separate(data=sp1.interp_flux, x=sp1.grid)
+
+    # sightline.freeze(prefix='Telluric', freeze_cont=False)
 
     # Add line using guess_pars, and link parameters together
-    sightline.add_line(name='line5', source='interstellar', guess_data=resid)
-    sightline.model_pars['interstellar_line5_lam_0'].set(expr='interstellar_line3_lam_0 + 0.091')
+    sightline.add_line(name='line4', source='Nontelluric', guess_data=resid)
 
-    # ###############################################################
-    # Fit and plot
     sightline.fit(report=True, plot=True, method='leastsq')
 
-    out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
-    resid = sp1.flux - out
+    sightline.separate(data=sp1.interp_flux, x=sp1.grid)
 
-    plt.plot(sp1.wave, sp1.flux)
-    plt.plot(sp1.wave, out)
-    plt.plot(sp1.wave, resid)
-    plt.show()
-    # ###############################################################
