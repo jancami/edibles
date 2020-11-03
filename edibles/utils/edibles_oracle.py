@@ -26,6 +26,14 @@ class EdiblesOracle:
         self.sptypelog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_LogN(HI).csv"
         self.nhilog = pd.read_csv(filename)
+        filename = folder /"sightline_data"/"Formatted_LogN(HII).csv"
+        self.nhiilog = pd.read_csv(filename)
+        filename = folder /"sightline_data"/"Formatted_f(H2).csv"
+        self.fh2log = pd.read_csv(filename)
+        filename = folder /"sightline_data"/"Formatted_RV.csv"
+        self.rvlog = pd.read_csv(filename)
+        filename = folder /"sightline_data"/"Formatted_AV.csv"
+        self.avlog = pd.read_csv(filename)
         
         
         #print(self.sptypelog.dtypes)
@@ -79,8 +87,9 @@ class EdiblesOracle:
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
         ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
-        print(ind)
-        print(' result', self.obslog.iloc[ind].Filename)
+        #print(ind)
+        print("**Filtered File List**")
+        print(self.obslog.iloc[ind].Filename)
         return self.obslog.iloc[ind].Filename            
 
 
@@ -141,7 +150,12 @@ class EdiblesOracle:
     def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,\
                            EBV=None, EBV_min=None, EBV_max=None, EBV_reference=None, \
                            SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, \
-                           WaveMin=None, WaveMax=None, LogNHI=None,LogNHI_min=None,LogNHI_max=None, LogNHI_reference=None):
+                           WaveMin=None, WaveMax=None, LogNHI=None,LogNHI_min=None,LogNHI_max=None,\
+                           LogNHI_reference=None,LogNHII=None,LogNHII_min=None,LogNHII_max=None, \
+                           LogNHII_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
+                           fH2_reference=None, RV=None,RV_min=None,RV_max=None, \
+                           RV_reference=None, AV=None,AV_min=None,AV_max=None, \
+                           AV_reference=None):
         
         '''This method will provide a filtered list of observations that match 
         the specified criteria on sightline/target parameters as well as
@@ -158,17 +172,26 @@ class EdiblesOracle:
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
         matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
+        matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
+        matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
+        matching_objects_rv = self.FilterEngine(object, self.rvlog, RV, RV_min, RV_max, RV_reference)
+        matching_objects_av = self.FilterEngine(object, self.avlog, AV, AV_min, AV_max, AV_reference)
+        
+        print(matching_objects_ebv)
         # STEP 2: Find the common objects
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
         lognhi_objects = matching_objects_lognhi['object']
+        lognhii_objects = matching_objects_lognhii['object']
+        fh2_objects = matching_objects_fh2['object']
+        rv_objects = matching_objects_rv['object']
+        av_objects = matching_objects_av['object']
         
         #print(lognhi_objects.tolist())
         #print(ebv_objects.tolist())
         #print(sptype_objects.tolist())
         
-        #param_lists=(sptype_objects.to_list(),lognhi_objects.to_list())
-        common_objects_set = set(ebv_objects.to_list()).intersection(sptype_objects.to_list(),lognhi_objects.to_list())
+        common_objects_set = set(ebv_objects.to_list()).intersection(sptype_objects.to_list(),lognhi_objects.to_list(),lognhii_objects.to_list(),fh2_objects.to_list(),rv_objects.to_list(),av_objects.to_list())
         common_objects_list= list(common_objects_set)
         print("***Common Objects***")
         if len(common_objects_list) == 0:
@@ -180,7 +203,7 @@ class EdiblesOracle:
         # Now push this list of objects through for further filtering based on obs log
         FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
-        #print(FilteredObsList)
+        print(len(FilteredObsList))
 
         return (FilteredObsList)
 

@@ -93,4 +93,4 @@ sortkey = df_out['object'].tolist()
 sortkey = [int(x[3:]) for x in sortkey]
 df_out_print = df_out.assign(S=sortkey).sort_values('S').drop('S', 1)
 # Then finally print to the formatted csv file
-df_out_print.to_csv('Formatted_Rv.csv', index=False, na_rep='NaN')
+df_out_print.to_csv('Formatted_RV.csv', index=False, na_rep='NaN')
