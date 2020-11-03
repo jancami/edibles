@@ -136,7 +136,10 @@ class EdiblesOracle:
 
 
 
-    def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,EBV=None,EBV_min=None,EBV_max=None, EBV_reference=None, SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, WaveMin=None, WaveMax=None):
+    def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,\
+                           EBV=None, EBV_min=None, EBV_max=None, EBV_reference=None, \
+                           SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, \
+                           WaveMin=None, WaveMax=None):
         
         '''This method will provide a filtered list of observations that match 
         the specified criteria on sightline/target parameters as well as
@@ -152,16 +155,6 @@ class EdiblesOracle:
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
 
-        if matching_objects_ebv.size == 0:
-            print("None")
-        else:
-            print(matching_objects_ebv)
-
-        if matching_objects_sptype.size == 0:
-            print("None")
-        else:
-            print(matching_objects_sptype)
-        
         # STEP 2: Find the common objects
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
@@ -257,7 +250,6 @@ class EdiblesOracle:
             bool_order = self.obslog.Order == "ALL"
 
         ind = np.where(bool_target_matches & bool_order)
-        # print(ind)
         return self.obslog.iloc[ind].Filename
 
 
@@ -268,6 +260,7 @@ if __name__ == "__main__":
     # EXAMPLE 1: Get all observations for a single object. 
     List=pythia.getFilteredObsList(object=["HD 145502"], MergedOnly=False)
     print("1. Results from getFilteredObsList: ")
+    print(List)
 
 
     #List=pythia.getFilteredObsList(object=["HD 103779"],MergedOnly=True,EBV_min=0.2,EBV_max=0.8,EBV_reference=3)
