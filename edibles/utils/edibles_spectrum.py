@@ -5,6 +5,7 @@ from astropy.io import fits
 import astropy.constants as cst
 import astropy.units as u
 import matplotlib.pyplot as plt
+import pandas as pd
 from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
@@ -24,6 +25,8 @@ class EdiblesSpectrum:
 
     Args:
         filename (str): Name of the file, starting with the target
+        fully_featured (bool): If true, EdiblesSpectrum generates the gky transmission and
+corrected spectrum
         noDATADIR (bool): If true, DATADIR will not be added to the front of the filename
 
     Attributes:
@@ -63,28 +66,27 @@ created by corrected_spectrum
 created by corrected_spectrum
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
-        continuum_points (): x and y values describing the continuum of the spectrum
-        continuum_header (astropy.io.fits.header.Header): Header for continuum points
+        continuum_filename (astropy.io.fits.header.Header): Name of file with continuum points
 
     """
 
-    def __init__(self, filename, noDATADIR=False):
+    def __init__(self, filename, fully_featured=False, noDATADIR=False):
         """Filename is relative to the EDIBLES_DATADIR environment variable
 
         """
         self.filename = DATADIR + filename
+        self.fully_featured = fully_featured
 
         if noDATADIR is True:
             self.filename = filename
 
         self._loadSpectrum()
         self._spec_grid()
-        self._sky_transmission()
-        self._corrected_spectrum()
-
+        if self.fully_featured:
+            self._sky_transmission()
+            self._corrected_spectrum()
 
     def _loadSpectrum(self):
-
         with fits.open(self.filename) as hdulist:
             self.header = hdulist[0].header
             self.target = self.header["OBJECT"]
@@ -110,25 +112,22 @@ created by corrected_spectrum
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
-            if len(hdulist) > 1:
-                continuum_hdu = hdulist['CONTINUUM']
-                self.continuum_points = continuum_hdu.data
-                self.continuum_header = continuum_hdu.header
-                print(self.continuum_header)
+            csv_file = self.filename.replace(".fits", ".csv").replace(
+                "/DR4/data/", "/DR4/continuum/"
+            )
 
+            if os.path.isfile(csv_file):
+                self.continuum_filename = csv_file
 
     def _spec_grid(self):
-
         '''Creates a grid used for interpolation.
 
         '''
         grid = make_grid(3000, 10500, resolution=80000, oversample=2)
         self.raw_grid = grid
 
-
     def _sky_transmission(self):
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
-
 
         '''
         filename = PYTHONDIR + "/data/auxiliary_data/sky_transmission/transmission.dat"
@@ -142,14 +141,13 @@ created by corrected_spectrum
         self.raw_sky_wave = sky_wave
         self.raw_sky_flux = sky_flux
 
-
     def _corrected_spectrum(self):
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
 
         '''
-        wavelength, flux_initial = [], []
-        flux_corrO2, flux_corrO2_h2O = [], []
-        stripped_date = self.date[:10].replace('-', '')
+        print(self.datetime.date())
+
+        stripped_date = str(self.datetime.date()).replace('-', '')
 
         filename = glob.glob(
             PYTHONDIR + "/data/telluric_corrected_data/" +
@@ -158,24 +156,21 @@ created by corrected_spectrum
 
         if len(filename) != 0:
             filename = filename[0]
+            data = pd.read_csv(
+                filename,
+                sep=" |:",
+                header=0,
+                names=["wave", "init", "O2", "H2O"],
+                engine="python"
+            )
 
-            f = open(filename)
-            lines = f.readlines()[1:]
-            f.close()
+            self.corrected_wave = data["wave"].to_numpy()
+            self.flux_initial = data["init"].to_numpy()
+            self.flux_corrO2 = data["O2"].to_numpy()
+            self.flux_corrO2_h2O = data["H2O"].to_numpy()
 
-            for line in lines:
-                wavelength.append(line.split()[0])
-                flux_initial.append(line.split()[1])
-                flux_corrO2.append(line.split()[2])
-                flux_corrO2_h2O.append(line.split()[3])
-
-            self.corrected_wave = np.array(wavelength).astype(np.float)
-            self.flux_initial = np.array(flux_initial).astype(np.float)
-            self.flux_corrO2 = np.array(flux_corrO2).astype(np.float)
-            self.flux_corrO2_h2O = np.array(flux_corrO2_h2O).astype(np.float)
         else:
             print('no corrected spectra available')
-
 
     def getSpectrum(self, xmin, xmax):
         """Function to update the wavelength region held in an EdiblesSpectrum object.
@@ -202,13 +197,15 @@ created by corrected_spectrum
         self.bary_wave = self.raw_bary_wave[b_idx]
         self.bary_flux = self.raw_flux[b_idx]
 
-        # Sky transmission data
-        sky_idx = np.where(np.logical_and(self.raw_sky_wave > xmin, self.raw_sky_wave < xmax))
-        self.sky_wave = self.raw_sky_wave[sky_idx]
-        self.sky_flux = self.raw_sky_flux[sky_idx]
+        try:
+            # Sky transmission data
+            sky_idx = np.where(np.logical_and(self.raw_sky_wave > xmin, self.raw_sky_wave < xmax))
+            self.sky_wave = self.raw_sky_wave[sky_idx]
+            self.sky_flux = self.raw_sky_flux[sky_idx]
+        except AttributeError:
+            pass
 
         self._interpolate(initial=True)
-
 
     def _interpolate(self, initial=False):
         '''Interpolation function used in shift().
@@ -243,7 +240,6 @@ created by corrected_spectrum
             # Interpolate barycentric flux data
             bfunc = interp1d(self.bary_wave, self.flux)
             self.interp_bary_flux = bfunc(self.grid)
-
 
     def shift(self, shift, zoom_xmin, zoom_xmax):
         '''Shift the geocentric and update the barycentric wavelength data.
@@ -286,15 +282,30 @@ If shift is an array, it must be the same length as the wavelength grid.
         self.wave = self.wave[t_idx]
         self.flux = self.flux[t_idx]
 
-        sky_idx = np.where(np.logical_and(self.raw_sky_wave > zoom_xmin,
-                                          self.raw_sky_wave < zoom_xmax))
-        self.sky_wave = self.raw_sky_wave[sky_idx]
-        self.sky_flux = self.raw_sky_flux[sky_idx]
+        try:
+            sky_idx = np.where(np.logical_and(self.raw_sky_wave > zoom_xmin,
+                                              self.raw_sky_wave < zoom_xmax))
+            self.sky_wave = self.raw_sky_wave[sky_idx]
+            self.sky_flux = self.raw_sky_flux[sky_idx]
+        except AttributeError:
+            pass
+
+    def get_extra_data(self):
+        '''Get sky transmission and atmosphere corrected data about EdiblesSpectrum if
+fully_featured is False
+        '''
+
+        assert not self.fully_featured, 'EdiblesSpectrum is already fully_featured!'
+
+        self._sky_transmission()
+        self._corrected_spectrum()
+        self.fully_featured = True
 
 
 if __name__ == "__main__":
     # filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"
-    filename = "/HD170740/RED_564/HD170740_w564_n2_20160505_L.fits"
+
+    filename = "/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits"
     sp = EdiblesSpectrum(filename)
     print(sp.target)
     print(sp.datetime.date())
@@ -307,23 +318,31 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    sp.getSpectrum(xmin=5000, xmax=5020)
+
+
+
+    # sp.get_extra_data()
+
+
+
+
+    sp.getSpectrum(xmin=3275, xmax=3305)
     plt.plot(sp.wave, sp.flux, label="Geocentric Subset")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric Subset")
     plt.plot(sp.grid, sp.interp_flux, label='Geocentric Interpolation')
     plt.plot(sp.grid, sp.interp_bary_flux, label='Barycentric Interpolation')
-    plt.plot(sp.sky_wave, sp.sky_flux, 'k')
+    if sp.fully_featured:
+        plt.plot(sp.sky_wave, sp.sky_flux, 'k')
     plt.title('Data and Interpolations')
     plt.xlabel(r'Wavelength ($\AA$)')
     plt.ylabel('Flux')
-
     plt.legend()
     plt.show()
 
     plt.plot(sp.wave, sp.flux, label="Geocentric")
     plt.plot(sp.bary_wave, sp.bary_flux, label="Barycentric")
     shift = 0.05
-    sp.shift(shift=shift, zoom_xmin=5001, zoom_xmax=5019)
+    sp.shift(shift=shift, zoom_xmin=3285, zoom_xmax=3295)
     plt.plot(sp.wave, sp.flux, label='Shifted Geocentric')
     plt.plot(sp.bary_wave, sp.bary_flux, label="Shifted Barycentric")
     plt.title('Data and Shifted Data')
@@ -342,11 +361,19 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    plt.plot(sp.corrected_wave, sp.flux_initial, 'r', label='Initial Flux')
-    plt.plot(sp.corrected_wave, sp.flux_corrO2, 'g--', label='Corrected Flux O2')
-    plt.plot(sp.corrected_wave, sp.flux_corrO2_h2O, 'b--', label='Corrected Flux H2O and O2')
-    plt.legend(fontsize='small')
-    plt.xlabel(r'Wavelength ($\AA$)')
-    plt.ylabel('Flux')
-    plt.title('Data and Telluric Data')
-    plt.show()
+
+
+    sp.get_extra_data()
+
+
+
+
+    if sp.fully_featured:
+        plt.plot(sp.corrected_wave, sp.flux_initial, 'r', label='Initial Flux')
+        plt.plot(sp.corrected_wave, sp.flux_corrO2, 'g--', label='Corrected Flux O2')
+        plt.plot(sp.corrected_wave, sp.flux_corrO2_h2O, 'b--', label='Corrected Flux H2O and O2')
+        plt.legend(fontsize='small')
+        plt.xlabel(r'Wavelength ($\AA$)')
+        plt.ylabel('Flux')
+        plt.title('Data and Telluric Data')
+        plt.show()

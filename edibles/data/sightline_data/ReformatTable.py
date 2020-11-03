@@ -17,8 +17,14 @@ import pandas as pd
 
 EBV_preferred = 'E(B-V)_Simbad'
 
+<<<<<<< HEAD
+inputs=glob.glob('InputEBV.csv')
+=======
+# grab all the Input CSV files to convert
 inputs=glob.glob('Input*.csv')
+>>>>>>> d59be8a31c3aed0a56017321265152a8bd2594ac
 
+# initialise the reference list
 ref=0
 references=[]
 references_counter=[]
@@ -26,14 +32,23 @@ ref_counter=1
 
 for i in inputs:
 
+<<<<<<< HEAD
     print(i)
 
     data = np.genfromtxt(i, dtype=None, delimiter=",", names=True)
+    data2 = np.genfromtxt(i, dtype='U10', delimiter=",", names=True)
+    print(data2)
+=======
+    print(i) # prints the input file name
+    
+    data = np.genfromtxt(i, dtype=None, delimiter=",", names=True, encoding='utf-8-sig') # read the input CSV file
+>>>>>>> d59be8a31c3aed0a56017321265152a8bd2594ac
 
     colnames=data.dtype.names
-
+    print(colnames)
     nr_rows = data.shape[0]
 
+    # initialize the output target data
     object_id=[]
     value=[]
     unc_lower=[]
@@ -41,6 +56,7 @@ for i in inputs:
     reference_id=[]
     preferred_flag=[]
 
+    # extract data from the input and put in the lists
     for row in np.arange(nr_rows):
 
         nr_cols = len(data[row])
@@ -56,13 +72,20 @@ for i in inputs:
 
                reference_id.append(col+ref)
                preferred_flag.append(1)# not setting the PREFERED VALUE flag yet.
-
+             
     parameter = i[5:-4]
 
+    # creata a pandas dataframe representing the output data
     df=pd.DataFrame(list(zip(object_id,value,unc_lower,unc_upper,reference_id,preferred_flag)), columns=["object","value","unc_lower","unc_upper","reference_id","preferred_flag"])
 
-    df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
+<<<<<<< HEAD
+#    df.to_csv('Targets_'+parameter+'.csv', index=False, na_rep='NaN')
+=======
+    # write the pandas dataframe to CSV
+    #df.to_csv('Formatted_'+parameter+'.csv', index=False, na_rep='NaN')
+>>>>>>> d59be8a31c3aed0a56017321265152a8bd2594ac
 
+    # create the reference list
     for c in np.arange(1,nr_cols):
         references_counter.append(ref_counter)
         references.append(colnames[c])
@@ -71,5 +94,6 @@ for i in inputs:
 
     ref=ref+nr_cols-1
 
+# craete pandas dataframe for the reference and write to CSV
 dfr=pd.DataFrame(list(zip(references_counter, references)), columns=["reference_id","source"])
-dfr.to_csv('References.csv', index=False, na_rep='NaN')
+#dfr.to_csv('References.csv', index=False, na_rep='NaN')

@@ -1,8 +1,17 @@
 reference_id,source
-1,EBV_Tycho
-2,EBV_Simbad
-3,log_NH2
-4,log_NHI
-5,fH2
-6,SpType_MK
-7,SpType_EDIBLES
+<<<<<<< HEAD
+=======
+1,EBV
+2,Sigma_EBV
+3,EBV_Tycho
+4,EBV_Simbad
+5,log_NH2
+6,AV
+7,Sigma_AV
+8,RV
+9,Sigma_RV
+10,log_NHI
+11,fH2
+12,SpType_MK
+13,SpType_EDIBLES
+>>>>>>> d59be8a31c3aed0a56017321265152a8bd2594ac
