@@ -142,10 +142,11 @@ class EdiblesOracle:
         the specified criteria on sightline/target parameters as well as
         on observational criteria (e.g. wavelength range). This function consists
         of three steps: 
-        1. Find all targets that match specified target parameters. This is done
+
+        | 1. Find all targets that match specified target parameters. This is done
            for each parameter using the FilterEngine function. 
-        2. Find the objects that match all target specifications. 
-        3. Find the observations that match specified parameters for only these targets. '''
+        | 2. Find the objects that match all target specifications. 
+        | 3. Find the observations that match specified parameters for only these targets. '''
 
         # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified! 
         

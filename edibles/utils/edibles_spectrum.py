@@ -26,7 +26,7 @@ class EdiblesSpectrum:
     Args:
         filename (str): Name of the file, starting with the target
         fully_featured (bool): If true, EdiblesSpectrum generates the gky transmission and
-corrected spectrum
+            corrected spectrum
         noDATADIR (bool): If true, DATADIR will not be added to the front of the filename
 
     Attributes:
@@ -35,20 +35,20 @@ corrected spectrum
         datetime (datetime.datetime): The date of the target observation
         v_bary (float): Barycentric velocity of the target star
         raw_wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
-will not be updated by the functions
+            will not be updated by the functions
         raw_bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
-will not be updated by the functions
+            will not be updated by the functions
         raw_flux (1darray): The flux data for the spectrum,
-will not be updated by the functions
+            will not be updated by the functions
         raw_grid (1darray): A grid covering the entire spectral range used for interpolation
         raw_sky_wave (1darray): Telluric transmission data covering the entire spectral range
         raw_sky_flux (1darray): Telluric transmission data covering the entire spectral range
         wave (1darray): The wavelength data for the spectrum, geocentric reference frame,
-will be updated by the functions
+            will be updated by the functions
         bary_wave (1darray): The wavelength data for the spectrum, barycentric reference frame,
-will be updated by the functions
+            will be updated by the functions
         flux (1darray): The flux data for the spectrum,
-will be updated by the functions
+            will be updated by the functions
         xmin (float): minimum wavelength boundary of data subset - input to getSpectrum
         xmax (float): maximum wavelength boundary of data subset - input to getSpectrum
         sky_wave (1darray): Telluric transmission data - created and updated by getSpectrum
@@ -57,13 +57,13 @@ will be updated by the functions
         interp_flux (1darray): Interpolated geocentric flux - created by _interpolate
         interp_bary_flux (1darray): Interpolated barycentric flux - created by _interpolate
         corrected_wave (1darray): The wavelength data for the telluric corrected spectrum,
-created by corrected_spectrum
+            created by corrected_spectrum
         flux_initial (1darray): The initial flux data for the telluric corrected spectrum,
-created by corrected_spectrum
+            created by corrected_spectrum
         flux_corrO2 (1array): The O2 corrected flux data for the telluric corrected spectrum,
-created by corrected_spectrum
+            created by corrected_spectrum
         flux_corrO2_H2O (1array): O2 and H2O corrected flux for the telluric corrected spectrum,
-created by corrected_spectrum
+            created by corrected_spectrum
         wave_units (str): The units of the wavelength data
         flux_units (str): The units of the flux data
         continuum_filename (astropy.io.fits.header.Header): Name of file with continuum points
@@ -243,11 +243,11 @@ created by corrected_spectrum
 
     def shift(self, shift, zoom_xmin, zoom_xmax):
         '''Shift the geocentric and update the barycentric wavelength data.
-Reinterpolates after shifting.
+            Reinterpolates after shifting.
 
         Args:
             shift (float or 1darray): Amount to shift wavelength grid by.
-If shift is an array, it must be the same length as the wavelength grid.
+                If shift is an array, it must be the same length as the wavelength grid.
             zoom_xmin (float): New minimum wavelength (must be > old xmin)
             zoom_xmax (float): New maximum wavelength (must be < old xmax)
 
@@ -292,7 +292,8 @@ If shift is an array, it must be the same length as the wavelength grid.
 
     def get_extra_data(self):
         '''Get sky transmission and atmosphere corrected data about EdiblesSpectrum if
-fully_featured is False
+            fully_featured is False
+
         '''
 
         assert not self.fully_featured, 'EdiblesSpectrum is already fully_featured!'
