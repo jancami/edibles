@@ -13,6 +13,7 @@ class Sightline:
     Args:
         Spectrum (EdiblesSpectrum): The input spectrum object
         n_anchors (int): Optional, The number of anchors in the ContinuumSpline
+
     '''
 
     def __init__(self, Spectrum, init_cont=True, n_anchors=4):
@@ -54,12 +55,12 @@ class Sightline:
         '''Adds a new source of absorption to the sightline.
 
         The purpose of a source is to hold multiple line models
-together, sometiimes with similar parameters
+            together, sometiimes with similar parameters
 
         Args:
             name (str): The name of the absorption source
             similar (dict): A dict of parameters that change with the source,
-not the specific line, default: None, example: similar={'b': 3}
+                not the specific line, default: None, example: similar={'b': 3}
 
         '''
 
