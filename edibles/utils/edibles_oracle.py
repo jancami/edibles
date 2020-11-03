@@ -24,7 +24,9 @@ class EdiblesOracle:
         self.ebvlog = pd.read_csv(filename)
         filename=folder /"sightline_data"/"Formatted_SpType.csv"
         self.sptypelog = pd.read_csv(filename)
-
+        filename = folder /"sightline_data"/"Formatted_LogN(HI).csv"
+        self.nhilog = pd.read_csv(filename)
+        
         
         #print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
@@ -77,8 +79,8 @@ class EdiblesOracle:
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
         ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
-        #print(ind)
-        #print(' result', self.obslog.iloc[ind].Filename)
+        print(ind)
+        print(' result', self.obslog.iloc[ind].Filename)
         return self.obslog.iloc[ind].Filename            
 
 
@@ -139,7 +141,7 @@ class EdiblesOracle:
     def getFilteredObsList(self,object=None, Wave=None, MergedOnly=False, OrdersOnly=False,\
                            EBV=None, EBV_min=None, EBV_max=None, EBV_reference=None, \
                            SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, \
-                           WaveMin=None, WaveMax=None):
+                           WaveMin=None, WaveMax=None, LogNHI=None,LogNHI_min=None,LogNHI_max=None, LogNHI_reference=None):
         
         '''This method will provide a filtered list of observations that match 
         the specified criteria on sightline/target parameters as well as
@@ -154,13 +156,18 @@ class EdiblesOracle:
         
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
-
+        matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
         # STEP 2: Find the common objects
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
+        lognhi_objects = matching_objects_lognhi['object']
+        
+        #print(lognhi_objects.tolist())
         #print(ebv_objects.tolist())
         #print(sptype_objects.tolist())
-        common_objects_set = set(ebv_objects.tolist()).intersection(sptype_objects.tolist())
+        
+        #param_lists=(sptype_objects.to_list(),lognhi_objects.to_list())
+        common_objects_set = set(ebv_objects.to_list()).intersection(sptype_objects.to_list(),lognhi_objects.to_list())
         common_objects_list= list(common_objects_set)
         print("***Common Objects***")
         if len(common_objects_list) == 0:
