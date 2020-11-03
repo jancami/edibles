@@ -26,7 +26,7 @@ class EdiblesOracle:
         self.sptypelog = pd.read_csv(filename)
 
         
-        print(self.sptypelog.dtypes)
+        #print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
@@ -58,7 +58,7 @@ class EdiblesOracle:
         # Do we have to filter out merged or single-order spectra? Note that if both
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
         if MergedOnly and OrdersOnly:
-            print("WARNING: ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle WARNING: ONLY RETURNING MERGED SPECTRA")
 
         bool_order_matches = self.obslog.Order != "Z"
         if OrdersOnly is True:
@@ -125,9 +125,9 @@ class EdiblesOracle:
         #matching_objects = log.object.values[ind]
         matching_objects_df = log.loc[bool_combined_matches, ['object','value']]
 
-        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object matches.')  
-        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter matches.')  
-        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined matches.')  
+        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object match(es).')  
+        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
+        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
         
         return matching_objects_df
 
@@ -205,7 +205,7 @@ class EdiblesOracle:
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
 
         if MergedOnly and OrdersOnly:
-            print("ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle: ONLY RETURNING MERGED SPECTRA")
 
         bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:
@@ -244,7 +244,7 @@ class EdiblesOracle:
         # MergedOnly and OrdersOnly are True, only the Merged spectra will be returned.
 
         if MergedOnly and OrdersOnly:
-            print("ONLY RETURNING MERGED SPECTRA")
+            print("EDIBLES Oracle: ONLY RETURNING MERGED SPECTRA")
 
         bool_order = self.obslog.Order != "Z"
         if OrdersOnly is True:

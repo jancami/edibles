@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import bisect
 from lmfit import Parameters
@@ -20,10 +21,18 @@ class Sightline:
 
         self.wave = Spectrum.wave
         self.flux = Spectrum.flux
+        self.Spectrum = Spectrum
 
         if init_cont:
             cont_model = ContinuumModel(n_anchors=n_anchors)
             cont_pars = cont_model.guess(self.flux, x=self.wave)
+
+            for yname in cont_model.ynames:
+                flux_range = np.max(self.flux) - np.min(self.flux)
+                ymin = cont_pars[yname].value - (flux_range / 2)
+                ymax = cont_pars[yname].value + (flux_range / 2)
+
+                cont_pars[yname].set(min=ymin, max=ymax)
 
         self.model = cont_model
         self.model_pars = cont_pars
@@ -31,6 +40,7 @@ class Sightline:
         self.peaks = []
 
         self.num_sources = 0
+        self.n_anchors = n_anchors
         self.source_names = []
 
 
@@ -50,7 +60,7 @@ class Sightline:
         self.source_names.append(name)
 
         par = Parameters()
-        par.add(name + '_b', value=similar['b'], min=0)
+        par.add(name + '_b', value=similar['b'], min=0, max=30)
 
         self.model_pars = self.model_pars + par
 
@@ -93,12 +103,17 @@ class Sightline:
         b_name = source + '_b'
         new_pars[source + '_' + name + '_b'].set(expr=b_name)
 
+        new_pars[source + '_' + name + '_lam_0'].set(
+            min=self.Spectrum.xmin, max=self.Spectrum.xmax
+        )
+
         self.model = self.model * new_line
         self.model_pars = self.model_pars + new_pars
 
         lambda_name = source + '_' + name + '_lam_0'
         index = bisect.bisect(self.peaks, new_pars[lambda_name])
         self.peaks.insert(index, new_pars[lambda_name])
+
 
         if len(self.peaks) > 1:
             for idx in range(len(self.peaks)):
