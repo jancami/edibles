@@ -97,7 +97,8 @@ class EdiblesOracle:
         # Generic function to filter through the list of objects. 
         # Note: object should be a list or a numpy array type!
 
-        # First, find all the objects in our log that match the specified objects. 
+        # First, find all the objects in our log that match the specified objects.
+        
         bool_object_matches = np.zeros(len(log.index),dtype=bool)
         if object is None:
              bool_object_matches = np.ones(len(log.index),dtype=bool)
@@ -112,6 +113,7 @@ class EdiblesOracle:
         # Initialize a boolean array to match all entries in the sightline file. 
         # Then work through each of the criteria and add the corresponding filter criterion. 
         bool_value_matches = np.ones(len(log.index),dtype=bool)
+        
         #print(bool_value_matches)
         if value is not None:
             # Only keep sightline if the value is an exact match. 
@@ -119,8 +121,8 @@ class EdiblesOracle:
         if unc_lower is not None:
             bool_value_matches = (log.value > unc_lower) & bool_value_matches
         if unc_upper is not None:
-        
             bool_value_matches = (log.value < unc_upper) & bool_value_matches
+        
         # Now process the references or "preferred" values. 
         # If reference is "All", we should not apply an additional filter. 
         # If reference is specified, filter on that reference. 
@@ -133,7 +135,7 @@ class EdiblesOracle:
             #check if proper ref. is given [1,2] for EBV, [3,4] fpr SpT.
             bool_value_matches = (log.reference_id == reference_id) & bool_value_matches
         
-        #print(bool_value_matches)
+        
         bool_combined_matches = bool_object_matches & bool_value_matches
         #ind = np.where(bool_combined_matches)
         #matching_objects = log.object.values[ind]
@@ -167,17 +169,24 @@ class EdiblesOracle:
         | 2. Find the objects that match all target specifications. 
         | 3. Find the observations that match specified parameters for only these targets. '''
 
-        # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified! 
+        # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified!
         
+        print("EBV")
         matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
+        print("SP_TYPE")
         matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
+        print("LogN(HI)")
         matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
+        print("LogN(HII)")
         matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
+        print("fH2")
         matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
+        print("RV")
         matching_objects_rv = self.FilterEngine(object, self.rvlog, RV, RV_min, RV_max, RV_reference)
+        print("AV")
         matching_objects_av = self.FilterEngine(object, self.avlog, AV, AV_min, AV_max, AV_reference)
         
-        print(matching_objects_ebv)
+    
         # STEP 2: Find the common objects
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
