@@ -35,6 +35,9 @@ class EdiblesOracle:
         filename = folder /"sightline_data"/"Formatted_AV.csv"
         self.avlog = pd.read_csv(filename)
         
+        filename = folder /"sightline_data"/"ObservedObjects.csv"
+        self.object_log = pd.read_csv(filename,names=["object"],header=0)
+        
         
         #print(self.sptypelog.dtypes)
         # total_rows = len(self.ebvlog.index)
@@ -171,23 +174,54 @@ class EdiblesOracle:
 
         # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified!
         
-        print("EBV")
-        matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
-        print("SP_TYPE")
-        matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
-        print("LogN(HI)")
-        matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
-        print("LogN(HII)")
-        matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
-        print("fH2")
-        matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
-        print("RV")
-        matching_objects_rv = self.FilterEngine(object, self.rvlog, RV, RV_min, RV_max, RV_reference)
-        print("AV")
-        matching_objects_av = self.FilterEngine(object, self.avlog, AV, AV_min, AV_max, AV_reference)
         
-    
+        if (EBV or EBV_min or EBV_max or EBV_reference) is not None:
+            print("EBV")
+            matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
+        else:
+            matching_objects_ebv = self.object_log
+        
+        if (SpType or SpType_min or SpType_max or SpType_reference) is not None:
+            print("SP_TYPE")
+            matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
+        else:
+            matching_objects_sptype = self.object_log
+            
+        if (LogNHI or LogNHI_min or LogNHI_max or LogNHI_reference) is not None:
+            print("LogN(HI)")
+            matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
+        else:
+            matching_objects_lognhi = self.object_log
+        
+        if (LogNHII or LogNHII_min or LogNHII_max or LogNHII_reference) is not None:
+            print("LogN(HII)")
+            matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
+        else:
+            matching_objects_lognhii = self.object_log
+        
+        if (fH2 or fH2_min or fH2_max or fH2_reference) is not None:
+            print("fH2")
+            matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
+        else:
+            matching_objects_fh2 = self.object_log
+            
+        if (RV or RV_min or RV_max or RV_reference) is not None:
+            print("RV")
+            matching_objects_rv = self.FilterEngine(object, self.rvlog, RV, RV_min, RV_max, RV_reference)
+        else:
+            matching_objects_rv = self.object_log
+        
+        if (AV or AV_min or AV_max or AV_reference) is not None:
+            print("AV")
+            matching_objects_av = self.FilterEngine(object, self.avlog, AV, AV_min, AV_max, AV_reference)
+        else:
+            matching_objects_av = self.object_log
+            
+        
+     
         # STEP 2: Find the common objects
+        
+        
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
         lognhi_objects = matching_objects_lognhi['object']
@@ -199,8 +233,15 @@ class EdiblesOracle:
         #print(lognhi_objects.tolist())
         #print(ebv_objects.tolist())
         #print(sptype_objects.tolist())
+        ##################
+        if object is None:
+            search_list = self.object_log["object"].to_list()
+        else:
+            search_list = object
         
-        common_objects_set = set(ebv_objects.to_list()).intersection(sptype_objects.to_list(),lognhi_objects.to_list(),lognhii_objects.to_list(),fh2_objects.to_list(),rv_objects.to_list(),av_objects.to_list())
+        common_objects_set = set(search_list).intersection(ebv_objects.to_list(),sptype_objects.to_list(),lognhi_objects.to_list(),lognhii_objects.to_list(),fh2_objects.to_list(),rv_objects.to_list(),av_objects.to_list())
+        
+        ###################
         common_objects_list= list(common_objects_set)
         print("***Common Objects***")
         if len(common_objects_list) == 0:
