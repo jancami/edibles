@@ -47,7 +47,7 @@ class Sightline:
         self.n_lines = 0
         self.source_names = []
 
-        self.add_source("Telluric", similar={'b': 3})
+        self.add_source("Telluric", similar={'b': 1})
         self.add_source("Nontelluric", similar=None)
 
 
@@ -153,18 +153,18 @@ class Sightline:
         self.n_lines += 1
 
 
-    def fit(self, data=None, params=None,
-            x=None, report=False, plot=False, weights=None, method='leastsq', bary=False):
-        '''Fits the sightline models to the sightline data given by the EdiblesSpectrum object.
+    def fit(self, data=None, params=None, model=None,
+            x=None, report=False, plot=False, weights=None, method='leastsq'):
+        '''Fits a model to the sightline data given by the EdiblesSpectrum object.
 
         Args:
             data (1darray): Flux data to fit
             params (lmfit.parameter.Parameters): Initial parameters to fit
+            model (lmfit.model.CompositeModel): The model to fit, default: self.complete_model
             x (1darray): Wavelength data to fit
             report (bool): default False: If true, prints the report from the fit.
             plot (bool): default False: If true, plots the data and the fit model.
             method (str): The method of fitting. default: leastsq
-            bary (bool): If true, creates bary_result instead of result
 
         '''
         if data is None:
@@ -173,13 +173,14 @@ class Sightline:
             params = self.all_pars
         if x is None:
             x = self.wave
+        if model is None:
+            model = self.complete_model
 
-
-        self.result = self.complete_model.fit(data=data,
-                                              params=params,
-                                              x=x,
-                                              weights=weights,
-                                              method=method)
+        self.result = model.fit(data=data,
+                                params=params,
+                                x=x,
+                                weights=weights,
+                                method=method)
         if report:
             print(self.result.fit_report())
             self.result.params.pretty_print()
@@ -224,30 +225,38 @@ class Sightline:
             pass
 
 
-    def freeze(self, prefix=None, freeze_cont=True):
+    def freeze(self, prefix=None, freeze_cont=True, unfreeze=False):
         '''Freezes the current params, so you can still add to the
 model but the 'old' parameters will not change
 
         Args:
             prefix (str): Prefix of parameters to freeze, default: None, example: 'Telluric'
             freeze_cont (bool): Freeze the continuum or not, default: True
+            unfreeze (bool): unfreezes all parameters except x values of
+                spline anchors, default=False
 
         '''
 
-        if prefix:
-            for par in self.all_pars:
-                if prefix in par:
-                    self.all_pars[par].set(vary=False)
-                if 'y_' in par:
+        if unfreeze is False:
+            if prefix:
+                for par in self.all_pars:
+                    if prefix in par:
+                        self.all_pars[par].set(vary=False)
+                    if 'y_' in par:
+                        self.all_pars[par].set(vary=False)
+
+            else:
+                for par in self.all_pars:
                     self.all_pars[par].set(vary=False)
 
-        else:
-            for par in self.all_pars:
-                self.all_pars[par].set(vary=False)
+            if not freeze_cont:
+                for par in self.all_pars:
+                    if 'y_' in par:
+                        self.all_pars[par].set(vary=True)
 
-        if not freeze_cont:
+        elif unfreeze is True:
             for par in self.all_pars:
-                if 'y_' in par:
+                if 'x_' not in par:
                     self.all_pars[par].set(vary=True)
 
 
@@ -306,13 +315,13 @@ if __name__ == "__main__":
 
 
     FILE1 = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
-    xmin = 7661.5
+    xmin = 7661.75
     xmax = 7669
 
     sp1 = EdiblesSpectrum(FILE1)
-    sp1.getSpectrum(xmin=7661, xmax=7670)
+    sp1.getSpectrum(xmin=xmin, xmax=xmax)
 
-    sightline = Sightline(sp1)
+    sightline = Sightline(sp1, n_anchors=5)
 
 
     # Add line with auto-guessed params
@@ -322,9 +331,6 @@ if __name__ == "__main__":
     d = {'d': 0.01, 'tau_0': 0.6, 'lam_0': 7664.8}
     sightline.add_line(name='line2', pars=d, source='Telluric')
 
-    # Add line with different source
-    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.1}
-    sightline.add_line(name='line3', source='Nontelluric', pars=d)
 
     # # ###############################################################
     # # Fit and plot
@@ -333,19 +339,25 @@ if __name__ == "__main__":
     out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     resid = sp1.flux - out
 
-    plt.plot(sp1.wave, sp1.flux)
-    plt.plot(sp1.wave, out)
-    plt.plot(sp1.wave, resid)
-    plt.show()
+    # Add line with different source
+    d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7665.25}
+    sightline.add_line(name='line3', source='Nontelluric', pars=d)
 
-    # sightline.separate(data=sp1.interp_flux, x=sp1.grid)
+    sightline.fit(report=True, plot=True, method='leastsq')
+    out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
+    resid = sp1.flux - out
 
-    # sightline.freeze(prefix='Telluric', freeze_cont=False)
-
-    # Add line using guess_pars, and link parameters together
+    # Add line using guess_pars
     sightline.add_line(name='line4', source='Nontelluric', guess_data=resid)
+
+    # sightline.freeze(prefix='Telluric', freeze_cont=False, unfreeze=True)
+
+    sightline.fit(report=True, plot=True, method='leastsq')
+
+
+    d = {'d': 0.01, 'tau_0': 0.01, 'lam_0': 7662}
+    sightline.add_line(name='line5', pars=d, source='Telluric')
 
     sightline.fit(report=True, plot=True, method='leastsq')
 
     sightline.separate(data=sp1.interp_flux, x=sp1.grid)
-
