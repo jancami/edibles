@@ -262,8 +262,6 @@ class Sightline:
                 for par in pars:
                     if prefix in par:
                         pars[par].set(vary=False)
-                    if 'y_' in par:
-                        pars[par].set(vary=False)
 
             else:
                 for par in pars:
@@ -290,7 +288,13 @@ class Sightline:
 
 
     def separate(self, data, x, old=False, plot=True):
-        '''Separate the sources
+        '''Separate the sources that were added to Sightline.
+
+        Args:
+            data (1darray): FLux data to use for separation
+            x (1darray): Wavelength array to use
+            old (bool): If true, uses the older, second-most recent model and parameters
+            plot (bool): If true, plots separted spectrum
 
         '''
 
