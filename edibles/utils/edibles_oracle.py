@@ -26,7 +26,7 @@ class EdiblesOracle:
         self.sptypelog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_LogN(HI).csv"
         self.nhilog = pd.read_csv(filename)
-        filename = folder /"sightline_data"/"Formatted_LogN(HII).csv"
+        filename = folder /"sightline_data"/"Formatted_LogN(H2).csv"
         self.nhiilog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_f(H2).csv"
         self.fh2log = pd.read_csv(filename)
