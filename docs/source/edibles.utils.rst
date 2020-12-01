@@ -64,3 +64,11 @@ edibles.utils.voigt module
    :members:
    :undoc-members:
    :show-inheritance:
+
+edibles.utils.voigt\_profile module
+-----------------------------------
+
+.. automodule:: edibles.utils.voigt_profile
+   :members:
+   :undoc-members:
+   :show-inheritance:
