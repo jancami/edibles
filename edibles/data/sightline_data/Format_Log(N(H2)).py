@@ -33,7 +33,7 @@ counter = 0
 
 # Read in and process the Log(N(H2)) data
 jenkins_data = ReadJenkins()
-
+print(jenkins_data)
 # Now loop over each object, and go through all data sources.
 for objloop in range(n_obj):
     this_object = observed_objects[objloop]

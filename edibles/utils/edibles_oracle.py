@@ -253,7 +253,7 @@ class EdiblesOracle:
         # Now push this list of objects through for further filtering based on obs log
         FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
-        print(len(FilteredObsList))
+        print(str(len(FilteredObsList))+" file(s) found which fit the given parameters")
 
         return (FilteredObsList)
 
