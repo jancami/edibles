@@ -224,6 +224,8 @@ def voigt_absorption_line(
                 thiswavegrid, tau, kind="cubic", fill_value="extrapolate"
             )
             tau_grid = interpolationfunction(refgrid)
+            tau_grid[np.where(refgrid > np.max(thiswavegrid))] = 0
+            tau_grid[np.where(refgrid < np.min(thiswavegrid))] = 0
             allcomponents[:, lineloop] = tau_grid
 
         # Now add up all the optical depth components.
