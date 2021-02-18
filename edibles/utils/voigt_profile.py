@@ -63,8 +63,8 @@ def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad
     nu = cst.c.to("angstrom/s").value / wave
     nu0 = cst.c.to("angstrom/s").value / lambda0
     sigma = (b * 1e13) / lambda0 / np.sqrt(2)
-    gamma_voigt = gamma / 4 / pi
-    tau_factor = (N * pi * cst.e.esu ** 2 / cst.m_e.cgs / cst.c.cgs * f).value
+    gamma_voigt = gamma / 4 / np.pi
+    tau_factor = (N * np.pi * cst.e.esu ** 2 / cst.m_e.cgs / cst.c.cgs * f).value
 
     # print("Nu0 is:        " + "{:e}".format(nu0))
     # print("Sigma is:      " + "{:e}".format(sigma))
@@ -172,6 +172,7 @@ def voigt_absorption_line(
     elif n_lines == n_components:
         # Case 3A from above.
         print("Number of components: ", n_lines)
+        print("")
         # We can process each line/component now with its own set of parameters.
         # We will loop over each line, create the proper wavelength grid, then get the
         # corresponding optical depth profile, and then decide how to combine everything.
@@ -193,6 +194,7 @@ def voigt_absorption_line(
         minwave = bluewaves.min()
         maxwave = redwaves.max()
         # print("Wave range: ", minwave, maxwave)
+        #print (maxwave, cst.c.to("km/s").value, v_stepsize, b_array)
         n_v = int(
             np.ceil((maxwave - minwave) / minwave * cst.c.to("km/s").value / v_stepsize)
         )
@@ -214,6 +216,7 @@ def voigt_absorption_line(
                 gamma=gamma_array[lineloop],
                 v_rad=v_rad_array[lineloop],
             )
+            #print(tau)
             # Shift to the proper wavelength given the radial velocity
             vel = dv + v_rad_array[lineloop]
             thiswavegrid = lambda0_array[lineloop] * (
@@ -227,6 +230,10 @@ def voigt_absorption_line(
             tau_grid[np.where(refgrid > np.max(thiswavegrid))] = 0
             tau_grid[np.where(refgrid < np.min(thiswavegrid))] = 0
             allcomponents[:, lineloop] = tau_grid
+            #plt.plot(refgrid, tau_grid)
+            #plt.plot(thiswavegrid, tau)
+            #plt.show()
+
 
         # Now add up all the optical depth components.
         tau = np.sum(allcomponents, axis=1)
@@ -236,6 +243,8 @@ def voigt_absorption_line(
         # plt.show()
 
         # Do the radiative transfer
+        #print(tau)
+
         AbsorptionLine = np.exp(-tau)
 
         # Apply a Gaussian instrumental smoothing function!
@@ -280,7 +289,7 @@ if __name__ == "__main__":
     well as for the various forms of the normalized Voigt profiles. One test aims to
     reproduce the high-resolution profile for the K line of omi Per (form Welty et al.)
     """
-    show_example = 1
+    show_example = 2
 
     if show_example == 1:
         #############################################################
