@@ -18,34 +18,34 @@ class Voigt:
     def __init__(self):
         self
 
-    def voigtMath(self, x, alpha, gamma):
-        """
-        Function to return the Voigt line shape centered at cent with
-        Lorentzian component HWHM gamma and Gaussian component HWHM alpha.
+        def voigtMath(self, x, alpha, gamma):
+            """
+            Function to return the Voigt line shape centered at cent with
+            Lorentzian component HWHM gamma and Gaussian component HWHM alpha.
 
-        Creates a Voigt line profile using the scipy.special.wofz, which
-        returns the value of the Faddeeva function.
+            Creates a Voigt line profile using the scipy.special.wofz, which
+            returns the value of the Faddeeva function.
 
-        WARNING:
-            scipy.special.wofz is not compaible with np.float128 input type.
+            WARNING:
+                scipy.special.wofz is not compaible with np.float128 input type.
 
-        Args:
-            x (float64): Dimensionless point/array
-            alpha (float64): Gaussian HWHM component
-            gamma (float64): Lorentzian HWHM component
+            Args:
+                x (float64): Dimensionless point/array
+                alpha (float64): Gaussian HWHM component
+                gamma (float64): Lorentzian HWHM component
 
-        Returns:
-            ndarray: Flux array for given input
+            Returns:
+                ndarray: Flux array for given input
 
-        """
+            """
 
-        sigma = alpha / np.sqrt(2 * np.log(2))
+            sigma = alpha / np.sqrt(2 * np.log(2))
 
-        return (
-            np.real(wofz((x + 1j * gamma) / sigma / np.sqrt(2)))
-            / sigma
-            / np.sqrt(2 * np.pi)
-        )
+            return (
+                np.real(wofz((x + 1j * gamma) / sigma / np.sqrt(2)))
+                / sigma
+                / np.sqrt(2 * np.pi)
+            )
 
     def voigtOpticalDepth(self, lam, lam_0, b, d, Nf=1.0):
         """
