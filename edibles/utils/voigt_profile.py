@@ -172,7 +172,6 @@ def voigt_absorption_line(
     elif n_lines == n_components:
         # Case 3A from above.
         print("Number of components: ", n_lines)
-        print("")
         # We can process each line/component now with its own set of parameters.
         # We will loop over each line, create the proper wavelength grid, then get the
         # corresponding optical depth profile, and then decide how to combine everything.
@@ -183,18 +182,25 @@ def voigt_absorption_line(
         v_stepsize = b_array.min() / 10
 
         # We will also need to be able to add each optical depth profile, so we need a common
-        # wavelength grid to interpolate on. Let's use a width of 20 * b for each line, and see
+        # wavelength grid to interpolate on. Let's use a width of 50 * b for each line, and see
         # what wavelength limits to consider.
         bluewaves = lambda0_array * (
-            1.0 + (v_rad_array - 20.0 * b_array) / cst.c.to("km/s").value
+            1.0 + (v_rad_array - 50.0 * b_array) / cst.c.to("km/s").value
         )
         redwaves = lambda0_array * (
-            1.0 + (v_rad_array + 20.0 * b_array) / cst.c.to("km/s").value
+            1.0 + (v_rad_array + 50.0 * b_array) / cst.c.to("km/s").value
         )
+        #print("Bluewaves:", bluewaves)
+        #print("Waves    :", lambda0_array)
+        #print("Redwaves :", redwaves)
+        #print("b_array  :", b_array)
         minwave = bluewaves.min()
         maxwave = redwaves.max()
-        # print("Wave range: ", minwave, maxwave)
-        #print (maxwave, cst.c.to("km/s").value, v_stepsize, b_array)
+        minwave = min(minwave, wavegrid.min())
+        maxwave = max(maxwave, wavegrid.max())
+
+        #print(v_rad_array)
+        #print("Wave range: ", minwave, maxwave)
         n_v = int(
             np.ceil((maxwave - minwave) / minwave * cst.c.to("km/s").value / v_stepsize)
         )
@@ -202,7 +208,7 @@ def voigt_absorption_line(
         allcomponents = np.zeros(shape=(n_v, n_lines))
 
         for lineloop in range(n_lines):
-            v_limits = [-20.0 * b_array[lineloop], 20.0 * b_array[lineloop]]
+            v_limits = [-50.0 * b_array[lineloop], 50.0 * b_array[lineloop]]
             dv = np.arange(
                 start=v_limits[0], stop=v_limits[1], step=v_stepsize
             )  # in km/s
@@ -216,7 +222,7 @@ def voigt_absorption_line(
                 gamma=gamma_array[lineloop],
                 v_rad=v_rad_array[lineloop],
             )
-            #print(tau)
+            print("Max tau:", tau.max())
             # Shift to the proper wavelength given the radial velocity
             vel = dv + v_rad_array[lineloop]
             thiswavegrid = lambda0_array[lineloop] * (
@@ -229,41 +235,65 @@ def voigt_absorption_line(
             tau_grid = interpolationfunction(refgrid)
             tau_grid[np.where(refgrid > np.max(thiswavegrid))] = 0
             tau_grid[np.where(refgrid < np.min(thiswavegrid))] = 0
-            allcomponents[:, lineloop] = tau_grid
-            #plt.plot(refgrid, tau_grid)
-            #plt.plot(thiswavegrid, tau)
+            #plt.plot(thiswavegrid,tau,marker="+")
+            #plt.plot(refgrid,tau_grid, color='red')
             #plt.show()
-
+            
+            allcomponents[:, lineloop] = tau_grid
 
         # Now add up all the optical depth components.
         tau = np.sum(allcomponents, axis=1)
 
-        # plt.plot(refgrid,tau_coadd)
-        # plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
-        # plt.show()
+        #plt.plot(refgrid,tau)
+        #plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+        #plt.show()
 
         # Do the radiative transfer
-        #print(tau)
-
         AbsorptionLine = np.exp(-tau)
+        #plt.plot(refgrid,AbsorptionLine)
+        #plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+        #plt.show()
 
         # Apply a Gaussian instrumental smoothing function!
         # Calculate sigma -- in units of step size!
         smooth_sigma = fwhm2sigma(v_resolution) / v_stepsize
-        # print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
+        print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
+        
+        # One thing to watch out for is that the smoothing width is large compared to 
+
         gauss_smooth = gaussian_filter(AbsorptionLine, sigma=smooth_sigma)
         interpolationfunction = interp1d(
             refgrid, gauss_smooth, kind="cubic", bounds_error=False, fill_value=(1, 1)
         )
         interpolated_model = interpolationfunction(wavegrid)
-        # plt.plot(refgrid, AbsorptionLine, marker='o')
-        # plt.plot(refgrid, gauss_smooth, color='green', marker='D')
-        # plt.plot(wavegrid,interpolated_model, color='red', marker='1')
-        # plt.show()
+        #plt.plot(refgrid, AbsorptionLine, marker='o')
+        #plt.plot(refgrid, gauss_smooth, color='green', marker='D')
+        #plt.plot(wavegrid,interpolated_model, color='red', marker='1')
+        #plt.show()
     else:
-        print(
-            "voigt_absorption_line Panic: This option has not been implemented yet.... "
+        # Create arrays that hold all the lines for all the components. 
+        # We need in total n_components * n_lines array elements. 
+        lambda0_use = np.repeat(lambda0, n_components)
+        f_use = np.repeat(f, n_components)
+        gamma_use = np.repeat(gamma, n_components)
+        # For the eomponents, do some dimensional juggling.... 
+        b_use = np.concatenate(np.repeat([b], n_lines, axis=0), axis=0)
+        N_use = np.concatenate(np.repeat([N], n_lines, axis=0), axis=0)
+        v_rad_use = np.concatenate(np.repeat([v_rad], n_lines, axis=0), axis=0)
+        #print(lambda0_use)
+        #print(N_use)
+        interpolated_model = voigt_absorption_line(
+            wavegrid,
+            lambda0=lambda0_use,
+            f=f_use,
+            gamma=gamma_use,
+            b=b_use,
+            N=N_use,
+            v_rad=v_rad_use,
+            v_resolution=v_resolution,
         )
+            #"voigt_absorption_line Panic: This option has not been implemented yet.... "
+        #)
 
     return interpolated_model
 
@@ -289,7 +319,7 @@ if __name__ == "__main__":
     well as for the various forms of the normalized Voigt profiles. One test aims to
     reproduce the high-resolution profile for the K line of omi Per (form Welty et al.)
     """
-    show_example = 2
+    show_example = 4
 
     if show_example == 1:
         #############################################################
@@ -410,3 +440,48 @@ if __name__ == "__main__":
         plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
         plt.plot(wave, AbsorptionLine, color="orange", marker="*")
         plt.show()
+    
+    elif show_example == 4:
+        #############################################################
+        #
+        # EXAMPLE 4: Na doublet: multiple lines, multiple cloud.
+        #
+        #############################################################
+
+        # Let's see if we can reproduce the Na lines for HD 183143
+        lambda0 = [3302.369, 3302.978]
+        f = [8.26e-03, 4.06e-03]
+        gamma = [6.280e7, 6.280e7]
+        b = [1.0, 1.4, 1.4]
+        N = [1e13, 1.5e14, 5.0e14]
+        v_rad = [1.0, 8.0, 22.0]
+        v_resolution = 5.75
+
+        pythia = EdiblesOracle()
+        List = pythia.getFilteredObsList(object=["HD 183143"], MergedOnly=True, Wave=3302.0)
+        test = List.values.tolist()
+        filename = test[0]
+        print(filename)
+        wrange = [3301.5, 3304.0]
+        sp = EdiblesSpectrum(filename)
+        wave = sp.wave
+        flux = sp.flux
+        idx = np.where((wave > wrange[0]) & (wave < wrange[1]))
+        wave = wave[idx]
+        flux = flux[idx]
+        flux = flux / np.median(flux)
+        AbsorptionLine = voigt_absorption_line(
+            wave,
+            lambda0=lambda0,
+            b=b,
+            N=N,
+            f=f,
+            gamma=gamma,
+            v_rad=v_rad,
+            v_resolution=v_resolution,
+        )
+        plt.plot(wave, flux)
+        plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+        plt.plot(wave, AbsorptionLine, color="orange", marker="*")
+        plt.show()
+    
