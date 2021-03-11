@@ -213,6 +213,14 @@ def voigt_absorption_line(
                 start=v_limits[0], stop=v_limits[1], step=v_stepsize
             )  # in km/s
             thiswavegrid = lambda0_array[lineloop] * (1.0 + dv / cst.c.to("km/s").value)
+            print(len(dv))
+
+            dv = getVGrid(
+                lambda0_array[lineloop],
+                gamma_array[lineloop],
+                b_array[lineloop],
+                v_resolution)
+            thiswavegrid = lambda0_array[lineloop] * (1.0 + dv / cst.c.to("km/s").value)
             tau = voigt_optical_depth(
                 thiswavegrid,
                 lambda0=lambda0_array[lineloop],
@@ -305,6 +313,47 @@ def fwhm2sigma(fwhm):
     sigma = fwhm / (2.0 * np.sqrt(2.0 * np.log(2.0)))
     return sigma
 
+def VoigtFWHM(lambda0, gamma, b):
+    """
+    Calculate FWHM of Voigt using the formula by Olivero.
+    See the bottom of wiki Voigt Profile page
+
+    :param lambda0: center wavelength in AA
+    :param gamma: Lorentzian gamma (=HWHM), in frequency?
+    :param b: Gaussian b in km/s.
+    :return: Gau_FWHM, Lor_FWHM, V_FWHM, all in km/s
+    """
+
+    #gamma_AA = gamma * lambda0**2 / cst.c.to("angstrom/s").value
+    gamma_kms = gamma * lambda0 * 1e-13
+    Lor_FWHM = gamma_kms * 2
+
+    # FWHM = 2*sigma*sqrt(2*ln2)
+    Gau_FWHM = 2.35482 * b
+
+    #fV = fL/2 + sqrt(fL^2/4 + fG^2)
+    Voigt_FWHM = 0.5 * Lor_FWHM + np.sqrt(Lor_FWHM**2 / 4 + Gau_FWHM ** 2)
+
+    return Gau_FWHM, Lor_FWHM, Voigt_FWHM
+
+
+def getVGrid(lambda0, gamma, b, v_resolution):
+    """
+    Calculate v grid to be used for Voigt profile
+    Size of grid is determined by the greater of FWHM_Voigt and v_resolution
+
+    :return: dv, velocity grid
+    """
+
+    Gau_FWHM, Lor_FWHM, Voigt_FWHM = VoigtFWHM(lambda0, gamma, b)
+    print(Gau_FWHM, Lor_FWHM, Voigt_FWHM)
+    FWHM2use = np.max([Voigt_FWHM, v_resolution])
+    v_stepsize = np.min([Voigt_FWHM, v_resolution]) / 25
+    print(FWHM2use, v_stepsize)
+    dv = np.arange(
+        start=-5.0*FWHM2use, stop=5.0*FWHM2use, step=v_stepsize
+    )
+    return dv
 
 #  --------------------------------------------------------------------------------------
 
@@ -484,4 +533,3 @@ if __name__ == "__main__":
         plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
         plt.plot(wave, AbsorptionLine, color="orange", marker="*")
         plt.show()
-    
