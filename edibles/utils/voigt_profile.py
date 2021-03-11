@@ -196,8 +196,8 @@ def voigt_absorption_line(
         #print("b_array  :", b_array)
         minwave = bluewaves.min()
         maxwave = redwaves.max()
-        minwave = min(minwave, wavegrid.min())
-        maxwave = max(maxwave, wavegrid.max())
+        minwave = min(minwave, min(wavegrid))
+        maxwave = max(maxwave, max(wavegrid))
 
         #print(v_rad_array)
         #print("Wave range: ", minwave, maxwave)
@@ -484,4 +484,3 @@ if __name__ == "__main__":
         plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
         plt.plot(wave, AbsorptionLine, color="orange", marker="*")
         plt.show()
-    

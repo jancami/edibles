@@ -30,8 +30,6 @@ class EdiblesOracle:
         self.nhiilog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_f(H2).csv"
         self.fh2log = pd.read_csv(filename)
-        filename = folder /"sightline_data"/"Formatted_RV.csv"
-        self.rvlog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_AV.csv"
         self.avlog = pd.read_csv(filename)
         
