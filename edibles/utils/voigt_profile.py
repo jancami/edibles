@@ -80,7 +80,8 @@ def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad
 
 
 def voigt_absorption_line(
-    wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0
+    wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0,
+    debug=False
 ):
     """
     Function to return a complete Voigt Absorption Line Model, smoothed to the specified
@@ -97,6 +98,7 @@ def voigt_absorption_line(
         gamma (float64): Lorentzian gamma (=HWHM) component
         v_rad (float64): Radial velocity of absorption line (in km/s)
         v_resolution (float64): Instrument resolution in velocity space (in km/s)
+        debug (bool): If true, will output message during calculations
 
     Returns:
         ndarray: Normalized flux for specified grid & parameters.
@@ -112,11 +114,12 @@ def voigt_absorption_line(
 
     # How many lines are passed on?
     n_lines = lambda0_array.size
-    print("Number of lines: " + "{:d}".format(n_lines))
 
     # How many cloud components do we have?
     n_components = N_array.size
-    print("Number of components: " + "{:d}".format(n_components))
+    if debug:
+        print("Number of lines: " + "{:d}".format(n_lines))
+        print("Number of components: " + "{:d}".format(n_components))
 
     # We will consider 3 different cases here:
     # 1. A single line, but multiple components.
@@ -171,7 +174,8 @@ def voigt_absorption_line(
         )
     elif n_lines == n_components:
         # Case 3A from above.
-        print("Number of components: ", n_lines)
+        if debug:
+            print("Number of components: ", n_lines)
         # We can process each line/component now with its own set of parameters.
         # We will loop over each line, create the proper wavelength grid, then get the
         # corresponding optical depth profile, and then decide how to combine everything.
@@ -222,7 +226,8 @@ def voigt_absorption_line(
                 gamma=gamma_array[lineloop],
                 v_rad=v_rad_array[lineloop],
             )
-            print("Max tau:", tau.max())
+            if debug:
+                print("Max tau:", tau.max())
             # Shift to the proper wavelength given the radial velocity
             vel = dv + v_rad_array[lineloop]
             thiswavegrid = lambda0_array[lineloop] * (
@@ -257,7 +262,8 @@ def voigt_absorption_line(
         # Apply a Gaussian instrumental smoothing function!
         # Calculate sigma -- in units of step size!
         smooth_sigma = fwhm2sigma(v_resolution) / v_stepsize
-        print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
+        if debug:
+            print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
         
         # One thing to watch out for is that the smoothing width is large compared to 
 
