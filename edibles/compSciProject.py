@@ -2,6 +2,7 @@ import numpy as np
 import statistics
 import matplotlib.pyplot as plt
 import os.path
+import time
 from edibles import DATADIR
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
@@ -34,20 +35,19 @@ def normailzeLists(list1,list2):
         idx = np.where((wave1 > wrange1[0]) & (wave1 < wrange1[1]))
         idx2 = np.where((wave2 > wrange2[0]) & (wave2 < wrange2[1]))
 
-
         flux1 = sp1.flux[idx]/ np.median(sp1.flux[idx])
         flux2 = sp2.flux[idx2]/ np.median(sp2.flux[idx2])
 
         wave = list(wave1[idx]) +  list(wave2[idx2])
         flux = list(flux1) + list(flux2)
-
-        return wave, flux
+        #return wave, flux
+        return list(wave1[idx]),list(flux1),list(wave2[idx2]),list(flux2)
     print("failed")
     return [],[]
 
 def NaModel(filename):
     method = 'least_squares'
-
+    startTime = time.time()
     lambda0 = [3302.369, 3302.978, 5889.950, 5895.924]
     f = [8.26e-03, 4.06e-03, 6.49E-01,3.24E-01]
     gamma = [6.280e7, 6.280e7,6.280e7,6.280e7]
@@ -69,80 +69,63 @@ def NaModel(filename):
             object=[filename], MergedOnly=True, Wave=5889.0
     ).values.tolist()
 
-    wave, flux = normailzeLists(List1,List2)
+    wave, flux, wave2, flux2  = normailzeLists(List1,List2)
 
-    temp = 0
+    temp = 1
     test = flux
     oldModel = None
     oldPars = None
+    v_rad = [0.0]
+    while temp < 3:
+        model = NAModelOptimize(n_components=temp)
+        pars = model.guess(flux,wave,v_rad)
 
-    while temp < 2:
-        model = NAModelOptimize(prefix = 'm_' + str(temp) + '_')
-        pars = model.guess(test, b[-1],  N[-1], wavegrid = wave, lambda0=[3302.369, 3302.978, 5889.950, 5895.924], f=[8.26e-03, 4.06e-03, 6.49E-01,3.24E-01], gamma=[6.280e7, 6.280e7,6.280e7,6.280e7], v_resolution=v_resolution)
-
-        if oldModel:
-            testModel = oldModel * model
-            testPars = oldPars + pars
-        else:
-            testModel = model
-            testPars = pars
-
-        result = testModel.fit(data=flux, params=testPars, wavegrid=wave, lambda0=[3302.369, 3302.978, 5889.950, 5895.924], f=[8.26e-03, 4.06e-03, 6.49E-01,3.24E-01], gamma=[6.280e7, 6.280e7,6.280e7,6.280e7], v_resolution=v_resolution, method=method)
+        result = model.fit(data=test, params=pars,  x=wave)
 
         print("Report start")
         print(result.fit_report())
         print("Report End")
 
-        for i in range (0, temp+1):
-            v_rad[i] = result.params['m_' + str(i) + '_' + 'v_rad'].value
-            b[i] = result.params['m_' + str(i) + '_' + 'b'].value
-            N[i] = result.params['m_' + str(i) + '_' + 'N'].value
+        for i in range (0, temp):
+            v_rad[i] = result.params['V_off_Cloud' + str(i)].value
+            v_rad.append(0.0)
 
-        test_v_rad = []
-        test_N = []
-        test_b = []
-
-        for v in v_rad:
-            test_v_rad = np.concatenate([test_v_rad, [v, v, v, v]])
-
-        for v in N:
-            test_N = np.concatenate([test_N, [v, v, v, v]])
-
-        for v in b:
-            test_b = np.concatenate([test_b, [v, v, v, v]])
-
-        AbsorptionLine = voigt_absorption_line(
-            wave,
-            lambda0=lambda0,
-            b=test_b,
-            N=test_N,
-            f=f,
-            gamma=gamma,
-            v_rad=test_v_rad,
-            v_resolution=v_resolution,
-        )
-        test = flux - AbsorptionLine
+        #test = flux - AbsorptionLine
 
         lambda0.extend([3302.369, 3302.978, 5889.950, 5895.924])
         f.extend([8.26e-03, 4.06e-03, 6.49E-01,3.24E-01])
         gamma.extend([6.280e7, 6.280e7,6.280e7,6.280e7])
 
-        v_rad = np.append(v_rad, result.params['m_' + str(temp) + '_' + 'v_rad'].value)
-        b = np.append(b, result.params['m_' + str(temp) + '_' + 'b'].value)
-        N = np.append(N,result.params['m_' + str(temp) + '_' + 'N'].value)
         temp += 1
         if not oldModel:
-            oldModel = testModel
-            oldPars = testPars
+            oldModel = model
+            oldPars = pars
         else:
             #compareModels(testModel, oldModel)
-            oldModel = testModel
-            oldPars = testPars
+            oldModel = model
+            oldPars = pars
 
-    print(result.covar)
+    print(result.covar)  #look into f test
+    print('Total Time:', time.time() - startTime)
+
+    AbsorptionLine3000 = model.eval(params=result.params, x=wave)
+    AbsorptionLine5000 = model.eval(params=result.params, x=wave2)
+    AbsorptionLineComb = model.eval(params=result.params, x=(wave+wave2))
+
+    plot1 = plt.figure(1)
     plt.plot(wave, flux)
     plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
-    plt.plot(wave, AbsorptionLine, color="orange", marker="*")
+    plt.plot(wave, AbsorptionLine3000, color="orange", marker="*")
+
+    plot2 = plt.figure(2)
+    plt.plot(wave2, flux2)
+    plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+    plt.plot(wave2, AbsorptionLine5000, color="orange", marker="*")
+
+    plot3 = plt.figure(3)
+    plt.plot(wave+wave2, flux+flux2)
+    plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+    plt.plot(wave+wave2, AbsorptionLineComb, color="orange", marker="*")
     plt.show()
 
 
@@ -193,4 +176,10 @@ def sample(filename):
     plt.show()
 
 #sample("HD 183143")
-NaModel("HD 183143")
+#NaModel("HD 183143")
+#NaModel("HD 22951")
+#NaModel("HD 39680")
+#NaModel("HD 49787")
+#NaModel("HD 45314")
+NaModel("HD 54662")
+#NaModel("HD 80558")
