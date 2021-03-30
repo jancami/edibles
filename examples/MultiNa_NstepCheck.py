@@ -1,4 +1,4 @@
-# test time-cost v.s. n_step (sampling rate) in voigt_profile calculation
+# check if n_step would change the calculation result for the same set of parameters
 
 import numpy as np
 import inspect
@@ -138,37 +138,19 @@ if __name__ == "__main__":
     wave, flux = wave[idx], flux[idx]
     flux = flux / np.median(flux)
 
-    n_step2test = [5, 12, 25]
-    result_all = []
-    model_all = []
-    time_all = [time.time()]
+    print("=" * 20)
+    print("Fitting....")
 
-    for n_setp in n_step2test:
-        print("\n" * 2)
-        print("=" * 20)
-        print("n_step: ", n_setp)
+    model = multiNaModel(n_components=2, n_step=25)
+    pars = model.guess(V_off=[-12, 4])
+    result = model.fit(data=flux, params=pars, x=wave)
+    print(result.fit_report())
 
-        model = multiNaModel(n_components=2, n_step=n_setp)
-        pars = model.guess(V_off=[-12, 4])
-        result = model.fit(data=flux, params=pars, x=wave)
-
-        result_all.append(result)
-        model_all.append(model)
-        time_all.append(time.time())
-
-
-
-
-    for i, n_setp in enumerate(n_step2test):
-        print("\n" * 2)
-        print("=" * 20)
-        print("n_step: ", n_setp)
-        print("time cost: ", time_all[i+1] - time_all[i])
-        print(result_all[i].fit_report())
-
+    for n_step in [5, 12, 25, 40]:
+        model.n_setp = n_step
         fig = plt.figure(figsize=[5, 3], dpi=200)
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(wave, flux, color="k")
-        ax.scatter(wave, model_all[i].eval(params=result_all[i].params, x=wave), label="n_step: " + str(n_setp))
-        ax.set_xlabel("n_step: "+str(n_setp))
+        ax.scatter(wave, model.eval(params=result.params, x=wave))
+        ax.set_xlabel("n_step: "+str(n_step))
         plt.show()
