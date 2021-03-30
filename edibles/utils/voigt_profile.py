@@ -98,6 +98,7 @@ def voigt_absorption_line(
         v_rad (float64): Radial velocity of absorption line (in km/s)
         v_resolution (float64): Instrument resolution in velocity space (in km/s)
         n_step (int): no. of point per FWHM length, governing sampling rate and efficiency
+        debug (bool): If True, info on the calculation will be displayed
 
     Returns:
         ndarray: Normalized flux for specified grid & parameters.
@@ -116,9 +117,11 @@ def voigt_absorption_line(
     if debug:
         print("Number of lines: " + "{:d}".format(n_lines))
 
+
     # How many cloud components do we have?
     n_components = N_array.size
     if debug:
+        print("Number of lines: " + "{:d}".format(n_lines))
         print("Number of components: " + "{:d}".format(n_components))
 
     # We will consider 3 different cases here:
