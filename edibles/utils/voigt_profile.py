@@ -551,8 +551,4 @@ if __name__ == "__main__":
         plt.plot(wave, flux)
         plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
         plt.plot(wave, AbsorptionLine, color="orange", marker="*")
-<<<<<<< HEAD
         plt.show()
-=======
-        plt.show()
->>>>>>> master

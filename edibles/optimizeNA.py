@@ -76,7 +76,6 @@ class NAModelOptimize(Model):
         self.n_components = n_components
         kwargs.update({'prefix': prefix, 'nan_policy': nan_policy,
                        'independent_vars': independent_vars})
-        #super().__init__(voigt_absorption_line, **kwargs)
 
         self.b_names = ["b_Cloud%i" % (i) for i in range(n_components)]
         self.N_names = ["N_Cloud%i" % (i) for i in range(n_components)]
