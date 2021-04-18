@@ -8,64 +8,6 @@ from scipy.stats import pearsonr
 import inspect
 import collections
 
-def calc_vrad(wave,flux):
-
-    lambda0 = [3302.369, 3302.978, 5889.950, 5895.924]
-    f = [8.26e-03, 4.06e-03, 6.49E-01,3.24E-01]
-    gamma = [6.280e7, 6.280e7,6.280e7,6.280e7]
-    v_resolution = 5.75
-    b = 1.0
-    N = 1.8e12
-    v_rad = 0
-    AbsorptionLine = voigt_absorption_line(
-        wave,
-        lambda0=lambda0,
-        b=b,
-        N=N,
-        f=f,
-        gamma=gamma,
-        v_rad=v_rad,
-        v_resolution=v_resolution,
-    )
-    bestV = None
-    bestLine = None
-    #1. calculate model v_rad = 0 (wave, flux)
-    #2. calculate shifted model (wavev2, flux)
-    # (wave2 -wave)/wave = v_rad/c    [-10,-9.5,-9,.....]  c = constant(look in astropy)
-    # wave1 *(1+vrad/c)
-    #3 for each vrad calculate correlation between model and data
-    v = -50
-    while v <= 50:
-        mult =  1.0 + v/cst.c.to("km/s").value
-        testW = (np.array(wave) * mult)
-
-        interpolationfunction = interp1d(
-                    testW, AbsorptionLine, kind="cubic", fill_value="extrapolate")
-        interpolatedModel = interpolationfunction(wave)
-        new, _ = pearsonr(flux, interpolatedModel)
-        if not bestV:
-            bestV = v
-            bestLine = new
-        elif new > bestLine:
-            bestV = v
-            bestLine = new
-        v += 0.5
-
-    return bestV
-
-def guess_NA(model, data, b, n, x):
-    if data is None:
-        raise ValueError('y does not exist')
-
-    y = np.asarray(data)
-    v_rad = calc_vrad(x,y)
-    print ("vrad:", v_rad)
-
-    voigt_pars = model.make_params(v_rad = v_rad, b = b, N = n)
-
-    return voigt_pars
-
-
 class NAModelOptimize(Model):
     """A model of the astronomical Voigt function."""
 
@@ -154,14 +96,58 @@ class NAModelOptimize(Model):
         super().__init__(calcMultiNa, **kwargs)
 
     def guess(self, data,  wavegrid=None, V_off=[0.0], **kwargs):
-        V_off[-1] = calc_vrad(wavegrid, data)
+        V_off[-1] = self.calc_vrad(wavegrid, data)
 
         pars = self.make_params()
         for i, v in enumerate(V_off):
             pars["%sb_Cloud%i" % (self.prefix, i)].set(value=1.0, min=0, max=10)
             pars["%sN_Cloud%i" % (self.prefix, i)].set(value=1.0, min=0, max=500)
-            pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=-50, max=50)
+            pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=-40, max=40)
             # if we have better estimate on v, consider using v pm 15 as min and max
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
+    def calc_vrad(self,wave,flux):
+
+        lambda0 = [3302.369, 3302.978, 5889.950, 5895.924]
+        f = [8.26e-03, 4.06e-03, 6.49E-01,3.24E-01]
+        gamma = [6.280e7, 6.280e7,6.280e7,6.280e7]
+        v_resolution = 5.75
+        b = 1.0
+        N = 1.8e12
+        v_rad = 0
+        AbsorptionLine = voigt_absorption_line(
+            wave,
+            lambda0=lambda0,
+            b=b,
+            N=N,
+            f=f,
+            gamma=gamma,
+            v_rad=v_rad,
+            v_resolution=v_resolution,
+        )
+        bestV = None
+        bestLine = None
+        #1. calculate model v_rad = 0 (wave, flux)
+        #2. calculate shifted model (wavev2, flux)
+        # (wave2 -wave)/wave = v_rad/c    [-10,-9.5,-9,.....]  c = constant(look in astropy)
+        # wave1 *(1+vrad/c)
+        #3 for each vrad calculate correlation between model and data
+        v = -40
+        while v <= 40:
+            mult =  1.0 + v/cst.c.to("km/s").value
+            testW = (np.array(wave) * mult)
+
+            interpolationfunction = interp1d(
+                        testW, AbsorptionLine, kind="cubic", fill_value="extrapolate")
+            interpolatedModel = interpolationfunction(wave)
+            new, _ = pearsonr(flux, interpolatedModel)
+            if not bestV:
+                bestV = v
+                bestLine = new
+            elif new > bestLine:
+                bestV = v
+                bestLine = new
+            v += 0.5
+
+        return bestV
