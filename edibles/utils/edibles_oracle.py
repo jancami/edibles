@@ -437,7 +437,7 @@ if __name__ == "__main__":
     pythia = EdiblesOracle()
 
     # EXAMPLE 1: Get all observations for a single object. 
-    List=pythia.getFilteredObsList(object=["HD 145502"], MergedOnly=False)
+    List=pythia.getFilteredObsList(object=["HD 183143"], MergedOnly=True, Wave=3302.0)
     print("1. Results from getFilteredObsList: ")
     print(List)
 
