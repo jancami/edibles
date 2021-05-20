@@ -30,7 +30,7 @@ class EdiblesOracle:
         self.nhiilog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_f(H2).csv"
         self.fh2log = pd.read_csv(filename)
-        filename = folder /"sightline_data"/"InputRV.csv"
+        filename = folder /"sightline_data"/"Formatted_RV.csv"
         self.rvlog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_AV.csv"
         self.avlog = pd.read_csv(filename)
@@ -437,7 +437,7 @@ if __name__ == "__main__":
     pythia = EdiblesOracle()
 
     # EXAMPLE 1: Get all observations for a single object. 
-    List=pythia.getFilteredObsList(object=["HD 145502"], MergedOnly=False)
+    List=pythia.getFilteredObsList(object=["HD 183143"], MergedOnly=True, Wave=3302.0)
     print("1. Results from getFilteredObsList: ")
     print(List)
 
