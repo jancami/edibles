@@ -26,7 +26,7 @@ def fit_NaI_Lines(target, date):
     wavelength = 3300
 
     pythia = EdiblesOracle()
-    bluelist = pythia.GetObsListByWavelength(wavelength, OrdersOnly=True)
+    bluelist = pythia.getObsListByWavelength(wavelength, OrdersOnly=True)
 
     files = []
     for filename in bluelist:
@@ -91,7 +91,7 @@ def fit_NaI_Lines(target, date):
     wavelength = 5890
 
     pythia = EdiblesOracle()
-    redlist = pythia.GetObsListByWavelength(wavelength, OrdersOnly=True)
+    redlist = pythia.getObsListByWavelength(wavelength, OrdersOnly=True)
 
     files = []
     for filename in redlist:
