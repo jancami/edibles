@@ -6,13 +6,10 @@ from edibles.utils import edibles_oracle
 def specie_charac_return(specie):
     '''
     Returns the characteristics of identified spiecies
-        
     Specie must be : AlI,CaI,CaII,CrI,FeI,HeI*,KI,7LiI,6LiI,NaI,87RbI,TiII
-    
     Return the wavelengths and f of the specie
     '''
     obslist=pd.read_csv(r'/Users/Samuel/Desktop/Programs/ImportGithub/edibles/data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv')
-    # print(obslist)
     
     wlength=[]
     flist=[]
@@ -99,35 +96,4 @@ if __name__ == "__main__":
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+       
