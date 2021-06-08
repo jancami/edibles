@@ -153,12 +153,11 @@ class ISLineModel(Model):
             raise TypeError("n_components (%.1f) must be an integer!" % n_components)
 
         # lam_0, fjj, gamma should be LIST have same length
-        if not isinstance(n_components, lam_0) or not isinstance(n_components, fjj) or not isinstance(n_components, gamma):
+        if not isinstance(lam_0, list) or not isinstance(fjj, list) or not isinstance(gamma, list):
             raise TypeError("lam_0, fjj, gamma should be list")
         len_array = [len(lam_0), len(fjj), len(gamma)]
         if not np.max(len_array) == np.max(len_array):
-            raise TypeError("lam_0, fjj, gamma should have the same length, not as {l}"
-                            .format(l=len_array))
+            raise TypeError("lam_0, fjj, gamma should have the same length")
 
         # Nmag and n_step should be int but just in case it's a float
         Nmag = floor(Nmag)
