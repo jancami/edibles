@@ -43,10 +43,12 @@ class ISLineFitter():
             Doppler_factor = 1. + v_rad / cst.c.to("km/s").value
             #print(Doppler_factor)
             new_wave = wave * Doppler_factor
+            
             # Interpolate shifted model to original wavelength grid
             interpolationfunction = interp1d(
             new_wave, model, kind="cubic", fill_value="extrapolate")
             interpolatedModel = interpolationfunction(wave)
+            
             # Calculate correlation coefficient
             this_c, _ = pearsonr(flux, interpolatedModel)
             all_corr[loop] = this_c
@@ -60,6 +62,8 @@ class ISLineFitter():
 
         return v_rad_best
 
+    
+    
 if __name__ == "__main__":
     print("Hello Word!")      
     
