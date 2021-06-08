@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 from edibles import PYTHONDIR
-from edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.utils.ISLineFitter import ISLineFitter
 
 # Load the benchmark data and run it through ISLineFitter. Then compare results. 
 
@@ -18,3 +18,6 @@ wave = arrays[:,0]
 flux = arrays[:,1]
 #print(wave, flux)
 
+fitter = ISLineFitter(wave,flux, v_resolution=0.56)
+KI_params = fitter.fit(species='KI')
+print(KI_params)
