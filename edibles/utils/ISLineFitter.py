@@ -7,16 +7,104 @@ import collections
 from math import floor
 from lmfit import Model
 from lmfit.models import update_param_vals
+
 from edibles.utils.voigt_profile import voigt_absorption_line
+from edibles.models import ContinuumModel
 
 class ISLineFitter():
-    def __init__(self, wave, flux):
+    def __init__(self, wave, flux, SNR=None, v_resolution=3.0):
         # wave and flux from edibles spectrum or elsewhere
+        # load by separate method to be built
         self.wave = wave
         self.flux = flux
+        self.SNR = SNR # Don't know yet how to use SNR in LMFIT
+        self.v_res = v_resolution
 
-    def fit(self):
-        # this will do the fitting
+        # attribute to archive model-fitting history
+        self.model_all = []
+        self.model_old = None # model with n components
+        self.model_new = None # model with n+1 components
+
+    def getData2Fit(self, lam_0, windowsize):
+        # clip and return spectral data around target lines
+        return wave2fit, flux2fit, SNR2fit
+
+    def baysianCriterion(self):
+        # do the Baysian analysis to determine if self.model_new is better than self.model_old
+        # if pass: keep adding new components
+        #          self.model_old = self.model_new,
+        #          return False
+        # if not pass: return True to exit
+        pass
+
+    def fit(self, species="KI", n_anchors=5):
+        # Do the fitting
+        # 1. Get atomic data using Heather's method
+        # 2. Clip spectral data around target lines
+        # 3. Build model to be fit
+        # 4. Fit, compare, repeat!
+
+        ######################
+        # get lam_0, fjj, gamma from Heather's code.
+        # I still think get Nmag from data table, rather than estimating it,
+        # would be a good idea...
+        # For now use default, already embedded in ISLineModel
+        ######################
+
+        ######################
+        # get wave2fit, flux2fit, and possibily SNR2fit
+        # Require new method, self.getData2Fit(lam_0, windowsize)
+        ######################
+        wave2fit, flux2fit, SNR2fit = self.getData2Fit(lam_0, windowsize=5)
+
+        while True:
+            model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, Nmag, n_anchors)
+            result = model2fit.fit(data=flux2fit, params=pars_guess, x=wave2fit)
+            self.model_all.append(model2fit)
+            self.model_new = model2fit
+            # should we append parameters rather than models? Check how Baysian works...
+            if self.baysianCriterion():
+                break
+
+        return result.params
+
+    def buildModel(self, lam_0, fjj, gamma, Nmag, n_anchors, n_components = None):
+        # build continuum and line model then combine them
+        # we can reuse continuum model to boost efficiency?
+
+        # Continuum first
+        continuum_model = ContinuumModel(n_anchors = n_anchors)
+        pars_guess = continuum_model.guess(self.flux, self.wave)
+        model2fit = continuum_model
+
+        # check n_components before building line-model
+        # only include
+        if n_components is None:
+            n_components = len(self.model_all)
+        if n_components > 0:
+            line_model = ISLineModel(n_components,
+                                     lam_0 = lam_0,
+                                     fjj = fjj,
+                                     gamma = gamma,
+                                     Nmag = Nmag,
+                                     v_res = self.v_res)
+
+            ##############################
+            # to do:
+            # Guessing v_offs form the residual of self.model_old using corr method
+            # Not available now, I'll just say V_off = 0s
+            #
+            # If we do not load Nmag from data table, we can make model.guess() more
+            # complex to determine the N from residual of self.model_old?
+            ##############################
+            V_off = [0.0] * n_components
+            pars_guess.update(line_model.guess(V_off=V_off))
+            model2fit = model2fit * line_model
+
+        return model2fit, pars_guess
+
+    def plotModel(self):
+        # method to make plots
         pass
 
 
@@ -142,8 +230,8 @@ class ISLineModel(Model):
         for i, v in enumerate(V_off):
             pars["%sb_Cloud%i" % (self.prefix, i)].set(value=1.0, min=0, max=10)
             pars["%sN_Cloud%i" % (self.prefix, i)].set(value=1.0, min=0, max=1000)
-            pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=v-10, max=v+10)
-            # if we have better estimate on v, consider using v pm 15 as min and max
+            pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=v-50, max=v+50)
+            # we can further constrain min and max on V_off if we have good estimate.
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
