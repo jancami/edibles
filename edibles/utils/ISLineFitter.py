@@ -28,6 +28,11 @@ class ISLineFitter():
         self.model_all = []
         self.model_old = None # model with n components
         self.model_new = None # model with n+1 components
+        
+        # read in atomic line data frame
+        folder = Path(PYTHONDIR+"/data")
+        filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
+        self.species_df=pd.read_csv(filename)
 
     def getData2Fit(self, lam_0, windowsize):
         # clip and return spectral data around target lines
@@ -41,7 +46,7 @@ class ISLineFitter():
         # if not pass: return True to exit
         pass
 
-    def fit(self, species="KI", n_anchors=5):
+    def fit(self, species="KI", n_anchors=5,Wave=None, WaveMin=None, WaveMax=None, OscillatorStrength=None, OscillatorStrengthMin=None, OscillatorStrengthMax=None,Gamma=None, GammaMin=None, GammaMax=None):
         # Do the fitting
         # 1. Get atomic data using Heather's method
         # 2. Clip spectral data around target lines
@@ -53,6 +58,9 @@ class ISLineFitter():
         # I still think get Nmag from data table, rather than estimating it,
         # would be a good idea...
         # For now use default, already embedded in ISLineModel
+        
+        spec_name,lam_0,fjj,gamma=self.select_species_data(species=species,Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, OscillatorStrength=OscillatorStrength, OscillatorStrengthMin=OscillatorStrengthMin, OscillatorStrengthMax=OscillatorStrengthMax,Gamma=Gamma, GammaMin=GammaMin, GammaMax=GammaMax)
+       
         ######################
 
         ######################
@@ -112,19 +120,13 @@ class ISLineFitter():
         pass
         
         
-    def load_species_info(self,species=None,Wave=None, WaveMin=None, WaveMax=None, OscillatorStrength=None, OscillatorStrengthMin=None, OscillatorStrengthMax=None):
+    def select_species_data(self,species=None,Wave=None, WaveMin=None, WaveMax=None, OscillatorStrength=None, OscillatorStrengthMin=None, OscillatorStrengthMax=None,Gamma=None, GammaMin=None, GammaMax=None):
         '''This method will provide a filtered list of species information that matches
         the specified criteria on sightline/target parameters as well as
         on observational criteria (e.g. wavelength range).
     
          '''
-        folder = Path(PYTHONDIR+"/data")
-        filename = folder / "auxiliary_data/line_catalogs/edibles_linelist_atoms.csv"
-        self.species_df=pd.read_csv(filename)
-        #print(self.species_df)
-        #search for matches by species name
-        #print('Inside the function: object is', species)
-
+        
         bool_species_matches = np.zeros(len(self.species_df.index),dtype=bool)
         
         if species is None:
@@ -137,7 +139,7 @@ class ISLineFitter():
                 
         else:
             
-            bool_species_matches = self.ebvlog.object == object
+            bool_species_matches = self.species_df.Species == species
 
         bool_wave_matches = np.ones(len(self.species_df.index),dtype=bool)
         if Wave:
@@ -156,13 +158,24 @@ class ISLineFitter():
         if OscillatorStrengthMax:
             bool_osc_matches = (self.species_df.OscillatorStrength < OscillatorStrengthMax) & (bool_osc_matches)
             
+        
+        bool_gamma_matches = np.ones(len(self.species_df.index),dtype=bool)
+        if Gamma:
+            bool_gamma_matches = (self.species_df.Gamma == Gamma)
+        if GammaMin:
+            bool_gamma_matches = (self.species_df.Gamma > GammaMin) & (bool_gamma_matches)
+        if GammaMax:
+            bool_gamma_matches = (self.species_df.Gamma < GammaMax) & (bool_gamma_matches)
             
             
-        ind = np.where(bool_species_matches & bool_wave_matches & bool_osc_matches)[0]
+            
+        ind = np.where(bool_species_matches & bool_wave_matches & bool_osc_matches & bool_gamma_matches)[0]
         self.species_list=self.species_df['Species'].iloc[ind].to_numpy()
+        
         self.air_wavelength=self.species_df['WavelengthAir'].iloc[ind].to_numpy()
         self.oscillator_strength=self.species_df['OscillatorStrength'].iloc[ind].to_numpy()
-        return(self.species_list,self.air_wavelength,self.oscillator_strength)
+        self.gamma=self.species_df['Gamma'].iloc[ind].to_numpy()
+        return(self.species_list,self.air_wavelength,self.oscillator_strength,self.gamma)
 
 class ISLineModel(Model):
     def __init__(self, n_components,
@@ -318,7 +331,8 @@ if __name__ == "__main__":
     wave=np.linspace(0,10,11)
     flux=np.asarray((random.sample(range(100), k=len(wave))))/100
     ####################################################
-    fit=ISLineFitter(wave,flux)
-    test_species_info=fit.load_species_info(species=['Na'],OscillatorStrengthMin=0.1)
-    print(test_species_info)
+    fit_test=ISLineFitter(wave,flux)
+    test_species_info=fit_test.select_species_data(OscillatorStrengthMin=0.1)
+    #fit_test.fit(species=['Na'])
+
 
