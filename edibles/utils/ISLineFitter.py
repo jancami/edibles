@@ -177,6 +177,46 @@ class ISLineFitter():
         self.gamma=self.species_df['Gamma'].iloc[ind].to_numpy()
         return(self.species_list,self.air_wavelength,self.oscillator_strength,self.gamma)
 
+        
+    
+    def determine_vrad_from_correlation(self,wave, flux, model):
+        """
+        Function to calculate the correlation between an observed spectrum and a model as a function of
+        radial velocity and return the radial velocity with the highest correlation coefficient. 
+        Args:
+            wave (float64): array of wavelengths
+            flux (float64): Flux (observed)
+            model(float64): model
+        Returns:
+            vrad_best: radial velocity corresponding to highest correlation. 
+        """
+        # Create the grid of velocities at which to calculate the correlation. 
+        # Using a step size of 0.1 km/s here, and a range of -50 to 50; this should 
+        # suffice for most sightlines. 
+        v_rad_grid = np.arange(-50.,50.,.1) # in km / s
+        all_corr = v_rad_grid * 0.
+        #print(v_rad_grid)
+        for loop in range(len(v_rad_grid)):
+            v_rad = v_rad_grid[loop]
+            Doppler_factor = 1. + v_rad / cst.c.to("km/s").value
+            #print(Doppler_factor)
+            new_wave = wave * Doppler_factor
+            
+            # Interpolate shifted model to original wavelength grid
+            interpolationfunction = interp1d(
+            new_wave, model, kind="cubic", fill_value="extrapolate")
+            interpolatedModel = interpolationfunction(wave)
+            
+            # Calculate correlation coefficient
+            this_c, _ = pearsonr(flux, interpolatedModel)
+            all_corr[loop] = this_c
+            # Return the radial velocity at the maximum correlation.  
+        v_rad_best = v_rad_grid[np.argmax(all_corr)]    
+
+        return v_rad_best
+
+
+
 class ISLineModel(Model):
     def __init__(self, n_components,
                  lam_0 = [3302.369, 3302.978],
