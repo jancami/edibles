@@ -31,13 +31,13 @@ sightline.add_line(name='line3', source='interstellar')
 
 # Add line with no source & user defined pars
 d = {'d': 0.01, 'tau_0': 0.1, 'lam_0': 7662}
-sightline.add_line(name='line4', pars=d)
+sightline.add_line(name='line4', pars=d, source = 'None')
 
 # ###############################################################
 # Fit and plot
 sightline.fit(report=True, plot=True)
 
-out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
+out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
 resid = sp1.flux - out
 
 plt.plot(sp1.wave, sp1.flux)
@@ -48,13 +48,13 @@ plt.show()
 
 # Add line using guess_pars, and link parameters together
 sightline.add_line(name='line5', source='interstellar', guess_data=resid)
-sightline.model_pars['interstellar_line5_lam_0'].set(expr='interstellar_line3_lam_0 + 0.091')
+sightline.all_pars['interstellar_line5_lam_0'].set(expr='interstellar_line3_lam_0 + 0.091')
 
 # ###############################################################
 # Fit and plot
 sightline.fit(report=True, plot=True)
 
-out = sightline.model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
+out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
 resid = sp1.flux - out
 
 plt.plot(sp1.wave, sp1.flux)
