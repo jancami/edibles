@@ -46,6 +46,7 @@ class ISLineFitter():
         folder = Path(PYTHONDIR+"/data")
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
+        print(self.species_df.columns)
 
     def getData2Fit(self, lam_0=None, windowsize=3):
         # clip the data around target wavelength
@@ -85,7 +86,6 @@ class ISLineFitter():
         """
         The main fitting method for the class.
         Currently kwargs for select_species_data to make code more pretty
-
         :param species: name of the species
         :param n_anchors: number of anchor points for spline continuum, default: 5
         :param windowsize: width of wavelength window on EACH side of target line, default: 3 (AA)
@@ -177,7 +177,6 @@ class ISLineFitter():
         '''This method will provide a filtered list of species information that matches
         the specified criteria on sightline/target parameters as well as
         on observational criteria (e.g. wavelength range).
-
         Use kwargs to make the code look pretty,
         Consider allow both upper and lower cases?
         Allowed kwargs:
@@ -195,12 +194,12 @@ class ISLineFitter():
             
             for thisobject in species:
 
-                bool_species_matches = (self.species_df.Species.str.contains(thisobject)) | (bool_species_matches)
+                bool_species_matches = (self.species_df["Species"].str.contains(thisobject)) | (bool_species_matches)
                 
         else:
             
-            bool_species_matches = self.species_df.Species == species
-
+            bool_species_matches = self.species_df["Species"] == species
+ 
         # Filtering Wave
         bool_wave_matches = np.ones(len(self.species_df.index), dtype=bool)
         if "Wave" in kwargs.keys():
@@ -458,6 +457,7 @@ if __name__ == "__main__":
     from edibles.utils.edibles_oracle import EdiblesOracle
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
     import matplotlib.pyplot as plt
+    from matplotlib import gridspec
     import time
 
     # data to fit, around HD183143 Na 3300 doublet, order only
@@ -500,8 +500,40 @@ if __name__ == "__main__":
     # let's do the fitting
     best_result = test_fitter.fit(species="NaI", windowsize=1.5, known_n_components=3, WaveMax=3310)
     print(best_result.fit_report())
+    
+    fig=plt.figure(figsize=(10,6.5))
+    plt.gcf().subplots_adjust(hspace = 0)
+    spec = gridspec.GridSpec(ncols=1, nrows=2,
+                          height_ratios=[4,1])
 
-
-
-
-
+    ax0 = fig.add_subplot(spec[0])
+    plt.gca().xaxis.set_visible(False)
+    plt.title(filename)
+    plt.plot(test_fitter.wave2fit, test_fitter.flux2fit, marker='D',fillstyle='none',color='black', label='Data')
+    #plt.plot(test_fitter.wave2fit, comps['cont'], label='continuum', color='green')
+    plt.plot(test_fitter.wave2fit, test_fitter.eval(params=best_result.params, x=wave), label="Voigt profile",marker='*', color='blue')
+    plt.ylabel('Relative flux')
+    plt.legend()
+    
+    ax1 = fig.add_subplot(spec[1])
+    plt.plot(test_fitter.wave2fit, (test_fitter.flux2fit-test_fitter.eval(params=best_result.params, x=wave))/test_fitter.flux2fit *100 , color='black', linewidth=0.8)
+    plt.ylabel('residual [%]')
+    plt.xlabel('Wavelenght $\AA$')
+    plt.show()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
