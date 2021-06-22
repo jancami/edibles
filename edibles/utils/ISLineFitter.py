@@ -47,7 +47,7 @@ class ISLineFitter():
         folder = Path(PYTHONDIR+"/data")
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
-        print(self.species_df.columns)
+        
 
     def getData2Fit(self, lam_0=None, windowsize=3):
         # clip the data around target wavelength
