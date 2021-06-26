@@ -1,8 +1,41 @@
+"""A one line summary of the module or program, terminated by a period.
+
+Leave one blank line.  The rest of this docstring should contain an
+overall description of the module or program.  Optionally, it may also
+contain a brief description of exported classes and functions and/or usage
+examples.
+"""
+
 #import the stuff from my class
 from RotationalEnergies import Rotational_Energies
 import matplotlib.pyplot as plt
 import pandas as pd
+
 def Simulated_Contour(A,Delta_A,B,Delta_B,C,Delta_C,Trot,Jlimit, Name,Q_scale=1,PR_scale=1, Q_Branch=True,lambda0=0):
+    """Summary of function...
+    
+    Longer information...
+
+    Args: 
+        A (TYPE): DESCRIPION
+        Delta_A (TYPE): DESCRIPION
+        B (TYPE): DESCRIPION
+        Delta_B (TYPE): DESCRIPION
+        C (TYPE): DESCRIPION
+        Delta_C (TYPE): DESCRIPION
+        Trot (TYPE): DESCRIPION
+        Jlimit (TYPE): DESCRIPION
+        Name (TYPE): DESCRIPION
+        Q_scale (TYPE): DESCRIPION. Optional; the default is 1.
+        PR_scale (TYPE): DESCRIPION. Optional; the default is 1.
+        Q_Branch (TYPE): DESCRIPION. Optional; the default is True.
+        lambda0 (TYPE): DESCRIPION. Optional; the default is 0.
+
+    Returns: 
+        re_low.spectrax (TYPE): DESCRIPTION
+        re_low.final_y (TYPE): DESCRIPTION
+
+    """
     re_low = Rotational_Energies(A=A,B=B,C=C, Name=Name,Q_scale=Q_scale,PR_scale=PR_scale)
     if re_low.flag:
         print("Can't deal with this molecule yet")

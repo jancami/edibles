@@ -1,3 +1,11 @@
+"""A one line summary of the module or program, terminated by a period.
+
+Leave one blank line.  The rest of this docstring should contain an
+overall description of the module or program.  Optionally, it may also
+contain a brief description of exported classes and functions and/or usage
+examples.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -5,15 +13,39 @@ from astropy import constants as const
 from astropy import units as u
 from astropy.convolution import Gaussian1DKernel, convolve
 from astropy.modeling.models import Voigt1D
+
 pd.options.mode.chained_assignment = None
 c=const.c.to('km/s')
 kms=(u.km / u.s)
+
 def WavelengthToWavenumber(values):
+    """Summary of function here...
+    
+    Args:
+        values (TYPE): DESCRIPTION
+        
+    Returns: 
+        wavenumbers (TYPE): DESCRIPTION
+    """
     wavenumbers=1/(values*(10**-8))
     return(wavenumbers)
+
 class Rotational_Energies:
+    """Summary of class here.
+
+    Longer class information....
+
+    Args: 
+        A (TYPE): DESCRIPTION
+        B (TYPE): DESCRIPTION
+        C (TYPE): DESCRIPTION
+        Name (TYPE): DESCRIPTION
+        Q_scale (TYPE): DESCRIPTION
+        PR_scale (TYPE): DESCRIPTION        
+    """    
 
     def __init__(self,A,B,C, Name,Q_scale,PR_scale):
+        """Init Rotational_Energies class."""
         #print('init')
         self.A=A
         self.B=B
@@ -38,6 +70,13 @@ class Rotational_Energies:
         print('Symmetry Type: ',self.symmetry_type)
     
     def rotational_energies(self,Jlimit):
+        """Summary of method here...
+        
+        Longer method information...
+
+        Args:
+            Jlimit (TYPE): DESCRIPTION
+        """
         #print("Calculating rotational energy values")
         self.Jlimit=Jlimit
         if self.symmetry_type=='spherical':
@@ -67,6 +106,13 @@ class Rotational_Energies:
         self.E=df["E"]
         
     def boltzmann(self,T):
+        """Summary of method here...
+        
+        Longer method information...
+
+        Args:
+            T (TYPE): DESCRIPTION
+        """
         #print("Calculating state population")
         h=const.h.value
         c=const.c.to('cm/s').value
@@ -82,7 +128,16 @@ class Rotational_Energies:
         
         
     def allowed_combinations(self,Jup,Kup,Eup,Q_Branch=False):
+        """Summary of method here...
         
+        Longer method information...
+
+        Args:
+            Jup (TYPE): DESCRIPTION
+            Kup (TYPE): DESCRIPTION
+            Eup (TYPE): DESCRIPTION
+            Q_branch (TYPE): Optional; the default is False. DESCRIPTION
+        """
         #determines which combinations are allowed based on J and K selection rules.
         df=pd.concat([self.J,self.K,self.E,self.population],axis=1)
         df.columns=["J","K","E","nJ"]
@@ -144,17 +199,16 @@ class Rotational_Energies:
         else:
            print('symmetry type not yet available')
         
-        
-            
         df3=pd.DataFrame({"E": E_list, "E'": E_prime_list, "J": J_list, "J'": J_prime_list, "K": K_list, "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data=df3
         
-            
-                
-
-
+        
         
     def transition_freq_and_pop(self):
+        """Summary of method here...
+        
+        Longer method information...
+        """
         if self.allowed_combo_data is None:
             print("Do not have relevant data")
         else:
@@ -175,6 +229,10 @@ class Rotational_Energies:
         
         
     def plot_transitions(self):
+        """Summary of method here...
+        
+        Longer method information...
+        """
         #print("Plotting the resulting transitions")
         plt.vlines(x=self.transition_freqs,ymax=self.transition_intensity,ymin=0,color='black',label='transitions')
   
@@ -189,9 +247,8 @@ class Rotational_Energies:
         plt.savefig(str(self.name)+'_'+self.symmetry_type+".pdf")
 
 
-            
-      
     def _rebin_data(self,X,Y,bin_size,Verbose=False):
+        
         rebinned_x,rebinned_y=[],[]
         bins=np.arange(np.float(np.min(X))-5,np.float(np.max(X))+5, bin_size )
         
@@ -248,6 +305,14 @@ class Rotational_Energies:
         return(Final_X,Y_sampled)
         
     def apply_voigt(self,lambda0,show_figure=False):
+        """Summary of method here...
+        
+        Longer method information...
+
+        Args:
+            lambda0 (TYPE): DESCRIPTION
+            show_figure (TYPE): Optional; the default is False. DESCRIPTION
+        """
         from edibles.utils.voigt_profile import voigt_optical_depth
         X=self.transition_freqs
         Y=self.transition_intensity
@@ -265,6 +330,13 @@ class Rotational_Energies:
             plt.show()
             
     def apply_radiative_transfer(self,show_figure=False):
+        """Summary of method here...
+        
+        Longer method information...
+
+        Args:
+            show_figure (TYPE): Optional; the defalut is False. DESCRIPTION
+        """
         self.simple_rt_y=1-self.spectray
         self.full_rt_y=np.exp(-self.spectray)
         if show_figure==True:
@@ -276,8 +348,14 @@ class Rotational_Energies:
         return()
         
     def smooth_spectra(self, lambda0,show_figure=False):
-    
-       
+        """Summary of method here...
+        
+        Longer method information...
+
+        Args:
+            lambda0  (TYPE): DESCRIPTION
+            show_figure (TYPE): Optional; the defalut is False. DESCRIPTION
+        """
         dx=np.asarray(self.spectrax[1:])-np.asarray(self.spectrax[0:-1])
         d_lambda=lambda0/80000
         sigma_a=d_lambda/2.355
