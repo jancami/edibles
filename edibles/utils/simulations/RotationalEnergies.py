@@ -13,7 +13,6 @@ from astropy import constants as const
 from astropy import units as u
 from astropy.convolution import Gaussian1DKernel, convolve
 from edibles.utils.voigt_profile import voigt_optical_depth
-from astropy.modeling.models import Voigt1D
 
 pd.options.mode.chained_assignment = None
 c = const.c.to('km/s')
@@ -21,34 +20,32 @@ kms = (u.km / u.s)
 
 
 def WavelengthToWavenumber(values):
-    """Summary of function here...
+    """Convert wavelength to wavenumber.
 
     Args:
-        values (TYPE): DESCRIPTION
+        values (1darray): Array with wavelengths
 
     Returns:
-        wavenumbers (TYPE): DESCRIPTION
+        wavenumbers (1darray): Array with wavenumbers.
     """
     wavenumbers = 1/(values*(10**-8))
     return(wavenumbers)
 
 
 class Rotational_Energies:
-    """Summary of class here.
-
-    Longer class information....
+    """Simulate the PQR-branches of a molecule with known symmetry.
 
     Args:
-        A (TYPE): DESCRIPTION
-        B (TYPE): DESCRIPTION
-        C (TYPE): DESCRIPTION
-        Name (TYPE): DESCRIPTION
-        Q_scale (TYPE): DESCRIPTION
-        PR_scale (TYPE): DESCRIPTION
+        A (float): Rotational constant of the first rotational axis.
+        B (float): Constant of the second axis.
+        C (float): Constant of the third axis.
+        Name (str): Name of the DIB line.
+        Q_scale (float): Scale of the Q-branch.
+        PR_scale (TYPE): Scale of the P-branch and R-branch.
     """
 
     def __init__(self, A, B, C, Name, Q_scale, PR_scale):
-        """Init Rotational_Energies class."""
+        """Init the Rotational_Energies class."""
         # print('init')
         self.A = A
         self.B = B
@@ -59,38 +56,48 @@ class Rotational_Energies:
         self.PR_scale = PR_scale
 
     def _determine_symmetry_type(self):
-
+        """Get symmetry type accordingly with the rotational constants."""
         self.flag = False
+        # An spherical symmetry has the same rotational constant for all axes.
         if self.A == self.B == self.C:
             self.symmetry_type = 'spherical'
 
+        # Prolate  and oblate symmetries has two rotational constant with same value
+
+        # The unique constant is bigger in a prolate symmetry.
         elif self.B == self.C and self.A > self.B:
             self.symmetry_type = 'symmetric_prolate'
 
+        # The unique constant is smaller in an oblate symmetry.
         elif self.B == self.A and self.B > self.C:
             self.symmetry_type = 'symmetric_oblate'
 
         else:
             self.symmetry_type = 'asymmetric'
             print('Asymmetric tops are too hard for me to deal with right now!')
+
+            # Flag to stop processing.
             self.flag = True
 
         print('Symmetry Type: ', self.symmetry_type)
 
     def rotational_energies(self, Jlimit):
-        """Summary of method here...
+        """Compute the rotational energy values.
 
-        Longer method information...
+        Calculate the rotational energy values for all the possible
+        combinations of the rotational quantum numbers.
 
         Args:
-            Jlimit (TYPE): DESCRIPTION
+            Jlimit (int): Upper bound of the first rotational quantum number J.
         """
         # print("Calculating rotational energy values")
         self.Jlimit = Jlimit
         if self.symmetry_type == 'spherical':
             df = pd.DataFrame(columns=["J", "E"])
+            # Values of the quantum rotational number.
             J_vals = list(range(0, self.Jlimit+1))
 
+            # Energy of each J value.
             for J in J_vals:
                 E = self.B*J*(J+1)
                 df = df.append({"J": J, "E": E}, ignore_index=True)
@@ -98,15 +105,19 @@ class Rotational_Energies:
 
         else:
             df = pd.DataFrame(columns=["J", "K"])
+            # Values of the first quantum rotational number J.
             J_vals = list(range(0, self.Jlimit+1))
 
             for J in J_vals:
+                # Values of the second rotational number K.
                 for K in list(range(-J, J+1)):
+                    # Combinations of J and K values
                     df = df.append({"J": J, "K": K}, ignore_index=True)
-
+            # Energy of each (J, K) pair of a prolate symmetry.
             if self.symmetry_type == 'symmetric_prolate':
                 df["E"] = self.B*df["J"]*(df["J"]+1)+(self.A-self.B)*df["K"]**2
 
+            # Energy of each (J, K) pair of an oblate symmetry.
             elif self.symmetry_type == 'symmetric_oblate':
                 df["E"] = self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
 
@@ -116,12 +127,13 @@ class Rotational_Energies:
         self.E = df["E"]
 
     def boltzmann(self, T):
-        """Summary of method here...
+        """Compute the Booltzmann distribution.
 
-        Longer method information...
+        Calculate the state population using the Boltzann distribution for
+        a given temperature.
 
         Args:
-            T (TYPE): DESCRIPTION
+            T (float): Temperature (Kelvin degrees).
         """
         # print("Calculating state population")
         h = const.h.value
@@ -132,23 +144,27 @@ class Rotational_Energies:
         exponent = (-h*c*self.B*self.J*(self.J+1)*(1/(k*T))).astype('float64')
         self.population = (2*self.J+1)*np.exp(exponent)
 
-        # renormalize
+        # Renormalize
         norm_pop = self.population/(np.sum(self.population))
         self.population = pd.Series(norm_pop)
 
     def allowed_combinations(self, Jup, Kup, Eup, Q_Branch=False):
-        """Summary of method here...
+        """Determine allowed transitions.
 
-        Longer method information...
+        Determine allowed transitions of the rotational quantum numbers
+        acoordingly with the J and K selection rules. The arguments of this
+        method must comes from another Rotational_Energies class, with the same
+        arguments but different values of A, B and C (that differs with a
+        small value).
 
         Args:
-            Jup (TYPE): DESCRIPTION
-            Kup (TYPE): DESCRIPTION
-            Eup (TYPE): DESCRIPTION
-            Q_branch (TYPE): Optional; the default is False. DESCRIPTION
+            Jup (1darray): Values of the upper states of the J rotational number.
+                This array must comes from <Rotational_Energies>.J
+            Kup (1darray): Values of the upper states of the K rotational number.
+            Eup (1darray): Values of the upper states of energy.
+            Q_branch (bool): Optional; the default is False. Wheter to consider
+                or not the Q-branch.
         """
-        # determines which combinations are allowed based on
-        # J and K selection rules.
         df = pd.concat([self.J, self.K, self.E, self.population], axis=1)
         df.columns = ["J", "K", "E", "nJ"]
         df2 = pd.DataFrame({"J'": Jup, "K'": Kup, "E'": Eup})
@@ -158,23 +174,34 @@ class Rotational_Energies:
 
         if self.symmetry_type == 'spherical':
 
+            # Selection rules (with or without Q-branch)
             if not Q_Branch:
                 DeltaJ = [-1, 1]
 
             else:
                 DeltaJ = [-1, 0, 1]
             # print("Starting search for allowed transitions")
+            # For every initial state.
             for i in range(len(df.index)):
 
+                # Get current values of Jup, Eup and Kup
                 Jupp = df2["J'"].iloc[i]
                 Eupp = df2["E'"].iloc[i]
                 Kupp = df2["K'"].iloc[i]
 
+                # Allowed transition values for Jup
                 allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
+
+                # Get all the states that are allowed to transitionate to Jup
+                # by the J selection rule
                 df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ)])
+
+                # Add Jupp, Eupp and Kupp to DataFrame of allowed transitions.
                 df4["J'"] = Jupp
                 df4["E'"] = Eupp
                 df4["K'"] = Kupp
+
+                # Save results of iteration.
                 E_list.extend(df4["E"].values)
                 J_list.extend(df4["J"].values)
                 nJ_list.extend(df4["nJ"].values)
@@ -185,24 +212,37 @@ class Rotational_Energies:
 
         elif 'symmetric' in self.symmetry_type:
             # print("Starting search for allowed transitions")
+            # For every initial state
             for i in range(len(df.index)):
+
+                # Get current values of J, E and K.
                 Jupp = df2["J'"].iloc[i]
                 Eupp = df2["E'"].iloc[i]
                 Kupp = df2["K'"].iloc[i]
+
+                # Selection rules for K.
                 DeltaK = [0]
 
+                # Selection rules for J.
                 if df["K"].iloc[i] == 0:
                     DeltaJ = [-1, 1]
 
                 else:
                     DeltaJ = [-1, 0, 1]
 
+                # Allowed transition values.
                 allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
                 allowedK = [Kupp-DelK for DelK in DeltaK]
+
+                # Final states that agree with the allowed transitions.
                 df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK)])
+
+                # Add values to DataFrame of allowed transitions.
                 df4["J'"] = Jupp
                 df4["E'"] = Eupp
                 df4["K'"] = Kupp
+
+                # Save results of iteration.
                 E_list.extend(df4["E"].values)
                 J_list.extend(df4["J"].values)
                 nJ_list.extend(df4["nJ"].values)
@@ -214,44 +254,46 @@ class Rotational_Energies:
         else:
             print('symmetry type not yet available')
 
+        # Save allowed combinations in Class.
         df3 = pd.DataFrame({"E": E_list, "E'": E_prime_list, "J": J_list,
                             "J'": J_prime_list, "K": K_list,
                             "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data = df3
 
     def transition_freq_and_pop(self):
-        """Summary of method here...
+        """Get the frequencie and population of transitions.
 
-        Longer method information...
+        Get the frequency of the allowed transitions and their itensities 
+        acoordingly with their population.
         """
         if self.allowed_combo_data is None:
             print("Do not have relevant data")
 
         else:
+            # Compute frecuencies.
             self.transition_freqs = (self.allowed_combo_data["E'"] -
                                      self.allowed_combo_data["E"])
 
+            # Change in the J rotational number.
             self.allowed_combo_data['DeltaJ'] = (self.allowed_combo_data["J'"]
                                                  - self.allowed_combo_data["J"])
 
+            # Re-scale the PQR branches.
             self.allowed_combo_data['nJ'].loc[self.allowed_combo_data['DeltaJ'] == 0] = \
                 self.allowed_combo_data["nJ"]*self.Q_scale
-
             self.allowed_combo_data['nJ'].loc[self.allowed_combo_data['DeltaJ'] != 0] = \
                 self.allowed_combo_data["nJ"]*self.PR_scale
 
             self.transition_intensity = self.allowed_combo_data["nJ"]
 
-            # find highest populated state
+            # Find highest populated state.
             max_pop_idx = self.transition_intensity.astype('float64').idxmax()
             self.highest_pop_state = (self.allowed_combo_data["J"].iloc[max_pop_idx])
+
             # print("Jmax=" ,self.highest_pop_state)
-
+# TO-DO
     def plot_transitions(self):
-        """Summary of method here...
-
-        Longer method information...
-        """
+        """Plot the resulting transitions"""
         # print("Plotting the resulting transitions")
         plt.vlines(x=self.transition_freqs, ymax=self.transition_intensity,
                    ymin=0, color='black', label='transitions')
@@ -320,8 +362,7 @@ class Rotational_Energies:
         #################################################
         # Convert velocities back into wavelengths
 
-        Final_X = [((lambda0*u.AA*(1+(V*kms/c))).to(u.AA)
-                    ).value for V in X_sampled]
+        Final_X = [((lambda0*u.AA*(1+(V*kms/c))).to(u.AA)).value for V in X_sampled]
 
         return(Final_X, Y_sampled)
 
