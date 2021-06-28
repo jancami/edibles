@@ -35,7 +35,7 @@ class Rotational_Energies:
         C (float): Constant of the third axis.
         Target (str): Name of the target sightline.
         Q_scale (float): Scale of the Q-branch.
-        PR_scale (TYPE): Scale of the P-branch and R-branch.
+        PR_scale (float): Scale of the P-branch and R-branch.
     """
 
     def __init__(self, A, B, C, Target, Q_scale, PR_scale):
@@ -334,8 +334,8 @@ class Rotational_Energies:
         rebinned_x, rebinned_y = [], []
 
         # Internvals to resample X data.
-        bins = np.arange(np.float(np.min(X))-5,
-                         np.float(np.max(X))+5, bin_size)
+        bins = np.arange(float(np.min(X))-5,
+                         float(np.max(X))+5, bin_size)
 
         # Classification of X data in bins.
         inds = np.digitize(X, bins)
