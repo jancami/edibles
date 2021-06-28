@@ -33,19 +33,19 @@ class Rotational_Energies:
         A (float): Rotational constant of the first rotational axis.
         B (float): Constant of the second axis.
         C (float): Constant of the third axis.
-        Name (str): Name of sigthline dataset. 
+        Target (str): Name of the target sightline.
         Q_scale (float): Scale of the Q-branch.
         PR_scale (TYPE): Scale of the P-branch and R-branch.
     """
 
-    def __init__(self, A, B, C, Name, Q_scale, PR_scale):
+    def __init__(self, A, B, C, Target, Q_scale, PR_scale):
         """Init the Rotational_Energies class."""
         # print('init')
         self.A = A
         self.B = B
         self.C = C
         self._determine_symmetry_type()
-        self.name = Name
+        self.Target = Target
         self.Q_scale = Q_scale
         self.PR_scale = PR_scale
 
@@ -127,7 +127,7 @@ class Rotational_Energies:
         self.E = df["E"]
 
     def boltzmann(self, T):
-        """Compute the Booltzmann distribution.
+        """Compute the Boltzmann distribution.
 
         Calculate the state population using the Boltzann distribution for
         a given temperature.
@@ -154,8 +154,7 @@ class Rotational_Energies:
         Determine allowed transitions of the rotational quantum numbers
         acoordingly with the J and K selection rules. The arguments of this
         method must comes from another Rotational_Energies class, with the same
-        arguments but different values of A, B and C (that differs with a
-        small value).
+        arguments but potentially different values of A, B and C.
 
         Args:
             Jup (1darray): Values of the upper states of the J rotational number.
@@ -315,8 +314,8 @@ class Rotational_Energies:
         # Plot details.
         plt.xlabel("Transition Frequency (1/cm)")
         plt.ylabel("Intensity")
-        plt.title(str(self.name))
-        plt.savefig(str(self.name)+'_'+self.symmetry_type+".pdf")
+        plt.title(str(self.Target))
+        plt.savefig(str(self.Target)+'_'+self.symmetry_type+".pdf")
 
     def _rebin_data(self, X, Y, bin_size, Verbose=False):
         """Resample data with a given interval.
