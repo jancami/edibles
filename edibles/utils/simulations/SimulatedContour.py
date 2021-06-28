@@ -11,7 +11,7 @@ from edibles.utils.simulations.RotationalEnergies import Rotational_Energies
 import matplotlib.pyplot as plt
 
 
-def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Name, Q_scale=1,
+def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, Q_scale=1,
                       PR_scale=1, Q_Branch=True, lambda0=0):
     """Summary of function...
 
@@ -26,7 +26,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Name, Q_
         Delta_C (TYPE): DESCRIPION
         Trot (TYPE): DESCRIPION
         Jlimit (TYPE): DESCRIPION
-        Name (TYPE): DESCRIPION
+        Target (TYPE): DESCRIPION
         Q_scale (TYPE): DESCRIPION. Optional; the default is 1.
         PR_scale (TYPE): DESCRIPION. Optional; the default is 1.
         Q_Branch (TYPE): DESCRIPION. Optional; the default is True.
@@ -37,7 +37,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Name, Q_
         re_low.final_y (TYPE): DESCRIPTION
 
     """
-    re_low = Rotational_Energies(A=A, B=B, C=C, Name=Name,
+    re_low = Rotational_Energies(A=A, B=B, C=C, Target=Target,
                                  Q_scale=Q_scale, PR_scale=PR_scale)
 
     if re_low.flag:
@@ -47,7 +47,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Name, Q_
         re_low.rotational_energies(Jlimit=Jlimit)
         re_low.boltzmann(T=Trot)
         re_up = Rotational_Energies(A=A+Delta_A, B=B+Delta_B, C=C+Delta_C,
-                                    Name=Name, Q_scale=Q_scale, PR_scale=PR_scale)
+                                    Target=Target, Q_scale=Q_scale, PR_scale=PR_scale)
 
         re_up.rotational_energies(Jlimit=Jlimit)
         re_low.allowed_combinations(Jup=re_up.J, Kup=re_up.K,
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     sim = Simulated_Contour(A=42e-3, B=42e-3, C=42e-3, Delta_A=42e-3*(0.001),
                             Delta_B=42e-3*(0.001), Delta_C=42e-3*(0.001), Trot=15,
-                            Jlimit=50, Name='Test', lambda0=6614, Q_Branch=True)
+                            Jlimit=50, Target='Test', lambda0=6614, Q_Branch=True)
     plt.plot(sim[0], sim[1], 'k-')
     plt.xlabel(r'Wavelength ($\mathrm{\AA}$)')
     plt.ylabel('Normalized Intensity')
