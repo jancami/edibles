@@ -10,11 +10,12 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
 
     Args:
         A (float): Rotational constant of the first rotational axis.
-        Delta_A (float): DESCRIPTION
+        Delta_A (float): Difference between the values of the first rotational constant of the 
+            upper and lower states.
         B (float): Constant of the second axis.
-        Delta_B (float): DESCRIPION
-        C (float): Constant of the second axis.
-        Delta_C (float): DESCRIPION
+        Delta_B (float): Difference of the second constant.
+        C (float): Constant of the third axis.
+        Delta_C (float): Difference of the third constant.
         Trot (float): Temperature (Kelvin degrees).
         Jlimit (int): Upper bound of the first rotational quantum number J.
         Target (str): Name of the target sightline.
