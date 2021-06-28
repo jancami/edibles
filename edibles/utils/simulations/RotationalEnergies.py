@@ -89,42 +89,36 @@ class Rotational_Energies:
         self.Jlimit = Jlimit
 
         if self.symmetry_type == 'spherical':
-            df = pd.DataFrame(columns=["J", "E"])
 
             # Values of the quantum rotational number.
-            J_vals = list(range(0, self.Jlimit+1))
+            J = np.arange(0, self.Jlimit+1)
 
             # Energy of each J value.
-            for J in J_vals:
-                E = self.B*J*(J+1)
-                df = df.append({"J": J, "E": E}, ignore_index=True)
-                self.K = pd.Series(np.nan)
+            E = self.B*J*(J+1)
+
+            # Empty values for K.
+            K = np.nan
 
         else:
-            df = pd.DataFrame(columns=["J", "K"])
 
-            # Values of the first quantum rotational number J.
-            J_vals = list(range(0, self.Jlimit+1))
+            # Possible values of the first and second quantum rotational numbers (J and K).
+            J_vals = np.arange(0, self.Jlimit+1)
+            K_vals = np.arange(-self.Jlimit, self.Jlimit+1)
 
-            for J in J_vals:
-                # Values of the second rotational number K.
-
-                for K in list(range(-J, J+1)):
-                    # Combinations of J and K values
-                    df = df.append({"J": J, "K": K}, ignore_index=True)
+            # Generate all possible combinations.
+            J, K = np.array(np.meshgrid(J_vals, K_vals)).T.reshape(-1, 2).T
 
             # Energy of each (J, K) pair of a prolate symmetry.
             if self.symmetry_type == 'symmetric_prolate':
-                df["E"] = self.B*df["J"]*(df["J"]+1)+(self.A-self.B)*df["K"]**2
+                E = self.B*J*(J+1) + (self.A-self.B)*K**2
 
             # Energy of each (J, K) pair of an oblate symmetry.
             elif self.symmetry_type == 'symmetric_oblate':
-                df["E"] = self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
+                E = self.B*J*(J+1)+(self.C-self.B)*K**2
 
-            self.K = df["K"]
-
-        self.J = df["J"]
-        self.E = df["E"]
+        self.K = pd.Series(K)
+        self.J = pd.Series(J)
+        self.E = pd.Series(E)
 
     def boltzmann(self, T):
         """Compute the Boltzmann distribution.
@@ -262,7 +256,7 @@ class Rotational_Energies:
     def transition_freq_and_pop(self):
         """Get the frequencie and population of transitions.
 
-        Get the frequency of the allowed transitions and their itensities 
+        Get the frequency of the allowed transitions and their itensities
         acoordingly with their population.
         """
         if self.allowed_combo_data is None:
@@ -324,10 +318,10 @@ class Rotational_Energies:
             X (1darray): Data of the X axis.
             Y (1darray): Data of the Y axis.
             bin_size (float): Interval for resampling.
-            Verbose (bool, optional): Default to False. Wheter or not to 
+            Verbose (bool, optional): Default to False. Wheter or not to
                 describe progress of execution.
 
-        Returns: 
+        Returns:
             rebinned_x (1darray): Resampled X data.
             rebinned_y (1darray): Resampled Y data.
         """
