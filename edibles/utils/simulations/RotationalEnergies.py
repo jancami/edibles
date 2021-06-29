@@ -349,7 +349,6 @@ class Rotational_Energies:
         plt.xlabel("Transition Frequency (1/cm)")
         plt.ylabel("Intensity")
         plt.title(str(self.Target))
-        plt.savefig(str(self.Target)+'_'+self.symmetry_type+".pdf")
 
     def _rebin_data(self, X, Y, bin_size, Verbose=False):
         """Resample data with a given interval.
