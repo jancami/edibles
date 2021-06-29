@@ -311,6 +311,46 @@ class Rotational_Energies:
         plt.title(str(self.Target))
         plt.savefig(str(self.Target)+'_'+self.symmetry_type+".pdf")
 
+    def plot_k_transitions(self, K_values):
+        """Plot transitions with a particular K initial value.
+
+        This work only for prolate and oblate tops. In order to observe a shift
+        in the frecuencies, ther must be a differences between the Delta values
+        of the rotational constants.
+
+        Args:
+            K_values (1darray): K values to compare (integer numbers). Only
+                two numbers are recomended.
+        """
+        # DataFrame of transitions.
+        df = pd.DataFrame({"Trans_Freqs": self.transition_freqs,
+                           "Trans_Intens": self.transition_intensity,
+                           "K": self.allowed_combo_data['K']})
+
+        # List for dataframes
+        dfs = []
+
+        # Colors for plot
+        colors = ['black', 'blue', 'red', 'green']
+
+        # For every K value
+        for i in range(len(K_values)):
+
+            # Filter transitions with specific K initial value.
+            dfs.append(df[df['K'] == K_values[i]])
+
+            # Plot every transition line of the resulting transitions.
+            plt.vlines(x=dfs[i]['Trans_Freqs'], ymax=dfs[i]['Trans_Intens'],
+                       ymin=0, color=colors[i],
+                       label='K = ' + str(K_values[i]),
+                       alpha=1, linewidth=0.5)
+
+        # Plot details.
+        plt.xlabel("Transition Frequency (1/cm)")
+        plt.ylabel("Intensity")
+        plt.title(str(self.Target))
+        plt.savefig(str(self.Target)+'_'+self.symmetry_type+".pdf")
+
     def _rebin_data(self, X, Y, bin_size, Verbose=False):
         """Resample data with a given interval.
 
