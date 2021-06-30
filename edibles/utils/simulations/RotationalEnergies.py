@@ -288,9 +288,8 @@ class Rotational_Energies:
             # print("Jmax=" ,self.highest_pop_state)
             
             
-            
-            
-    def plot_level_structure(self:
+
+    def plot_level_structure(self):
         J_low=self.allowed_combo_data["J"]*(self.allowed_combo_data["J"]+1)
         J_high=self.allowed_combo_data["J'"]*(self.allowed_combo_data["J'"]+1)
         freqs=self.transition_freqs

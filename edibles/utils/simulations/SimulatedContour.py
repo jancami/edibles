@@ -57,7 +57,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         # Get transition frequencies and populations.
         re_low.transition_freq_and_pop()
         plot1=plt.figure(1)
-        re_low.plot_level_structure()
+    #    re_low.plot_level_structure()
     #    re_low.plot_transitions()
     #    plt.legend()
     #    plot2=plt.figure(2)
