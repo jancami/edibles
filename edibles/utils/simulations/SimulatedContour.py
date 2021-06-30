@@ -55,8 +55,12 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
                                     Eup=re_up.E, Q_Branch=Q_Branch)
 
         # Get transition frequencies and populations.
+
+
         re_low.transition_freq_and_pop()
-    #    plot1=plt.figure(1)
+        
+        re_low.plot_level_structure()
+    #        plot1=plt.figure(1)
     #    re_low.plot_transitions()
     #    plt.legend()
     #    plot2=plt.figure(2)
@@ -74,7 +78,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         # Apply 1D Gaussian kernel.
         re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
     #    plt.legend()
-    #    plt.show()
+        plt.show()
 
         return(re_low.spectrax, re_low.final_y)
 
