@@ -55,9 +55,12 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
                                     Eup=re_up.E, Q_Branch=Q_Branch)
 
         # Get transition frequencies and populations.
+
+
         re_low.transition_freq_and_pop()
-        plot1=plt.figure(1)
-    #    re_low.plot_level_structure()
+        
+        re_low.plot_level_structure()
+    #        plot1=plt.figure(1)
     #    re_low.plot_transitions()
     #    plt.legend()
     #    plot2=plt.figure(2)
@@ -85,7 +88,7 @@ if __name__ == "__main__":
     # Perform simulation.
     sim = Simulated_Contour(A=42e-3, B=42e-3, C=42e-3, Delta_A=42e-3*(0.001),
                             Delta_B=42e-3*(0.001), Delta_C=42e-3*(0.001), Trot=15,
-                            Jlimit=5, Target='Test', lambda0=6614, Q_Branch=True)
+                            Jlimit=50, Target='Test', lambda0=6614, Q_Branch=True)
 
     # Plot result.
     plt.plot(sim[0], sim[1], 'k-')

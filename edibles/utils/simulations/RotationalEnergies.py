@@ -293,22 +293,26 @@ class Rotational_Energies:
         J_low=self.allowed_combo_data["J"]*(self.allowed_combo_data["J"]+1)
         J_high=self.allowed_combo_data["J'"]*(self.allowed_combo_data["J'"]+1)
         freqs=self.transition_freqs
+        
+        
         fig, axs = plt.subplots(2,sharex=True)
-        fig.suptitle('Plotting Level Structure')
-        axs[0].plot(freqs, J_low,'b.',marker='None')
-        axs[1].plot(freqs, J_high,'b.',marker='None')
-        axs[0].set_yticks(ticks=J_low)
-        axs[1].set_yticks(ticks=J_high)
+        fig.suptitle('Plotting Level Structure: B='+str(self.B))
+        axs[1].plot(freqs, J_low,'b.',marker='None')
+        axs[0].plot(freqs, J_high,'b.',marker='None')
+        axs[1].set_yticks(ticks=J_low)
+        axs[0].set_yticks(ticks=J_high)
+        
+    
         for i in range(len(J_high)):
             xy_low = (freqs[i], J_low[i])
             xy_high = (freqs[i], J_high[i])
-            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data", axesA=axs[0], axesB=axs[1], arrowstyle="<|-",color="blue")
+            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data", axesA=axs[1], axesB=axs[0], arrowstyle="-|>",color="blue")
             axs[1].add_artist(con)
-        axs[0].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
         axs[1].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
-        axs[0].set_ylabel(r"Rotational Energy Levels ($\times$B) - V")
-        axs[1].set_ylabel(r"Rotational Energy Levels ($\times$B) - V'")
-        plt.xlabel("Transition Frequency")
+        axs[0].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
+        axs[1].set_ylabel(r"($\times$B): V")
+        axs[0].set_ylabel(r"($\times$B): V'")
+        plt.tick_params(labelbottom=False,bottom=False)
         
         
         
