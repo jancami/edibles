@@ -60,7 +60,8 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         re_low.transition_freq_and_pop()
         
         re_low.plot_level_structure()
-    #        plot1=plt.figure(1)
+        plot1=plt.figure(1)
+        re_low.plot_level_transitions()
     #    re_low.plot_transitions()
     #    plt.legend()
     #    plot2=plt.figure(2)

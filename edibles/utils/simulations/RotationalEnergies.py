@@ -103,24 +103,21 @@ class Rotational_Energies:
 
         else:
                
-            # Possible values of the first and second quantum rotational numbers (J and K).
-            J_vals = np.arange(0, self.Jlimit+1)
-            K_vals = np.arange(-self.Jlimit, self.Jlimit+1)
-
-            # Generate all possible combinations.
-            J, K = np.array(np.meshgrid(J_vals, K_vals)).T.reshape(-1, 2).T
-
-            # Energy of each (J, K) pair of a prolate symmetry.
-            if self.symmetry_type == 'symmetric_prolate':
-                E = self.B*J*(J+1) + (self.A-self.B)*K**2
-
-            # Energy of each (J, K) pair of an oblate symmetry.
-            elif self.symmetry_type == 'symmetric_oblate':
-                E = self.B*J*(J+1)+(self.C-self.B)*K**2
-
-        self.K = pd.Series(K)
-        self.J = pd.Series(J)
-        self.E = pd.Series(E)
+            df=pd.DataFrame(columns=["J","K"])
+            J_vals=list(range(0,self.Jlimit+1))
+            
+            for J in J_vals:
+                for K in list(range(-J,J+1)):
+                    
+                    df=df.append({"J" : J, "K": K}, ignore_index=True)
+            if self.symmetry_type=='symmetric_prolate':
+                df["E"]=self.B*df["J"]*(df["J"]+1)+(self.A-self.B)*df["K"]**2
+            elif self.symmetry_type=='symmetric_oblate':
+                df["E"]=self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
+            self.K=df["K"]
+        self.J=df["J"]
+        
+        self.E=df["E"]
 
     def boltzmann(self, T):
         """Compute the Boltzmann distribution.
@@ -143,7 +140,17 @@ class Rotational_Energies:
         # Renormalize
         norm_pop = self.population/(np.sum(self.population))
         self.population = pd.Series(norm_pop)
-
+        
+    def plot_level_structure(self):
+        plt.plot(self.K,self.E,color='k',marker=1,ms=20,ls='None')
+        for i in range(len(self.E.index)):
+            plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(self.K.iloc[i]-0.25,self.E.iloc[i]),size=5)
+        plt.xlabel("K")
+        plt.ylabel("E")
+        plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
+        plt.xlim(xmin=-0.5)
+        plt.show()
+        
     def allowed_combinations(self, Jup, Kup, Eup, Q_Branch=False):
         """Determine allowed transitions.
 
@@ -319,16 +326,7 @@ class Rotational_Energies:
         axs[1].set_ylabel("V")
         axs[0].set_ylabel("V'")
         plt.tick_params(labelbottom=False,bottom=False)
-        
-    def plot_level_structure(self):
-        plt.plot(self.allowed_combo_data["K"],self.allowed_combo_data["E"],color='k',marker=1,ms=20,ls='None')
-        for i in range(len(self.allowed_combo_data.index)):
-            plt.annotate(text="J= "+str(self.allowed_combo_data["J"].iloc[i]),xy=(self.allowed_combo_data["K"].iloc[i]-0.25,self.allowed_combo_data["E"].iloc[i]),size=5)
-        plt.xlabel("K")
-        plt.ylabel("E")
-        plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
-        plt.xlim(xmin=-0.5)
-        plt.show()
+    
         
 
     def plot_transitions(self):
