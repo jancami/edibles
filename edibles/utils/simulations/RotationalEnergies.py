@@ -102,7 +102,7 @@ class Rotational_Energies:
             K = np.nan
 
         else:
-
+               
             # Possible values of the first and second quantum rotational numbers (J and K).
             J_vals = np.arange(0, self.Jlimit+1)
             K_vals = np.arange(-self.Jlimit, self.Jlimit+1)
@@ -163,7 +163,7 @@ class Rotational_Energies:
         df = pd.concat([self.J, self.K, self.E, self.population], axis=1)
         df.columns = ["J", "K", "E", "nJ"]
         df2 = pd.DataFrame({"J'": Jup, "K'": Kup, "E'": Eup})
-
+        
         E_list, E_prime_list, J_list, J_prime_list = [], [], [], []
         K_list, K_prime_list, nJ_list = [], [], []
 
@@ -208,13 +208,14 @@ class Rotational_Energies:
         elif 'symmetric' in self.symmetry_type:
             # print("Starting search for allowed transitions")
             # For every initial state
-            for i in range(len(df.index)):
-
+            
+            for i in range(len(df2.index)):
+                
                 # Get current values of J, E and K.
                 Jupp = df2["J'"].iloc[i]
                 Eupp = df2["E'"].iloc[i]
                 Kupp = df2["K'"].iloc[i]
-
+                
                 # Selection rules for K.
                 DeltaK = [0]
 
@@ -227,11 +228,13 @@ class Rotational_Energies:
 
                 # Allowed transition values.
                 allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
-                allowedK = [Kupp-DelK for DelK in DeltaK]
-
+                allowedK1 = [Kupp-DelK for DelK in DeltaK]
+                allowedK2= np.arange(-Jupp+1,Jupp)
+                
+                
                 # Final states that agree with the allowed transitions.
-                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK)])
-
+                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) & df.K.isin(allowedK2)])
+                
                 # Add values to DataFrame of allowed transitions.
                 df4["J'"] = Jupp
                 df4["E'"] = Eupp
@@ -254,9 +257,9 @@ class Rotational_Energies:
                             "J'": J_prime_list, "K": K_list,
                             "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data = df3
-
+        
     def transition_freq_and_pop(self):
-        """Get the frequencie and population of transitions.
+        """Get the frequency and population of transitions.
 
         Get the frequency of the allowed transitions and their itensities
         acoordingly with their population.
@@ -265,7 +268,7 @@ class Rotational_Energies:
             print("Do not have relevant data")
 
         else:
-            # Compute frecuencies.
+            # Compute frequencies.
             self.transition_freqs = (self.allowed_combo_data["E'"] -
                                      self.allowed_combo_data["E"])
 
@@ -281,7 +284,7 @@ class Rotational_Energies:
 
             # Intensity proportional to population.
             self.transition_intensity = self.allowed_combo_data["nJ"]
-
+            
             # Find highest populated state.
             max_pop_idx = self.transition_intensity.astype('float64').idxmax()
             self.highest_pop_state = (self.allowed_combo_data["J"].iloc[max_pop_idx])
@@ -317,7 +320,15 @@ class Rotational_Energies:
         axs[0].set_ylabel("V'")
         plt.tick_params(labelbottom=False,bottom=False)
         
-        
+    def plot_level_structure(self):
+        plt.plot(self.allowed_combo_data["K"],self.allowed_combo_data["E"],color='k',marker=1,ms=20,ls='None')
+        for i in range(len(self.allowed_combo_data.index)):
+            plt.annotate(text="J= "+str(self.allowed_combo_data["J"].iloc[i]),xy=(self.allowed_combo_data["K"].iloc[i]-0.25,self.allowed_combo_data["E"].iloc[i]),size=5)
+        plt.xlabel("K")
+        plt.ylabel("E")
+        plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
+        plt.xlim(xmin=-0.5)
+        plt.show()
         
 
     def plot_transitions(self):
