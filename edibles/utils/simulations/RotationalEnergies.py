@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import ConnectionPatch
+from matplotlib.ticker import FormatStrFormatter
 import pandas as pd
 from astropy import constants as const
 from astropy import units as u
@@ -289,29 +290,31 @@ class Rotational_Energies:
             
             
 
-    def plot_level_structure(self):
+    def plot_level_transitions(self):
         J_low=self.allowed_combo_data["J"]*(self.allowed_combo_data["J"]+1)
         J_high=self.allowed_combo_data["J'"]*(self.allowed_combo_data["J'"]+1)
         freqs=self.transition_freqs
         
         
         fig, axs = plt.subplots(2,sharex=True)
-        fig.suptitle('Plotting Level Structure: B='+str(self.B))
+        fig.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
         axs[1].plot(freqs, J_low,'b.',marker='None')
         axs[0].plot(freqs, J_high,'b.',marker='None')
         axs[1].set_yticks(ticks=J_low)
         axs[0].set_yticks(ticks=J_high)
         
-    
+        axs[0].yaxis.set_major_formatter(FormatStrFormatter('%dB'))
+        axs[1].yaxis.set_major_formatter(FormatStrFormatter('%dB'))
+        
         for i in range(len(J_high)):
             xy_low = (freqs[i], J_low[i])
             xy_high = (freqs[i], J_high[i])
-            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data", axesA=axs[1], axesB=axs[0], arrowstyle="-|>",color="blue")
+            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data", axesA=axs[1], axesB=axs[0], arrowstyle="-|>",color='blue')
             axs[1].add_artist(con)
         axs[1].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
         axs[0].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
-        axs[1].set_ylabel(r"($\times$B): V")
-        axs[0].set_ylabel(r"($\times$B): V'")
+        axs[1].set_ylabel("V")
+        axs[0].set_ylabel("V'")
         plt.tick_params(labelbottom=False,bottom=False)
         
         
