@@ -146,10 +146,11 @@ class Rotational_Energies:
         for i in range(len(self.E.index)):
             plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(self.K.iloc[i]-0.25,self.E.iloc[i]),size=5)
         plt.xlabel("K")
-        plt.ylabel("E")
+        plt.ylabel(r"E (cm$^{-1})$")
         plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
-        plt.xlim(xmin=-0.5)
-        plt.show()
+        plt.xticks(np.arange(min(self.K), max(self.K)+1, 1.0))
+        plt.xlim(xmin=-0.3)
+        plt.savefig("PlotLevelStructure_"+str(self.symmetry_type)+".pdf")
         
     def allowed_combinations(self, Jup, Kup, Eup, Q_Branch=False):
         """Determine allowed transitions.
