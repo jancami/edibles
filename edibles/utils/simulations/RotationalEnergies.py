@@ -91,18 +91,19 @@ class Rotational_Energies:
         self.Jlimit = Jlimit
 
         if self.symmetry_type == 'spherical':
-
-            # Values of the quantum rotational number.
-            J = np.arange(0, self.Jlimit+1)
-
-            # Energy of each J value.
-            E = self.B*J*(J+1)
-
-            # Empty values for K.
-            K = np.nan
+            #Create dataframe to store values
+            df=pd.DataFrame(columns=["J","E"])
+            #Create list of J values
+            J_vals=list(range(0,self.Jlimit+1))
+            
+            for J in J_vals:
+                #Calculate energy (E) for each value of J and store it in dataframe
+                E=self.B*J*(J+1)
+                df=df.append({"J":J, "E":E},ignore_index=True)
+                self.K=pd.Series(np.nan)
 
         else:
-               
+            #Create dataframe to store values
             df=pd.DataFrame(columns=["J","K"])
             J_vals=list(range(0,self.Jlimit+1))
             
@@ -142,15 +143,24 @@ class Rotational_Energies:
         self.population = pd.Series(norm_pop)
         
     def plot_level_structure(self):
-        plt.plot(self.K,self.E,color='k',marker=1,ms=20,ls='None')
-        for i in range(len(self.E.index)):
-            plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(self.K.iloc[i]-0.25,self.E.iloc[i]),size=5)
-        plt.xlabel("K")
-        plt.ylabel(r"E (cm$^{-1})$")
-        plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
-        plt.xticks(np.arange(min(self.K), max(self.K)+1, 1.0))
-        plt.xlim(xmin=-0.3)
-        plt.savefig("PlotLevelStructure_"+str(self.symmetry_type)+".pdf")
+        if self.symmetry_type!='spherical':
+            plt.plot(self.K,self.E,color='k',marker=1,ms=20,ls='None')
+            for i in range(len(self.E.index)):
+                plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(self.K.iloc[i]-0.25,self.E.iloc[i]),size=5)
+            plt.xlabel("K")
+            plt.ylabel(r"E (cm$^{-1})$")
+            plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
+            plt.xticks(np.arange(min(self.K), max(self.K)+1, 1.0))
+            plt.xlim(xmin=-0.3)
+        else:
+            plt.plot([0]*len(self.E),self.E,color='k',marker=1,ms=20,ls='None')
+            for i in range(len(self.E.index)):
+                plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(-0.01,self.E.iloc[i]),size=5)
+            plt.xlabel("K")
+            plt.ylabel(r"E (cm$^{-1})$")
+            plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
+            
+            
         
     def allowed_combinations(self, Jup, Kup, Eup, Q_Branch=False):
         """Determine allowed transitions.
@@ -353,7 +363,7 @@ class Rotational_Energies:
         plt.xlabel("Transition Frequency (1/cm)")
         plt.ylabel("Intensity")
         plt.title(str(self.Target))
-        plt.savefig(str(self.Target)+'_'+self.symmetry_type+".pdf")
+        
 
     def plot_k_transitions(self, K_values):
         """Plot transitions with a particular K initial value.
@@ -522,7 +532,7 @@ class Rotational_Energies:
             plt.plot(Wave, final_tau, 'k-', label='voigt profile applied')
             plt.xlabel('Wavelength $\mathrm{\AA}$')
             plt.ylabel('Tau')
-            plt.show()
+            
 
     def apply_radiative_transfer(self, show_figure=False):
         """Apply radiative transfer to data from voigt profile.
@@ -541,7 +551,7 @@ class Rotational_Energies:
 
             plt.xlabel('Wavelength $\mathrm{\AA}$')
             plt.ylabel('Optical Depth')
-            plt.show()
+            
         return()
 
     def smooth_spectra(self, lambda0, show_figure=False):

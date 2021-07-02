@@ -55,32 +55,35 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
                                     Eup=re_up.E, Q_Branch=Q_Branch)
 
         # Get transition frequencies and populations.
-
-
         re_low.transition_freq_and_pop()
-    #    plot1=plt.figure(1)
-    #    re_low.plot_level_structure()
-    #    plot2=plt.figure(2)
-    #    re_low.plot_level_transitions()
-    #    re_low.plot_transitions()
-    #    plt.legend()
-    #    plot3=plt.figure(3)
-
-        # Apply voigt profile.
+        # Plot Level Structure
+#        plt.figure()
+#        re_low.plot_level_structure()
+#
+#         #Plot Level Transitions
+#
+#        re_low.plot_level_transitions()
+#
+#        # Plot Transitions
+#        plt.figure()
+#        re_low.plot_transitions()
+#        plt.legend()
+#         #Apply voigt profile.
+#        plt.figure()
         re_low.apply_voigt(lambda0=lambda0, show_figure=False)
-    #    plt.legend()
-    #    plot4=plt.figure(4)
+        
+#        plt.figure()
 
         # Apply radiative transfer
         re_low.apply_radiative_transfer(show_figure=False)
-    #    plt.legend()
-    #    plot5=plt.figure(5)
+        
+#        plt.figure()
 
         # Apply 1D Gaussian kernel.
         re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
-    #    plt.legend()
-        plt.show()
-
+        
+#        plt.show()
+        
         return(re_low.spectrax, re_low.final_y)
 
 
