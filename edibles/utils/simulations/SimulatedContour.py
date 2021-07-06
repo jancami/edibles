@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, Q_scale=1,
-                      PR_scale=1, Q_Branch=True, lambda0=0):
+                      PR_scale=1, Q_Branch=False, lambda0=0):
     """Generate simulated contour.
 
     Args:
@@ -21,7 +21,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         Target (str): Name of the target sightline.
         Q_scale (float, optional): Scale of the Q-branch. Default to 1.
         PR_scale (float, optional): Scale of the P-branch and R-branch. Default to 1.
-        Q_Branch (bool, optional): Wheter to consideror not the Q-branch. Default to True.
+        Q_Branch (bool, optional): Wheter to consideror not the Q-branch. Default to False.
         lambda0 (float, optional): Center wavelength of DIB (Angstrom). Default to 0.
 
     Returns:
@@ -59,30 +59,30 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         # Plot Level Structure
 #        plt.figure()
 #        re_low.plot_level_structure()
-#
-#         #Plot Level Transitions
-#
+
+         #Plot Level Transitions
+
 #        re_low.plot_level_transitions()
 #
 #        # Plot Transitions
-#        plt.figure()
-#        re_low.plot_transitions()
+        plt.figure()
+        re_low.plot_transitions()
 #        plt.legend()
-#         #Apply voigt profile.
-#        plt.figure()
-        re_low.apply_voigt(lambda0=lambda0, show_figure=False)
+         #Apply voigt profile.
+        plt.figure()
+        re_low.apply_voigt(lambda0=lambda0, show_figure=True)
         
-#        plt.figure()
+        plt.figure()
 
         # Apply radiative transfer
-        re_low.apply_radiative_transfer(show_figure=False)
+        re_low.apply_radiative_transfer(show_figure=True)
         
-#        plt.figure()
+        plt.figure()
 
         # Apply 1D Gaussian kernel.
-        re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
+        re_low.smooth_spectra(lambda0=lambda0, show_figure=True)
         
-#        plt.show()
+        plt.show()
         
         return(re_low.spectrax, re_low.final_y)
 
