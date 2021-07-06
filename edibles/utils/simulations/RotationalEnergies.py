@@ -91,34 +91,34 @@ class Rotational_Energies:
         self.Jlimit = Jlimit
 
         if self.symmetry_type == 'spherical':
-            #Create dataframe to store values
-            df=pd.DataFrame(columns=["J","E"])
-            #Create list of J values
-            J_vals=list(range(0,self.Jlimit+1))
-            
+            # Create dataframe to store values
+            df = pd.DataFrame(columns=["J", "E"])
+            # Create list of J values
+            J_vals = list(range(0, self.Jlimit+1))
+
             for J in J_vals:
-                #Calculate energy (E) for each value of J and store it in dataframe
-                E=self.B*J*(J+1)
-                df=df.append({"J":J, "E":E},ignore_index=True)
-                self.K=pd.Series(np.nan)
+                # Calculate energy (E) for each value of J and store it in dataframe
+                E = self.B*J*(J+1)
+                df = df.append({"J": J, "E": E}, ignore_index=True)
+                self.K = pd.Series(np.nan)
 
         else:
-            #Create dataframe to store values
-            df=pd.DataFrame(columns=["J","K"])
-            J_vals=list(range(0,self.Jlimit+1))
-            
+            # Create dataframe to store values
+            df = pd.DataFrame(columns=["J", "K"])
+            J_vals = list(range(0, self.Jlimit+1))
+
             for J in J_vals:
-                for K in list(range(-J,J+1)):
-                    
-                    df=df.append({"J" : J, "K": K}, ignore_index=True)
-            if self.symmetry_type=='symmetric_prolate':
-                df["E"]=self.B*df["J"]*(df["J"]+1)+(self.A-self.B)*df["K"]**2
-            elif self.symmetry_type=='symmetric_oblate':
-                df["E"]=self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
-            self.K=df["K"]
-        self.J=df["J"]
-        
-        self.E=df["E"]
+                for K in list(range(-J, J+1)):
+                    df = df.append({"J": J, "K": K}, ignore_index=True)
+
+            if self.symmetry_type == 'symmetric_prolate':
+                df["E"] = self.B*df["J"]*(df["J"]+1)+(self.A-self.B)*df["K"]**2
+            elif self.symmetry_type == 'symmetric_oblate':
+                df["E"] = self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
+            self.K = df["K"]
+        self.J = df["J"]
+
+        self.E = df["E"]
 
     def boltzmann(self, T):
         """Compute the Boltzmann distribution.
@@ -141,27 +141,37 @@ class Rotational_Energies:
         # Renormalize
         norm_pop = self.population/(np.sum(self.population))
         self.population = pd.Series(norm_pop)
-        
+
     def plot_level_structure(self):
-        if self.symmetry_type!='spherical':
-            plt.plot(self.K,self.E,color='k',marker=1,ms=20,ls='None')
+        """Plot the energy level structure of the transitions as a function of K and J."""
+        # For prolate and oblate tops.
+        if self.symmetry_type != 'spherical':
+            # Plot all the levels (scatter-like plot)
+            plt.plot(self.K, self.E, color='k', marker=1, ms=20, ls='None')
+
+            # Annotate each level with corresponding J value.
             for i in range(len(self.E.index)):
-                plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(self.K.iloc[i]-0.25,self.E.iloc[i]),size=5)
-            plt.xlabel("K")
-            plt.ylabel(r"E (cm$^{-1})$")
-            plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
+                plt.annotate(text="J= "+str(self.J.iloc[i]),
+                             xy=(self.K.iloc[i]-0.25, self.E.iloc[i]), size=5)
+
+            # X-ticks correspond with K values.
             plt.xticks(np.arange(min(self.K), max(self.K)+1, 1.0))
             plt.xlim(xmin=-0.3)
+        # For spherical tops.
         else:
-            plt.plot([0]*len(self.E),self.E,color='k',marker=1,ms=20,ls='None')
+            # Plot all the levels (Explicit level structure).
+            plt.plot([0]*len(self.E), self.E, color='k', marker=1, ms=20, ls='None')
+
+            # Annotate each level with corresponding J value
             for i in range(len(self.E.index)):
-                plt.annotate(text="J= "+str(self.J.iloc[i]),xy=(-0.01,self.E.iloc[i]),size=5)
-            plt.xlabel("K")
-            plt.ylabel(r"E (cm$^{-1})$")
-            plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
-            
-            
-        
+                plt.annotate(text="J= "+str(self.J.iloc[i]), xy=(-0.01, self.E.iloc[i]), size=5)
+
+        # Plot details
+        plt.xlabel("K")
+        plt.ylabel(r"E (cm$^{-1})$")
+        plt.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B) +
+                     ' C='+str(self.C))
+
     def allowed_combinations(self, Jup, Kup, Eup, Q_Branch=False):
         """Determine allowed transitions.
 
@@ -181,7 +191,7 @@ class Rotational_Energies:
         df = pd.concat([self.J, self.K, self.E, self.population], axis=1)
         df.columns = ["J", "K", "E", "nJ"]
         df2 = pd.DataFrame({"J'": Jup, "K'": Kup, "E'": Eup})
-        
+
         E_list, E_prime_list, J_list, J_prime_list = [], [], [], []
         K_list, K_prime_list, nJ_list = [], [], []
 
@@ -226,14 +236,14 @@ class Rotational_Energies:
         elif 'symmetric' in self.symmetry_type:
             # print("Starting search for allowed transitions")
             # For every initial state
-            
+
             for i in range(len(df2.index)):
-                
+
                 # Get current values of J, E and K.
                 Jupp = df2["J'"].iloc[i]
                 Eupp = df2["E'"].iloc[i]
                 Kupp = df2["K'"].iloc[i]
-                
+
                 # Selection rules for K.
                 DeltaK = [0]
 
@@ -247,12 +257,12 @@ class Rotational_Energies:
                 # Allowed transition values.
                 allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
                 allowedK1 = [Kupp-DelK for DelK in DeltaK]
-                allowedK2= np.arange(-Jupp+1,Jupp)
-                
-                
+                allowedK2 = np.arange(-Jupp+1, Jupp)
+
                 # Final states that agree with the allowed transitions.
-                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) & df.K.isin(allowedK2)])
-                
+                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
+                                          df.K.isin(allowedK2)])
+
                 # Add values to DataFrame of allowed transitions.
                 df4["J'"] = Jupp
                 df4["E'"] = Eupp
@@ -275,7 +285,7 @@ class Rotational_Energies:
                             "J'": J_prime_list, "K": K_list,
                             "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data = df3
-        
+
     def transition_freq_and_pop(self):
         """Get the frequency and population of transitions.
 
@@ -302,43 +312,49 @@ class Rotational_Energies:
 
             # Intensity proportional to population.
             self.transition_intensity = self.allowed_combo_data["nJ"]
-            
+
             # Find highest populated state.
             max_pop_idx = self.transition_intensity.astype('float64').idxmax()
             self.highest_pop_state = (self.allowed_combo_data["J"].iloc[max_pop_idx])
 
             # print("Jmax=" ,self.highest_pop_state)
-            
-            
 
     def plot_level_transitions(self):
-        J_low=self.allowed_combo_data["J"]*(self.allowed_combo_data["J"]+1)
-        J_high=self.allowed_combo_data["J'"]*(self.allowed_combo_data["J'"]+1)
-        freqs=self.transition_freqs
-        
-        
-        fig, axs = plt.subplots(2,sharex=True)
-        fig.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B)+' C='+str(self.C))
-        axs[1].plot(freqs, J_low,'b.',marker='None')
-        axs[0].plot(freqs, J_high,'b.',marker='None')
+        """Plot the level transitions between Jlow and Jhigh states."""
+        # Computing the energy of high and low states
+        J_low = self.allowed_combo_data["J"]*(self.allowed_combo_data["J"]+1)
+        J_high = self.allowed_combo_data["J'"]*(self.allowed_combo_data["J'"]+1)
+        freqs = self.transition_freqs
+
+        # Create two subplots (for low and high levels)
+        fig, axs = plt.subplots(2, sharex=True)
+
+        # Title.
+        fig.suptitle('Plotting Level Structure: A='+str(self.A)+' B='+str(self.B) +
+                     ' C='+str(self.C))
+
+        axs[1].plot(freqs, J_low, 'b.', marker='None')
+        axs[0].plot(freqs, J_high, 'b.', marker='None')
+
+        # yticks correspond with J values
         axs[1].set_yticks(ticks=J_low)
         axs[0].set_yticks(ticks=J_high)
-        
+
         axs[0].yaxis.set_major_formatter(FormatStrFormatter('%dB'))
         axs[1].yaxis.set_major_formatter(FormatStrFormatter('%dB'))
-        
+
         for i in range(len(J_high)):
             xy_low = (freqs[i], J_low[i])
             xy_high = (freqs[i], J_high[i])
-            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data", axesA=axs[1], axesB=axs[0], arrowstyle="-|>",color='blue')
+            con = ConnectionPatch(xyA=xy_low, xyB=xy_high, coordsA="data", coordsB="data",
+                                  axesA=axs[1], axesB=axs[0], arrowstyle="-|>", color='blue')
             axs[1].add_artist(con)
-        axs[1].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
-        axs[0].grid(b=True,axis='y',which='major',c='grey',alpha=0.5)
+
+        axs[1].grid(b=True, axis='y', which='major', c='grey', alpha=0.5)
+        axs[0].grid(b=True, axis='y', which='major', c='grey', alpha=0.5)
         axs[1].set_ylabel("V")
         axs[0].set_ylabel("V'")
-        plt.tick_params(labelbottom=False,bottom=False)
-    
-        
+        plt.tick_params(labelbottom=False, bottom=False)
 
     def plot_transitions(self):
         """Plot the resulting transitions."""
@@ -363,7 +379,6 @@ class Rotational_Energies:
         plt.xlabel("Transition Frequency (1/cm)")
         plt.ylabel("Intensity")
         plt.title(str(self.Target))
-        
 
     def plot_k_transitions(self, K_values):
         """Plot transitions with a particular K initial value.
@@ -532,7 +547,6 @@ class Rotational_Energies:
             plt.plot(Wave, final_tau, 'k-', label='voigt profile applied')
             plt.xlabel('Wavelength $\mathrm{\AA}$')
             plt.ylabel('Tau')
-            
 
     def apply_radiative_transfer(self, show_figure=False):
         """Apply radiative transfer to data from voigt profile.
@@ -551,7 +565,7 @@ class Rotational_Energies:
 
             plt.xlabel('Wavelength $\mathrm{\AA}$')
             plt.ylabel('Optical Depth')
-            
+
         return()
 
     def smooth_spectra(self, lambda0, show_figure=False):
