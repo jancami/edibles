@@ -10,6 +10,7 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
+from pathlib import Path
 from edibles import PYTHONDIR
 from edibles import DATADIR
 
@@ -130,7 +131,8 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = PYTHONDIR + "/data/auxiliary_data/sky_transmission/transmission.dat"
+        filename = Path(PYTHONDIR + '/data/auxiliary_data/sky_transmission/transmission.dat')
+        #print(filename)
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
@@ -145,14 +147,20 @@ class EdiblesSpectrum:
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
 
         '''
-        print(self.datetime.date())
+        #print(self.datetime.date())
 
         stripped_date = str(self.datetime.date()).replace('-', '')
 
-        filename = glob.glob(
-            PYTHONDIR + "/data/telluric_corrected_data/" +
-            self.target + "*" + stripped_date + "*.ascii"
-        )
+        search_path = Path(PYTHONDIR + '/data/telluric_corrected_data')        
+        search_string = self.target + "*" + stripped_date + "*.ascii"
+        #print(search_path)
+        #print(search_string)
+        filename = list(search_path.glob(search_string))
+        #print(filename)
+        #filename = glob.glob(
+        #    PYTHONDIR + "/data/telluric_corrected_data/" +
+        #    self.target + "*" + stripped_date + "*.ascii"
+        #)
 
         if len(filename) != 0:
             filename = filename[0]
