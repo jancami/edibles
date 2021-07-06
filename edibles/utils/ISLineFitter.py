@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 import astropy.constants as cst
 from scipy.interpolate import interp1d
 from scipy.stats import pearsonr
@@ -46,6 +47,7 @@ class ISLineFitter():
         folder = Path(PYTHONDIR+"/data")
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
+        
 
     def getData2Fit(self, lam_0=None, windowsize=3):
         # clip the data around target wavelength
@@ -85,7 +87,6 @@ class ISLineFitter():
         """
         The main fitting method for the class.
         Currently kwargs for select_species_data to make code more pretty
-
         :param species: name of the species
         :param n_anchors: number of anchor points for spline continuum, default: 5
         :param windowsize: width of wavelength window on EACH side of target line, default: 3 (AA)
@@ -97,7 +98,6 @@ class ISLineFitter():
         ########## Step 1, get species info ##########
         spec_name, lam_0, fjj, gamma = self.select_species_data(species=species, **kwargs)
         # debug purpose
-
         ########## Step 2, get data2fit ##########
         _ = self.getData2Fit(lam_0, windowsize=windowsize)
 
@@ -156,18 +156,40 @@ class ISLineFitter():
         return model2fit, pars_guess
 
     def plotModel(self, which=-1):
+        
+        fig=plt.figure(figsize=(10,6.5))
+        plt.gcf().subplots_adjust(hspace = 0)
+        spec = gridspec.GridSpec(ncols=1, nrows=2,
+                              height_ratios=[4,1])
+        
+        ax0 = fig.add_subplot(spec[0])
+        plt.gca().xaxis.set_visible(False)
         if which == -1:
             which = len(self.result_all) - 1
 
-        plt.plot(self.wave2fit, self.flux2fit, color="k")
-        plt.plot(self.wave2fit, self.result_all[which].best_fit, color="b")
+        plt.plot(self.wave2fit, self.flux2fit, marker='D',fillstyle='none',color='black', label='Data')
+        plt.plot(self.wave2fit, self.result_all[which].best_fit, label="Best fit",marker='*', color='blue')
+        plt.ylabel('Relative flux')
+        plt.legend()
 
         if which >= 1:
             comps = self.result_all[which].eval_components(x=self.wave2fit)
-            plt.plot(self.wave2fit, comps["cont"], color="r")
-
-        plt.xlabel("N Components = {n}".format(n=which))
+            plt.plot(self.wave2fit, comps["cont"], label='Continuum', color='green')
+            plt.legend()
+        plt.title("N Components = {n}".format(n=which))
+        
+        
+  
+        ax1 = fig.add_subplot(spec[1])
+        plt.plot(self.wave2fit, (self.flux2fit-self.result_all[which].best_fit)/self.flux2fit *100 , color='black', linewidth=0.8)
+        plt.ylabel('residual [%]')
+        plt.xlabel('Wavelenght $\AA$')
         plt.show()
+        
+        
+        
+        
+        
 
     def select_species_data(self, species=None, **kwargs):
     # def select_species_data(self,species=None,Wave=None, WaveMin=None, WaveMax=None,
@@ -177,7 +199,6 @@ class ISLineFitter():
         '''This method will provide a filtered list of species information that matches
         the specified criteria on sightline/target parameters as well as
         on observational criteria (e.g. wavelength range).
-
         Use kwargs to make the code look pretty,
         Consider allow both upper and lower cases?
         Allowed kwargs:
@@ -195,12 +216,12 @@ class ISLineFitter():
             
             for thisobject in species:
 
-                bool_species_matches = (self.species_df.Species.str.contains(thisobject)) | (bool_species_matches)
+                bool_species_matches = (self.species_df["Species"].str.contains(thisobject)) | (bool_species_matches)
                 
         else:
             
-            bool_species_matches = self.species_df.Species == species
-
+            bool_species_matches = self.species_df["Species"] == species
+ 
         # Filtering Wave
         bool_wave_matches = np.ones(len(self.species_df.index), dtype=bool)
         if "Wave" in kwargs.keys():
@@ -486,7 +507,8 @@ if __name__ == "__main__":
     plt.plot(test_fitter.wave2fit, test_fitter.flux2fit)
     plt.xlabel("Data to Fit")
     plt.show()
-
+    
+    
     # test guess v_off
     v_off = test_fitter.getNextVoff()
     yrange = [np.min(test_fitter.flux2fit), np.max(test_fitter.flux2fit)]
@@ -496,12 +518,26 @@ if __name__ == "__main__":
         plt.plot([l,l],yrange, color="r")
     plt.xlabel("Next V_off at {v:.2f} km/s".format(v=v_off))
     plt.show()
-
+    
     # let's do the fitting
     best_result = test_fitter.fit(species="NaI", windowsize=1.5, known_n_components=3, WaveMax=3310)
     print(best_result.fit_report())
-
-
-
-
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
