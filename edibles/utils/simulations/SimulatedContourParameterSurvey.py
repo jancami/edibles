@@ -16,7 +16,7 @@ plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preamble'] = [r"\usepackage{amsmath}"]
 
 
-def animation(simulations, param_name, param_values, SymmetryType,
+def animation(simulations, param_name, param_values, SymmetryType, lambda0,
               path='Test_data', fps=5, plot_min=False):
     """Animate a series of simulations.
 
@@ -27,6 +27,7 @@ def animation(simulations, param_name, param_values, SymmetryType,
         simulations (list): List with simulations data.
         param_name (str): Name of varying variable(s).
         param_values (list): Values of parameters of each simulation.
+        lambda0 (float): Center wavelength of profile.
         path (str): Directory to save image.
         fps (int, optional): Frames per second of animation. Defaults to 5.
         plot_min (bool, optional): To plot local minimum values or not. Defaults to False.
@@ -35,11 +36,13 @@ def animation(simulations, param_name, param_values, SymmetryType,
     fig, ax = plt.subplots(figsize=(6, 6))
 
     # Find interval for x_aix values
-    x_min = min([min(simulation[0]) for simulation in simulations])
-    x_max = max([max(simulation[0]) for simulation in simulations])
+    # x_min = min([min(simulation[0]) for simulation in simulations])
+    # x_max = max([max(simulation[0]) for simulation in simulations])
+    # ax.set_xlim((x_min-1, x_max+1))
 
     # Set axes limits.
-    ax.set_xlim((x_min-1, x_max+1))
+    a = WavelengthToWavenumber(lambda0)
+    ax.set_xlim((a-10, a+10))
 
     y_min = min([min(simulation[1]) for simulation in simulations])
     ax.set_ylim(y_min, 1)
@@ -108,7 +111,8 @@ def animation(simulations, param_name, param_values, SymmetryType,
     plt.close()
 
 
-def plot_simulations(simulations, param_name, param_values, SymmetryType, path='Test_data'):
+def plot_simulations(simulations, param_name, param_values,
+                     SymmetryType, lambda0, path='Test_data'):
     """Plot a set of simulations.
 
     Plot in a single graph a set of simulations obtained by varying some
@@ -118,6 +122,7 @@ def plot_simulations(simulations, param_name, param_values, SymmetryType, path='
         simulations (list): List with simulations data.
         param_name (str): Name of varying variable(s).
         param_values (list): Values of parameters of each simulation.
+        lambda0 (float): Center wavelength of profile.
         path (str): Directory to save image.
     """
     # Colours for plots
@@ -125,12 +130,15 @@ def plot_simulations(simulations, param_name, param_values, SymmetryType, path='
 
     # Plot all the profiles.
     for i, simulation in enumerate(simulations):
-        plt.plot(simulation[0], simulation[1], ls='-',
+        plt.plot(simulation[0], simulation[1], ls='-', alpha=0.7,
                  label=f'B: {param_values[i][0]:.4f} ' +
                  f'T: {param_values[i][1]:.1f} ' +
                  f'Delta: {param_values[i][2]:.3f}', color=colours[i])
 
     # Plot style
+    a = WavelengthToWavenumber(lambda0)
+    plt.xlim((a-10, a+10))
+
     plt.xlabel(r'Wavenumber ($cm^{-1}$)')
     plt.ylabel('Normalized Intensity')
     plt.legend(fontsize='x-small')
@@ -225,9 +233,9 @@ def one_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
 
         # Generates GIF and plot.
         plot_simulations(param_simulations[param], param,
-                         parameters[param], SymmetryType, path=path)
+                         parameters[param], SymmetryType, lambda0, path=path)
         animation(param_simulations[param], param, parameters[param],
-                  SymmetryType, path=path)
+                  SymmetryType, lambda0, path=path)
 
         # Save simulation to future reference.
         if save:
@@ -244,6 +252,6 @@ if __name__ == "__main__":
 
     # Run simulations with and without the Q-branch
     one_variable_survey('Parameter_survey/QTrue', B_values, T_values,
-                        delta_values, save=True)
+                        delta_values, load=True)
     one_variable_survey('Parameter_survey/QFalse',  B_values, T_values,
-                        delta_values, Q_Branch=False, save=True)
+                        delta_values, Q_Branch=False, load=True)
