@@ -126,8 +126,8 @@ def plot_simulations(simulations, param_name, param_values, SymmetryType, path='
     # Plot all the profiles.
     for i, simulation in enumerate(simulations):
         plt.plot(simulation[0], simulation[1], ls='-',
-                 label=f'B: {param_values[i][0]:.3f} ' +
-                 f'T: {param_values[i][1]:.3f} ' +
+                 label=f'B: {param_values[i][0]:.4f} ' +
+                 f'T: {param_values[i][1]:.1f} ' +
                  f'Delta: {param_values[i][2]:.3f}', color=colours[i])
 
     # Plot style
@@ -140,76 +140,70 @@ def plot_simulations(simulations, param_name, param_values, SymmetryType, path='
     plt.close()
 
 
-def one_variable_survey(path, Q_Branch=True, SymmetryType='Spherical', A_init=20*(10**-3),
-                        B_init=20*(10**-3), C_init=20*(10**-3), T_init=15, delta_init=0):
-    """Perform a parameter survey over individual parameters.
+def one_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
+                        B_default=0.02, T_default=10, delta_default=0):
+    """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
     (T, B and delta).
 
     Args:
+        B_values (1darray): Array with values of B.
+        T_values (1darray): Array with values of T.
+        delta_values (1darray): Array with values of deltaB.
         Q_Branch (bool, optional): To consider or not the Q-branch. Defaults to True.
-        SymmetryType (str, optional): Defaults to 'Spherical'.
-        A_init (float, optional): Defaults to 20*(10**-3).
-        B_init (float, optional): Defaults to 20*(10**-3).
-        C_init (float, optional): Defaults to 20*(10**-3).
-        T_init (int, optional): Defaults to 15.
-        delta_init (float, optional): Defaults to 0.
+        B_default (flota, optional): Default value of B when constant. Defaults to 0.02
+        T_default (flota, optional): Defaults to 10
+        B_default (flota, optional): Defaults to 0.0
     """
     # Declare constants
-    Jlimit = 100
+    SymmetryType = 'Spherical'
+    Jlimit = 200
     lambda0 = 6614
     Sightline = 'ParameterSurvey'
     Q_scale_init = 1
 
-    # Define parameter space.
-    params_to_vary = ['B', 'T', 'delta']
-    vary_1 = np.linspace(1.0, 2.1, 11)
-    vary_2 = np.linspace(0.0, 0.011, 11)
-
     # Dictionary to save simulations per parameter
     param_simulations = {'B': [], 'T': [], 'delta': []}
-    param_values = {'B': [], 'T': [], 'delta': []}
+
+    # Dictionary to save parameters used for simulation
+    parameters = {'B': [], 'T': [], 'delta': []}
+
+    # Dictionary with parameter space
+    param_values = {'B': B_values, 'T': T_values, 'delta': delta_values}
 
     # Varying all the parameters.
-    for param in params_to_vary:
-
-        # Change in parameters.
-        if param == 'delta':
-            vary = vary_2
-        else:
-            vary = vary_1
+    for param in param_values.keys():
 
         # Iterate over values of parameter.
-        for i in range(len(vary)):
+        for i in range(len(param_values[param])):
 
             # Initializate Q_scale
             Q_scale = Q_scale_init
 
             # Parameter values.
             if param == 'B':
-                B = B_init*vary[i]
+                B = B_values[i]
                 A = C = B
-                T = T_init
-                delta = delta_init
-            elif param == 'T':
-                B = B_init
-                A = A_init
-                C = C_init
-                T = T_init*vary[i]
-                delta = delta_init
-            elif param == 'delta':
-                B = B_init
-                A = A_init
-                C = C_init
-                T = T_init
+                T = T_default
+                delta = delta_default
 
-                delta = delta_init+vary[i]
+            elif param == 'T':
+                B = B_default
+                A = C = B
+                T = T_values[i]
+                delta = delta_default
+
+            elif param == 'delta':
+                B = B_default
+                A = C = B
+                T = T_default
+                delta = delta_values[i]
 
             # Run simulation
             build = sim(A=A, B=B, C=C, Delta_A=delta*A, Delta_B=delta*B, Delta_C=delta*C,
                         Trot=T, Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
-                        Q_Branch=Q_Branch, Q_scale=Q_scale, )
+                        Q_Branch=Q_Branch, Q_scale=Q_scale)
 
             # Obtain wavenumbers.
             x_vals = WavelengthToWavenumber(np.asarray(build[0]))
@@ -217,16 +211,22 @@ def one_variable_survey(path, Q_Branch=True, SymmetryType='Spherical', A_init=20
 
             # Save results and parameters.
             param_simulations[param].append([x_vals, y_vals])
-            param_values[param].append([B, T, delta])
+            parameters[param].append([B, T, delta])
 
         plot_simulations(param_simulations[param], param,
-                         param_values[param], SymmetryType, path=path)
-        animation(param_simulations[param], param, param_values[param],
+                         parameters[param], SymmetryType, path=path)
+        animation(param_simulations[param], param, parameters[param],
                   SymmetryType, path=path)
 
 
 if __name__ == "__main__":
 
-    # one_variable_survey(path='Parameter_survey/QTrue')
+    # Define parameter ranges.
+    T_values = np.linspace(10, 100, 10)
+    B_values = 10**np.linspace(-4, -1, 10)
+    delta_values = np.linspace(0, 0.05, 10)
 
-    one_variable_survey(path='Parameter_survey/QFalse', Q_Branch=False)
+    # Run simulations with and without the Q-branch
+    one_variable_survey('Parameter_survey/QTrue', B_values, T_values, delta_values)
+    one_variable_survey('Parameter_survey/QFalse',  B_values, T_values,
+                        delta_values, Q_Branch=False)
