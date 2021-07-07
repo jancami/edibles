@@ -141,7 +141,7 @@ def plot_simulations(simulations, param_name, param_values, SymmetryType, path='
 
 
 def one_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
-                        B_default=0.02, T_default=10, delta_default=0):
+                        B_default=0.02, T_default=10, delta_default=0, save=False, load=False):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
@@ -175,48 +175,64 @@ def one_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
     # Varying all the parameters.
     for param in param_values.keys():
 
-        # Iterate over values of parameter.
-        for i in range(len(param_values[param])):
+        # Load pre-calculated simulations
+        if load:
+            with open(f"{path}/{SymmetryType}_Changing{param}_.bin", "rb") as data:
+                # Extract data
+                build = pickle.load(data)
+                param_simulations[param] = build[0]
+                parameters[param] = build[1]
 
-            # Initializate Q_scale
-            Q_scale = Q_scale_init
+        # Run simulation.
+        else:
+            # Iterate over values of parameter.
+            for i in range(len(param_values[param])):
 
-            # Parameter values.
-            if param == 'B':
-                B = B_values[i]
-                A = C = B
-                T = T_default
-                delta = delta_default
+                # Initializate Q_scale
+                Q_scale = Q_scale_init
 
-            elif param == 'T':
-                B = B_default
-                A = C = B
-                T = T_values[i]
-                delta = delta_default
+                # Parameter values.
+                if param == 'B':
+                    B = B_values[i]
+                    A = C = B
+                    T = T_default
+                    delta = delta_default
 
-            elif param == 'delta':
-                B = B_default
-                A = C = B
-                T = T_default
-                delta = delta_values[i]
+                elif param == 'T':
+                    B = B_default
+                    A = C = B
+                    T = T_values[i]
+                    delta = delta_default
 
-            # Run simulation
-            build = sim(A=A, B=B, C=C, Delta_A=delta*A, Delta_B=delta*B, Delta_C=delta*C,
-                        Trot=T, Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
-                        Q_Branch=Q_Branch, Q_scale=Q_scale)
+                elif param == 'delta':
+                    B = B_default
+                    A = C = B
+                    T = T_default
+                    delta = delta_values[i]
 
-            # Obtain wavenumbers.
-            x_vals = WavelengthToWavenumber(np.asarray(build[0]))
-            y_vals = build[1]
+                # Run simulation
+                build = sim(A=A, B=B, C=C, Delta_A=delta*A, Delta_B=delta*B, Delta_C=delta*C,
+                            Trot=T, Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
+                            Q_Branch=Q_Branch, Q_scale=Q_scale)
 
-            # Save results and parameters.
-            param_simulations[param].append([x_vals, y_vals])
-            parameters[param].append([B, T, delta])
+                # Obtain wavenumbers.
+                x_vals = WavelengthToWavenumber(np.asarray(build[0]))
+                y_vals = build[1]
 
+                # Save results and parameters.
+                param_simulations[param].append([x_vals, y_vals])
+                parameters[param].append([B, T, delta])
+
+        # Generates GIF and plot.
         plot_simulations(param_simulations[param], param,
                          parameters[param], SymmetryType, path=path)
         animation(param_simulations[param], param, parameters[param],
                   SymmetryType, path=path)
+
+        # Save simulation to future reference.
+        if save:
+            with open(f"{path}/{SymmetryType}_Changing{param}_.bin", "wb") as output:
+                pickle.dump([param_simulations[param], parameters[param]], output)
 
 
 if __name__ == "__main__":
@@ -227,6 +243,7 @@ if __name__ == "__main__":
     delta_values = np.linspace(0, 0.05, 10)
 
     # Run simulations with and without the Q-branch
-    one_variable_survey('Parameter_survey/QTrue', B_values, T_values, delta_values)
+    one_variable_survey('Parameter_survey/QTrue', B_values, T_values,
+                        delta_values, save=True)
     one_variable_survey('Parameter_survey/QFalse',  B_values, T_values,
-                        delta_values, Q_Branch=False)
+                        delta_values, Q_Branch=False, save=True)
