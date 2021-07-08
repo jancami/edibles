@@ -353,25 +353,64 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
                     y_vals = build[1]
 
                     # Save results and parameters.
-                    param_simulations[combinations][value1][value2] = {
-                        'simulation': [x_vals, y_vals], 'parameters': [B, T, delta]}
+                    param_simulations[combinations][value1][value2] = [x_vals, y_vals]
                     parameters[combinations][value1][value2] = [B, T, delta]
 
-        # Save simulation to future reference.
-        if save:
-            with open(f"{path}/{SymmetryType}_Changing{combinations}_.bin", "wb") as output:
-                pickle.dump([param_simulations[combinations], parameters[combinations]], output)
+    # Save simulation to future reference.
+    if save:
+        with open(f"{path}/{SymmetryType}_Changing{combinations}_.bin", "wb") as output:
+            pickle.dump([param_simulations, parameters], output)
+
+    plot_grid(param_simulations[combinations], parameters[combinations],
+              param_values, lambda0, path, SymmetryType)
+
+
+def plot_grid(simulations, parameters, param_values, lambda0, path, SymmetryType):
+
+    for combinations in param_values.keys():
+
+        variables = list(param_values[combinations].keys())
+
+        rows = len(list(param_values[combinations][variables[0]]))
+        cols = len(list(param_values[combinations][variables[1]]))
+
+        fig, axs = plt.subplots(nrows=rows, ncols=cols, sharex=True,
+                                sharey=True, figsize=(rows*2, cols*2))
+
+        for i, value1 in enumerate(param_values[combinations][variables[0]]):
+            for j, value2 in enumerate(param_values[combinations][variables[1]]):
+                x = simulations[combinations][value1][value2][0]
+                y = simulations[combinations][value1][value2][1]
+
+                a = WavelengthToWavenumber(lambda0)
+                axs[i, j].set_xlim((a-5, a+5))
+                axs[i, j].plot(x, y)
+                axs[i, j].grid(alpha=0.5)
+
+                if i == rows-1:
+                    axs[i, j].set_xlabel(r'Wavenumber ($cm^{-1}$)')
+
+                if i == 0:
+                    axs[i, j].set_title(f'{variables[1]} = {value2:.4f}')
+
+                if j == 0:
+                    axs[i, j].set_ylabel(f'{variables[0]} = {value1:.4f}')
+
+        plt.suptitle('2D parameter survey')
+        plt.tight_layout()
+        plt.savefig(f"{path}/"+str(SymmetryType)+"_Changing"+combinations+".pdf", dpi=300)
+        plt.show()
 
 
 if __name__ == "__main__":
 
     # Define parameter ranges.
-    T_values = np.linspace(10, 100, 3)
-    B_values = 10**np.linspace(-4, -1, 3)
-    delta_values = np.linspace(0, 0.05, 3)
+    T_values = np.linspace(10, 100, 5)
+    B_values = 10**np.linspace(-4, -1, 5)
+    delta_values = np.linspace(0, 0.05, 5)
 
     # Run simulations with and without the Q-branch
     # one_variable_survey('Parameter_survey/QTrue', B_values, T_values, delta_values, load=True)
     # one_variable_survey('Parameter_survey/QFalse',  B_values, T_values, delta_values, Q_Branch=False, load=True)
 
-    two_variable_survey('Parameter_survey/2D/QTrue', B_values, T_values, delta_values, save=True)
+    two_variable_survey('Parameter_survey/2D/QTrue', B_values, T_values, delta_values, load=True)
