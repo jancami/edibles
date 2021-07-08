@@ -117,7 +117,7 @@ class Rotational_Energies:
                 df["E"] = self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
             self.K = df["K"]
         self.J = df["J"]
-
+        
         self.E = df["E"]
 
     def boltzmann(self, T):
@@ -135,9 +135,21 @@ class Rotational_Energies:
         k = const.k_B.value
 
         self.T = T
-        exponent = (-h*c*self.B*self.J*(self.J+1)*(1/(k*T))).astype('float64')
-        self.population = (2*self.J+1)*np.exp(exponent)
+        if self.symmetry_type=='spherical':
+            exponent = (-h*c*self.B*self.J*(self.J+1)*(1/(k*T))).astype('float64')
+            self.population = (2*self.J+1)*np.exp(exponent)
+        elif self.symmetry_type=='symmetric_prolate':
 
+            exponent = ((self.B*self.J*(self.J+1)+(self.A-self.B)*self.K**2)*(-h*c/(k*T))).astype('float64')
+            self.population = np.exp(exponent)
+        
+        elif self.symmetry_type=='symmetric_oblate':
+        
+            exponent = ((self.B*self.J*(self.J+1)+(self.C-self.B)*self.K**2)*(-h*c/(k*T))).astype('float64')
+            self.population = np.exp(exponent)
+           
+        else:
+            print('problem alert')
         # Renormalize
         norm_pop = self.population/(np.sum(self.population))
         self.population = pd.Series(norm_pop)
@@ -380,11 +392,11 @@ class Rotational_Energies:
         plt.ylabel("Intensity")
         plt.title(str(self.Target))
 
-    def plot_k_transitions(self, K_values):
+    def plot_k_transitions(self, K_divisions):
         """Plot transitions with a particular K initial value.
 
         This work only for prolate and oblate tops. In order to observe a shift
-        in the frecuencies, ther must be a differences between the Delta values
+        in the frequencies, there must be a differences between the Delta values
         of the rotational constants.
 
         Args:
@@ -400,8 +412,16 @@ class Rotational_Energies:
         dfs = []
 
         # Colors for plot
-        colors = ['black', 'blue', 'red', 'green']
-
+        colormap = plt.cm.hsv
+        colors = [colormap(i) for i in np.linspace(0, 0.9, K_divisions)]
+        # Split K based on K_divisions
+        pot_k_vals=np.arange(0,self.Jlimit+1)
+        
+        K_chunks=np.array_split(pot_k_vals, K_divisions)
+        K_values=[K_chunks[i][0] for i in range(len(K_chunks))]
+        print(K_values)
+        
+        
         # For every K value
         for i in range(len(K_values)):
 
@@ -409,14 +429,15 @@ class Rotational_Energies:
             dfs.append(df[df['K'] == K_values[i]])
 
             # Plot every transition line of the resulting transitions.
-            plt.vlines(x=dfs[i]['Trans_Freqs'], ymax=dfs[i]['Trans_Intens'],
-                       ymin=0, color=colors[i],
+            plt.vlines(x=dfs[i]['Trans_Freqs'], ymax=dfs[i]['Trans_Intens']-(0.002*i),
+                       ymin=0-(0.002*i), color=colors[i],
                        label='K = ' + str(K_values[i]),
-                       alpha=1, linewidth=0.5)
+                       linewidth=0.75)
 
         # Plot details.
         plt.xlabel("Transition Frequency (1/cm)")
         plt.ylabel("Intensity")
+        plt.legend()
         plt.title(str(self.Target))
 
     def _rebin_data(self, X, Y, bin_size, Verbose=False):
