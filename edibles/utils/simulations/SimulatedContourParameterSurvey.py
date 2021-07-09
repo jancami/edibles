@@ -300,7 +300,7 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
 
     # Declare constants
     SymmetryType = 'Spherical'
-    Jlimit = 50
+    Jlimit = 200
     lambda0 = 6614
     Sightline = 'ParameterSurvey'
 
@@ -429,9 +429,9 @@ def plot_grid(simulations, parameters, param_values,
 if __name__ == "__main__":
 
     # Define parameter ranges.
-    T_values = np.linspace(10, 100, 2)
-    B_values = 10**np.linspace(-4, -1, 2)
-    delta_values = np.linspace(0, 0.05, 2)
+    T_values = np.linspace(10, 100, 5)
+    B_values = 10**np.linspace(-4, -1, 5)
+    delta_values = np.linspace(0, 0.05, 5)
 
     # Default values when constant.
     T_default = np.linspace(10, 100, 3)
@@ -445,16 +445,16 @@ if __name__ == "__main__":
         two_variable_survey(path=f'Parameter_survey/2D/QFalse/default{i+1}', B_values=B_values,
                             T_values=T_values, delta_values=delta_values, Q_Branch=False,
                             B_default=B_default[i], T_default=T_default[i],
-                            delta_default=delta_default[i], save=True)
-        print(i, 1)
+                            delta_default=delta_default[i], load=True)
+        print(i, 2)
         # Simulation with Q branch
         two_variable_survey(path=f'Parameter_survey/2D/QTrue/default{i+1}', B_values=B_values,
                             T_values=T_values, delta_values=delta_values, Q_Branch=True,
                             B_default=B_default[i], T_default=T_default[i],
-                            delta_default=delta_default[i], save=True)
-        print(i, 1)
+                            delta_default=delta_default[i], load=True)
+        print(i, 3)
         # Simultion with scaled Q branch
         two_variable_survey(path=f'Parameter_survey/2D/QScale/default{i+1}', B_values=B_values,
                             T_values=T_values, delta_values=delta_values, Q_Branch=True,
                             B_default=B_default[i], T_default=T_default[i],
-                            delta_default=delta_default[i], save=True, Q_scale=0.1)
+                            delta_default=delta_default[i], load=True, Q_scale=0.1)
