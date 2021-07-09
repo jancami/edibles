@@ -295,7 +295,8 @@ def assign_two_variables(value1, value2, name1, name2,
 
 
 def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
-                        B_default=0.02, T_default=10, delta_default=0, save=False, load=False):
+                        B_default=0.02, T_default=10, delta_default=0, save=False,
+                        load=False, plot_wavenumber=True):
 
     # Declare constants
     SymmetryType = 'Spherical'
@@ -362,10 +363,13 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
             pickle.dump([param_simulations, parameters], output)
 
     plot_grid(param_simulations[combinations], parameters[combinations],
-              param_values, lambda0, path, SymmetryType)
+              param_values, lambda0, path, SymmetryType, plot_wavenumber)
 
 
-def plot_grid(simulations, parameters, param_values, lambda0, path, SymmetryType):
+def plot_grid(simulations, parameters, param_values,
+              lambda0, path, SymmetryType, plot_wavenumber):
+
+    a = WavelengthToWavenumber(lambda0)
 
     for combinations in param_values.keys():
 
@@ -382,19 +386,32 @@ def plot_grid(simulations, parameters, param_values, lambda0, path, SymmetryType
                 x = simulations[combinations][value1][value2][0]
                 y = simulations[combinations][value1][value2][1]
 
-                a = WavelengthToWavenumber(lambda0)
-                axs[i, j].set_xlim((a-5, a+5))
+                if plot_wavenumber:
+                    axs[i, j].set_xlim((-5, +5))
+                    x -= a
+
+                else:
+                    x = WavelengthToWavenumber(x)
+                    axs[i, j].set_xlim((lambda0-2, lambda0+2))
+
                 axs[i, j].plot(x, y)
                 axs[i, j].grid(alpha=0.5)
 
                 if i == rows-1:
-                    axs[i, j].set_xlabel(r'Wavenumber ($cm^{-1}$)')
+                    if plot_wavenumber:
+                        axs[i, j].set_xlabel(r'Wavenumber (cm$^{-1}$)')
+                    else:
+                        axs[i, j].set_xlabel('Wavelength $\mathrm{\AA}$')
 
                 if i == 0:
                     axs[i, j].set_title(f'{variables[1]} = {value2:.4f}')
 
-                if j == 0:
+                if j == cols-1:
                     axs[i, j].set_ylabel(f'{variables[0]} = {value1:.4f}')
+                    axs[i, j].yaxis.set_label_position("right")
+
+                if j == 0:
+                    axs[i, j].set_ylabel('Normalized Intensity')
 
         plt.suptitle('2D parameter survey')
         plt.tight_layout()
@@ -413,4 +430,5 @@ if __name__ == "__main__":
     # one_variable_survey('Parameter_survey/QTrue', B_values, T_values, delta_values, load=True)
     # one_variable_survey('Parameter_survey/QFalse',  B_values, T_values, delta_values, Q_Branch=False, load=True)
 
-    two_variable_survey('Parameter_survey/2D/QTrue', B_values, T_values, delta_values, load=True)
+    two_variable_survey('Parameter_survey/2D/QTrue', B_values,
+                        T_values, delta_values, load=True, plot_wavenumber=True)
