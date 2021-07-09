@@ -296,14 +296,13 @@ def assign_two_variables(value1, value2, name1, name2,
 
 def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
                         B_default=0.02, T_default=10, delta_default=0, save=False,
-                        load=False, plot_wavenumber=True):
+                        load=False, plot_wavenumber=True, Q_scale=1):
 
     # Declare constants
     SymmetryType = 'Spherical'
-    Jlimit = 200
+    Jlimit = 50
     lambda0 = 6614
     Sightline = 'ParameterSurvey'
-    Q_scale = 1
 
     # Dictionary to save simulations
     param_simulations = {'BT': {},
@@ -316,30 +315,33 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
                   'Bdelta': {}}
 
     # Dictionary with parameter space
-    param_values = {'BT': {'B': B_values, 'T': T_values},
-                    'Tdelta': {'T': T_values, 'delta': delta_values},
-                    'Bdelta': {'B': B_values, 'delta': delta_values}}
+    param_values = {'BT': [{'B': B_values, 'T': T_values}, {'delta': delta_default}],
+                    'Tdelta': [{'T': T_values, 'delta': delta_values}, {'B': B_default}],
+                    'Bdelta': [{'B': B_values, 'delta': delta_values}, {'T': T_default}]}
 
-    for combinations in param_values.keys():
-        # Load pre-calculated simulations
-        if load:
-            with open(f"{path}/{SymmetryType}_Changing{combinations}_.bin", "rb") as data:
-                # Extract data
-                build = pickle.load(data)
-                param_simulations[combinations] = build[0]
-                parameters[combinations] = build[1]
+    # Load pre-calculated simulations
+    if load:
+        with open(f"{path}/{SymmetryType}_2D_survey.bin", "rb") as data:
+            # Extract data
+            build = pickle.load(data)
+            param_simulations = build[0]
+            parameters = build[1]
 
-        # Run simulation.
-        else:
+# Run simulation.
+    else:
 
-            variables = list(param_values[combinations].keys())
+        for combinations in param_values.keys():
+
+            parameter_space = param_values[combinations][0]
+            variables = list(parameter_space.keys())
 
             # Simulation
-            for value1 in param_values[combinations][variables[0]]:
+            for value1 in parameter_space[variables[0]]:
 
                 param_simulations[combinations][value1] = {}
                 parameters[combinations][value1] = {}
-                for value2 in param_values[combinations][variables[1]]:
+
+                for value2 in parameter_space[variables[1]]:
 
                     B, T, delta = assign_two_variables(value1, value2, variables[0], variables[1],
                                                        B_default, T_default, delta_default)
@@ -359,11 +361,11 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
 
     # Save simulation to future reference.
     if save:
-        with open(f"{path}/{SymmetryType}_Changing{combinations}_.bin", "wb") as output:
+        with open(f"{path}/{SymmetryType}_2D_survey.bin", "wb") as output:
             pickle.dump([param_simulations, parameters], output)
 
-    plot_grid(param_simulations[combinations], parameters[combinations],
-              param_values, lambda0, path, SymmetryType, plot_wavenumber)
+    plot_grid(param_simulations, parameters, param_values, lambda0,
+              path, SymmetryType, plot_wavenumber)
 
 
 def plot_grid(simulations, parameters, param_values,
@@ -373,16 +375,17 @@ def plot_grid(simulations, parameters, param_values,
 
     for combinations in param_values.keys():
 
-        variables = list(param_values[combinations].keys())
+        parameter_space = param_values[combinations][0]
+        variables = list(parameter_space.keys())
 
-        rows = len(list(param_values[combinations][variables[0]]))
-        cols = len(list(param_values[combinations][variables[1]]))
+        rows = len(list(parameter_space[variables[0]]))
+        cols = len(list(parameter_space[variables[1]]))
 
         fig, axs = plt.subplots(nrows=rows, ncols=cols, sharex=True,
                                 sharey=True, figsize=(rows*2, cols*2))
 
-        for i, value1 in enumerate(param_values[combinations][variables[0]]):
-            for j, value2 in enumerate(param_values[combinations][variables[1]]):
+        for i, value1 in enumerate(parameter_space[variables[0]]):
+            for j, value2 in enumerate(parameter_space[variables[1]]):
                 x = simulations[combinations][value1][value2][0]
                 y = simulations[combinations][value1][value2][1]
 
@@ -413,7 +416,11 @@ def plot_grid(simulations, parameters, param_values,
                 if j == 0:
                     axs[i, j].set_ylabel('Normalized Intensity')
 
-        plt.suptitle('2D parameter survey')
+        constant = list(param_values[combinations][1].keys())[0]
+        value = list(param_values[combinations][1].values())[0]
+
+        plt.suptitle(f'2D parameter survey with {variables[0]} and {variables[1]}. ' +
+                     f'Constant {constant} = {value:.4f}')
         plt.tight_layout()
         plt.savefig(f"{path}/"+str(SymmetryType)+"_Changing"+combinations+".pdf", dpi=300)
         plt.show()
@@ -422,13 +429,32 @@ def plot_grid(simulations, parameters, param_values,
 if __name__ == "__main__":
 
     # Define parameter ranges.
-    T_values = np.linspace(10, 100, 5)
-    B_values = 10**np.linspace(-4, -1, 5)
-    delta_values = np.linspace(0, 0.05, 5)
+    T_values = np.linspace(10, 100, 2)
+    B_values = 10**np.linspace(-4, -1, 2)
+    delta_values = np.linspace(0, 0.05, 2)
 
-    # Run simulations with and without the Q-branch
-    # one_variable_survey('Parameter_survey/QTrue', B_values, T_values, delta_values, load=True)
-    # one_variable_survey('Parameter_survey/QFalse',  B_values, T_values, delta_values, Q_Branch=False, load=True)
+    # Default values when constant.
+    T_default = np.linspace(10, 100, 3)
+    B_default = 10**np.linspace(-4, -1, 3)
+    delta_default = np.linspace(0, 0.05, 3)
 
-    two_variable_survey('Parameter_survey/2D/QTrue', B_values,
-                        T_values, delta_values, load=True, plot_wavenumber=True)
+    # Run 2D surveys with three different default values
+    for i in range(3):
+        print(i, 1)
+        # Simulation without Q branch.
+        two_variable_survey(path=f'Parameter_survey/2D/QFalse/default{i+1}', B_values=B_values,
+                            T_values=T_values, delta_values=delta_values, Q_Branch=False,
+                            B_default=B_default[i], T_default=T_default[i],
+                            delta_default=delta_default[i], save=True)
+        print(i, 1)
+        # Simulation with Q branch
+        two_variable_survey(path=f'Parameter_survey/2D/QTrue/default{i+1}', B_values=B_values,
+                            T_values=T_values, delta_values=delta_values, Q_Branch=True,
+                            B_default=B_default[i], T_default=T_default[i],
+                            delta_default=delta_default[i], save=True)
+        print(i, 1)
+        # Simultion with scaled Q branch
+        two_variable_survey(path=f'Parameter_survey/2D/QScale/default{i+1}', B_values=B_values,
+                            T_values=T_values, delta_values=delta_values, Q_Branch=True,
+                            B_default=B_default[i], T_default=T_default[i],
+                            delta_default=delta_default[i], save=True, Q_scale=0.1)
