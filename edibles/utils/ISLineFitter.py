@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import astropy.constants as cst
 from scipy.interpolate import interp1d
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, f
 
 import inspect
 import collections
@@ -47,7 +47,6 @@ class ISLineFitter():
         folder = Path(PYTHONDIR+"/data")
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
-        
 
     def getData2Fit(self, lam_0=None, windowsize=3):
         # clip the data around target wavelength
@@ -66,24 +65,47 @@ class ISLineFitter():
         self.flux2fit = self.flux[data_select == 1]
         return self.wave2fit, self.flux2fit
 
-    def baysianCriterion(self, known_n_components=None):
+    def baysianCriterion(self, criteria="BIC"):
         # do the Baysian analysis to determine if self.model_all[-1] is better than self.model_all[-2]
         # if pass: return False to keep adding new components
         # if not pass: return True to exit
 
-        # always continue after the first model (continuum only)
+        assert criteria.upper() in ["B", "BIC", "A", "AIC", "F", "F_TEST", "FTEST"], \
+            "Allowed critera are 'BIC', 'AIC', or 'F_Test'"
+
+        # always continue after the first model (no lines, continuum only)
         if len(self.model_all) == 1:
             return False
 
-        # For bench mark purpose, we just assume we know the number of components
-        # stop at n+1 component
-        if known_n_components is not None:
-            if len(self.model_all) >= known_n_components + 2:
-                return True
-            else:
+        # Bayesian information criterion, or BIC
+        if criteria.upper() in ["B", "BIC"]:
+            if self.result_all[-1].bic < self.result_all[-2].bic:
                 return False
+            else:
+                return True
 
-    def fit(self, species="KI", n_anchors=5, windowsize=3, known_n_components=2, **kwargs):
+        # Akaike information criterion, or AIC
+        if criteria.upper() in ["A", "AIC"]:
+            if self.result_all[-1].aic < self.result_all[-2].aic:
+                return False
+            else:
+                return True
+
+        # F-test
+        if criteria.upper() in ["F", "F_TEST", "FTEST"]:
+            no_parm_old = CountFreeParameter(self.result_all[-2])
+            no_parm_new = CountFreeParameter(self.result_all[-1])
+            df1 = no_parm_new - no_parm_old
+            df2 = len(self.wave2fit) - no_parm_new
+            num = (self.result_all[-2].chisqr - self.result_all[-1].chisqr) / df1
+            denom = self.result_all[-1].chisqr / df2
+            p_value = f.cdf(num / denom, df1, df2)
+            if p_value > 0.95:
+                return False
+            else:
+                return True
+
+    def fit(self, species="KI", n_anchors=5, windowsize=3, criteria="BIC", **kwargs):
         """
         The main fitting method for the class.
         Currently kwargs for select_species_data to make code more pretty
@@ -108,7 +130,7 @@ class ISLineFitter():
             model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
             result = model2fit.fit(data=self.flux2fit, params=pars_guess, x=self.wave2fit)
             self.__afterFit(model2fit, result)
-            if self.baysianCriterion(known_n_components=known_n_components):
+            if self.baysianCriterion(criteria=criteria):
                 break
 
         return self.result_all[-2]
@@ -159,37 +181,47 @@ class ISLineFitter():
         
         fig=plt.figure(figsize=(10,6.5))
         plt.gcf().subplots_adjust(hspace = 0)
-        spec = gridspec.GridSpec(ncols=1, nrows=2,
-                              height_ratios=[4,1])
+        spec = gridspec.GridSpec(ncols=1, nrows=3,
+                                 height_ratios=[4, 4, 1])
         
+        # Top panel for raw data and overall fitting
         ax0 = fig.add_subplot(spec[0])
         plt.gca().xaxis.set_visible(False)
-        if which == -1:
-            which = len(self.result_all) - 1
+        while which < 0:
+            which = which + len(self.result_all)
 
-        plt.plot(self.wave2fit, self.flux2fit, marker='D',fillstyle='none',color='black', label='Data')
-        plt.plot(self.wave2fit, self.result_all[which].best_fit, label="Best fit",marker='*', color='blue')
+        plt.plot(self.wave2fit, self.flux2fit,
+                 marker='D', fillstyle='none', color='black',
+                 label='Data')
+        plt.plot(self.wave2fit, self.result_all[which].best_fit,
+                 marker='*', color='blue',
+                 label="Best fit",)
         plt.ylabel('Relative flux')
         plt.legend()
 
-        if which >= 1:
-            comps = self.result_all[which].eval_components(x=self.wave2fit)
-            plt.plot(self.wave2fit, comps["cont"], label='Continuum', color='green')
-            plt.legend()
-        plt.title("N Components = {n}".format(n=which))
-        
-        
-  
+        # Mid panel for normalized data and multi components
+        comps = self.result_all[which].eval_components(x=self.wave2fit)
+        continuum = comps["cont"]
+
         ax1 = fig.add_subplot(spec[1])
-        plt.plot(self.wave2fit, (self.flux2fit-self.result_all[which].best_fit)/self.flux2fit *100 , color='black', linewidth=0.8)
+        plt.gca().xaxis.set_visible(False)
+        plt.plot(self.wave2fit, self.flux2fit / continuum,
+                 marker='D', fillstyle='none', color='black',
+                 label='Data')
+        if which >= 1:
+            line_model = self.model_all[which].right
+            flux_comps = line_model.calcIndividualComponent(self.result_all[which].params, self.wave2fit)
+            for com_idx, flux_single in enumerate(flux_comps):
+                plt.plot(self.wave2fit, flux_single, label="Comp %i" % (com_idx))
+        plt.ylabel("Normalized Flux")
+        plt.legend()
+
+        # Bottom and narrow bottom for residual
+        ax2 = fig.add_subplot(spec[2])
+        plt.plot(self.wave2fit, (self.flux2fit-self.result_all[which].best_fit)/continuum , color='black', linewidth=0.8)
         plt.ylabel('residual [%]')
         plt.xlabel('Wavelenght $\AA$')
         plt.show()
-        
-        
-        
-        
-        
 
     def select_species_data(self, species=None, **kwargs):
     # def select_species_data(self,species=None,Wave=None, WaveMin=None, WaveMax=None,
@@ -317,7 +349,6 @@ class ISLineFitter():
         return self.determine_vrad_from_correlation(self.wave2fit, flux, y_model)
 
 
-
 class ISLineModel(Model):
     def __init__(self, n_components,
                  lam_0=[3302.369, 3302.978],
@@ -390,17 +421,20 @@ class ISLineModel(Model):
                     V_offs = V_offs + [kwargs[name]] * len(self.lam_0)
 
             # no problem for convolution since we only call voigt_absorption_line once.
-            flux = voigt_absorption_line(
-                x,
-                lambda0=lambda0,
-                b=bs,
-                N=Ns,
-                f=f,
-                gamma=gamma,
-                v_rad=V_offs,
-                v_resolution=v_resolution,
-                n_step=self.n_setp
-            )
+            # update so if n_components = 0, return a all-ones np array
+            if self.n_components > 0:
+                flux = voigt_absorption_line(
+                    x,
+                    lambda0=lambda0,
+                    b=bs,
+                    N=Ns,
+                    f=f,
+                    v_rad=V_offs,
+                    gamma=gamma,
+                    v_resolution=v_resolution,
+                    n_step=self.n_setp)
+            elif self.n_components == 0:
+                flux = np.ones_like(x)
 
             return flux
 
@@ -437,7 +471,7 @@ class ISLineModel(Model):
 
         pars = self.make_params()
         for i, v in enumerate(V_off):
-            pars["%sb_Cloud%i" % (self.prefix, i)].set(value=1.0, min=0, max=10)
+            pars["%sb_Cloud%i" % (self.prefix, i)].set(value=0.8, min=0, max=10)
             pars["%sN_Cloud%i" % (self.prefix, i)].set(value=self.N_init, min=0)
             pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=v-20, max=v+20)
             # we can further constrain min and max on V_off if we have good estimate.
@@ -472,7 +506,29 @@ class ISLineModel(Model):
 
         return N_init
 
+    def calcIndividualComponent(self, parms, x_grid):
+        flux_comps = []
+        singe_component = ISLineModel(1,
+                                      lam_0=self.lam_0,
+                                      fjj=self.fjj,
+                                      gamma=self.gamma,
+                                      v_res=self.v_res,
+                                      n_step=self.n_setp)
+        for i in range(self.n_components):
+            pars_single = singe_component.make_params(b_Cloud0=parms["b_Cloud%i" % (i)].value,
+                                                      N_Cloud0=parms["N_Cloud%i" % (i)].value,
+                                                      V_off_Cloud0=parms["V_off_Cloud%i" % (i)].value)
+            flux_comps.append(singe_component.eval(params=pars_single, x=x_grid))
 
+        return flux_comps
+
+
+def CountFreeParameter(result):
+    counter = 0
+    for key in result.params.keys():
+        if result.parms[key].vary:
+            counter = counter + 1
+    return counter
 
 
 if __name__ == "__main__":
@@ -522,22 +578,4 @@ if __name__ == "__main__":
     # let's do the fitting
     best_result = test_fitter.fit(species="NaI", windowsize=1.5, known_n_components=3, WaveMax=3310)
     print(best_result.fit_report())
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    test_fitter.plotModel(which=-2)

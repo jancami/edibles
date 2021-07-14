@@ -137,7 +137,7 @@ class ContinuumModel(Model):
                 elif arg[0] == 'y':
                     y_anchors.append(kwargs[arg])
 
-            if all(anchor is -999 for anchor in x_anchors):
+            if all(anchor == -999 for anchor in x_anchors):
                 x_anchors = [x[i] for i in spacing_idx]
 
             spline = CubicSpline(x_anchors, y_anchors)
@@ -208,7 +208,7 @@ class ContinuumModel(Model):
                 y_anchors.append(np.median(data[ymin:ymax]))
 
         for i, coef in enumerate(y_anchors[::1]):
-            pars['%sy_%i' % (self.prefix, i)].set(value=coef)
+            pars['%sy_%i' % (self.prefix, i)].set(value=coef, min=0, max=2 * np.max(data))
 
         return update_param_vals(pars, self.prefix, **kwargs)
 
