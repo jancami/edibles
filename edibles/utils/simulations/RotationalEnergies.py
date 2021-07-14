@@ -117,7 +117,7 @@ class Rotational_Energies:
                 df["E"] = self.B*df["J"]*(df["J"]+1)+(self.C-self.B)*df["K"]**2
             self.K = df["K"]
         self.J = df["J"]
-        
+
         self.E = df["E"]
 
     def boltzmann(self, T):
@@ -135,19 +135,21 @@ class Rotational_Energies:
         k = const.k_B.value
 
         self.T = T
-        if self.symmetry_type=='spherical':
+        if self.symmetry_type == 'spherical':
             exponent = (-h*c*self.B*self.J*(self.J+1)*(1/(k*T))).astype('float64')
             self.population = (2*self.J+1)*np.exp(exponent)
-        elif self.symmetry_type=='symmetric_prolate':
+        elif self.symmetry_type == 'symmetric_prolate':
 
-            exponent = ((self.B*self.J*(self.J+1)+(self.A-self.B)*self.K**2)*(-h*c/(k*T))).astype('float64')
+            exponent = ((self.B*self.J*(self.J+1)+(self.A-self.B)*self.K**2)
+                        * (-h*c/(k*T))).astype('float64')
             self.population = np.exp(exponent)
-        
-        elif self.symmetry_type=='symmetric_oblate':
-        
-            exponent = ((self.B*self.J*(self.J+1)+(self.C-self.B)*self.K**2)*(-h*c/(k*T))).astype('float64')
+
+        elif self.symmetry_type == 'symmetric_oblate':
+
+            exponent = ((self.B*self.J*(self.J+1)+(self.C-self.B)*self.K**2)
+                        * (-h*c/(k*T))).astype('float64')
             self.population = np.exp(exponent)
-           
+
         else:
             print('problem alert')
         # Renormalize
@@ -374,7 +376,7 @@ class Rotational_Energies:
 
         # Plot every transition line (size equivalent to intensity).
         plt.vlines(x=self.transition_freqs, ymax=self.transition_intensity,
-                   ymin=0, color='black', label='transitions')
+                   ymin=0, color='black', label='transitions', linewidth=0.5)
 
         # DataFrame of transitions.
         df = pd.DataFrame({"Trans_Freqs": self.transition_freqs,
@@ -415,13 +417,12 @@ class Rotational_Energies:
         colormap = plt.cm.hsv
         colors = [colormap(i) for i in np.linspace(0, 0.9, K_divisions)]
         # Split K based on K_divisions
-        pot_k_vals=np.arange(0,self.Jlimit+1)
-        
-        K_chunks=np.array_split(pot_k_vals, K_divisions)
-        K_values=[K_chunks[i][0] for i in range(len(K_chunks))]
+        pot_k_vals = np.arange(0, self.Jlimit+1)
+
+        K_chunks = np.array_split(pot_k_vals, K_divisions)
+        K_values = [K_chunks[i][0] for i in range(len(K_chunks))]
         print(K_values)
-        
-        
+
         # For every K value
         for i in range(len(K_values)):
 
