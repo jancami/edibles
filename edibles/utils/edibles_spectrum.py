@@ -311,6 +311,39 @@ class EdiblesSpectrum:
         self.fully_featured = True
 
 
+def measure_snr(wave, flux, block_size=1.0, do_plot=False):
+    """
+    Estimate SNR of given spectral data
+    :param wave: wavelength grid
+    :type wave: ndarray
+    :param flux: flux
+    :type flux: ndarray
+    :param do_plot: if set, make SNR plot
+    :type  do_plot: bool
+
+    :return: SNR, LAM, SNR and median flux of each of the 1A block
+    :rtype: list
+    """
+    # split in blocks of given size
+    xmin = wave[0]
+    xmax = xmin + block_size
+    SNR, LAM = [], []
+    while xmin < wave[-1]:
+        flux_block = flux[np.where((wave > xmin) & (wave < xmax))]
+        if len(flux_block) == 1:
+            break
+        if (np.nanmean(flux_block) > 0.0):
+            sigma_block = np.nanmean(flux_block) / np.nanstd(flux_block)
+            SNR.append(sigma_block)
+            LAM.append(xmin + (xmax - xmin) / 2.0)
+        xmin = xmax.copy()
+        xmax = xmin + block_size
+    if (do_plot == True):
+        plt.plot(LAM, SNR)
+        plt.plot(LAM, np.convolve(SNR, np.ones(10) / 10, mode='same'))
+        plt.show()
+    return SNR, LAM
+
 if __name__ == "__main__":
     # filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"
 

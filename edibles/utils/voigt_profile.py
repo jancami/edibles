@@ -117,7 +117,6 @@ def voigt_absorption_line(
     if debug:
         print("Number of lines: " + "{:d}".format(n_lines))
 
-
     # How many cloud components do we have?
     n_components = N_array.size
     if debug:
@@ -181,7 +180,6 @@ def voigt_absorption_line(
         # Case 3A from above.
         if debug:
             print("Number of components: ", n_lines)
-
         # We can process each line/component now with its own set of parameters.
         # We will loop over each line, create the proper wavelength grid, then get the
         # corresponding optical depth profile, and then decide how to combine everything.
