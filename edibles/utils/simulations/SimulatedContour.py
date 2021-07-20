@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, Q_scale=1,
-                      PR_scale=1, Q_Branch=False, lambda0=0,Results_In_Wavenumber=True):
+                      PR_scale=1, Q_Branch=False, lambda0=0,Results_In_Wavenumber=False):
     """Generate simulated contour.
 
     Args:
