@@ -1,11 +1,13 @@
 """Script to generate a simulated contour of a molecule with known rotational constants."""
 
 from edibles.utils.simulations.RotationalEnergies import Rotational_Energies
-import matplotlib.pyplot as plt
 
+from edibles.utils.simulations.SRC.Functions import WavelengthToWavenumber
+import matplotlib.pyplot as plt
+import numpy as np
 
 def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, Q_scale=1,
-                      PR_scale=1, Q_Branch=False, lambda0=0):
+                      PR_scale=1, Q_Branch=False, lambda0=0,Results_In_Wavenumber=True):
     """Generate simulated contour.
 
     Args:
@@ -84,8 +86,11 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
 
 #        plt.show()
-
-        return(re_low.spectrax, re_low.final_y)
+        if Results_In_Wavenumber:
+            return(WavelengthToWavenumber(np.asarray(re_low.spectrax)), re_low.final_y)
+        
+        else:
+            return(re_low.spectrax, re_low.final_y)
 
 
 if __name__ == "__main__":
