@@ -5,6 +5,7 @@ from matplotlib import gridspec
 import astropy.constants as cst
 from scipy.interpolate import interp1d
 from scipy.stats import pearsonr, f
+import math
 
 import inspect
 import collections
@@ -29,7 +30,7 @@ from edibles import PYTHONDIR
 # 3. Benchmark for the Column Density measurements are required.
 #######################
 class ISLineFitter():
-    def __init__(self, wave, flux, v_resolution=3.0):
+    def __init__(self, wave, flux, v_resolution=3.0, normalized=False, verbose=1):
 
         assert len(wave) == len(flux), "Input wave grid and flux must have the same length!"
         self.wave = wave
@@ -48,6 +49,15 @@ class ISLineFitter():
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
 
+        # verbose is to control the output will fitting.
+        # 0: super-simplified, you know the current no. of components, final fitting results only
+        # 1: default, you also have fitting result of each model and Bayesian criterion
+        # 2: debug, step by step, for debug purpose
+        self.verbose = verbose
+
+        # if normalized set to True, no continuum model will be generated
+        self.nomalized = normalized
+
     def getData2Fit(self, lam_0=None, windowsize=3):
         # clip the data around target wavelength
         # for now windowsize is fixed but can be made to depend on resolution, b, d etc.
@@ -65,13 +75,13 @@ class ISLineFitter():
         self.flux2fit = self.flux[data_select == 1]
         return self.wave2fit, self.flux2fit
 
-    def baysianCriterion(self, criteria="BIC"):
+    def bayesianCriterion(self, criteria="BIC"):
         # do the Baysian analysis to determine if self.model_all[-1] is better than self.model_all[-2]
         # if pass: return False to keep adding new components
         # if not pass: return True to exit
 
         assert criteria.upper() in ["B", "BIC", "A", "AIC", "F", "F_TEST", "FTEST"], \
-            "Allowed critera are 'BIC', 'AIC', or 'F_Test'"
+            "Allowed criteria are 'BIC', 'AIC', or 'F_Test'"
 
         # always continue after the first model (no lines, continuum only)
         if len(self.model_all) == 1:
@@ -80,15 +90,35 @@ class ISLineFitter():
         # Bayesian information criterion, or BIC
         if criteria.upper() in ["B", "BIC"]:
             if self.result_all[-1].bic < self.result_all[-2].bic:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("BIC Test, %.2f < %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
+                    print("Passed and continue...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return False
             else:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("BIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
+                    print("Failed and switch back to last model...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return True
 
         # Akaike information criterion, or AIC
         if criteria.upper() in ["A", "AIC"]:
             if self.result_all[-1].aic < self.result_all[-2].aic:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("AIC Test, %.2f < %.2f" % (self.result_all[-1].aic, self.result_all[-2].aic))
+                    print("Passed and continue...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return False
             else:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("AIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
+                    print("Failed and switch back to last model...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return True
 
         # F-test
@@ -99,10 +129,20 @@ class ISLineFitter():
             df2 = len(self.wave2fit) - no_parm_new
             num = (self.result_all[-2].chisqr - self.result_all[-1].chisqr) / df1
             denom = self.result_all[-1].chisqr / df2
-            p_value = f.cdf(num / denom, df1, df2)
+            p_value = float(f.cdf(num / denom, df1, df2))
             if p_value > 0.95:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("P-value, %.2f < 0.05" % (1 - p_value))
+                    print("Passed and continue...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return False
             else:
+                if self.verbose >= 1:
+                    self.__reportParams()
+                    print("P-value, %.2f > 0.05" % (1 - p_value))
+                    print("Failed and switch back to last model...")
+                    self.plotModel(which=-1, v_next=self.getNextVoff())
                 return True
 
     def fit(self, species="KI", n_anchors=5, windowsize=3, criteria="BIC", **kwargs):
@@ -126,19 +166,36 @@ class ISLineFitter():
         ######### Step 3 and 4: build model, fit, repeat ##########
         while True:
             n_components = len(self.model_all)
-            print("Fitting model with %i component..." % (n_components))
+            print("\n\nFitting model with %i component..." % (n_components))
             model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
             result = model2fit.fit(data=self.flux2fit, params=pars_guess, x=self.wave2fit)
             self.__afterFit(model2fit, result)
-            if self.baysianCriterion(criteria=criteria):
+            if self.bayesianCriterion(criteria=criteria):
                 break
 
         return self.result_all[-2]
 
+    def __reportParams(self, which=-1):
+        while which < 0:
+            which = which + len(self.result_all)
+
+        if which >= 1:
+            params2report = self.result_all[which].params
+            N_all = [params2report["N_Cloud%i" % (i)].value
+                     for i in range(len(self.model_all)-1)]
+            N_mag = math.floor(np.median([math.floor(np.log10(item)) for item in N_all]))
+            N_all = [item / 10 ** N_mag for item in N_all]
+            N_all = ["%.2f" % item for item in N_all]
+            print("N (10^%i cm^-2): " % N_mag, N_all)
+
+            V_all = [params2report["V_off_Cloud%i" % (i)].value
+                     for i in range(len(self.model_all)-1)]
+            V_all = ["%.2f" % item for item in V_all]
+            print("V (km/s): ", V_all)
+
     def __afterFit(self, model_new, result_new):
         self.model_all.append(model_new)
         self.result_all.append(result_new)
-        self.plotModel(which=-1)
 
         fitted_pars = result_new.params
         n_components = len(self.model_all) - 1
@@ -153,6 +210,12 @@ class ISLineFitter():
         # Continuum first
         continuum_model = ContinuumModel(n_anchors=n_anchors)
         pars_guess = continuum_model.guess(self.flux2fit, self.wave2fit)
+        if self.nomalized:
+            for key in pars_guess.keys():
+                if "y_" in key:
+                    pars_guess[key].vary = False
+                    pars_guess[key].value = 1.0
+
         model2fit = continuum_model
 
         # check n_components before building line-model
@@ -164,10 +227,11 @@ class ISLineFitter():
                                      lam_0=lam_0,
                                      fjj=fjj,
                                      gamma=gamma,
-                                     v_res=self.v_res)
+                                     v_res=self.v_res,
+                                     verbose=self.verbose)
 
             if n_components <= 2:
-                V_off_next = self.getNextVoff(lam_0=lam_0)
+                V_off_next = self.getNextVoff()
             else:
                 V_off_next = np.average(self.v_off)
             V_off = self.v_off + [V_off_next]
@@ -177,9 +241,9 @@ class ISLineFitter():
 
         return model2fit, pars_guess
 
-    def plotModel(self, which=-1):
+    def plotModel(self, which=-1, v_next=None):
         
-        fig=plt.figure(figsize=(10,6.5))
+        fig=plt.figure(figsize=(10, 6.5))
         plt.gcf().subplots_adjust(hspace = 0)
         spec = gridspec.GridSpec(ncols=1, nrows=3,
                                  height_ratios=[4, 4, 1])
@@ -218,8 +282,14 @@ class ISLineFitter():
 
         # Bottom and narrow bottom for residual
         ax2 = fig.add_subplot(spec[2])
-        plt.plot(self.wave2fit, (self.flux2fit-self.result_all[which].best_fit)/continuum , color='black', linewidth=0.8)
-        plt.ylabel('residual [%]')
+        y_res = (self.flux2fit-self.result_all[which].best_fit)/continuum
+        plt.plot(self.wave2fit, y_res, color='black', linewidth=0.8)
+        if v_next is not None:
+            yspan = [np.min(y_res), np.max(y_res)]
+            line2add = np.asarray(self.air_wavelength) * (1 + v_next / cst.c.to("km/s").value)
+            for l in line2add:
+                plt.plot([l, l], yspan, color="r")
+        plt.ylabel('Residual')
         plt.xlabel('Wavelenght $\AA$')
         plt.show()
 
@@ -326,27 +396,24 @@ class ISLineFitter():
 
         return v_rad_best
 
-    def getNextVoff(self, wave=None, flux=None, lam_0=None):
-        if lam_0 is None:
+    def getNextVoff(self):
+        if len(self.model_all) >= 3:
+            v_next = np.average(self.v_off)
+        else:
             lam_0 = self.air_wavelength
-
-        if wave is None:
             wave = self.wave2fit
-
-        if flux is None:
-            flux = self.flux2fit
             if len(self.result_all) >= 1:
                 flux = self.flux2fit - self.result_all[-1].best_fit
+            else:
+                flux = self.flux2fit
 
-        assert len(wave) == len(flux), "Wave grid and flux must be of the same length!"
+            linemodel = ISLineModel(1, lam_0=lam_0, fjj=[1] * len(lam_0), gamma=[0] * len(lam_0))
+            pars = linemodel.guess(V_off=[0.0])
+            # x_model = np.arange(start=self.wave2fit[0], stop=self.wave2fit[-1], step=0.01)
+            y_model = linemodel.eval(params=pars, x=wave)
+            v_next = self.determine_vrad_from_correlation(self.wave2fit, flux, y_model)
 
-
-        linemodel = ISLineModel(1, lam_0=lam_0, fjj=[1]*len(lam_0), gamma=[0]*len(lam_0))
-        pars = linemodel.guess(V_off=[0.0])
-        #x_model = np.arange(start=self.wave2fit[0], stop=self.wave2fit[-1], step=0.01)
-        y_model = linemodel.eval(params=pars, x=wave)
-
-        return self.determine_vrad_from_correlation(self.wave2fit, flux, y_model)
+        return v_next
 
 
 class ISLineModel(Model):
@@ -359,6 +426,7 @@ class ISLineModel(Model):
                  prefix="",
                  nan_policy="raise",
                  n_step=25,
+                 verbose=1,
                  **kwargs):
         """
         :param n_components: int, number of velocity components
@@ -371,11 +439,13 @@ class ISLineModel(Model):
         :param nan_policy: from lmfit and Klay's code
         :param n_step: int, no. of points in 1*FWHM during calculation. Under-sample losses information
         but over-sample losses efficiency.
+        :param verbose: int, if verbose > 2, print V_off
         :param kwargs: ???
         """
         self.n_components, self.lam_0, self.fjj, self.gamma, self.n_setp = \
             self.__inputCheck(n_components, lam_0, fjj, gamma, n_step)
         self.v_res = v_res
+        self.verbose = verbose
 
         self.N_init = self.__estimateN(tau0=0.1)
 
@@ -419,6 +489,9 @@ class ISLineModel(Model):
                     Ns = Ns + [kwargs[name]] * len(self.lam_0)
                 if name[0] == "V":
                     V_offs = V_offs + [kwargs[name]] * len(self.lam_0)
+
+            if self.verbose >= 2:
+                print("Current V_off: " + str(np.unique(V_offs[0::len(self.lam_0)])))
 
             # no problem for convolution since we only call voigt_absorption_line once.
             # update so if n_components = 0, return a all-ones np array
@@ -526,7 +599,7 @@ class ISLineModel(Model):
 def CountFreeParameter(result):
     counter = 0
     for key in result.params.keys():
-        if result.parms[key].vary:
+        if result.params[key].vary:
             counter = counter + 1
     return counter
 
@@ -535,47 +608,23 @@ if __name__ == "__main__":
     from edibles.utils.edibles_oracle import EdiblesOracle
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
     import matplotlib.pyplot as plt
-    import time
 
+    normalized = True
     # data to fit, around HD183143 Na 3300 doublet, order only
-    # v_off at -12 and 3.5
     pythia = EdiblesOracle()
     List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
     filename = List.values.tolist()[1]
     sp = EdiblesSpectrum(filename)
     wave, flux = sp.bary_wave, sp.flux
+    if normalized:
+        flux = flux / np.percentile(flux, 75)
 
     # initializing ISLineFitter
     print("="*40)
     print("Testing ISLineFitter, Finger Crossed!")
-    test_fitter = ISLineFitter(wave, flux)
+    test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
+    # Verbose = 0, 1, 2
 
-    # test line selection
-    # WaveMax is passed in **kwarg, if it works, other should work too
-    spec_name, lam_0, fjj, gamma = test_fitter.select_species_data(species="NaI", WaveMax=3305)
-    print("Fitting: ", test_fitter.species_list)
-    print("lam_0: ", test_fitter.air_wavelength)
-    print("fjj: ",test_fitter.oscillator_strength)
-    print("gamma: ",  test_fitter.gamma)
-
-    # test data clipping
-    _ = test_fitter.getData2Fit(windowsize=1.5)
-    plt.plot(test_fitter.wave2fit, test_fitter.flux2fit)
-    plt.xlabel("Data to Fit")
-    plt.show()
-    
-    
-    # test guess v_off
-    v_off = test_fitter.getNextVoff()
-    yrange = [np.min(test_fitter.flux2fit), np.max(test_fitter.flux2fit)]
-    lam_0 = np.asarray(test_fitter.air_wavelength) * (1 + v_off / cst.c.to("km/s").value)
-    plt.plot(test_fitter.wave2fit, test_fitter.flux2fit)
-    for l in lam_0:
-        plt.plot([l,l],yrange, color="r")
-    plt.xlabel("Next V_off at {v:.2f} km/s".format(v=v_off))
-    plt.show()
-    
-    # let's do the fitting
-    best_result = test_fitter.fit(species="NaI", windowsize=1.5, known_n_components=3, WaveMax=3310)
+    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="a")
     print(best_result.fit_report())
     test_fitter.plotModel(which=-2)
