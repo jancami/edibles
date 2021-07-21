@@ -539,7 +539,7 @@ class Rotational_Energies:
         distributions) to model the (frecuency, intensity) class data.
 
         Args:
-            lambda0 (float): Center wavelenght of DIB. (Angstroms).
+            lambda0 (float): Center wavelength of DIB. (Angstroms).
             show_figure (bool): Default to False. Wheter or not to show the
                 resulting figure.
         """
