@@ -98,7 +98,7 @@ class ContinuumModel(Model):
     """
 
 
-    def __init__(self, n_anchors, independent_vars=["x"], prefix="", nan_policy="raise", **kwargs):
+    def __init__(self, n_anchors, independent_vars=["x"], prefix="", nan_policy="raise", verbose=0, **kwargs):
 
         self.ANCHORS_ERR = "n_anchors (%.1f) must be an integer less than or equal to 10"
 
@@ -120,6 +120,8 @@ class ContinuumModel(Model):
                 params[name] = -999
 
         self.n_anchors = n_anchors
+        self.verbose = verbose
+        # if verbose >=2, print x and y anchors each time
 
 
         def cont(x, x_0=-999, y_0=1, **kwargs):
@@ -141,6 +143,13 @@ class ContinuumModel(Model):
                 x_anchors = [x[i] for i in spacing_idx]
 
             spline = CubicSpline(x_anchors, y_anchors)
+            if self.verbose >= 2:
+                print("====== Spline Continuum ======")
+                x_anchors_p = ["%.2f" % item for item in x_anchors]
+                print("Xs: ", x_anchors_p)
+
+                y_anchors_p = ["%.2f" % item for item in y_anchors]
+                print("Ys: ", y_anchors_p)
 
             return spline(x)
 

@@ -93,15 +93,13 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("BIC Test, %.2f < %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
-                    print("Passed and continue...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Passed and continue...\n")
                 return False
             else:
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("BIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
-                    print("Failed and switch back to last model...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Failed and switch back to last model...\n")
                 return True
 
         # Akaike information criterion, or AIC
@@ -110,15 +108,13 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("AIC Test, %.2f < %.2f" % (self.result_all[-1].aic, self.result_all[-2].aic))
-                    print("Passed and continue...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Passed and continue...\n")
                 return False
             else:
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("AIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
-                    print("Failed and switch back to last model...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Failed and switch back to last model...\n")
                 return True
 
         # F-test
@@ -134,15 +130,13 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("P-value, %.2f < 0.05" % (1 - p_value))
-                    print("Passed and continue...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Passed and continue...\n")
                 return False
             else:
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("P-value, %.2f > 0.05" % (1 - p_value))
-                    print("Failed and switch back to last model...")
-                    self.plotModel(which=-1, v_next=self.getNextVoff())
+                    print("Failed and switch back to last model...\n")
                 return True
 
     def fit(self, species="KI", n_anchors=5, windowsize=3, criteria="BIC", **kwargs):
@@ -170,7 +164,10 @@ class ISLineFitter():
             model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
             result = model2fit.fit(data=self.flux2fit, params=pars_guess, x=self.wave2fit)
             self.__afterFit(model2fit, result)
-            if self.bayesianCriterion(criteria=criteria):
+            stop_flag = self.bayesianCriterion(criteria=criteria)
+            if self.verbose >= 1:
+                self.plotModel(which=-1, v_next=self.getNextVoff())
+            if stop_flag:
                 break
 
         return self.result_all[-2]
@@ -180,6 +177,7 @@ class ISLineFitter():
             which = which + len(self.result_all)
 
         if which >= 1:
+            print("\n****** Fitting Result for %i Components ******" % which)
             params2report = self.result_all[which].params
             N_all = [params2report["N_Cloud%i" % (i)].value
                      for i in range(len(self.model_all)-1)]
@@ -208,7 +206,7 @@ class ISLineFitter():
         # we can reuse continuum model to boost efficiency?
 
         # Continuum first
-        continuum_model = ContinuumModel(n_anchors=n_anchors)
+        continuum_model = ContinuumModel(n_anchors=n_anchors, verbose=self.verbose)
         pars_guess = continuum_model.guess(self.flux2fit, self.wave2fit)
         if self.nomalized:
             for key in pars_guess.keys():
@@ -491,7 +489,20 @@ class ISLineModel(Model):
                     V_offs = V_offs + [kwargs[name]] * len(self.lam_0)
 
             if self.verbose >= 2:
-                print("Current V_off: " + str(np.unique(V_offs[0::len(self.lam_0)])))
+                print("========= Line Model =========")
+                V_all = V_offs[0::len(self.lam_0)]
+                V_all = ["%.2f" % item for item in V_all]
+                print("V_off: ", V_all)
+
+                b_all = bs[0::len(self.lam_0)]
+                b_all = ["%.2f" % item for item in b_all]
+                print("b: ", b_all)
+
+                N_all = Ns[0::len(self.lam_0)]
+                N_mag = math.floor(np.log10(np.min(N_all)))
+                N_all = [item/10**N_mag for item in N_all]
+                N_all = ["%.2f" % item for item in N_all]
+                print("N (X10^%i): " % N_mag, N_all)
 
             # no problem for convolution since we only call voigt_absorption_line once.
             # update so if n_components = 0, return a all-ones np array
@@ -609,7 +620,7 @@ if __name__ == "__main__":
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
     import matplotlib.pyplot as plt
 
-    normalized = True
+    normalized = False
     # data to fit, around HD183143 Na 3300 doublet, order only
     pythia = EdiblesOracle()
     List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
@@ -622,9 +633,9 @@ if __name__ == "__main__":
     # initializing ISLineFitter
     print("="*40)
     print("Testing ISLineFitter, Finger Crossed!")
-    test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
+    test_fitter = ISLineFitter(wave, flux, verbose=2, normalized=normalized)
     # Verbose = 0, 1, 2
 
-    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="a")
+    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b")
     print(best_result.fit_report())
     test_fitter.plotModel(which=-2)
