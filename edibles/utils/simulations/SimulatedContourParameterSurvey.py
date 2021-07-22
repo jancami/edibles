@@ -16,8 +16,8 @@ plt.rc('text', usetex=True)
 plt.rcParams['text.latex.preamble'] = [r"\usepackage{amsmath}"]
 
 
-def animation(simulations, param_name, param_values, SymmetryType, lambda0,
-              path='Test_data', fps=5, plot_min=False):
+def animation(simulations, param_name, param_values,
+              lambda0, path='Test_data', fps=5, plot_min=False):
     """Animate a series of simulations.
 
     Creates a GIF with the result of different profiles simulations obtained by varying
@@ -41,8 +41,7 @@ def animation(simulations, param_name, param_values, SymmetryType, lambda0,
     # ax.set_xlim((x_min-1, x_max+1))
 
     # Set axes limits.
-    a = WavelengthToWavenumber(lambda0)
-    ax.set_xlim((a-10, a+10))
+    ax.set_xlim((-10, +10))
 
     y_min = min([min(simulation[1]) for simulation in simulations])
     ax.set_ylim(y_min, 1)
@@ -76,8 +75,9 @@ def animation(simulations, param_name, param_values, SymmetryType, lambda0,
 
         # Update plot.
         line.set_data(simulations[i][0], simulations[i][1])
-        ax.set_title(f'B: {param_values[i][0]:.3f} T: {param_values[i][1]:.3f} ' +
-                     f'Delta: {param_values[i][2]:.3f}')
+        ax.set_title(f'A: {param_values[i]["A"]:.4f} B: {param_values[i]["B"]:.4f}\
+                     C: {param_values[i]["C"]:.4f} T: {param_values[i]["T"]:.2f}\
+                     Delta: {param_values[i]["delta"]:.4f}')
 
         # Update local minimum markers.
         if plot_min:
@@ -105,14 +105,14 @@ def animation(simulations, param_name, param_values, SymmetryType, lambda0,
     ax.set_ylabel('Normalized Intensity')
 
     # Save animation.
-    anim.save(f"{path}/"+SymmetryType+"_Changing"+param_name+'.gif',
+    anim.save(f"{path}/_Changing"+param_name+'.gif',
               writer='imagemagick', fps=fps)
 
     plt.close()
 
 
 def plot_simulations(simulations, param_name, param_values,
-                     SymmetryType, lambda0, path='Test_data', save=False):
+                     lambda0, path='Test_data', save=False):
     """Plot a set of simulations.
 
     Plot in a single graph a set of simulations obtained by varying some
@@ -131,9 +131,7 @@ def plot_simulations(simulations, param_name, param_values,
     # Plot all the profiles.
     for i, simulation in enumerate(simulations):
         plt.plot(simulation[0], simulation[1], ls='-', alpha=0.7,
-                 label=f'B: {param_values[i][0]:.4f} ' +
-                 f'T: {param_values[i][1]:.1f} ' +
-                 f'Delta: {param_values[i][2]:.3f}', color=colours[i])
+                 label=f'{param_name} = {param_values[i][param_name]:.5f}', color=colours[i])
 
     # Plot style
     plt.xlim((-10, 10))
@@ -141,17 +139,19 @@ def plot_simulations(simulations, param_name, param_values,
     plt.xlabel(r'Wavenumber ($cm^{-1}$)')
     plt.ylabel('Normalized Intensity')
     plt.legend(fontsize='x-small')
-    plt.title('Parameter Survey - Changing '+param_name)
+    plt.title(f'Changing {param_name}. Initial values A = {param_values[0]["A"]},\
+              B = {param_values[0]["B"]}, C = {param_values[0]["C"]}, T = {param_values[0]["T"]},\
+              delta = {param_values[0]["delta"]}')
 
     if save:
-        plt.savefig(f"{path}/"+str(SymmetryType)+"_Changing"+param_name+".pdf", dpi=300)
+        plt.savefig(f"{path}/_Changing"+param_name+".pdf", dpi=300)
     plt.show()
     plt.close()
 
 
 def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_values=None,
                         delta_values=None, Q_Branch=True, B_default=0.02, T_default=10,
-                        delta_default=0, save=False, load=False, save_fig=False, anim=False):
+                        delta_default=0.001, save=False, load=False, save_fig=False, anim=False):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
@@ -171,7 +171,6 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
         anim (bool, optional): Create GIF or not. Defaults to False.
     """
     # Declare constants
-    SymmetryType = 'Spherical'
     Jlimit = 200
     lambda0 = 6614
     Sightline = 'ParameterSurvey'
@@ -192,7 +191,7 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
         if param_values[param] is not None:
             # Load pre-calculated simulations
             if load:
-                with open(f"{path}/{SymmetryType}_Changing{param}_.bin", "rb") as data:
+                with open(f"{path}/_Changing{param}_.bin", "rb") as data:
                     # Extract data
                     build = pickle.load(data)
                     param_simulations[param] = build[0]
@@ -251,19 +250,19 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
 
                     # Save results and parameters.
                     param_simulations[param].append([x_vals, y_vals])
-                    parameters[param].append([B, T, delta])
+                    parameters[param].append({'A': A, 'B': B, 'C': C, 'T': T, 'delta': delta})
 
             # Generates GIF and plot.
-            plot_simulations(param_simulations[param], param, parameters[param], SymmetryType,
+            plot_simulations(param_simulations[param], param, parameters[param],
                              lambda0, path=path, save=save_fig)
 
             if anim:
                 animation(param_simulations[param], param, parameters[param],
-                          SymmetryType, lambda0, path=path)
+                          lambda0, path=path)
 
             # Save simulation to future reference.
             if save:
-                with open(f"{path}/{SymmetryType}_Changing{param}_.bin", "wb") as output:
+                with open(f"{path}/_Changing{param}_.bin", "wb") as output:
                     pickle.dump([param_simulations[param], parameters[param]], output)
 
 
@@ -488,9 +487,11 @@ if __name__ == "__main__":
     if True:
 
         # Define parameter ranges.
-        A_values = [1, 0.8, 0.4, 0.2, 0.08, 0.05]
-        one_variable_survey(path='Parameter_survey', A_values=A_values)
+        A_values = np.arange(0.05, 0.5, 0.05)
+        one_variable_survey(path='Parameter_survey', A_values=A_values,
+                            save=True, save_fig=True, anim=True)
 
         # Define parameter ranges.
-        C_values = [0.01, 0.008, 0.004, 0.002, 0.0008]
-        one_variable_survey(path='Parameter_survey', A_values=A_values)
+        C_values = np.arange(0.0001, 0.015, 0.002)
+        one_variable_survey(path='Parameter_survey', C_values=C_values,
+                            save=True, save_fig=True, anim=True)
