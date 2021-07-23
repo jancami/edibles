@@ -6,6 +6,7 @@ from edibles.utils.simulations.RotationalEnergies import WavelengthToWavenumber
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
+import matplotlib
 import pickle
 from scipy.signal import argrelextrema
 
@@ -41,7 +42,7 @@ def animation(simulations, param_name, param_values,
     # ax.set_xlim((x_min-1, x_max+1))
 
     # Set axes limits.
-    ax.set_xlim((-10, +10))
+    ax.set_xlim((-4, +4))
 
     y_min = min([min(simulation[1]) for simulation in simulations])
     ax.set_ylim(y_min, 1)
@@ -75,9 +76,11 @@ def animation(simulations, param_name, param_values,
 
         # Update plot.
         line.set_data(simulations[i][0], simulations[i][1])
-        ax.set_title(f'A: {param_values[i]["A"]:.4f} B: {param_values[i]["B"]:.4f}\
-                     C: {param_values[i]["C"]:.4f} T: {param_values[i]["T"]:.2f}\
-                     Delta: {param_values[i]["delta"]:.4f}')
+        ax.set_title(f'A: {param_values[i]["A"]:.4f} B:{param_values[i]["B"]:.4f}' +
+                     f'C: {param_values[i]["C"]:.4f} T:{param_values[i]["T"]:.2f}\n' +
+                     f'deltaA: {param_values[i]["deltaA"]:.5f}, ' +
+                     f'deltaB: {param_values[i]["deltaB"]:.5f}, ' +
+                     f'deltaC: {param_values[i]["deltaC"]:.5f}')
 
         # Update local minimum markers.
         if plot_min:
@@ -97,8 +100,8 @@ def animation(simulations, param_name, param_values,
             return (line, )
 
     # Animate
-    anim = FuncAnimation(fig, animate, init_func=init,
-                         frames=len(simulations), interval=50, blit=True)
+    anim = FuncAnimation(fig, animate, init_func=init, repeat_delay=1000,
+                         frames=len(simulations), interval=500, blit=True)
 
     # Axes labels.
     ax.set_xlabel(r'Wavenumber ($cm^{-1}$)')
@@ -134,14 +137,18 @@ def plot_simulations(simulations, param_name, param_values,
                  label=f'{param_name} = {param_values[i][param_name]:.5f}', color=colours[i])
 
     # Plot style
-    plt.xlim((-10, 10))
+    plt.xlim((-4, 4))
 
     plt.xlabel(r'Wavenumber ($cm^{-1}$)')
     plt.ylabel('Normalized Intensity')
     plt.legend(fontsize='x-small')
-    plt.title(f'Changing {param_name}. Initial values A = {param_values[0]["A"]},\
-              B = {param_values[0]["B"]}, C = {param_values[0]["C"]}, T = {param_values[0]["T"]},\
-              delta = {param_values[0]["delta"]}')
+    title = (f'Changing {param_name}. Initial values A:{param_values[0]["A"]:.4f}\n' +
+             f'B:{param_values[0]["B"]:.4f}, C:{param_values[0]["C"]:.4f}, ' +
+             f'T:{param_values[0]["T"]:.2f}\ndeltaA = {param_values[0]["deltaA"]:.5f},' +
+             f' deltaB = {param_values[0]["deltaB"]:.4f}, ' +
+             f'deltaC = {param_values[0]["deltaC"]:.4f}')
+    plt.title(title)
+    plt.tight_layout()
 
     if save:
         plt.savefig(f"{path}/_Changing"+param_name+".pdf", dpi=300)
@@ -150,23 +157,31 @@ def plot_simulations(simulations, param_name, param_values,
 
 
 def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_values=None,
-                        delta_values=None, Q_Branch=True, B_default=0.02, T_default=10,
-                        delta_default=0.001, save=False, load=False, save_fig=False, anim=False):
+                        delta_A_values=None, delta_B_values=None, delta_C_values=None,
+                        Q_Branch=True, A_default=0.02, B_default=0.02, C_default=0.02,
+                        T_default=10, delta_A_default=0.001, delta_B_default=0.001,
+                        delta_C_default=0.001, save=False, load=False, save_fig=False, anim=False):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
-    (T, A, B, C, and delta).
+    (T, A, B, C, delta_A, delta_B and delta_C).
 
     Args:
         A_values (1darray): Array with values of A. Ignored if empty. Defaults to None.
-        B_values (1darray): Array with values of B. Ignored if empty. Defaults to None.
-        C_values (1darray): Array with values of C. Ignored if empty. Defaults to None.
-        T_values (1darray): Array with values of T. Ignored if empty. Defaults to None.
-        delta_values (1darray): Array with values of deltaB. Ignored if empty.  Defaults to None.
+        B_values (1darray): Values of B. Ignored if empty. Defaults to None.
+        C_values (1darray): Values of C. Ignored if empty. Defaults to None.
+        T_values (1darray): Values of T. Ignored if empty. Defaults to None.
+        delta_A_values (1darray): Array with values of deltaA. Ignored if empty.  Defaults to None.
+        delta_B_values (1darray): Values of deltaB. Ignored if empty.  Defaults to None.
+        delta_C_values (1darray): Values of deltaC. Ignored if empty.  Defaults to None.
         Q_Branch (bool, optional): To consider or not the Q-branch. Defaults to True.
-        B_default (float, optional): Default value of B when constant. Defaults to 0.02
+        A_default (float, optional): Default value of A when constant. Defaults to 0.02.
+        B_default (float, optional): Default value of B. Defaults to 0.02.
+        C_default (float, optional): Default value of C. Defaults to 0.02
         T_default (float, optional): Defaults to 10
-        B_default (float, optional): Defaults to 0.0
+        delta_A_default (float, optional): Defaults to 0.001
+        delta_B_default (float, optional): Defaults to 0.001
+        delta_C_default (float, optional): Defaults to 0.001
         save_fig (bool, optional): Defaults to False.
         anim (bool, optional): Create GIF or not. Defaults to False.
     """
@@ -177,14 +192,17 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
     Q_scale_init = 1
 
     # Dictionary to save simulations per parameter varying.
-    param_simulations = {'A': [], 'B': [], 'C': [], 'T': [], 'delta': []}
+    param_simulations = {'A': [], 'B': [], 'C': [], 'T': [],
+                         'deltaA': [], 'deltaB': [], 'deltaC': []}
 
     # Dictionary to save parameters used for simulation
-    parameters = {'A': [], 'B': [], 'C': [], 'T': [], 'delta': []}
+    parameters = {'A': [], 'B': [], 'C': [], 'T': [],
+                  'deltaA': [], 'deltaB': [], 'deltaC': []}
 
     # Dictionary with parameter space
-    param_values = {'A': A_values, 'B': B_values, 'C': C_values,
-                    'T': T_values, 'delta': delta_values}
+    param_values = {'A': A_values, 'B': B_values, 'C': C_values, 'T': T_values,
+                    'deltaA': delta_A_values, 'deltaB': delta_B_values,
+                    'deltaC': delta_C_values}
 
     # Varying all the parameters.
     for param in param_values.keys():
@@ -205,43 +223,41 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
                     # Initializate Q_scale
                     Q_scale = Q_scale_init
 
-                    # Parameter values.
+                    # Set default parameters values
+                    A = A_default
+                    B = B_default
+                    C = C_default
+                    T = T_default
+                    delta_A = delta_A_default
+                    delta_B = delta_B_default
+                    delta_C = delta_C_default
+
+                    # Set changing parameter value
                     if param == 'A':
-                        B = B_default
-                        C = B
                         A = A_values[i]
-                        T = T_default
-                        delta = delta_default
 
-                    if param == 'B':
+                    elif param == 'B':
                         B = B_values[i]
-                        A = C = B
-                        T = T_default
-                        delta = delta_default
 
-                    if param == 'C':
-                        B = B_default
-                        A = B
+                    elif param == 'C':
                         C = C_values[i]
-                        T = T_default
-                        delta = delta_default
 
                     elif param == 'T':
-                        B = B_default
-                        A = C = B
                         T = T_values[i]
-                        delta = delta_default
 
-                    elif param == 'delta':
-                        B = B_default
-                        A = C = B
-                        T = T_default
-                        delta = delta_values[i]
+                    elif param == 'deltaA':
+                        delta_A = delta_A_values[i]
+
+                    elif param == 'deltaB':
+                        delta_B = delta_B_values[i]
+
+                    elif param == 'deltaC':
+                        delta_C = delta_C_values[i]
 
                     # Run simulation
-                    build = sim(A=A, B=B, C=C, Delta_A=delta*A, Delta_B=delta*B, Delta_C=delta*C,
-                                Trot=T, Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
-                                Q_Branch=Q_Branch, Q_scale=Q_scale)
+                    build = sim(A=A, B=B, C=C, Delta_A=delta_A*A, Delta_B=delta_B*B,
+                                Delta_C=delta_C*C, Trot=T, Jlimit=Jlimit, Target=Sightline,
+                                lambda0=lambda0, Q_Branch=Q_Branch, Q_scale=Q_scale)
 
                     # Obtain wavenumbers.
                     x_vals = WavelengthToWavenumber(np.asarray(build[0])) - \
@@ -250,7 +266,13 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
 
                     # Save results and parameters.
                     param_simulations[param].append([x_vals, y_vals])
-                    parameters[param].append({'A': A, 'B': B, 'C': C, 'T': T, 'delta': delta})
+                    parameters[param].append({'A': A, 'B': B, 'C': C, 'T': T, 'deltaA': delta_A,
+                                              'deltaB': delta_B, 'deltaC': delta_C})
+
+            # Save simulation to future reference.
+            if save:
+                with open(f"{path}/_Changing{param}_.bin", "wb") as output:
+                    pickle.dump([param_simulations[param], parameters[param]], output)
 
             # Generates GIF and plot.
             plot_simulations(param_simulations[param], param, parameters[param],
@@ -259,11 +281,6 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
             if anim:
                 animation(param_simulations[param], param, parameters[param],
                           lambda0, path=path)
-
-            # Save simulation to future reference.
-            if save:
-                with open(f"{path}/_Changing{param}_.bin", "wb") as output:
-                    pickle.dump([param_simulations[param], parameters[param]], output)
 
 
 def assign_two_variables(value1, value2, name1, name2,
@@ -487,11 +504,11 @@ if __name__ == "__main__":
     if True:
 
         # Define parameter ranges.
-        A_values = np.arange(0.05, 0.5, 0.05)
-        one_variable_survey(path='Parameter_survey', A_values=A_values,
-                            save=True, save_fig=True, anim=True)
+        delta_A_values = np.linspace(0, 0.5, 10)
+        one_variable_survey(path='Parameter_survey', delta_A_values=delta_A_values,
+                            A_default=0.1, save=True, save_fig=True, anim=True)
 
         # Define parameter ranges.
-        C_values = np.arange(0.0001, 0.015, 0.002)
-        one_variable_survey(path='Parameter_survey', C_values=C_values,
-                            save=True, save_fig=True, anim=True)
+        delta_C_values = np.linspace(0, 0.5, 10)
+        one_variable_survey(path='Parameter_survey', delta_C_values=delta_C_values,
+                            C_default=0.005, save=True, save_fig=True, anim=True)
