@@ -160,7 +160,8 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
                         delta_A_values=None, delta_B_values=None, delta_C_values=None,
                         Q_Branch=True, A_default=0.02, B_default=0.02, C_default=0.02,
                         T_default=10, delta_A_default=0.001, delta_B_default=0.001,
-                        delta_C_default=0.001, save=False, load=False, save_fig=False, anim=False):
+                        delta_C_default=0.001, save=False, load=False, save_fig=False,
+                        anim=False, SymmetryType='Prolate'):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
@@ -184,6 +185,8 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
         delta_C_default (float, optional): Defaults to 0.001
         save_fig (bool, optional): Defaults to False.
         anim (bool, optional): Create GIF or not. Defaults to False.
+        SymmetryType (str, optional): Type of symmetry of molecule. Options Oblate, Prolate
+            or Spherical. Defaults to Prolate.
     """
     # Declare constants
     Jlimit = 200
@@ -253,6 +256,18 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
 
                     elif param == 'deltaC':
                         delta_C = delta_C_values[i]
+
+                    if SymmetryType == 'Prolate':
+                        C = B
+                        delta_C = delta_B
+
+                    elif SymmetryType == 'Oblate':
+                        A = B
+                        delta_A = delta_B
+
+                    elif SymmetryType == 'Spherical':
+                        A = C = B
+                        delta_A = delta_A = delta_B
 
                     # Run simulation
                     build = sim(A=A, B=B, C=C, Delta_A=delta_A*A, Delta_B=delta_B*B,
@@ -469,7 +484,8 @@ def plot_grid(simulations, parameters, param_values,
 def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=True, A_default=0.02,
                                B_default=0.02, C_default=0.02, T_default=10, delta_A_default=0,
                                delta_B_default=0, delta_C_default=0, save=False,
-                               load=False, plot_wavenumber=True, Q_scale=1, plot=True):
+                               load=False, plot_wavenumber=True, Q_scale=1, plot=True,
+                               SymmetryType='Spherical'):
 
     # Declare constants
     Jlimit = 200
@@ -509,12 +525,25 @@ def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=Tr
                 # Assign variable values.
                 params[name1] = value1
                 params[name2] = value2
-                print(params['A'], params['B'])
 
-                build = sim(A=params['A'], B=params['B'], C=params['B'],
+                if SymmetryType == 'Prolate':
+                    params['C'] = params['B'].copy()
+                    params['delta_C'] = params['delta_B'].copy()
+
+                elif SymmetryType == 'Oblate':
+                    params['A'] = params['B'].copy()
+                    params['delta_A'] = params['delta_B'].copy()
+
+                elif SymmetryType == 'Spherical':
+                    params['A'] = params['B'].copy()
+                    params['delta_A'] = params['delta_B'].copy()
+                    params['C'] = params['B'].copy()
+                    params['delta_C'] = params['delta_B'].copy()
+
+                build = sim(A=params['A'], B=params['B'], C=params['C'],
                             Delta_A=params['delta_A']*params['A'],
                             Delta_B=params['delta_B']*params['B'],
-                            Delta_C=params['delta_B']*params['B'],
+                            Delta_C=params['delta_C']*params['C'],
                             Trot=params['T'], Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
                             Q_Branch=Q_Branch, Q_scale=Q_scale)
 
@@ -581,6 +610,7 @@ def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=Tr
 
 if __name__ == "__main__":
 
+    # 2D parameter survey for spherical tops. Turn to True to run.
     if False:
 
         # Define parameter ranges.
@@ -614,18 +644,22 @@ if __name__ == "__main__":
                                 B_default=B_default[i], T_default=T_default[i],
                                 delta_default=delta_default[i], load=True, Q_scale=0.1)
 
+    # One variable survey for prolate and oblate symmetries.
     if False:
 
         # Define parameter ranges.
         delta_A_values = np.linspace(0, 0.5, 10)
         one_variable_survey(path='Parameter_survey', delta_A_values=delta_A_values,
-                            A_default=0.1, save=True, save_fig=True, anim=True)
+                            A_default=0.1, load=True, save_fig=True, anim=True,
+                            SymmetryType='Prolate')
 
         # Define parameter ranges.
         delta_C_values = np.linspace(0, 0.5, 10)
         one_variable_survey(path='Parameter_survey', delta_C_values=delta_C_values,
-                            C_default=0.005, save=True, save_fig=True, anim=True)
+                            C_default=0.005, load=True, save_fig=True, anim=True,
+                            SymmetryType='Oblate')
 
+    # Single 2D variable survey for prolate and oblate tops.
     if True:
 
         # Define parameter ranges.
@@ -633,5 +667,13 @@ if __name__ == "__main__":
         A_values = [0.1, 0.5, 1, 5]
         single_two_variable_survey(path='Parameter_survey/single', values1=A_values,
                                    values2=B_values, name1='A', name2='B', delta_A_default=0.005,
+                                   delta_B_default=0.005, delta_C_default=0.005, load=True,
+                                   T_default=70, Q_scale=0.4, SymmetryType='Prolate')
+
+        # Define parameter ranges.
+        C_values = [0.001, 0.005, 0.01, 0.05]
+        B_values = [0.1, 0.5, 1, 5]
+        single_two_variable_survey(path='Parameter_survey/single', values1=A_values,
+                                   values2=B_values, name1='A', name2='B', delta_A_default=0.005,
                                    delta_B_default=0.005, delta_C_default=0.005, save=True,
-                                   T_default=70, Q_scale=0.4)
+                                   T_default=70, Q_scale=0.4, SymmetryType='Oblate')
