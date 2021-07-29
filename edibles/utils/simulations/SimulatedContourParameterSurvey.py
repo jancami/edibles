@@ -466,6 +466,119 @@ def plot_grid(simulations, parameters, param_values,
         plt.show()
 
 
+def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=True, A_default=0.02,
+                               B_default=0.02, C_default=0.02, T_default=10, delta_A_default=0,
+                               delta_B_default=0, delta_C_default=0, save=False,
+                               load=False, plot_wavenumber=True, Q_scale=1, plot=True):
+
+    # Declare constants
+    Jlimit = 200
+    lambda0 = 6614
+    a = WavelengthToWavenumber(lambda0)
+    Sightline = 'ParameterSurvey'
+    name = name1 + name2
+
+    # Dictionary to save simulations
+    param_simulations = {}
+
+    # Dictionary to save parameters used in simulations.
+    parameters = {}
+
+    # Load pre-calculated simulations
+    if load:
+        with open(f"{path}/{name}_2D_single_survey.bin", "rb") as data:
+            # Extract data
+            build = pickle.load(data)
+            param_simulations = build[0]
+            parameters = build[1]
+
+    # Run simulation.
+    else:
+
+        # Simulations
+        for value1 in values1:
+            param_simulations[value1] = {}
+            parameters[value1] = {}
+            for value2 in values2:
+
+                # Assign default values.
+                params = {'A': A_default, 'B': B_default, 'C': C_default, 'T': T_default,
+                          'delta_A': delta_A_default, 'delta_B': delta_B_default,
+                          'delta_C': delta_C_default}
+
+                # Assign variable values.
+                params[name1] = value1
+                params[name2] = value2
+                print(params['A'], params['B'])
+
+                build = sim(A=params['A'], B=params['B'], C=params['B'],
+                            Delta_A=params['delta_A']*params['A'],
+                            Delta_B=params['delta_B']*params['B'],
+                            Delta_C=params['delta_B']*params['B'],
+                            Trot=params['T'], Jlimit=Jlimit, Target=Sightline, lambda0=lambda0,
+                            Q_Branch=Q_Branch, Q_scale=Q_scale)
+
+                # Obtain wavenumbers.
+                x_vals = WavelengthToWavenumber(np.asarray(build[0]))
+                y_vals = build[1]
+
+                # Save results and parameters.
+                param_simulations[value1][value2] = [x_vals, y_vals]
+
+    # Save simulation to future reference.
+    if save:
+        with open(f"{path}/{name}_2D_single_survey.bin", "wb") as output:
+            pickle.dump([param_simulations, parameters], output)
+
+    if plot:
+        rows = len(values1)
+        cols = len(values2)
+
+        fig, axs = plt.subplots(nrows=rows, ncols=cols, sharex=True,
+                                sharey=True, figsize=(rows*2, cols*2))
+
+        for i, value1 in enumerate(values1):
+            for j, value2 in enumerate(values2):
+
+                x = param_simulations[value1][value2][0]
+                y = param_simulations[value1][value2][1]
+
+                if plot_wavenumber:
+                    axs[i, j].set_xlim((-5, +5))
+                    x -= a
+
+                else:
+                    x = WavelengthToWavenumber(x)
+                    axs[i, j].set_xlim((lambda0-2, lambda0+2))
+
+                axs[i, j].plot(x, y)
+                axs[i, j].grid(alpha=0.5)
+
+                if i == rows-1:
+                    if plot_wavenumber:
+                        axs[i, j].set_xlabel(r'Wavenumber (cm$^{-1}$)')
+                    else:
+                        axs[i, j].set_xlabel('Wavelength $\mathrm{\AA}$')
+
+                if i == 0:
+                    axs[i, j].set_title(f'{name2} = {value2:.4f}')
+
+                if j == cols-1:
+                    axs[i, j].set_ylabel(f'{name1} = {value1:.4f}')
+                    axs[i, j].yaxis.set_label_position("right")
+
+                if j == 0:
+                    axs[i, j].set_ylabel('Normalized Intensity')
+
+        plt.suptitle(f'2D parameter survey with {name1} and {name2}.\n' +
+                     f'A = {A_default}, B = {B_default}, C = {C_default}, T = {T_default}\n' +
+                     f'deltaA = {delta_A_default}, deltaB = {delta_B_default}, ' +
+                     f'deltaC = {delta_C_default}')
+        plt.tight_layout()
+        plt.savefig(f"{path}/{name}_2D_single_survey.pdf", dpi=300)
+        plt.show()
+
+
 if __name__ == "__main__":
 
     if False:
@@ -501,7 +614,7 @@ if __name__ == "__main__":
                                 B_default=B_default[i], T_default=T_default[i],
                                 delta_default=delta_default[i], load=True, Q_scale=0.1)
 
-    if True:
+    if False:
 
         # Define parameter ranges.
         delta_A_values = np.linspace(0, 0.5, 10)
@@ -512,3 +625,13 @@ if __name__ == "__main__":
         delta_C_values = np.linspace(0, 0.5, 10)
         one_variable_survey(path='Parameter_survey', delta_C_values=delta_C_values,
                             C_default=0.005, save=True, save_fig=True, anim=True)
+
+    if True:
+
+        # Define parameter ranges.
+        B_values = [0.001, 0.005, 0.01, 0.05]
+        A_values = [0.1, 0.5, 1, 5]
+        single_two_variable_survey(path='Parameter_survey/single', values1=A_values,
+                                   values2=B_values, name1='A', name2='B', delta_A_default=0.005,
+                                   delta_B_default=0.005, delta_C_default=0.005, save=True,
+                                   T_default=70, Q_scale=0.4)
