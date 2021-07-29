@@ -41,7 +41,7 @@ class Fitted_Contours:
     
     
     
-    def _residual(self,params, Data_X,Data_Y,Yerr,Jlimit=50,Symmetry_Type=None, Sightline=None ,Q_Branch=False):
+    def _residual(self,params, Data_X,Data_Y,Yerr,Jlimit,Symmetry_Type=None, Sightline=None ,Q_Branch=False):
         
         ##read in the dict of parameters. Apply appropriate constraints depending on symmetry type
      
@@ -79,8 +79,8 @@ class Fitted_Contours:
         
         self.results=lmfit.minimize(self._residual,params=self.parms,kws={'Data_X': self.wavelength, 'Data_Y':self.flux,'Yerr':self.uncertainty_array, 'Jlimit': self.J_Limit, 'Sightline':self.Target ,'Q_Branch':self.Q_Branch}, method='nelder', nan_policy='omit',options={'disp':True,'fatol':0.01,'xatol':0.01})
         
-        f = open('SavedModels/'+str(self.DIB)+'_'+str(self.Target)+'_Lambda_'+str(self.results.params['Lambda_0'].value)+'.txt', "w")
-        f.write(str(self.results.params))
+        f = open('SavedModels/FinalFits/'+str(self.DIB)+'_'+str(self.Target)+'_Lambda_'+str(round(self.results.params['Lambda_0'].value,2))+'Held.txt', "w")
+        f.write(str(self.results.params.valuesdict()))
         f.close()
         
         if verbose==True:
@@ -97,7 +97,7 @@ class Fitted_Contours:
         P_s=self.results.params['PR_Scale'].value
         DIB_l=self.results.params['Lambda_0'].value
 
-        build=sim(A=B,B=B,C=B,Delta_A=delta*B,Delta_B=delta*B,Delta_C=delta*B,Trot=T_r,Jlimit=50,Q_scale=Q_s,PR_scale=P_s, Target=self.Target,lambda0=DIB_l,Q_Branch=True)
+        build=sim(A=B,B=B,C=B,Delta_A=delta*B,Delta_B=delta*B,Delta_C=delta*B,Trot=T_r,Jlimit=self.J_Limit,Q_scale=Q_s,PR_scale=P_s, Target=self.Target,lambda0=DIB_l,Q_Branch=True)
         
         new_y=griddata(build[0],build[1],self.wavelength,method='cubic',fill_value=1.0)
         new_y=(new_y/np.max(new_y*Y_s))*Y_s
@@ -107,7 +107,7 @@ class Fitted_Contours:
         plt.plot(self.wavelength,self.flux,label='Original Data')
         plt.plot(self.wavelength,new_y,label='Best Fit')
         plt.legend()
-        plt.savefig('SavedModels/'+str(self.DIB)+'_'+str(self.Target)+'_Lambda_'+str(self.results.params['Lambda_0'].value)+'.pdf')
+        plt.savefig('SavedModels/FinalFits/'+str(self.DIB)+'_'+str(self.Target)+'_Lambda_'+str(round(self.results.params['Lambda_0'].value,2))+'Held.pdf')
         #plt.show()
         plt.close()
 ################################################################################
@@ -122,24 +122,33 @@ def Fit_Contour(DIB,Target, Initial_Params,J_Limit,Q_Branch=True):
     build.plot_results()
     print('hi')
 ################################################################################
-Sightlines=['HD144470','HD147165','HD147683','HD149757','HD166937','HD170740','HD184915','HD185418','HD185859','HD203532','HD23180', 'HD24398']
-
+#Sightlines=['HD144470','HD147165','HD147683','HD149757','HD166937','HD170740','HD184915','HD185418','HD185859','HD203532','HD23180', 'HD24398']
+Sightlines=['HD170740']
 ################################################################################
 ##Create Initial Params##
 p=lmfit.Parameters()
-p.add('Q_Scale',0.3,min=0.0)
-p.add('PR_Scale',0.5,min=0.0)
-p.add('Y_Scale',0.005,min=0)
-p.add('T', 20,min=0,max=50)
-p.add('Delta', 0.002)
-p.add('B', 30e-3,min=10e-4,max=10e-1)
+p.add('Q_Scale',0.5,min=0.0)
+p.add('PR_Scale',1.2,min=0.0)
+p.add('Y_Scale',0.008,min=0)
+p.add('T', 14,vary=False)
+p.add('Delta', 0.018,vary=True)
+p.add('B', 0.0014122, vary=False)
 for Target in Sightlines:
-    for x in range(5):
-        start=timer()
-        print(start)
-        p.add('Lambda_0',6613.23+(0.01*x),vary=False)
+#    for x in range(10):
+#        start=timer()
+#        print(start)
+#        p.add('Lambda_0',6613.20+(0.05*x),vary=False)
+#
+#        Fit_Contour(6614,Target,p,50)
+#        end=timer()
+#        print(end)
+#        print(end-start,' seconds')
+    start=timer()
+    print(start)
+    p.add('Lambda_0',6613.25,min=6613.22,max=6613.32)
 
-        Fit_Contour(6614,Target,p,50)
-        end=timer()
-        print(end)
-        print(end-start,' seconds')
+    Fit_Contour(6614,Target,p,50)
+    end=timer()
+    print(end)
+    print(end-start,' seconds')
+
