@@ -527,18 +527,18 @@ def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=Tr
                 params[name2] = value2
 
                 if SymmetryType == 'Prolate':
-                    params['C'] = params['B'].copy()
-                    params['delta_C'] = params['delta_B'].copy()
+                    params['C'] = params['B']
+                    params['delta_C'] = params['delta_B']
 
                 elif SymmetryType == 'Oblate':
-                    params['A'] = params['B'].copy()
-                    params['delta_A'] = params['delta_B'].copy()
+                    params['A'] = params['B']
+                    params['delta_A'] = params['delta_B']
 
                 elif SymmetryType == 'Spherical':
-                    params['A'] = params['B'].copy()
-                    params['delta_A'] = params['delta_B'].copy()
-                    params['C'] = params['B'].copy()
-                    params['delta_C'] = params['delta_B'].copy()
+                    params['A'] = params['B']
+                    params['delta_A'] = params['delta_B']
+                    params['C'] = params['B']
+                    params['delta_C'] = params['delta_B']
 
                 build = sim(A=params['A'], B=params['B'], C=params['C'],
                             Delta_A=params['delta_A']*params['A'],
