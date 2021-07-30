@@ -160,7 +160,7 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
                         delta_A_values=None, delta_B_values=None, delta_C_values=None,
                         Q_Branch=True, A_default=0.02, B_default=0.02, C_default=0.02,
                         T_default=10, delta_A_default=0.001, delta_B_default=0.001,
-                        delta_C_default=0.001, save=False, load=False, save_fig=False,
+                        delta_C_default=0.001,Jlimit=200,lambda0=6614, save=False, load=False, save_fig=False,
                         anim=False, SymmetryType='Prolate'):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
@@ -183,14 +183,15 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
         delta_A_default (float, optional): Defaults to 0.001
         delta_B_default (float, optional): Defaults to 0.001
         delta_C_default (float, optional): Defaults to 0.001
+        Jlimit (float, optional): Defaults to 200. How many values of J to consider.
+        lambda0 (float, optional): Defaults to 6614. Center wavelength (in A) of profile
         save_fig (bool, optional): Defaults to False.
         anim (bool, optional): Create GIF or not. Defaults to False.
         SymmetryType (str, optional): Type of symmetry of molecule. Options Oblate, Prolate
             or Spherical. Defaults to Prolate.
     """
     # Declare constants
-    Jlimit = 200
-    lambda0 = 6614
+
     Sightline = 'ParameterSurvey'
     Q_scale_init = 1
 

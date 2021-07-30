@@ -58,20 +58,20 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
 
         # Get transition frequencies and populations.
         re_low.transition_freq_and_pop()
- #       re_low.plot_k_transitions(K_divisions=10)
-        # Plot Level Structure
+#        re_low.plot_k_transitions(K_divisions=10)
+#         ##Plot Level Structure
 #        plt.figure("Level Structures")
 #        re_low.plot_level_structure()
-
-        # Plot Level Transitions
-
+#
+#         ##Plot Level Transitions
+#
 #        re_low.plot_level_transitions()
 #
 #        # Plot Transitions
 #        plt.figure("Transitions")
 #        re_low.plot_transitions()
 #        plt.legend()
-        # Apply voigt profile.
+#         ##Apply voigt profile.
 #        plt.figure("Apply Voigt")
         re_low.apply_voigt(lambda0=lambda0, show_figure=False)
 
@@ -85,7 +85,7 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         # Apply 1D Gaussian kernel.
         re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
 
-#        plt.show()
+        #plt.show()
         if Results_In_Wavenumber:
             return(WavelengthToWavenumber(np.asarray(re_low.spectrax)), re_low.final_y)
         
