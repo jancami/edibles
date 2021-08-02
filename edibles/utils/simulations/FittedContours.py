@@ -153,7 +153,7 @@ for Target in Sightlines:
     print(start)
     p.add('Lambda_0',6613.25,min=6613.22,max=6613.32)
 
-    Fit_Contour(6614,Target,p,50)
+    Fit_Contour(6614,Target,p,100)
     end=timer()
     print(end)
     print(end-start,' seconds')

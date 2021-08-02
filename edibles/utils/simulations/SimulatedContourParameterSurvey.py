@@ -14,7 +14,7 @@ from scipy.signal import argrelextrema
 colormap = plt.cm.cool
 plt.rcParams.update({'font.size': 10})
 plt.rc('text', usetex=True)
-plt.rcParams['text.latex.preamble'] = [r"\usepackage{amsmath}"]
+plt.rcParams['text.latex.preamble'] = r"\usepackage{amsmath}"
 
 
 def animation(simulations, param_name, param_values,
@@ -115,7 +115,7 @@ def animation(simulations, param_name, param_values,
 
 
 def plot_simulations(simulations, param_name, param_values,
-                     lambda0, path='Test_data', save=False):
+                     lambda0, path='Test_data', save=False, SymmetryType='Prolate'):
     """Plot a set of simulations.
 
     Plot in a single graph a set of simulations obtained by varying some
@@ -151,8 +151,8 @@ def plot_simulations(simulations, param_name, param_values,
     plt.tight_layout()
 
     if save:
-        plt.savefig(f"{path}/_Changing"+param_name+".pdf", dpi=300)
-    plt.show()
+        plt.savefig(f"{path}/{SymmetryType}_Changing"+param_name+".pdf", dpi=300)
+    #plt.show()
     plt.close()
 
 
@@ -292,7 +292,7 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
 
             # Generates GIF and plot.
             plot_simulations(param_simulations[param], param, parameters[param],
-                             lambda0, path=path, save=save_fig)
+                             lambda0, path=path, save=save_fig,SymmetryType=SymmetryType)
 
             if anim:
                 animation(param_simulations[param], param, parameters[param],

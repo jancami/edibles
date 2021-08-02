@@ -556,7 +556,7 @@ class Rotational_Energies:
         # For every data point.
         for i in range(len(Wave)):
             # Apply voigt optical depth.
-            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=1, N=Intensity[i]*10**10,
+            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10,
                                       f=1, gamma=1e7, v_rad=0)
             final_tau = final_tau+tau
 
