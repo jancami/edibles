@@ -142,13 +142,13 @@ class Rotational_Energies:
 
             exponent = ((self.B*self.J*(self.J+1)+(self.A-self.B)*self.K**2)
                         * (-h*c/(k*T))).astype('float64')
-            self.population = np.exp(exponent)
+            self.population = (2*self.J+1)*np.exp(exponent)
 
         elif self.symmetry_type == 'symmetric_oblate':
 
             exponent = ((self.B*self.J*(self.J+1)+(self.C-self.B)*self.K**2)
                         * (-h*c/(k*T))).astype('float64')
-            self.population = np.exp(exponent)
+            self.population = (2*self.J+1)*np.exp(exponent)
 
         else:
             print('problem alert')
@@ -259,37 +259,68 @@ class Rotational_Energies:
                 Kupp = df2["K'"].iloc[i]
 
                 # Selection rules for K.
-                DeltaK = [0]
+                DeltaK = [0,-1,1]
+                
+                for DelK in DeltaK:
+                    if DelK==0:
 
-                # Selection rules for J.
-                if df["K"].iloc[i] == 0:
-                    DeltaJ = [-1, 1]
+                        # Selection rules for J.
+                        if df["K"].iloc[i] == 0:
+                            DeltaJ = [-1, 1]
 
-                else:
-                    DeltaJ = [-1, 0, 1]
+                        else:
+                            DeltaJ = [-1, 0, 1]
 
-                # Allowed transition values.
-                allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
-                allowedK1 = [Kupp-DelK for DelK in DeltaK]
-                allowedK2 = np.arange(-Jupp+1, Jupp)
+                        # Allowed transition values.
+                        allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
+                        allowedK1 = [Kupp-DelK for DelK in DeltaK]
+                        allowedK2 = np.arange(-Jupp+1, Jupp)
 
                 # Final states that agree with the allowed transitions.
-                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
+                        df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
                                           df.K.isin(allowedK2)])
 
-                # Add values to DataFrame of allowed transitions.
-                df4["J'"] = Jupp
-                df4["E'"] = Eupp
-                df4["K'"] = Kupp
+                        # Add values to DataFrame of allowed transitions.
+                        df4["J'"] = Jupp
+                        df4["E'"] = Eupp
+                        df4["K'"] = Kupp
 
-                # Save results of iteration.
-                E_list.extend(df4["E"].values)
-                J_list.extend(df4["J"].values)
-                nJ_list.extend(df4["nJ"].values)
-                E_prime_list.extend(df4["E'"].values)
-                J_prime_list.extend(df4["J'"].values)
-                K_list.extend(df4["K"].values)
-                K_prime_list.extend(df4["K'"].values)
+                        # Save results of iteration.
+                        E_list.extend(df4["E"].values)
+                        J_list.extend(df4["J"].values)
+                        nJ_list.extend(df4["nJ"].values)
+                        E_prime_list.extend(df4["E'"].values)
+                        J_prime_list.extend(df4["J'"].values)
+                        K_list.extend(df4["K"].values)
+                        K_prime_list.extend(df4["K'"].values)
+                    else:
+
+                        DeltaJ = [-1, 0, 1]
+
+                        # Allowed transition values.
+                        allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
+                        allowedK1 = [Kupp-DelK]
+                        allowedK2 = np.arange(-Jupp+1, Jupp)
+
+                        # Final states that agree with the allowed transitions.
+                        df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
+                                          df.K.isin(allowedK2)])
+
+                        # Add values to DataFrame of allowed transitions.
+                        df4["J'"] = Jupp
+                        df4["E'"] = Eupp
+                        df4["K'"] = Kupp
+
+                        # Save results of iteration.
+                        E_list.extend(df4["E"].values)
+                        J_list.extend(df4["J"].values)
+                        nJ_list.extend(df4["nJ"].values)
+                        E_prime_list.extend(df4["E'"].values)
+                        J_prime_list.extend(df4["J'"].values)
+                        K_list.extend(df4["K"].values)
+                        K_prime_list.extend(df4["K'"].values)
+                    
+                    
 
         else:
             print('symmetry type not yet available')
@@ -299,6 +330,7 @@ class Rotational_Energies:
                             "J'": J_prime_list, "K": K_list,
                             "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data = df3
+        
 
     def transition_freq_and_pop(self):
         """Get the frequency and population of transitions.
@@ -601,6 +633,7 @@ class Rotational_Energies:
                 resulting figure.
         """
         dx = np.asarray(self.spectrax[1:])-np.asarray(self.spectrax[0:-1])
+        
         d_lambda = lambda0/80000
         sigma_a = d_lambda/2.355
         sigma_p = sigma_a/dx[0]
