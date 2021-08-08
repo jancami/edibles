@@ -142,13 +142,13 @@ class Rotational_Energies:
 
             exponent = ((self.B*self.J*(self.J+1)+(self.A-self.B)*self.K**2)
                         * (-h*c/(k*T))).astype('float64')
-            self.population = np.exp(exponent)
+            self.population = (2*self.J+1)*np.exp(exponent)
 
         elif self.symmetry_type == 'symmetric_oblate':
 
             exponent = ((self.B*self.J*(self.J+1)+(self.C-self.B)*self.K**2)
                         * (-h*c/(k*T))).astype('float64')
-            self.population = np.exp(exponent)
+            self.population = (2*self.J+1)*np.exp(exponent)
 
         else:
             print('problem alert')
@@ -259,7 +259,7 @@ class Rotational_Energies:
                 Kupp = df2["K'"].iloc[i]
 
                 # Selection rules for K.
-                DeltaK = [0]
+                DeltaK = [0,-1,1]
                 
                 for DelK in DeltaK:
                     if DelK==0:
@@ -588,14 +588,13 @@ class Rotational_Energies:
         # For every data point.
         for i in range(len(Wave)):
             # Apply voigt optical depth.
-            tau = voigt_optical_depth(Wave, lambda0=X[i], b=4.5, N=Y[i]*10**10,
+            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10,
                                       f=1, gamma=1e7, v_rad=0)
             final_tau = final_tau+tau
 
         # Save results in class.
         self.spectrax = Wave
         self.spectray = final_tau
-
 
         # Plot results.
         if show_figure:
@@ -634,7 +633,7 @@ class Rotational_Energies:
                 resulting figure.
         """
         dx = np.asarray(self.spectrax[1:])-np.asarray(self.spectrax[0:-1])
-       
+        
         d_lambda = lambda0/80000
         sigma_a = d_lambda/2.355
         sigma_p = sigma_a/dx[0]
