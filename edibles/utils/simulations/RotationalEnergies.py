@@ -38,9 +38,11 @@ class Rotational_Energies:
         Target (str): Name of the target sightline.
         Q_scale (float): Scale of the Q-branch.
         PR_scale (float): Scale of the P-branch and R-branch.
+        transition_type (str): Transition type to consider. Defaults to Parallel.
+            Options: Parallel, Perpendicular, Both.
     """
 
-    def __init__(self, A, B, C, Target, Q_scale, PR_scale):
+    def __init__(self, A, B, C, Target, Q_scale, PR_scale, transition_type='Parallel'):
         """Init the Rotational_Energies class."""
         # print('init')
         self.A = A
@@ -50,6 +52,7 @@ class Rotational_Energies:
         self.Target = Target
         self.Q_scale = Q_scale
         self.PR_scale = PR_scale
+        self.transition_type = transition_type
 
     def _determine_symmetry_type(self):
         """Get symmetry type accordingly with the rotational constants."""
@@ -251,50 +254,54 @@ class Rotational_Energies:
             # print("Starting search for allowed transitions")
             # For every initial state
 
+            # Selection rules for K.
+            if 'Parallel' in self.transition_type:
+                DeltaK = [0]
+            elif 'Perpendicular' in self.transition_type:
+                DeltaK = [-1, 1]
+            elif 'Both' in self.transition_type:
+                DeltaK = [-1, 0, 1]
+            else:
+                print("Transitions type doesn't exist!")
+
             for i in range(len(df2.index)):
 
-                # Get current values of J, E and K.
-                Jupp = df2["J'"].iloc[i]
-                Eupp = df2["E'"].iloc[i]
-                Kupp = df2["K'"].iloc[i]
+                for DelK in DeltaK:
 
-                # Selection rules for K.
-                DeltaK = [0]
-                
+                    # Get current values of J, E and K.
+                    Jupp = df2["J'"].iloc[i]
+                    Eupp = df2["E'"].iloc[i]
+                    Kupp = df2["K'"].iloc[i]
 
+                    # Selection rules for J.
+                    if df["K"].iloc[i] == 0 and DelK == 0:
+                        DeltaJ = [-1, 1]
 
-                # Selection rules for J.
-                if df["K"].iloc[i] == 0:
-                    DeltaJ = [-1, 1]
+                    else:
+                        DeltaJ = [-1, 0, 1]
 
-                else:
-                    DeltaJ = [-1, 0, 1]
+                    # Allowed transition values.
+                    allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
+                    allowedK1 = [Kupp-DelK]
+                    allowedK2 = np.arange(-Jupp+1, Jupp)
 
-                # Allowed transition values.
-                allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
-                allowedK1 = [Kupp-DelK for DelK in DeltaK]
-                allowedK2 = np.arange(-Jupp+1, Jupp)
+            # Final states that agree with the allowed transitions.
+                    df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
+                                              df.K.isin(allowedK2)])
 
-        # Final states that agree with the allowed transitions.
-                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
-                                  df.K.isin(allowedK2)])
+                    # Add values to DataFrame of allowed transitions.
+                    df4["J'"] = Jupp
+                    df4["E'"] = Eupp
+                    df4["K'"] = Kupp
 
-                # Add values to DataFrame of allowed transitions.
-                df4["J'"] = Jupp
-                df4["E'"] = Eupp
-                df4["K'"] = Kupp
-
-                # Save results of iteration.
-                E_list.extend(df4["E"].values)
-                J_list.extend(df4["J"].values)
-                nJ_list.extend(df4["nJ"].values)
-                E_prime_list.extend(df4["E'"].values)
-                J_prime_list.extend(df4["J'"].values)
-                K_list.extend(df4["K"].values)
-                K_prime_list.extend(df4["K'"].values)
-              
-                    
-                    
+                    # Save results of iteration.
+                    E_list.extend(df4["E"].values)
+                    J_list.extend(df4["J"].values)
+                    nJ_list.extend(df4["nJ"].values)
+                    E_prime_list.extend(df4["E'"].values)
+                    J_prime_list.extend(df4["J'"].values)
+                    K_list.extend(df4["K"].values)
+                    K_prime_list.extend(df4["K'"].values)
 
         else:
             print('symmetry type not yet available')
@@ -304,7 +311,6 @@ class Rotational_Energies:
                             "J'": J_prime_list, "K": K_list,
                             "K'": K_prime_list, "nJ": nJ_list})
         self.allowed_combo_data = df3
-        
 
     def transition_freq_and_pop(self):
         """Get the frequency and population of transitions.
@@ -562,7 +568,8 @@ class Rotational_Energies:
         # For every data point.
         for i in range(len(Wave)):
             # Apply voigt optical depth.
-            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10, f=1, gamma=1e7, v_rad=0)
+            tau = voigt_optical_depth(
+                Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10, f=1, gamma=1e7, v_rad=0)
             final_tau = final_tau+tau
 
         # Save results in class.
@@ -606,7 +613,7 @@ class Rotational_Energies:
                 resulting figure.
         """
         dx = np.asarray(self.spectrax[1:])-np.asarray(self.spectrax[0:-1])
-        
+
         d_lambda = lambda0/80000
         sigma_a = d_lambda/2.355
         sigma_p = sigma_a/dx[0]

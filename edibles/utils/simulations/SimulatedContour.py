@@ -6,8 +6,10 @@ from edibles.utils.simulations.SRC.Functions import WavelengthToWavenumber
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, Q_scale=1,
-                      PR_scale=1, Q_Branch=False, lambda0=0,Results_In_Wavenumber=False):
+                      PR_scale=1, Q_Branch=False, lambda0=0, Results_In_Wavenumber=False,
+                      transition_type='Parallel'):
     """Generate simulated contour.
 
     Args:
@@ -25,14 +27,16 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         PR_scale (float, optional): Scale of the P-branch and R-branch. Default to 1.
         Q_Branch (bool, optional): Wheter to consideror not the Q-branch. Default to False.
         lambda0 (float, optional): Center wavelength of DIB (Angstrom). Default to 0.
+        transition_type (str): Transition type to consider. Defaults to Parallel.
+            Options: Parallel, Perpendicular, Both.
 
     Returns:
         re_low.spectrax (1darray): Resulting spectrum.
         re_low.final_y (1darray): Intensity of spectrum.
     """
     # Generate class object.
-    re_low = Rotational_Energies(A=A, B=B, C=C, Target=Target,
-                                 Q_scale=Q_scale, PR_scale=PR_scale)
+    re_low = Rotational_Energies(A=A, B=B, C=C, Target=Target, Q_scale=Q_scale,
+                                 PR_scale=PR_scale, transition_type=transition_type)
 
     # Check for available symmetries.
     if re_low.flag:
@@ -46,8 +50,9 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         re_low.boltzmann(T=Trot)
 
         # Define new class to transitionate.
-        re_up = Rotational_Energies(A=A+Delta_A, B=B+Delta_B, C=C+Delta_C,
-                                    Target=Target, Q_scale=Q_scale, PR_scale=PR_scale)
+        re_up = Rotational_Energies(A=A+Delta_A, B=B+Delta_B, C=C+Delta_C, Target=Target,
+                                    Q_scale=Q_scale, PR_scale=PR_scale,
+                                    transition_type=transition_type)
 
         # Get rotational energies of new class
         re_up.rotational_energies(Jlimit=Jlimit)
@@ -85,10 +90,10 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         # Apply 1D Gaussian kernel.
         re_low.smooth_spectra(lambda0=lambda0, show_figure=False)
 
-        #plt.show()
+        # plt.show()
         if Results_In_Wavenumber:
             return(WavelengthToWavenumber(np.asarray(re_low.spectrax)), re_low.final_y)
-        
+
         else:
             return(re_low.spectrax, re_low.final_y)
 
