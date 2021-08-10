@@ -259,66 +259,40 @@ class Rotational_Energies:
                 Kupp = df2["K'"].iloc[i]
 
                 # Selection rules for K.
-                DeltaK = [0,-1,1]
+                DeltaK = [0]
                 
-                for DelK in DeltaK:
-                    if DelK==0:
 
-                        # Selection rules for J.
-                        if df["K"].iloc[i] == 0:
-                            DeltaJ = [-1, 1]
 
-                        else:
-                            DeltaJ = [-1, 0, 1]
+                # Selection rules for J.
+                if df["K"].iloc[i] == 0:
+                    DeltaJ = [-1, 1]
 
-                        # Allowed transition values.
-                        allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
-                        allowedK1 = [Kupp-DelK for DelK in DeltaK]
-                        allowedK2 = np.arange(-Jupp+1, Jupp)
+                else:
+                    DeltaJ = [-1, 0, 1]
 
-                # Final states that agree with the allowed transitions.
-                        df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
-                                          df.K.isin(allowedK2)])
+                # Allowed transition values.
+                allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
+                allowedK1 = [Kupp-DelK for DelK in DeltaK]
+                allowedK2 = np.arange(-Jupp+1, Jupp)
 
-                        # Add values to DataFrame of allowed transitions.
-                        df4["J'"] = Jupp
-                        df4["E'"] = Eupp
-                        df4["K'"] = Kupp
+        # Final states that agree with the allowed transitions.
+                df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
+                                  df.K.isin(allowedK2)])
 
-                        # Save results of iteration.
-                        E_list.extend(df4["E"].values)
-                        J_list.extend(df4["J"].values)
-                        nJ_list.extend(df4["nJ"].values)
-                        E_prime_list.extend(df4["E'"].values)
-                        J_prime_list.extend(df4["J'"].values)
-                        K_list.extend(df4["K"].values)
-                        K_prime_list.extend(df4["K'"].values)
-                    else:
+                # Add values to DataFrame of allowed transitions.
+                df4["J'"] = Jupp
+                df4["E'"] = Eupp
+                df4["K'"] = Kupp
 
-                        DeltaJ = [-1, 0, 1]
-
-                        # Allowed transition values.
-                        allowedJ = [Jupp-DelJ for DelJ in DeltaJ]
-                        allowedK1 = [Kupp-DelK]
-                        allowedK2 = np.arange(-Jupp+1, Jupp)
-
-                        # Final states that agree with the allowed transitions.
-                        df4 = pd.DataFrame(df.loc[df.J.isin(allowedJ) & df.K.isin(allowedK1) &
-                                          df.K.isin(allowedK2)])
-
-                        # Add values to DataFrame of allowed transitions.
-                        df4["J'"] = Jupp
-                        df4["E'"] = Eupp
-                        df4["K'"] = Kupp
-
-                        # Save results of iteration.
-                        E_list.extend(df4["E"].values)
-                        J_list.extend(df4["J"].values)
-                        nJ_list.extend(df4["nJ"].values)
-                        E_prime_list.extend(df4["E'"].values)
-                        J_prime_list.extend(df4["J'"].values)
-                        K_list.extend(df4["K"].values)
-                        K_prime_list.extend(df4["K'"].values)
+                # Save results of iteration.
+                E_list.extend(df4["E"].values)
+                J_list.extend(df4["J"].values)
+                nJ_list.extend(df4["nJ"].values)
+                E_prime_list.extend(df4["E'"].values)
+                J_prime_list.extend(df4["J'"].values)
+                K_list.extend(df4["K"].values)
+                K_prime_list.extend(df4["K'"].values)
+              
                     
                     
 
@@ -588,8 +562,7 @@ class Rotational_Energies:
         # For every data point.
         for i in range(len(Wave)):
             # Apply voigt optical depth.
-            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10,
-                                      f=1, gamma=1e7, v_rad=0)
+            tau = voigt_optical_depth(Wave, lambda0=Wave[i], b=4.5, N=Intensity[i]*10**10, f=1, gamma=1e7, v_rad=0)
             final_tau = final_tau+tau
 
         # Save results in class.
