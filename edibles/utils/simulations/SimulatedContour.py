@@ -25,7 +25,10 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
         Target (str): Name of the target sightline.
         Q_scale (float, optional): Scale of the Q-branch. Default to 1.
         PR_scale (float, optional): Scale of the P-branch and R-branch. Default to 1.
-        Q_Branch (bool, optional): Wheter to consideror not the Q-branch. Default to False.
+        Q_Branch (bool, optional): Default to False. This parameter only
+                affects linear/spherical tops. When True, the perpendicular
+                band will be computed (it has a Q-branch). When False, then the
+                parallel band will be computed (without Q-branch).
         lambda0 (float, optional): Center wavelength of DIB (Angstrom). Default to 0.
         transition_type (str): Transition type to consider. Defaults to Parallel.
             Options: Parallel, Perpendicular, Both.
@@ -101,9 +104,10 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
 if __name__ == "__main__":
 
     # Perform simulation.
-    sim = Simulated_Contour(A=42e-3, B=42e-3, C=42e-3, Delta_A=42e-3*(0.001),
+    sim = Simulated_Contour(A=42e-2, B=42e-3, C=42e-3, Delta_A=42e-3*(0.001),
                             Delta_B=42e-3*(0.001), Delta_C=42e-3*(0.001), Trot=15,
-                            Jlimit=50, Target='Test', lambda0=6614, Q_Branch=True)
+                            Jlimit=50, Target='Test', lambda0=6614, Q_Branch=True,
+                            transition_type='Both')
 
     # Plot result.
     plt.plot(sim[0], sim[1], 'k-')

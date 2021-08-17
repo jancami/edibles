@@ -38,8 +38,8 @@ class Rotational_Energies:
         Target (str): Name of the target sightline.
         Q_scale (float): Scale of the Q-branch.
         PR_scale (float): Scale of the P-branch and R-branch.
-        transition_type (str): Transition type to consider. Defaults to Parallel.
-            Options: Parallel, Perpendicular, Both.
+        transition_type (str): Transition type to consider in oblate and prolate tops.
+            Defaults to Parallel. Options: Parallel, Perpendicular, Both.
     """
 
     def __init__(self, A, B, C, Target, Q_scale, PR_scale, transition_type='Parallel'):
@@ -202,8 +202,10 @@ class Rotational_Energies:
                 This array must comes from <Rotational_Energies>.J
             Kup (1darray): Values of the upper states of the K rotational number.
             Eup (1darray): Values of the upper states of energy.
-            Q_branch (bool, optional): Default to False. Wheter to consider
-                or not the Q-branch.
+            Q_branch (bool, optional): Default to False. This parameter only
+                affects linear/spherical tops. When True, the perpendicular
+                band will be computed (it has a Q-branch). When False, then the
+                parallel band will be computed (without Q-branch).
         """
         df = pd.concat([self.J, self.K, self.E, self.population], axis=1)
         df.columns = ["J", "K", "E", "nJ"]

@@ -152,7 +152,7 @@ def plot_simulations(simulations, param_name, param_values,
 
     if save:
         plt.savefig(f"{path}/{SymmetryType}_Changing"+param_name+".pdf", dpi=300)
-    #plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -160,8 +160,8 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
                         delta_A_values=None, delta_B_values=None, delta_C_values=None,
                         Q_Branch=True, A_default=0.02, B_default=0.02, C_default=0.02,
                         T_default=10, delta_A_default=0.001, delta_B_default=0.001,
-                        delta_C_default=0.001,Jlimit=200,lambda0=6614, save=False, load=False, save_fig=False,
-                        anim=False, SymmetryType='Prolate'):
+                        delta_C_default=0.001, Jlimit=200, lambda0=6614, save=False, load=False,
+                        save_fig=False, anim=False, SymmetryType='Prolate'):
     """Perform a parameter survey over individual parameters in a Spherical Symmetry.
 
     Generates plots and GIFs of surveys performed over individual parameters.
@@ -175,7 +175,10 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
         delta_A_values (1darray): Array with values of deltaA. Ignored if empty.  Defaults to None.
         delta_B_values (1darray): Values of deltaB. Ignored if empty.  Defaults to None.
         delta_C_values (1darray): Values of deltaC. Ignored if empty.  Defaults to None.
-        Q_Branch (bool, optional): To consider or not the Q-branch. Defaults to True.
+        Q_Branch (bool, optional): Default to False. This parameter only
+                affects linear/spherical tops. When True, the perpendicular
+                band will be computed (it has a Q-branch). When False, then the
+                parallel band will be computed (without Q-branch).
         A_default (float, optional): Default value of A when constant. Defaults to 0.02.
         B_default (float, optional): Default value of B. Defaults to 0.02.
         C_default (float, optional): Default value of C. Defaults to 0.02
@@ -292,7 +295,7 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
 
             # Generates GIF and plot.
             plot_simulations(param_simulations[param], param, parameters[param],
-                             lambda0, path=path, save=save_fig,SymmetryType=SymmetryType)
+                             lambda0, path=path, save=save_fig, SymmetryType=SymmetryType)
 
             if anim:
                 animation(param_simulations[param], param, parameters[param],
