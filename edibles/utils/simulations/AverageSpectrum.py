@@ -6,7 +6,7 @@ from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
-def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False):
+def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False, verbose=True):
 
     oracle = EdiblesOracle()
     List = oracle.getFilteredObsList([Target], Wave=DIB, MergedOnly=True)
@@ -17,7 +17,10 @@ def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False):
     for file in List:
         sp = EdiblesSpectrum(file)
         target_date = str(sp.datetime.date()).replace('-', '_')
-        print(target_date)
+
+        if verbose:
+            print(target_date)
+
         sp.getSpectrum(xmin=DIB-4, xmax=DIB+4)
 
         DIB_wavelength = np.asarray(sp.grid.byteswap().newbyteorder(), dtype='float64')
@@ -45,7 +48,10 @@ def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False):
 
     weig_avg = []
     weig_avg_err = []
-    print(df)
+
+    if verbose:
+        print(df)
+
     for i in range(len(df.index)):
         values = df[df.columns[::2]].iloc[i].values
         error = df[df.columns[1::2]].iloc[i].values
