@@ -38,6 +38,7 @@ class ISLineFitter():
         self.v_res = v_resolution
         self.wave2fit = wave
         self.flux2fit = flux
+        self.SNR = 1.0
 
         # attribute to archive model-fitting history
         self.model_all = []     # self.model_all[n] has n components in it
@@ -73,6 +74,7 @@ class ISLineFitter():
 
         self.wave2fit = self.wave[data_select == 1]
         self.flux2fit = self.flux[data_select == 1]
+        self.SNR = np.max(measure_snr(self.wave2fit, self.flux2fit, block_size=np.min([windowsize/3, 0.5])))
         return self.wave2fit, self.flux2fit
 
     def bayesianCriterion(self, criteria="BIC"):
@@ -162,11 +164,14 @@ class ISLineFitter():
             n_components = len(self.model_all)
             print("\n\nFitting model with %i component..." % (n_components))
             model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
-            result = model2fit.fit(data=self.flux2fit, params=pars_guess, x=self.wave2fit)
+            result = model2fit.fit(data=self.flux2fit,
+                                   params=pars_guess,
+                                   x=self.wave2fit,
+                                   weights=np.ones_like(self.flux2fit) * self.SNR)
             self.__afterFit(model2fit, result)
             stop_flag = self.bayesianCriterion(criteria=criteria)
             if self.verbose >= 1:
-                self.plotModel(which=-1, v_next=self.getNextVoff())
+                self.plotModel(which=-1, v_next=self.getNextVoff(), sleep=10)
             if stop_flag:
                 break
 
@@ -239,7 +244,7 @@ class ISLineFitter():
 
         return model2fit, pars_guess
 
-    def plotModel(self, which=-1, v_next=None):
+    def plotModel(self, which=-1, v_next=None, sleep=None):
         
         fig=plt.figure(figsize=(10, 6.5))
         plt.gcf().subplots_adjust(hspace = 0)
@@ -282,6 +287,8 @@ class ISLineFitter():
         ax2 = fig.add_subplot(spec[2])
         y_res = (self.flux2fit-self.result_all[which].best_fit)/continuum
         plt.plot(self.wave2fit, y_res, color='black', linewidth=0.8)
+        plt.plot(self.wave2fit, np.ones_like(self.wave2fit)/self.SNR, linestyle="--", color="b")
+        plt.plot(self.wave2fit, -1 * np.ones_like(self.wave2fit) / self.SNR, linestyle="--", color="b")
         if v_next is not None:
             yspan = [np.min(y_res), np.max(y_res)]
             line2add = np.asarray(self.air_wavelength) * (1 + v_next / cst.c.to("km/s").value)
@@ -289,7 +296,12 @@ class ISLineFitter():
                 plt.plot([l, l], yspan, color="r")
         plt.ylabel('Residual')
         plt.xlabel('Wavelenght $\AA$')
-        plt.show()
+        if sleep is not None:
+            plt.show(block=False)
+            plt.pause(sleep)
+            plt.close()
+        else:
+            plt.show()
 
     def select_species_data(self, species=None, **kwargs):
     # def select_species_data(self,species=None,Wave=None, WaveMin=None, WaveMax=None,
@@ -424,7 +436,7 @@ class ISLineModel(Model):
                  prefix="",
                  nan_policy="raise",
                  n_step=25,
-                 verbose=1,
+                 verbose=0,
                  **kwargs):
         """
         :param n_components: int, number of velocity components
@@ -437,7 +449,7 @@ class ISLineModel(Model):
         :param nan_policy: from lmfit and Klay's code
         :param n_step: int, no. of points in 1*FWHM during calculation. Under-sample losses information
         but over-sample losses efficiency.
-        :param verbose: int, if verbose > 2, print V_off
+        :param verbose: int, if verbose=1, print V_off; if verbos=2, print all parameter
         :param kwargs: ???
         """
         self.n_components, self.lam_0, self.fjj, self.gamma, self.n_setp = \
@@ -487,6 +499,9 @@ class ISLineModel(Model):
                     Ns = Ns + [kwargs[name]] * len(self.lam_0)
                 if name[0] == "V":
                     V_offs = V_offs + [kwargs[name]] * len(self.lam_0)
+
+            if self.verbose == 1:
+                print("V_off: ", ["%.2f" % item for item in V_offs[0::len(self.lam_0)]])
 
             if self.verbose >= 2:
                 print("========= Line Model =========")
@@ -555,7 +570,7 @@ class ISLineModel(Model):
 
         pars = self.make_params()
         for i, v in enumerate(V_off):
-            pars["%sb_Cloud%i" % (self.prefix, i)].set(value=0.8, min=0, max=10)
+            pars["%sb_Cloud%i" % (self.prefix, i)].set(value=0.8, min=0.1, max=10)
             pars["%sN_Cloud%i" % (self.prefix, i)].set(value=self.N_init, min=0)
             pars["%sV_off_Cloud%i" % (self.prefix, i)].set(value=v, min=v-20, max=v+20)
             # we can further constrain min and max on V_off if we have good estimate.
@@ -614,6 +629,33 @@ def CountFreeParameter(result):
             counter = counter + 1
     return counter
 
+def measure_snr(wave, flux, block_size=1.0):
+    """
+    Estimate SNR of given spectral data
+    :param wave: wavelength grid
+    :type wave: ndarray
+    :param flux: flux
+    :type flux: ndarray
+
+    :return: SNR, SNR of each of the block
+    :rtype: list
+    """
+    # split in blocks of 1 Angstrom.
+    xmin = wave[0]
+    xmax = xmin + block_size
+    SNR = []
+    while xmin < wave[-1]:
+        flux_block = flux[np.where((wave > xmin) & (wave < xmax))]
+        if len(flux_block) == 1:
+            break
+        if (np.nanmean(flux_block) > 0.0):
+            sigma_block = np.nanmean(flux_block) / np.nanstd(flux_block)
+            SNR.append(sigma_block)
+        xmin = xmax.copy()
+        xmax = xmin + block_size
+    return SNR
+
+
 
 if __name__ == "__main__":
     from edibles.utils.edibles_oracle import EdiblesOracle
@@ -626,7 +668,7 @@ if __name__ == "__main__":
     List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
     filename = List.values.tolist()[1]
     sp = EdiblesSpectrum(filename)
-    wave, flux = sp.bary_wave, sp.flux
+    wave, flux = sp.bary_wave, sp.flux # 2 comps if no /10
     if normalized:
         flux = flux / np.percentile(flux, 75)
 

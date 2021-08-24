@@ -145,10 +145,10 @@ class ContinuumModel(Model):
             spline = CubicSpline(x_anchors, y_anchors)
             if self.verbose >= 2:
                 print("====== Spline Continuum ======")
-                x_anchors_p = ["%.2f" % item for item in x_anchors]
+                x_anchors_p = ["%.5f" % item for item in x_anchors]
                 print("Xs: ", x_anchors_p)
 
-                y_anchors_p = ["%.2f" % item for item in y_anchors]
+                y_anchors_p = ["%.5f" % item for item in y_anchors]
                 print("Ys: ", y_anchors_p)
 
             return spline(x)
