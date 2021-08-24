@@ -66,7 +66,7 @@ def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False):
     if save_to_file == True:
         final = pd.DataFrame({"Wavelength": DIB_wavelength,
                              "Flux": df["Weighted_Average"].to_numpy()})
-        final.to_csv("Data/AverageSpectraData/"+str(DIB)+"/"+Sightline+"_avg_spectra.csv")
+        final.to_csv("Data/AverageSpectraData/"+str(DIB)+"/"+Target+"_avg_spectra.csv")
     return(DIB_wavelength, df["Weighted_Average"].to_numpy())
 
 
