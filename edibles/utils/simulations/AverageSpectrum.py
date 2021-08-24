@@ -14,6 +14,9 @@ def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False, ve
     df = pd.DataFrame()
     i = 0.05
 
+    if len(List) == 0:
+        return np.array([[0], [0]])
+
     for file in List:
         sp = EdiblesSpectrum(file)
         target_date = str(sp.datetime.date()).replace('-', '_')
