@@ -11,12 +11,16 @@ def Signal_Noise_Calculator(x_vals, y_vals):
     to the spectrum.
 
     Args:
-        x_vals (1darray): Wavelength values.
-        y_vals (1darray): Flux values
+        x_vals (1darray):
+            Wavelength values.
+        y_vals (1darray):
+            Flux values
 
     Returns:
-        SN (float): The S/N value for the input spectrum.
-        y_fit (1darray): Array consisting of flux values which correspond to the best linear fit
+        SN (float):
+            The S/N value for the input spectrum.
+        y_fit (1darray):
+            Array consisting of flux values which correspond to the best linear fit
             through the input spectrum.
 
     """
@@ -42,11 +46,15 @@ def weighted_average(values, uncertainties):
     of an input set of values
 
     Args:
-        values (1darray): Values to have the average taken of
-        uncertainties (1darray): The uncertainty of the measurement of the values passed
+        values (1darray):
+            Values to have the average taken of
+        uncertainties (1darray):
+            The uncertainty of the measurement of the values passed
     Returns:
-        weighted_average (1d array): Weighted average of the values
-        weighted_average_err (1d array): Uncertainty of the weighted average
+        weighted_average (1d array):
+            Weighted average of the values
+        weighted_average_err (1d array):
+            Uncertainty of the weighted average
     """
     if isinstance(values, pd.Series):
         weights = 1/(uncertainties**2)
@@ -67,11 +75,15 @@ def calculate_average(values, uncertainties):
     Calculate the average, as well as the uncertainty of this average, of an input set of values.
 
     Args:
-        values (1darray or Series): Values to have the average taken of.
-        uncertanties (1darray or Series): The uncertainty of the measurement of the values passed
+        values (1darray or Series):
+            Values to have the average taken of.
+        uncertanties (1darray or Series):
+            The uncertainty of the measurement of the values passed
     Returns:
-        average (1darray or Series): Average of the values
-        uncertainty (1darray or Series): Uncertainty of the average.
+        average (1darray or Series):
+            Average of the values
+        uncertainty (1darray or Series):
+            Uncertainty of the average.
 
     """
     # If/Eslse statement to determine if the values input were stored in arrays or series.
@@ -96,16 +108,22 @@ def Sort_Points(x_values, y_values, error):
     Combine three arrays and sorts by ascending values of the first.
 
     Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+        x_values (1darray):
+            Array of x-values. This array is the one which sorting will be based.
             Each index of this array is related to the same index value of the other two.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same
-            index value of the other two.
-        error (1darray): Array of error values. Each index of this array is related to the same
+        y_values (1darray):
+            Array of y-values. Each index of this array is related to the same index
+            value of the other two.
+        error (1darray):
+            Array of error values. Each index of this array is related to the same
             index value of the other two.
     Returns:
-        x_val (1darray): x_values array sorted in ascending order.
-        y_val (1darray): y_values array sorted based on new index order of x_val.
-        errors (1darray): error array sorted based on new index order of x_val.
+        x_val (1darray):
+            x_values array sorted in ascending order.
+        y_val (1darray):
+            y_values array sorted based on new index order of x_val.
+        errors (1darray):
+            error array sorted based on new index order of x_val.
     """
     to_return = []
     # If/Else statement to confirm that the arrays are the same length. Print error message if not.
@@ -133,20 +151,28 @@ def Sort_Points_4(x_values, y_values, xerr, yerr):
     Combine three arrays and sorts by ascending values of the first.
 
     Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+        x_values (1darray):
+            Array of x-values. This array is the one which sorting will be based.
             Each index of this array is related to the same index value of the other three.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same
+        y_values (1darray):
+            Array of y-values. Each index of this array is related to the same
             index value of the other three.
-        xerr(1darray): Array of error values which correspond to x_values. Each index of this array
+        xerr(1darray):
+            Array of error values which correspond to x_values. Each index of this array
             is related to the same index value of the other three.
 
-        yerr(1darray): Array of error values which correspond to y_values. Each index of this array
+        yerr(1darray):
+            Array of error values which correspond to y_values. Each index of this array
             is related to the same index value of the other three.
     Returns:
-        x_val (1darray): x_values array sorted in ascending order.
-        y_val (1darray): y_values array sorted based on new index order of x_val.
-        xer (1darray): xerr array sorted based on new index order of x_val.
-        yer (1darray): yerr array sorted based on new index order of x_val.
+        x_val (1darray):
+            x_values array sorted in ascending order.
+        y_val (1darray):
+            y_values array sorted based on new index order of x_val.
+        xer (1darray):
+            xerr array sorted based on new index order of x_val.
+        yer (1darray):
+            yerr array sorted based on new index order of x_val.
     """
     to_return = []
     # If/Else statement to confirm that the arrays are the same length. Print error message if not.
@@ -177,13 +203,17 @@ def Sort_Points_2(x_values, y_values):
     Combine three arrays and sorts by ascending values of the first.
 
     Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+        x_values (1darray):
+            Array of x-values. This array is the one which sorting will be based.
             Each index of this array is related to the same index value of the other.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same
+        y_values (1darray):
+            Array of y-values. Each index of this array is related to the same
             index value of the other.
     Returns:
-        x_val (1darray): x_values array sorted in ascending order.
-        y_val (1darray): y_values array sorted based on new index order of x_val.
+        x_val (1darray):
+            x_values array sorted in ascending order.
+        y_val (1darray):
+            y_values array sorted based on new index order of x_val.
     """
     to_return = []
     # If/Else statement to confirm that the arrays are the same length. Print error message if not.

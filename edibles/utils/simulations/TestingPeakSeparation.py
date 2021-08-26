@@ -41,14 +41,22 @@ def test_peak_separation(B, delta, Jlimit, N, Sightline, lambda0, Q_Branch, Q_sc
     Also a plot with the error and relative error.
 
     Args:
-        B (float): Value of rotational constant.
-        delta (float): Percentage of change of the rotational constant to the upper states.
-        Jlimit (int): Upper limit to consider of the rotational quantum number J.
-        N (int): Number of splits in the parameter range for the temperature (10k to 90k).
-        Sightline (str): Target sighline.
-        lambda0 (float): Center wavelength of profile.
-        Q_Branch (bool): Wheter or not to consider the Q branch.
-        Q_scale (float): Scale for the Q branch (if considered).
+        B (float):
+            Value of rotational constant.
+        delta (float):
+            Percentage of change of the rotational constant to the upper states.
+        Jlimit (int):
+            Upper limit to consider of the rotational quantum number J.
+        N (int):
+            Number of splits in the parameter range for the temperature (10k to 90k).
+        Sightline (str):
+            Target sighline.
+        lambda0 (float):
+            Center wavelength of profile.
+        Q_Branch (bool):
+            Wheter or not to consider the Q branch.
+        Q_scale (float):
+            Scale for the Q branch (if considered).
     """
     # Only for spherical tops.
     A = C = B

@@ -32,13 +32,20 @@ def animation(simulations, param_name, param_values,
     some parameter(s).
 
     Args:
-        simulations (list): List with simulations data.
-        param_name (str): Name of varying variable(s).
-        param_values (list): Values of parameters of each simulation.
-        lambda0 (float): Center wavelength of profile.
-        path (str): Directory to save image.
-        fps (int, optional): Frames per second of animation. Defaults to 5.
-        plot_min (bool, optional): To plot local minimum values or not. Defaults to False.
+        simulations (list):
+            List with simulations data.
+        param_name (str):
+            Name of varying variable(s).
+        param_values (list):
+            Values of parameters of each simulation.
+        lambda0 (float):
+            Center wavelength of profile.
+        path (str):
+            Directory to save image.
+        fps (int, optional):
+            Frames per second of animation. Defaults to 5.
+        plot_min (bool, optional):
+            To plot local minimum values or not. Defaults to False.
     """
     # Fig object and size.
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -129,11 +136,16 @@ def plot_simulations(simulations, param_name, param_values,
     parameter(s).
 
     Args:
-        simulations (list): List with simulations data.
-        param_name (str): Name of varying variable(s).
-        param_values (list): Values of parameters of each simulation.
-        lambda0 (float): Center wavelength of profile.
-        path (str): Directory to save image.
+        simulations (list):
+            List with simulations data.
+        param_name (str):
+            Name of varying variable(s).
+        param_values (list):
+            Values of parameters of each simulation.
+        lambda0 (float):
+            Center wavelength of profile.
+        path (str):
+            Directory to save image.
     """
     # Colours for plots
     colours = [colormap(i) for i in np.linspace(0, 0.9, len(param_values))]
@@ -175,30 +187,49 @@ def one_variable_survey(path, A_values=None, B_values=None, C_values=None, T_val
     (T, A, B, C, delta_A, delta_B and delta_C).
 
     Args:
-        A_values (1darray): Array with values of A. Ignored if empty. Defaults to None.
-        B_values (1darray): Values of B. Ignored if empty. Defaults to None.
-        C_values (1darray): Values of C. Ignored if empty. Defaults to None.
-        T_values (1darray): Values of T. Ignored if empty. Defaults to None.
-        delta_A_values (1darray): Array with values of deltaA. Ignored if empty.  Defaults to None.
-        delta_B_values (1darray): Values of deltaB. Ignored if empty.  Defaults to None.
-        delta_C_values (1darray): Values of deltaC. Ignored if empty.  Defaults to None.
-        Q_Branch (bool, optional): Default to False. This parameter only
-                affects linear/spherical tops. When True, the perpendicular
-                band will be computed (it has a Q-branch). When False, then the
-                parallel band will be computed (without Q-branch).
-        A_default (float, optional): Default value of A when constant. Defaults to 0.02.
-        B_default (float, optional): Default value of B. Defaults to 0.02.
-        C_default (float, optional): Default value of C. Defaults to 0.02
-        T_default (float, optional): Defaults to 10
-        delta_A_default (float, optional): Defaults to 0.001
-        delta_B_default (float, optional): Defaults to 0.001
-        delta_C_default (float, optional): Defaults to 0.001
-        Jlimit (float, optional): Defaults to 200. How many values of J to consider.
-        lambda0 (float, optional): Defaults to 6614. Center wavelength (in A) of profile
-        save_fig (bool, optional): Defaults to False.
-        anim (bool, optional): Create GIF or not. Defaults to False.
-        SymmetryType (str, optional): Type of symmetry of molecule. Options Oblate, Prolate
-            or Spherical. Defaults to Prolate.
+        A_values (1darray):
+            Array with values of A. Ignored if empty. Defaults to None.
+        B_values (1darray):
+            Values of B. Ignored if empty. Defaults to None.
+        C_values (1darray):
+            Values of C. Ignored if empty. Defaults to None.
+        T_values (1darray):
+            Values of T. Ignored if empty. Defaults to None.
+        delta_A_values (1darray):
+            Array with values of deltaA. Ignored if empty.  Defaults to None.
+        delta_B_values (1darray):
+            Values of deltaB. Ignored if empty.  Defaults to None.
+        delta_C_values (1darray):
+            Values of deltaC. Ignored if empty.  Defaults to None.
+        Q_Branch (bool, optional):
+            Default to False. This parameter only affects linear/spherical tops.
+            When True, the perpendicular band will be computed (it has a Q-branch).
+            When False, then the parallel band will be computed (without Q-branch).
+        A_default (float, optional):
+            Default value of A when constant. Defaults to 0.02.
+        B_default (float, optional):
+            Default value of B. Defaults to 0.02.
+        C_default (float, optional):
+            Default value of C. Defaults to 0.02
+        T_default (float, optional):
+            Defaults to 10
+        delta_A_default (float, optional):
+            Defaults to 0.001
+        delta_B_default (float, optional):
+            Defaults to 0.001
+        delta_C_default (float, optional):
+            Defaults to 0.001
+        Jlimit (float, optional):
+            Defaults to 200. How many values of J to consider.
+        lambda0 (float, optional):
+            Defaults to 6614. Center wavelength (in A) of profile
+        save_fig (bool, optional):
+            Defaults to False.
+        anim (bool, optional):
+            Create GIF or not. Defaults to False.
+        SymmetryType (str, optional):
+            Type of symmetry of molecule. Options Oblate, Prolate or Spherical.
+            Defaults to Prolate.
     """
     # Declare constants
 
@@ -314,18 +345,28 @@ def assign_two_variables(value1, value2, name1, name2,
     """Assign parameters values in the two-parameter survey.
 
     Args:
-        value1 (float): Value of the first variable.
-        value2 (float): Value of the second variable.
-        name1 (str): Name of first variable (B, T or delta).
-        name2 (str): Name of second variable.
-        B_default (float): Default value of B when constant.
-        T_default (float): Default value of T.
-        delta_default (float): Default value of delta.
+        value1 (float):
+            Value of the first variable.
+        value2 (float):
+            Value of the second variable.
+        name1 (str):
+            Name of first variable (B, T or delta).
+        name2 (str):
+            Name of second variable.
+        B_default (float):
+            Default value of B when constant.
+        T_default (float):
+            Default value of T.
+        delta_default (float):
+            Default value of delta.
 
     Returns:
-        B (float): Final value of B
-        T (float): Value of T.
-        delta (float): Value of delta.
+        B (float):
+            Final value of B
+        T (float):
+            Value of T.
+        delta (float):
+            Value of delta.
     """
     if name1 == 'B':
         B = value1
@@ -371,25 +412,34 @@ def two_variable_survey(path, B_values, T_values, delta_values, Q_Branch=True,
     optional.
 
     Args:
-        path (str): Directory for saving simulations and figures.
-        B_values (1darray): Parameter space values of rotational constant.
-        T_values (1darray): Values of rotational temperature.
-        delta_values (1darray): Values of the change in the rotational constant
-            to the upper level.
-        Q_Branch (bool, optional): Specify if consider the Q_branch or not.
-            Defaults to True.
-        B_default (float, optional): Default value of B when constant. Defaults
-            to 0.02.
-        T_default (float, optional): Default value of T. Defaults to 10.
-        delta_default (float, optional): Default value of deltaB. Defaults to 0.
-        save (bool, optional): If True, the survey simulations are saved on the
+        path (str):
+            Directory for saving simulations and figures.
+        B_values (1darray):
+            Parameter space values of rotational constant.
+        T_values (1darray):
+            Values of rotational temperature.
+        delta_values (1darray):
+            Values of the change in the rotational constant to the upper level.
+        Q_Branch (bool, optional):
+            Specify if consider the Q_branch or not. Defaults to True.
+        B_default (float, optional):
+            Default value of B when constant. Defaults to 0.02.
+        T_default (float, optional):
+            Default value of T. Defaults to 10.
+        delta_default (float, optional):
+            Default value of deltaB. Defaults to 0.
+        save (bool, optional):
+            If True, the survey simulations are saved on the
             provided path. Defaults to False.
-        load (bool, optional): If True, the simulations are loaded instead of
+        load (bool, optional):
+            If True, the simulations are loaded instead of
             computed. A previous executions whit save = True is necessary.
             Defaults to False.
-        plot_wavenumber (bool, optional): If True, the plots are created with
-            wavenumbers instead of wavelength. Defaults to True.
-        Q_scale (float, optional): Scale factor for the Q_branch. Defaults to 1.
+        plot_wavenumber (bool, optional):
+            If True, the plots are created with wavenumbers instead of wavelength.
+            Defaults to True.
+        Q_scale (float, optional):
+            Scale factor for the Q_branch. Defaults to 1.
 
     Returns:
         None.
@@ -474,13 +524,20 @@ def plot_grid(simulations, parameters, param_values,
     surveys or new ones.
 
     Args:
-        simulations (dict): Dictionary containing the simulations.
-        parameters (dict): Dictionary of parameters used in each simulation.
-        param_values (dict): Dictionary with parameter space used in the simulation.
-        lambda0 (float): Center wavelength of interest (same as simulation).
-        path (str): Directory for saving plots.
-        SymmetryType (str): Symmetry type of simulations.
-        plot_wavenumber (bool): If true, the plots will be generated in wavenumber space.
+        simulations (dict):
+            Dictionary containing the simulations.
+        parameters (dict):
+            Dictionary of parameters used in each simulation.
+        param_values (dict):
+            Dictionary with parameter space used in the simulation.
+        lambda0 (float):
+            Center wavelength of interest (same as simulation).
+        path (str):
+            Directory for saving plots.
+        SymmetryType (str):
+            Symmetry type of simulations.
+        plot_wavenumber (bool):
+            If true, the plots will be generated in wavenumber space.
 
     Returns:
         None.
@@ -553,32 +610,49 @@ def single_two_variable_survey(path, values1, values2, name1, name2, Q_Branch=Tr
     deltaC, and T. This method also creates a single grid plot of the survey.
 
     Args:
-        path (str): Directory to save plot and simulation (if specified).
-        values1 (1darray): Array with values of the first varying parameter.
-        values2 (1darray): Array with values of the second varying parameter.
-        name1 (str): Name of the first varying parameter. Options: A, B, C, T, delta_A,
-            delta_B, delta_C.
-        name2 (str): Name of the second varying parameter.
-        Q_Branch (bool, optional): If True, the Q_branch is considered in simulations
-            (only affects in Spherical tops). Defaults to True.
-        A_default (float, optional): Default value for rotational constant A. Defaults to 0.02.
-        B_default (float, optional): Default value for rotational constant B. Defaults to 0.02.
-        C_default (float, optional): Default value for rotational constant C. Defaults to 0.02.
-        T_default (float, optional): Default value for temperature T. Defaults to 10.
-        delta_A_default (float, optional): Default value for the change in the rotational
-            constant A, delta_A. Defaults to 0.
-        delta_B_default (float, optional): Default value for delta_B. Defaults to 0.
-        delta_C_default (float, optional): Default value for delta_C. Defaults to 0.
-        save (bool, optional): If true, the resulting simulation is saved in the directory.
+        path (str):
+            Directory to save plot and simulation (if specified).
+        values1 (1darray):
+            Array with values of the first varying parameter.
+        values2 (1darray):
+            Array with values of the second varying parameter.
+        name1 (str):
+            Name of the first varying parameter. Options: A, B, C, T, delta_A, delta_B, delta_C.
+        name2 (str):
+            Name of the second varying parameter.
+        Q_Branch (bool, optional):
+            If True, the Q_branch is considered in simulations (only affects in Spherical tops).
+            Defaults to True.
+        A_default (float, optional):
+            Default value for rotational constant A. Defaults to 0.02.
+        B_default (float, optional):
+            Default value for rotational constant B. Defaults to 0.02.
+        C_default (float, optional):
+            Default value for rotational constant C. Defaults to 0.02.
+        T_default (float, optional):
+            Default value for temperature T. Defaults to 10.
+        delta_A_default (float, optional):
+            Default value for the change in the rotational constant A, delta_A. Defaults to 0.
+        delta_B_default (float, optional):
+            Default value for delta_B. Defaults to 0.
+        delta_C_default (float, optional):
+            Default value for delta_C. Defaults to 0.
+        save (bool, optional):
+            If true, the resulting simulation is saved in the directory.
             Defaults to False.
-        load (bool, optional): If True, the simulations are loaded instead of computed.
-            A previous executions whit save = True is necessary. Defaults to False.
-        plot_wavenumber (bool, optional): If True, the plots are created with wavenumbers
-            instead of wavelength. Defaults to True.
-        Q_scale (float, optional): Scale factor for the Q_branch. Defaults to 1.
-        plot (bool, optional): If true, the grid plot of the survey is created. Defaults to True.
-        SymmetryType (str, optional): Symmetry type to consider. It must agree with A, B,
-            and C values. Defaults to 'Spherical'.
+        load (bool, optional):
+            If True, the simulations are loaded instead of computed. A previous executions
+            whit save = True is necessary. Defaults to False.
+        plot_wavenumber (bool, optional):
+            If True, the plots are created with wavenumbers instead of wavelength.
+            Defaults to True.
+        Q_scale (float, optional):
+            Scale factor for the Q_branch. Defaults to 1.
+        plot (bool, optional):
+            If true, the grid plot of the survey is created. Defaults to True.
+        SymmetryType (str, optional):
+            Symmetry type to consider. It must agree with A, B, and C values.
+            Defaults to 'Spherical'.
 
     Returns:
         None.

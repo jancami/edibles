@@ -16,17 +16,21 @@ def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False, ve
     """Create a DIB profile with an average spectrum for a sightline.
 
     Args:
-        DIB (int): Center wavelength of DIB.
-        Target (str): Sightline of observation. Usually "HD {integer number}"
-        save_to_file (bool, optional): If True, it saves the resulting profile.
-            Defaults to False.
-        save_figure (bool, optional): If True, it creates a plot of the resulting profile
-            and saves it. This plot contains the SN ratio. Defaults to False.
-        verbose (bool, optional): If True, print the target date and resulting profile.
-            Defaults to True.
+        DIB (int):
+            Center wavelength of DIB.
+        Target (str):
+            Sightline of observation. Usually "HD {integer number}"
+        save_to_file (bool, optional):
+            If True, it saves the resulting profile. Defaults to False.
+        save_figure (bool, optional):
+            If True, it creates a plot of the resulting profile and saves it.
+            This plot contains the SN ratio. Defaults to False.
+        verbose (bool, optional):
+            If True, print the target date and resulting profile. Defaults to True.
 
     Returns:
-        2darray: Resulting average profile in the form of (wavelength, intensity).
+        2darray:
+            Resulting average profile in the form of (wavelength, intensity).
     """
     # Get Edibles files of that sightline.
     oracle = EdiblesOracle()

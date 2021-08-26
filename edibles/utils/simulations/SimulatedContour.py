@@ -13,29 +13,44 @@ def Simulated_Contour(A, Delta_A, B, Delta_B, C, Delta_C, Trot, Jlimit, Target, 
     """Generate simulated contour.
 
     Args:
-        A (float): Rotational constant of the first rotational axis.
-        Delta_A (float): Difference between the values of the first rotational constant of the 
+        A (float):
+            Rotational constant of the first rotational axis.
+        Delta_A (float):
+            Difference between the values of the first rotational constant of the 
             upper and lower states.
-        B (float): Constant of the second axis.
-        Delta_B (float): Difference of the second constant.
-        C (float): Constant of the third axis.
-        Delta_C (float): Difference of the third constant.
-        Trot (float): Temperature (Kelvin degrees).
-        Jlimit (int): Upper bound of the first rotational quantum number J.
-        Target (str): Name of the target sightline.
-        Q_scale (float, optional): Scale of the Q-branch. Default to 1.
-        PR_scale (float, optional): Scale of the P-branch and R-branch. Default to 1.
-        Q_Branch (bool, optional): Default to False. This parameter only
-                affects linear/spherical tops. When True, the perpendicular
-                band will be computed (it has a Q-branch). When False, then the
-                parallel band will be computed (without Q-branch).
-        lambda0 (float, optional): Center wavelength of DIB (Angstrom). Default to 0.
-        transition_type (str): Transition type to consider. Defaults to Parallel.
+        B (float):
+            Constant of the second axis.
+        Delta_B (float):
+            Difference of the second constant.
+        C (float):
+            Constant of the third axis.
+        Delta_C (float):
+            Difference of the third constant.
+        Trot (float):
+            Temperature (Kelvin degrees).
+        Jlimit (int):
+            Upper bound of the first rotational quantum number J.
+        Target (str):
+            Name of the target sightline.
+        Q_scale (float, optional):
+            Scale of the Q-branch. Default to 1.
+        PR_scale (float, optional):
+            Scale of the P-branch and R-branch. Default to 1.
+        Q_Branch (bool, optional):
+            Default to False. This parameter only affects linear/spherical tops.
+            When True, the perpendicular band will be computed (it has a Q-branch).
+            When False, then the parallel band will be computed (without Q-branch).
+        lambda0 (float, optional):
+            Center wavelength of DIB (Angstrom). Default to 0.
+        transition_type (str):
+            Transition type to consider. Defaults to Parallel.
             Options: Parallel, Perpendicular, Both.
 
     Returns:
-        re_low.spectrax (1darray): Resulting spectrum.
-        re_low.final_y (1darray): Intensity of spectrum.
+        re_low.spectrax (1darray):
+            Resulting spectrum.
+        re_low.final_y (1darray):
+            Intensity of spectrum.
     """
     # Generate class object.
     re_low = Rotational_Energies(A=A, B=B, C=C, Target=Target, Q_scale=Q_scale,

@@ -19,10 +19,12 @@ def WavelengthToWavenumber(values):
     """Convert wavelength to wavenumber.
 
     Args:
-        values (1darray): Array with wavelengths
+        values (1darray):
+            Array with wavelengths
 
     Returns:
-        wavenumbers (1darray): Array with wavenumbers.
+        wavenumbers (1darray):
+            Array with wavenumbers.
     """
     wavenumbers = 1/(values*(10**-8))
     return(wavenumbers)
@@ -32,14 +34,21 @@ class Rotational_Energies:
     """Simulate the PQR-branches of a molecule with known symmetry.
 
     Args:
-        A (float): Rotational constant of the first rotational axis.
-        B (float): Constant of the second axis.
-        C (float): Constant of the third axis.
-        Target (str): Name of the target sightline.
-        Q_scale (float): Scale of the Q-branch.
-        PR_scale (float): Scale of the P-branch and R-branch.
-        transition_type (str): Transition type to consider in oblate and prolate tops.
-            Defaults to Parallel. Options: Parallel, Perpendicular, Both.
+        A (float):
+            Rotational constant of the first rotational axis.
+        B (float):
+            Constant of the second axis.
+        C (float):
+            Constant of the third axis.
+        Target (str):
+            Name of the target sightline.
+        Q_scale (float):
+            Scale of the Q-branch.
+        PR_scale (float):
+            Scale of the P-branch and R-branch.
+        transition_type (str):
+            Transition type to consider in oblate and prolate tops. Defaults to Parallel.
+            Options: Parallel, Perpendicular, Both.
     """
 
     def __init__(self, A, B, C, Target, Q_scale, PR_scale, transition_type='Parallel'):
@@ -88,7 +97,8 @@ class Rotational_Energies:
         combinations of the rotational quantum numbers.
 
         Args:
-            Jlimit (int): Upper bound of the first rotational quantum number J.
+            Jlimit (int):
+                Upper bound of the first rotational quantum number J.
         """
         # print("Calculating rotational energy values")
         self.Jlimit = Jlimit
@@ -130,7 +140,8 @@ class Rotational_Energies:
         a given temperature.
 
         Args:
-            T (float): Temperature (Kelvin degrees).
+            T (float):
+                Temperature (Kelvin degrees).
         """
         # print("Calculating state population")
         h = const.h.value
@@ -198,14 +209,17 @@ class Rotational_Energies:
         arguments but potentially different values of A, B and C.
 
         Args:
-            Jup (1darray): Values of the upper states of the J rotational number.
-                This array must comes from <Rotational_Energies>.J
-            Kup (1darray): Values of the upper states of the K rotational number.
-            Eup (1darray): Values of the upper states of energy.
-            Q_branch (bool, optional): Default to False. This parameter only
-                affects linear/spherical tops. When True, the perpendicular
-                band will be computed (it has a Q-branch). When False, then the
-                parallel band will be computed (without Q-branch).
+            Jup (1darray):
+                Values of the upper states of the J rotational number. This array must comes
+                from <Rotational_Energies>.J
+            Kup (1darray):
+                Values of the upper states of the K rotational number.
+            Eup (1darray):
+                Values of the upper states of energy.
+            Q_branch (bool, optional):
+                Default to False. This parameter only affects linear/spherical tops.
+                When True, the perpendicular band will be computed (it has a Q-branch).
+                When False, then the parallel band will be computed (without Q-branch).
         """
         df = pd.concat([self.J, self.K, self.E, self.population], axis=1)
         df.columns = ["J", "K", "E", "nJ"]
@@ -416,8 +430,8 @@ class Rotational_Energies:
         of the rotational constants.
 
         Args:
-            K_values (1darray): K values to compare (integer numbers). Only
-                two numbers are recomended.
+            K_values (1darray):
+                K values to compare (integer numbers). Only two numbers are recomended.
         """
         # DataFrame of transitions.
         df = pd.DataFrame({"Trans_Freqs": self.transition_freqs,
@@ -459,15 +473,20 @@ class Rotational_Energies:
         """Resample data with a given interval.
 
         Args:
-            X (1darray): Data of the X axis.
-            Y (1darray): Data of the Y axis.
-            bin_size (float): Interval for resampling.
-            Verbose (bool, optional): Default to False. Wheter or not to
-                describe progress of execution.
+            X (1darray):
+                Data of the X axis.
+            Y (1darray):
+                Data of the Y axis.
+            bin_size (float):
+                Interval for resampling.
+            Verbose (bool, optional):
+                Default to False. Wheter or not to describe progress of execution.
 
         Returns:
-            rebinned_x (1darray): Resampled X data.
-            rebinned_y (1darray): Resampled Y data.
+            rebinned_x (1darray):
+                Resampled X data.
+            rebinned_y (1darray):
+                Resampled Y data.
         """
         rebinned_x, rebinned_y = [], []
 
@@ -522,13 +541,18 @@ class Rotational_Energies:
         """Transform and resample data to final contour data.
 
         Args:
-            X (1darray): X data array. Must have 1/cm units.
-            Y (1darray): y data array.
-            lambda0 (float): Center wavelength of DIB. (Angstrom)
+            X (1darray):
+                X data array. Must have 1/cm units.
+            Y (1darray):
+                y data array.
+            lambda0 (float):
+                Center wavelength of DIB. (Angstrom)
 
         Returns:
-            Final_X (1darray): Final transformed X data.
-            Y_sampled (1darray): Final transformed Y data.
+            Final_X (1darray):
+                Final transformed X data.
+            Y_sampled (1darray):
+                Final transformed Y data.
         """
         # Some constants.
         c = const.c.to('km/s')
@@ -553,9 +577,10 @@ class Rotational_Energies:
         distributions) to model the (frecuency, intensity) class data.
 
         Args:
-            lambda0 (float): Center wavelength of DIB. (Angstroms).
-            show_figure (bool): Default to False. Wheter or not to show the
-                resulting figure.
+            lambda0 (float):
+                Center wavelength of DIB. (Angstroms).
+            show_figure (bool):
+                Default to False. Wheter or not to show the resulting figure.
         """
         # Get data from class.
         X = self.transition_freqs
@@ -588,8 +613,8 @@ class Rotational_Energies:
         """Apply radiative transfer to data from voigt profile.
 
         Args:
-            show_figure (bool, optional): Defalut is False. Wheter or not to show the
-                resulting figure.
+            show_figure (bool, optional):
+                Defalut is False. Wheter or not to show the resulting figure.
         """
         self.simple_rt_y = 1-self.spectray
         self.full_rt_y = np.exp(-self.spectray)
@@ -610,9 +635,10 @@ class Rotational_Energies:
         Smooth spectra via a 1D Gaussian Kernel.
 
         Args:
-            lambda0  (float): Center wavelenght of DIB. (Angstroms).
-            show_figure (bool, optional): Defalut is False. Wheter or not to show the
-                resulting figure.
+            lambda0  (float):
+                Center wavelenght of DIB. (Angstroms).
+            show_figure (bool, optional):
+                Defalut is False. Wheter or not to show the resulting figure.
         """
         dx = np.asarray(self.spectrax[1:])-np.asarray(self.spectrax[0:-1])
 
