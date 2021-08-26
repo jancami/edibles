@@ -1,21 +1,23 @@
+"""Python script to hold all of the little functions that get used throughout this project."""
 from lmfit.models import LinearModel
 import numpy as np
 import pandas as pd
-"""
-Python script to hold all of the little functions that get used throughout this project"
-"""
 
 
 def Signal_Noise_Calculator(x_vals, y_vals):
-    """
-    Calculates the signal to noise ratio (S/N) of a inputted spectrum by fitting a linear model to the spectrum.
+    """Calculate the signal to noise ratio (S/N).
+
+    Calculate the signal to noise ratio (S/N) of a inputted spectrum by fitting a linear model
+    to the spectrum.
+
     Args:
         x_vals (1darray): Wavelength values.
         y_vals (1darray): Flux values
 
     Returns:
         SN (float): The S/N value for the input spectrum.
-        y_fit (1darray): Array consisting of flux values which correspond to the best linear fit through the input spectrum.
+        y_fit (1darray): Array consisting of flux values which correspond to the best linear fit
+            through the input spectrum.
 
     """
     # Fit a linear model through the inpit x_vals and y_vals
@@ -34,15 +36,17 @@ def Signal_Noise_Calculator(x_vals, y_vals):
 
 
 def weighted_average(values, uncertainties):
-    """
-    Calculates the weighted average, as well as the uncertainty of this average, of an input set of values
+    """Calculate the weithted average and it´s unvertainity.
+
+    Calculate the weighted average, as well as the uncertainty of this average,
+    of an input set of values
+
     Args:
-        values (1darray): Values to have the average taken of.
-        uncertanties (1darray): The uncertainty of the measurement of the values passed
+        values (1darray): Values to have the average taken of
+        uncertainties (1darray): The uncertainty of the measurement of the values passed
     Returns:
         weighted_average (1d array): Weighted average of the values
-        weighted_average_err (1d array): Uncertainty of the weighted average.
-
+        weighted_average_err (1d array): Uncertainty of the weighted average
     """
     if isinstance(values, pd.Series):
         weights = 1/(uncertainties**2)
@@ -60,7 +64,8 @@ def weighted_average(values, uncertainties):
 
 def calculate_average(values, uncertainties):
     """
-    Calculates the average, as well as the uncertainty of this average, of an input set of values.
+    Calculate the average, as well as the uncertainty of this average, of an input set of values.
+
     Args:
         values (1darray or Series): Values to have the average taken of.
         uncertanties (1darray or Series): The uncertainty of the measurement of the values passed
@@ -69,7 +74,9 @@ def calculate_average(values, uncertainties):
         uncertainty (1darray or Series): Uncertainty of the average.
 
     """
-    # If/Es = lse statement to determine if the values input were stored in arrays or series. The inner working of both components are the same, but the manipulation is different due to different types. Hope is to eventually transition to only using series in this project.
+    # If/Eslse statement to determine if the values input were stored in arrays or series.
+    # The inner working of both components are the same, but the manipulation is different due
+    # to different types. Hope is to eventually transition to only using series in this project.
     if isinstance(values, pd.Series):
 
         average = values.sum()/values.size
@@ -86,11 +93,15 @@ def calculate_average(values, uncertainties):
 
 def Sort_Points(x_values, y_values, error):
     """
-    Function which combines three arrays and sorts by ascending values of the first.
+    Combine three arrays and sorts by ascending values of the first.
+
     Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based. Each index of this array is related to the same index value of the other two.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same index value of the other two.
-        error (1darray): Array of error values. Each index of this array is related to the same index value of the other two.
+        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+            Each index of this array is related to the same index value of the other two.
+        y_values (1darray): Array of y-values. Each index of this array is related to the same
+            index value of the other two.
+        error (1darray): Array of error values. Each index of this array is related to the same
+            index value of the other two.
     Returns:
         x_val (1darray): x_values array sorted in ascending order.
         y_val (1darray): y_values array sorted based on new index order of x_val.
@@ -119,13 +130,18 @@ def Sort_Points(x_values, y_values, error):
 
 def Sort_Points_4(x_values, y_values, xerr, yerr):
     """
-    Function which combines three arrays and sorts by ascending values of the first.
-    Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based. Each index of this array is related to the same index value of the other three.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same index value of the other three.
-        xerr(1darray): Array of error values which correspond to x_values. Each index of this array is related to the same index value of the other three.
+    Combine three arrays and sorts by ascending values of the first.
 
-        yerr(1darray): Array of error values which correspond to y_values. Each index of this array is related to the same index value of the other three.
+    Args:
+        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+            Each index of this array is related to the same index value of the other three.
+        y_values (1darray): Array of y-values. Each index of this array is related to the same
+            index value of the other three.
+        xerr(1darray): Array of error values which correspond to x_values. Each index of this array
+            is related to the same index value of the other three.
+
+        yerr(1darray): Array of error values which correspond to y_values. Each index of this array
+            is related to the same index value of the other three.
     Returns:
         x_val (1darray): x_values array sorted in ascending order.
         y_val (1darray): y_values array sorted based on new index order of x_val.
@@ -158,10 +174,13 @@ def Sort_Points_4(x_values, y_values, xerr, yerr):
 
 def Sort_Points_2(x_values, y_values):
     """
-    Function which combines three arrays and sorts by ascending values of the first.
+    Combine three arrays and sorts by ascending values of the first.
+
     Args:
-        x_values (1darray): Array of x-values. This array is the one which sorting will be based. Each index of this array is related to the same index value of the other.
-        y_values (1darray): Array of y-values. Each index of this array is related to the same index value of the other.
+        x_values (1darray): Array of x-values. This array is the one which sorting will be based.
+            Each index of this array is related to the same index value of the other.
+        y_values (1darray): Array of y-values. Each index of this array is related to the same
+            index value of the other.
     Returns:
         x_val (1darray): x_values array sorted in ascending order.
         y_val (1darray): y_values array sorted based on new index order of x_val.
