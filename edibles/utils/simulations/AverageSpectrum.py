@@ -1,3 +1,9 @@
+"""This script computes the average spectrum for a given DIB and sightline.
+
+For a given sightline, a profile is created with the average spectrum. The S/N ratio
+is computed too. The resulting profile is for a given DIB, in a range of (DIB-4, DIB+4).
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +13,21 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
 def CreateAverageSpectrum(DIB, Target, save_to_file=False, save_figure=False, verbose=True):
+    """Create a DIB profile with an average spectrum for a sightline.
 
+    Args:
+        DIB (int): Center wavelength of DIB.
+        Target (str): Sightline of observation. Usually "HD {integer number}"
+        save_to_file (bool, optional): If True, it saves the resulting profile.
+            Defaults to False.
+        save_figure (bool, optional): If True, it creates a plot of the resulting profile
+            and saves it. This plot contains the SN ratio. Defaults to False.
+        verbose (bool, optional): If True, print the target date and resulting profile.
+            Defaults to True.
+
+    Returns:
+        2darray: Resulting average profile in the form of (wavelength, intensity).
+    """
     oracle = EdiblesOracle()
     List = oracle.getFilteredObsList([Target], Wave=DIB, MergedOnly=True)
 
