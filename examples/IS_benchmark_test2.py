@@ -18,7 +18,7 @@
 # Comments
 # 1. Reduced Chi-Sqr is much smaller in the first test, something in the "continuum region"
 #    may not have been addressed.
-# 2. Fitting results depends on 
+# 2. Fitting results depends on window size and method used (AIC or BIC) to a certain degree
 
 
 
@@ -64,8 +64,7 @@ plt.close()
 print("SNR", SNR)
 print("N_points", len(wave))
 
-# Test 1, see how weights/errors affect AIC/BIC/chisqr
-# will use an 1AA window
+# See how window size will affect fitting results
 for test in [0,1,2,3]:
     wave2fit = wave[(wave >= 7699.15 - test*0.2) & (wave <= 7699.5 + test*0.2)]
     flux2fit = flux[(wave >= 7699.15 - test*0.2) & (wave <= 7699.5 + test*0.2)]
