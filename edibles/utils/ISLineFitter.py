@@ -53,7 +53,8 @@ class ISLineFitter():
         # verbose is to control the output will fitting.
         # 0: super-simplified, you know the current no. of components, final fitting results only
         # 1: default, you also have fitting result of each model and Bayesian criterion
-        # 2: debug, step by step, for debug purpose
+        # 2: simple debug, line model prints V_off for each calculation, to see speed and where get stack etc.
+        # 3: deep debug, models prints all parameter each time, focusing on calculation rather than BIC/AIC/F-test
         self.verbose = verbose
 
         # if normalized set to True, no continuum model will be generated
@@ -79,8 +80,9 @@ class ISLineFitter():
 
     def bayesianCriterion(self, criteria="BIC"):
         # do the Baysian analysis to determine if self.model_all[-1] is better than self.model_all[-2]
-        # if pass: return False to keep adding new components
-        # if not pass: return True to exit
+        # Returns: should we STOP?
+        # If False, continue with n+1 components
+        # if True, stop here, and report n-1 components
 
         assert criteria.upper() in ["B", "BIC", "A", "AIC", "F", "F_TEST", "FTEST"], \
             "Allowed criteria are 'BIC', 'AIC', or 'F_Test'"
@@ -101,7 +103,7 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("BIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
-                    print("Failed and switch back to last model...\n")
+                    print("Failed and switch back to the last model...\n")
                 return True
 
         # Akaike information criterion, or AIC
@@ -116,7 +118,7 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("AIC Test, %.2f > %.2f" % (self.result_all[-1].bic, self.result_all[-2].bic))
-                    print("Failed and switch back to last model...\n")
+                    print("Failed and switch back to the last model...\n")
                 return True
 
         # F-test
@@ -138,7 +140,7 @@ class ISLineFitter():
                 if self.verbose >= 1:
                     self.__reportParams()
                     print("P-value, %.2f > 0.05" % (1 - p_value))
-                    print("Failed and switch back to last model...\n")
+                    print("Failed and switch back to the last model...\n")
                 return True
 
     def fit(self, species="KI", n_anchors=5, windowsize=3, criteria="BIC", **kwargs):
@@ -162,7 +164,8 @@ class ISLineFitter():
         ######### Step 3 and 4: build model, fit, repeat ##########
         while True:
             n_components = len(self.model_all)
-            print("\n\nFitting model with %i component..." % (n_components))
+            print("\n" + "="*40)
+            print("Fitting model with %i component..." % (n_components))
             model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
             result = model2fit.fit(data=self.flux2fit,
                                    params=pars_guess,
@@ -182,7 +185,7 @@ class ISLineFitter():
             which = which + len(self.result_all)
 
         if which >= 1:
-            print("\n****** Fitting Result for %i Components ******" % which)
+            print("\n*** Fitting Result for %i Components ***" % which)
             params2report = self.result_all[which].params
             N_all = [params2report["N_Cloud%i" % (i)].value
                      for i in range(len(self.model_all)-1)]
@@ -247,7 +250,7 @@ class ISLineFitter():
     def plotModel(self, which=-1, v_next=None, sleep=None):
         
         fig=plt.figure(figsize=(10, 6.5))
-        plt.gcf().subplots_adjust(hspace = 0)
+        plt.gcf().subplots_adjust(hspace=0)
         spec = gridspec.GridSpec(ncols=1, nrows=3,
                                  height_ratios=[4, 4, 1])
         
@@ -406,7 +409,13 @@ class ISLineFitter():
 
         return v_rad_best
 
+    # TO DO:
+    # A method that sum up residuals in a Voigt kernel and determine where to add the next component?
+
     def getNextVoff(self):
+        # warp around determine_vrad_from_correlation
+        # For the first two components, calculaate, for the 3rd component, add at average V_off.
+
         if len(self.model_all) >= 3:
             v_next = np.average(self.v_off)
         else:
@@ -449,7 +458,7 @@ class ISLineModel(Model):
         :param nan_policy: from lmfit and Klay's code
         :param n_step: int, no. of points in 1*FWHM during calculation. Under-sample losses information
         but over-sample losses efficiency.
-        :param verbose: int, if verbose=1, print V_off; if verbos=2, print all parameter
+        :param verbose: int, if verbose=2, print V_off; if verbos>=3, print all parameter
         :param kwargs: ???
         """
         self.n_components, self.lam_0, self.fjj, self.gamma, self.n_setp = \
@@ -500,10 +509,10 @@ class ISLineModel(Model):
                 if name[0] == "V":
                     V_offs = V_offs + [kwargs[name]] * len(self.lam_0)
 
-            if self.verbose == 1:
+            if self.verbose == 2:
                 print("V_off: ", ["%.2f" % item for item in V_offs[0::len(self.lam_0)]])
 
-            if self.verbose >= 2:
+            if self.verbose >= 3:
                 print("========= Line Model =========")
                 V_all = V_offs[0::len(self.lam_0)]
                 V_all = ["%.2f" % item for item in V_all]
@@ -675,9 +684,10 @@ if __name__ == "__main__":
     # initializing ISLineFitter
     print("="*40)
     print("Testing ISLineFitter, Finger Crossed!")
-    test_fitter = ISLineFitter(wave, flux, verbose=2, normalized=normalized)
+    test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
     # Verbose = 0, 1, 2
 
     best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b")
     print(best_result.fit_report())
+    print(best_result.chisqr)
     test_fitter.plotModel(which=-2)

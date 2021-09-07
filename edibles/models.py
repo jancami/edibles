@@ -121,7 +121,7 @@ class ContinuumModel(Model):
 
         self.n_anchors = n_anchors
         self.verbose = verbose
-        # if verbose >=2, print x and y anchors each time
+        # if verbose >=3, print x and y anchors each time
 
 
         def cont(x, x_0=-999, y_0=1, **kwargs):
@@ -143,7 +143,7 @@ class ContinuumModel(Model):
                 x_anchors = [x[i] for i in spacing_idx]
 
             spline = CubicSpline(x_anchors, y_anchors)
-            if self.verbose >= 2:
+            if self.verbose >= 3:
                 print("====== Spline Continuum ======")
                 x_anchors_p = ["%.5f" % item for item in x_anchors]
                 print("Xs: ", x_anchors_p)
