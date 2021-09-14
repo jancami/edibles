@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 from edibles import PYTHONDIR
+
 from edibles.utils.ISLineFitter import ISLineFitter, ISLineModel
 
 # Load the benchmark data and run it through ISLineFitter. Then compare results. 
@@ -17,6 +18,7 @@ arrays = np.genfromtxt(filename,skip_header=1)
 wave = arrays[:,0]
 flux = arrays[:,1]
 #print(wave, flux)
+
 
 # fitting
 fitter = ISLineFitter(wave, flux, v_resolution=0.56)
