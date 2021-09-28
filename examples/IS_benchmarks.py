@@ -19,9 +19,9 @@ flux = arrays[:,1]
 #print(wave, flux)
 
 # fitting
-fitter = ISLineFitter(wave, flux, v_resolution=0.56)
+fitter = ISLineFitter(wave, flux, v_resolution=0.56, normalized=True)
 known_n_components = 5
-fit_result = fitter.fit(species='KI', windowsize=1.5, n_anchors=4,
+fit_result = fitter.fit(species='KI', windowsize=0.5, n_anchors=4,
                         known_n_components=known_n_components, WaveMax=7700, WaveMin=7695)
 
 # results
