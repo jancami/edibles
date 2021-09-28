@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from edibles import PYTHONDIR
 
-from edibles.utils.ISLineFitter import ISLineFitter, ISLineModel
+from edibles.utils.ISLineFitter import ISLineFitter, ISLineModel, measure_snr
 
 # Load the benchmark data and run it through ISLineFitter. Then compare results. 
 
@@ -19,11 +19,42 @@ wave = arrays[:,0]
 flux = arrays[:,1]
 #print(wave, flux)
 
+# First, create a model corresponding to Dan's literature values. 
+# Parameters from Dan Welty for all components: 
+v = np.array([10.50, 11.52, 13.45, 14.74, 15.72]) + 0.10
+N = np.array([12.50, 10.0, 44.3, 22.5, 3.9])*1e10
+b = np.array([0.60, 0.44, .72, .62, .60])
+#Dans_model = ISLineModel(v_res=0.56, verbose=0, wave=wave)
+#Dans_model.AddLine(lineID='KI_7698', v=v, N=N, b=b, verbose=0)
+
+K_wave = [7698.974]
+K_fjj = [3.393e-1]
+K_Gamma = [3.820e7]
+n_components=5
+model = ISLineModel(n_components, v_res=0.56, lam_0=K_wave, fjj=K_fjj, gamma=K_Gamma, verbose=0)
+pars_guess = model.guess(V_off=v[0:n_components])
+idx_cloud = 0
+while idx_cloud < n_components:
+    pars_guess["V_off_Cloud%i" % idx_cloud].value = v[idx_cloud]
+    pars_guess["b_Cloud%i" % idx_cloud].value = b[idx_cloud]
+    pars_guess["N_Cloud%i" % idx_cloud].value = N[idx_cloud]
+    idx_cloud = idx_cloud + 1
+ymodel=model.eval(x=wave,params=pars_guess)
+#ymodel=ISLineModel(v_res=0.56, s)
+plt.plot(wave, flux, color='black')
+plt.plot(wave, ymodel, color='red', ls='--')
+plt.plot(wave, ymodel+.1, color='blue')
+plt.xlim([7699.1,7699.5])
+plt.show()
+
+#model=ISLineModel(LineID='KI_7698', v=v, N=N, b=b, v_res=0.56, wave=wave)
+
+
 
 # fitting
-fitter = ISLineFitter(wave, flux, v_resolution=0.56)
-known_n_components = 5
-fit_result = fitter.fit(species='KI', windowsize=1.5, n_anchors=4,
+fitter = ISLineFitter(wave, flux, v_resolution=0.56, normalized=True)
+known_n_components = 1
+fit_result = fitter.fit(species='KI', windowsize=1, n_anchors=4,
                         known_n_components=known_n_components, WaveMax=7700, WaveMin=7695)
 
 # results
