@@ -170,7 +170,7 @@ class ISLineFitter():
             result = model2fit.fit(data=self.flux2fit,
                                    params=pars_guess,
                                    x=self.wave2fit,
-                                   weights=np.ones_like(self.flux2fit) * self.SNR)
+                                   weights=np.ones_like(self.flux2fit) * self.SNR / np.median(self.flux2fit))
             self.__afterFit(model2fit, result)
             stop_flag = self.bayesianCriterion(criteria=criteria)
             if self.verbose >= 1:
@@ -215,7 +215,7 @@ class ISLineFitter():
 
         # Continuum first
         continuum_model = ContinuumModel(n_anchors=n_anchors, verbose=self.verbose)
-        pars_guess = continuum_model.guess(self.flux2fit, self.wave2fit)
+        pars_guess = continuum_model.guess(self.flux2fit, x=self.wave2fit)
         if self.nomalized:
             for key in pars_guess.keys():
                 if "y_" in key:
