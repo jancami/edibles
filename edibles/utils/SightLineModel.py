@@ -23,14 +23,14 @@ from edibles import PYTHONDIR
 class Species():
     # Data structure to hold information of one species. This is used as child data struct of
     # the VelocityComponent class.
-    # b, N, and V_off are optional, and is usually passed by VelocityComponent in the **kwargs
+    # b, N, and v_cloud are optional, and is usually passed by VelocityComponent in the **kwargs
     # Species name is mandatory.
     # Code will look up the name in edibles_linelist_atoms.csv and load data
     # User can define his/her target species and line list, by passing name, lambda_0, fjj, and
 
     # Can be defined by name and the class will lookup in edibles_linelist_atoms.csv
     # Or the user can specify their line, with input lambda_0, fjj, Gamma
-    # b, N, and V_off are always optiona
+    # b, N, and v_cloud are always optiona
     def __init__(self, name, lam0=None, fjj=None, Gamma=None, **kwargs):
         # inputs:
         # name: str, name of the species
@@ -38,7 +38,7 @@ class Species():
         #                   wavelengths, fjj, and Gamma of species,
         #                   required when using different data than
         #                   edibles_linelist_atoms.csv
-        # kwargs: information on N, b, V_off, fit_status, from Velocity Component
+        # kwargs: information on N, b, v_cloud, fit_status, from Velocity Component
         self.name = name
 
         # read in atomic line data frame
@@ -103,9 +103,9 @@ class Species():
 
 class VelocityComponent():
 
-    def __init__(self, name, V_off=0.0, species=None):
+    def __init__(self, name, v_cloud=0.0, species=None):
         self.name = name
-        self.V_off = V_off
+        self.v_cloud = v_cloud
         self.species = {}
         if species is not None:
             self.AddSpecies(species)
