@@ -338,6 +338,23 @@ def GuessN(lam0, fjj, Gamma):
     return scale * 1E10
 
 
+class SightLineModel(Model):
+
+    def __init__(self, data_structure,
+                 v_res=3.0,
+                 independent_vars=["x"],
+                 prefix="",
+                 nan_policy="raise",
+                 n_step=25,
+                 verbose=0,
+                 **kwargs):
+
+        self.v_res = v_res
+
+
+
+
+
 if __name__ == "__main__":
     print("hello sight line!")
 
