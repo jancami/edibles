@@ -26,6 +26,11 @@ from edibles import PYTHONDIR
 # 2. When adding a known species, the name match is based on string match and thus not smart enough
 
 
+# To Do:
+# 1. Change the way of indexing clouds, by name (str) only
+# 2. Add something to store the info on wavelengths segments, regarding boundaries and resolution
+# 3. Function to compare wave_grid to compare to boundaries (so we can decided the resolution to use)
+
 class Species():
     # Data structure to hold information of one species. This is used as child data struct of
     # the VelocityComponent class.
@@ -336,6 +341,31 @@ def GuessN(lam0, fjj, Gamma):
 
     scale = 0.05 / (1 - np.min(y))
     return scale * 1E10
+
+
+def GetWaveGridSegment(wave_grid, n_tolerance=10):
+    """
+    Evaluate if input wave grid is made up of several segments. If so, identify
+    these segments and break them up.
+    Algorithm: Calculate the step of wave grid, break up when a given step larger
+    than n_tolerance * median(step).
+    !!! This algorithm does not work if the data is highly segmental!!!
+
+    :param wave_grid: ndarray
+           n_tolerance: int, n_tolerance * median(step) is used to identify
+                        boundaries of segments. Step of EDIBLES data is usually
+                        0.02AA so the default tolerance is 0.2AA for most case.
+    :return: grid_segment: list of ndarray
+    """
+
+    steps = np.diff(wave_grid)
+    tolerance = n_tolerance * np.median(steps)
+    break_idx = np.where(steps >= tolerance)[0]
+    if len(break_idx) == 0:
+        # one piece
+        return [wave_grid]
+    else:
+        return np.split(wave_grid, break_idx+2)
 
 
 class SightLineModel(Model):
