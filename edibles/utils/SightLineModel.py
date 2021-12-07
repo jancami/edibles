@@ -31,6 +31,36 @@ from edibles import PYTHONDIR
 # 2. Add something to store the info on wavelengths segments, regarding boundaries and resolution
 # 3. Function to compare wave_grid to compare to boundaries (so we can decided the resolution to use)
 
+class ROIs():
+    def __init__(self):
+        self.all_regions = []
+
+    def addROI(self, roi_range, resolution=2.8):
+        new_ROI={"Left": np.min(roi_range),
+                 "Right": np.max(roi_range),
+                 "Resolution": resolution}
+        self.all_regions.append(new_ROI)
+
+    def getResolution(self, wave_input):
+        grid_left = np.min(wave_input)
+        grid_right = np.max(wave_input)
+        matching_score = 0.0
+        resolution = 2.8
+
+        for region in self.all_regions:
+            if grid_left >= region["Right"] or grid_right <= region["Left"]:
+                continue
+
+            score_left = np.sort([grid_left, grid_right, region["Right"], region["Left"]])[1]
+            score_right = np.sort([grid_left, grid_right, region["Right"], region["Left"]])[2]
+            score = (score_right - score_left) / (grid_right - grid_left)
+            if score > matching_score:
+                resolution = region["Resolution"]
+                matching_score = score
+
+        return resolution
+
+
 class Species():
     # Data structure to hold information of one species. This is used as child data struct of
     # the VelocityComponent class.
@@ -280,6 +310,7 @@ class SightLine():
             self.name = name
 
         self.clouds = {}
+        self.ROI = ROIs()
 
     def AddSpecies(self, species, cloud=None, lam0=None, fjj=None, Gamma=None, **kwargs):
         # use "cloud" to choose which (known) cloud to work with.
@@ -314,6 +345,9 @@ class SightLine():
         cloud2add = VelocityComponent(name, species=species, **kwargs)
         self.clouds[name] = cloud2add
 
+    def AddROI(self, roi_range, resolution=2.8):
+        self.ROI.addROI(roi_range=roi_range, resolution=resolution)
+
     def FilterLines(self, wave_regions):
         for key in self.clouds.keys():
             self.clouds[key].FilterLines(wave_regions)
@@ -325,6 +359,7 @@ class SightLine():
         return out_str
 
 
+# auxiliary functions
 def GuessN(lam0, fjj, Gamma):
     # return estimate N so the central depth of the
     # absorption is 5% of continuum
