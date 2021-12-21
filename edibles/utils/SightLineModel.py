@@ -160,7 +160,7 @@ class Species():
                 # will update when the lines are filtered
                 self.N.set(value=-99)
                 N_guess = []
-                lambda_0, fjj, Gamma = self.GetData(filter=False)
+                lambda_0, fjj, Gamma, N, b = self.GetData()
                 for lam0, f, gamma in zip(lambda_0, fjj, Gamma):
                     N_guess.append(GuessN(lam0, f, gamma))
                 self.species_df["N"] = N_guess
@@ -184,17 +184,28 @@ class Species():
         self.species_df._set_value(bool_min&bool_max, "In_Range", 1)
         return True
 
-    def GetData(self, filter=True):
-        if filter:
-            lambda_0 = self.species_df["WavelengthAir"].loc[self.species_df["In_Range"] == 1].to_list()
-            fjj = self.species_df["OscillatorStrength"].loc[self.species_df["In_Range"] == 1].to_list()
-            Gamma = self.species_df["Gamma"].loc[self.species_df["In_Range"] == 1].to_list()
-        else:
-            lambda_0 = self.species_df["WavelengthAir"].to_list()
-            fjj = self.species_df["OscillatorStrength"].to_list()
-            Gamma = self.species_df["Gamma"].to_list()
+    def GetData(self, ROI=None, margin=5):
+        # margin is used to expand the region a little so
+        # if a line is just off the edge it will still be
+        # included for its possible impact
 
-        return lambda_0, fjj, Gamma
+        # position: lam_0 (sp_df) and v_off (cl)
+        # width: Gamma (sp_df) and b (sp_par)
+        # strength: fjj (sp_df) and N (sp_par)
+
+        if ROI is None:
+            df_out = self.species_df
+        else:
+            left, right = np.min(ROI) - margin, np.max(ROI) + margin
+            df_out = self.species_df.loc[(self.species_df["WavelengthAir"] > left)
+                                         & (self.species_df["WavelengthAir"] < right)]
+
+        n_lines = len(df_out)
+
+        return df_out["WavelengthAir"].to_list(), \
+               df_out["OscillatorStrength"].to_list(), \
+               df_out["Gamma"].to_list(), \
+               [self.N.value] * n_lines, [self.b.value] * n_lines
 
     def __str__(self):
         N_str = "N = %.2E cm-2" % self.N.value
@@ -209,12 +220,8 @@ class Species():
         else:
             b_str = b_str + " (fixed)"
 
-        if 1 in self.species_df["In_Range"].to_list():
-            lambda_0, fjj, Gamma = self.GetData(filter=1)
-            line_str = "Lines at: " + ", ".join([str(item) for item in lambda_0])
-        else:
-            lambda_0, fjj, Gamma = self.GetData(filter=0)
-            line_str = "Lines (unfiltered) at: " + ", ".join([str(item) for item in lambda_0])
+        lambda_0, fjj, Gamma, N, b = self.GetData()
+        line_str = "Lines at: " + ", ".join([str(item) for item in lambda_0])
 
         str_out = self.name.join([" "*4, ":"]) + "\n"
         str_out = str_out + N_str.join([" "*8, "\n"])
@@ -272,14 +279,23 @@ class VelocityComponent():
             for item in species2remove:
                 self.RemoveSpecies(item)
 
-    def GetData(self, filter=True):
-        lambda_0_cloud, fjj_cloud, Gamma_cloud = [], [], []
+    def GetData(self, ROI=None):
+        # position: lam_0 (sp) and v_off (cl)
+        # width: Gamma (sp) and b (sp)
+        # strength: fjj (sp) and N (sp)
+        lambda_0_cloud, fjj_cloud, Gamma_cloud, N_cloud, b_cloud = [], [], [], [], []
         for key in self.species.keys():
-            lambda_0, fjj, Gamma = self.species[key].GetData(filter=filter)
-            lambda_0_cloud.append(lambda_0)
-            fjj_cloud.append(fjj)
-            Gamma_cloud.append(Gamma)
-        return lambda_0_cloud, fjj_cloud, Gamma_cloud
+            lambda_0, fjj, Gamma, N, b = self.species[key].GetData(ROI=ROI)
+            lambda_0_cloud = lambda_0_cloud + lambda_0
+            fjj_cloud = fjj_cloud + fjj
+            Gamma_cloud = Gamma_cloud + Gamma
+            N_cloud = N_cloud + N
+            b_cloud = b_cloud + b
+
+        n_lines = len(lambda_0_cloud)
+
+        return lambda_0_cloud, fjj_cloud, Gamma_cloud, \
+               N_cloud, b_cloud, [self.v_cloud.value] * n_lines
 
     def FilterLines(self, wave_regions):
         for key in self.species.keys():
@@ -317,33 +333,24 @@ class SightLine():
         # if not exist, create it
 
         next_cloud_name = "Cloud_%i" % (len(self.clouds.keys()))
-        if cloud is None:
-            cloud2add = VelocityComponent(next_cloud_name)
-        elif isinstance(cloud, str):
-            cloud2add = VelocityComponent(next_cloud_name)
+        cloud2add = VelocityComponent(next_cloud_name, **kwargs)
+        if cloud is not None:
             for key in self.clouds.keys():
-                cloud_name = self.clouds[key].name
-                if cloud_name == cloud:
-                    cloud2add = self.clouds[key]
-        else:
-            cloud2add = VelocityComponent(next_cloud_name, v_cloud=cloud)
-            for key in self.clouds.keys():
-                v_cloud = self.clouds[key].v_cloud.value
-                if v_cloud == cloud:
+                if self.clouds[key].name == cloud:
                     cloud2add = self.clouds[key]
 
         cloud2add.AddSpecies(species, lam0=lam0, fjj=fjj, Gamma=Gamma, **kwargs)
         self.clouds[cloud2add.name] = cloud2add
 
-    def AddCloud(self, name=None, species=None, **kwargs):
-        if name is None:
-            name = "Cloud_%i" % (len(self.clouds.keys()))
+    def AddCloud(self, cloud_name=None, species=None, **kwargs):
+        if cloud_name is None:
+            cloud_name = "Cloud_%i" % (len(self.clouds.keys()))
 
         all_names = [self.clouds[key].name for key in self.clouds.keys()]
-        assert name not in all_names, "Cloud name already taken, use another."
+        assert cloud_name not in all_names, "Cloud name already taken, use another."
 
-        cloud2add = VelocityComponent(name, species=species, **kwargs)
-        self.clouds[name] = cloud2add
+        cloud2add = VelocityComponent(cloud_name, species=species, **kwargs)
+        self.clouds[cloud_name] = cloud2add
 
     def AddROI(self, roi_range, resolution=2.8):
         self.ROI.addROI(roi_range=roi_range, resolution=resolution)
@@ -357,6 +364,46 @@ class SightLine():
         for key in self.clouds.keys():
             out_str = out_str + str(self.clouds[key])
         return out_str
+
+    def __call__(self, input_wave):
+        input_wave = np.asarray(input_wave)
+        output_flux = np.ones_like(input_wave)
+
+        grids = GetWaveGridSegment(input_wave)
+        figure = plt.figure(figsize=[4, len(grids)*2], dpi=200)
+
+        for i, grid in enumerate(grids):
+            res2use = self.ROI.getResolution(grid)
+            lambda_0_all, fjj_all, Gamma_all, N_all, b_all, v_all = [], [], [], [], [], []
+            for key in self.clouds.keys():
+                pars = self.clouds[key].GetData(ROI=grid)
+                lambda_0_all = lambda_0_all + pars[0]
+                fjj_all = fjj_all + pars[1]
+                Gamma_all = Gamma_all + pars[2]
+                N_all = N_all + pars[3]
+                b_all = b_all + pars[4]
+                v_all = v_all + pars[5]
+
+            flux_grid = voigt_absorption_line(grid,
+                                              lambda0=lambda_0_all,
+                                              b=b_all,
+                                              N=N_all,
+                                              f=fjj_all,
+                                              v_rad=v_all,
+                                              gamma=Gamma_all,
+                                              v_resolution=res2use,
+                                              n_step=25)
+
+            ax = figure.add_subplot(len(grids), 1, i+1)
+            ax.plot(grid, flux_grid)
+            ax.tick_params(axis="both", which="major", labelsize=6)
+            ax.set_ylabel("Flux", fontsize=8)
+            ax.grid()
+            if i == len(grids) - 1:
+                ax.set_xlabel("Wavelength (AA)", fontsize=8)
+
+        plt.tight_layout()
+        plt.show()
 
 
 # auxiliary functions
@@ -400,23 +447,7 @@ def GetWaveGridSegment(wave_grid, n_tolerance=10):
         # one piece
         return [wave_grid]
     else:
-        return np.split(wave_grid, break_idx+2)
-
-
-class SightLineModel(Model):
-
-    def __init__(self, data_structure,
-                 v_res=3.0,
-                 independent_vars=["x"],
-                 prefix="",
-                 nan_policy="raise",
-                 n_step=25,
-                 verbose=0,
-                 **kwargs):
-
-        self.v_res = v_res
-
-
+        return np.split(wave_grid, break_idx+1)
 
 
 
@@ -432,10 +463,10 @@ if __name__ == "__main__":
     # wavelength, fjj, and Gamma are loaded from csv file, b and N set to default value and range
     # If there is no cloud at 1.0 km/s, it will be created with name Cloud_i
     # v_off for this new cloud is default, with range between (-100, 100) km/s
-    model_builder.AddSpecies(species="NaI", cloud=1.0)
+    model_builder.AddSpecies(species="NaI", cloud="Cloud_0")
 
     # similarly, add more "known" species to one cloud
-    model_builder.AddSpecies(species=["6LiI", "7LiI"], cloud=1.0)  # or set cloud="Cloud_0"
+    model_builder.AddSpecies(species=["6LiI", "7LiI"], cloud="Cloud_0")  # or set cloud="Cloud_0"
 
     # add customized species, with name/data different from the table
     model_builder.AddSpecies("Vibranium", cloud="Cloud_0",
@@ -447,7 +478,7 @@ if __name__ == "__main__":
     # this will fix b_value to 0.8, and N set between 10e12 to 10E13
 
     # To constrain the v_off of a cloud, you need to add it via .AddCloud method:
-    model_builder.AddCloud(name="Fix_V_Cloud", known_v_cloud=50.0)
+    model_builder.AddCloud(cloud_name="Fix_V_Cloud", known_v_cloud=50.0)
 
     # Can still add multiple species in one time if data is available in csv table and do not constrain b or N
     model_builder.AddSpecies(species=["6LiI", "7LiI"], cloud="Fix_V_Cloud")
@@ -475,3 +506,25 @@ if __name__ == "__main__":
     # The output will be slightly different then
     print("=" * 40)
     print(model_builder)
+
+
+    ######################################
+    # Test for Calculation
+    ######################################
+    print("\n"*10)
+
+    model_builder = SightLine(name="CalcTest")
+    model_builder.AddCloud(cloud_name="Cloud_0", v_cloud=-20)
+    model_builder.clouds["Cloud_0"].AddSpecies("NaI", N=1E14)
+
+    model_builder.AddSpecies(["NaI", "KI"], cloud="Cloud_1", known_v_cloud=10, N=3E13)
+
+    print(model_builder)
+
+    wave_grid1 = np.arange(start=3301.5, stop=3304, step=0.015)
+    wave_grid2 = np.arange(start=5887, stop=5897.5, step=0.015)
+    model_builder.AddROI([3300, 3305], resolution=2.8)
+    model_builder.AddROI(wave_grid2, resolution=5.0)
+
+    print("\n" * 10)
+    model_builder(np.append(wave_grid1, wave_grid2))
