@@ -20,7 +20,7 @@ if 'EDIBLES_PYTHONDIR' in os.environ:
 else:
     PYTHONDIR = os.path.dirname(__file__)
 
-print("Going Through")
+#print("Going Through")
     
 
 __version__ = '0.1'
