@@ -365,12 +365,12 @@ class SightLine():
             out_str = out_str + str(self.clouds[key])
         return out_str
 
-    def __call__(self, input_wave):
+    def __call__(self, input_wave, plot=True):
         input_wave = np.asarray(input_wave)
-        output_flux = np.ones_like(input_wave)
 
         grids = GetWaveGridSegment(input_wave)
-        figure = plt.figure(figsize=[4, len(grids)*2], dpi=200)
+        if plot:
+            figure = plt.figure(figsize=[4, len(grids)*2], dpi=200)
 
         for i, grid in enumerate(grids):
             res2use = self.ROI.getResolution(grid)
@@ -394,16 +394,25 @@ class SightLine():
                                               v_resolution=res2use,
                                               n_step=25)
 
-            ax = figure.add_subplot(len(grids), 1, i+1)
-            ax.plot(grid, flux_grid)
-            ax.tick_params(axis="both", which="major", labelsize=6)
-            ax.set_ylabel("Flux", fontsize=8)
-            ax.grid()
-            if i == len(grids) - 1:
-                ax.set_xlabel("Wavelength (AA)", fontsize=8)
+            if plot:
+                ax = figure.add_subplot(len(grids), 1, i+1)
+                ax.plot(grid, flux_grid)
+                ax.tick_params(axis="both", which="major", labelsize=6)
+                ax.set_ylabel("Flux", fontsize=8)
+                ax.grid()
+                if i == len(grids) - 1:
+                    ax.set_xlabel("Wavelength (AA)", fontsize=8)
 
-        plt.tight_layout()
-        plt.show()
+            try:
+                flux_out = np.append(flux_out, flux_grid)
+            except:
+                flux_out = flux_grid
+
+        if plot:
+            plt.tight_layout()
+            plt.show()
+
+        return(flux_out)
 
 
 # auxiliary functions
@@ -527,4 +536,7 @@ if __name__ == "__main__":
     model_builder.AddROI(wave_grid2, resolution=5.0)
 
     print("\n" * 10)
-    model_builder(np.append(wave_grid1, wave_grid2))
+    flux_out = model_builder(np.append(wave_grid1, wave_grid2), plot=True)
+
+    plt.plot(np.append(wave_grid1, wave_grid2), flux_out)
+    plt.show()

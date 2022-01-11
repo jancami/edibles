@@ -74,7 +74,7 @@ class ContinuumFitter():
         spline_continuum = CubicSpline(x_points, y_points)
         return spline_continuum, anchor_points
 
-    def SplineManualRegion(self, n_anchors=5):
+    def SplineManualRegion(self, n_anchors=5, n_regions=99):
         """
         Fit spline continuum from regions selected by users
         Up to 99 regions
@@ -85,7 +85,7 @@ class ContinuumFitter():
 
         # Select continuum regions to fit anc create a "marker" array
         # boundaries have to be from spectrum
-        boundary_points = self.SelectPoints(n=99*2, nearest=True,
+        boundary_points = self.SelectPoints(n=n_regions*2, nearest=True,
                                             y_message="Please Select Continuum Regions")
         boundary_x = boundary_points.T[0]
         data2fit = np.zeros_like(self.wave)
