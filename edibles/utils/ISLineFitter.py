@@ -143,7 +143,8 @@ class ISLineFitter():
                     print("Failed and switch back to the last model...\n")
                 return True
 
-    def fit(self, species="KI", n_anchors=5, windowsize=3, criteria="BIC", **kwargs):
+    def fit(self, species="KI", n_anchors=5, windowsize=3,
+            criteria="BIC", n_components_min=None, n_components_max=None, **kwargs):
         """
         The main fitting method for the class.
         Currently kwargs for select_species_data to make code more pretty
@@ -162,19 +163,37 @@ class ISLineFitter():
         _ = self.getData2Fit(lam_0, windowsize=windowsize)
 
         ######### Step 3 and 4: build model, fit, repeat ##########
+        if self.nomalized:
+            weights = np.ones_like(self.flux2fit) * self.SNR
+        else:
+            weights = np.ones_like(self.flux2fit) * self.SNR / np.median(self.flux2fit)
+
         while True:
             n_components = len(self.model_all)
+            if n_components_min is not None:
+                n_components = n_components_min + n_components
+
             print("\n" + "="*40)
             print("Fitting model with %i component..." % (n_components))
-            model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors)
+            model2fit, pars_guess = self.buildModel(lam_0, fjj, gamma, n_anchors,
+                                                    n_components=n_components)
             result = model2fit.fit(data=self.flux2fit,
                                    params=pars_guess,
                                    x=self.wave2fit,
-                                   weights=np.ones_like(self.flux2fit) * self.SNR / np.median(self.flux2fit))
-            self.__afterFit(model2fit, result)
+                                   weights=weights)
+            self.__afterFit(model2fit, result, n_components)
             stop_flag = self.bayesianCriterion(criteria=criteria)
             if self.verbose >= 1:
                 self.plotModel(which=-1, v_next=self.getNextVoff(), sleep=10)
+
+            if n_components_max is not None:
+                if n_components >= n_components_max:
+                    print("Reached max allowed number of cloud (%i), forced to stop" % n_components_max)
+                    stop_flag = True
+                    self.__afterFit(model2fit, result, n_components)
+                    # do another afterFit to append an extra model2fit and result, because
+                    # most of the method will focus on the [-2] model as the final result.
+
             if stop_flag:
                 break
 
@@ -199,12 +218,11 @@ class ISLineFitter():
             V_all = ["%.2f" % item for item in V_all]
             print("V (km/s): ", V_all)
 
-    def __afterFit(self, model_new, result_new):
+    def __afterFit(self, model_new, result_new, n_components):
         self.model_all.append(model_new)
         self.result_all.append(result_new)
 
         fitted_pars = result_new.params
-        n_components = len(self.model_all) - 1
         self.v_off = []
         for i in range(n_components):
             self.v_off.append(fitted_pars["V_off_Cloud%i" %(i)])
@@ -240,7 +258,11 @@ class ISLineFitter():
                 V_off_next = self.getNextVoff()
             else:
                 V_off_next = np.average(self.v_off)
-            V_off = self.v_off + [V_off_next]
+
+            if len(self.v_off) + 1 < n_components:
+                V_off = [0.0] * (n_components - 1) + [V_off_next]
+            else:
+                V_off = self.v_off + [V_off_next]
             #V_off = [0.0]*n_components
             pars_guess.update(line_model.guess(V_off=V_off))
             model2fit = model2fit * line_model
@@ -638,6 +660,7 @@ def CountFreeParameter(result):
             counter = counter + 1
     return counter
 
+
 def measure_snr(wave, flux, block_size=1.0):
     """
     Estimate SNR of given spectral data
@@ -665,11 +688,13 @@ def measure_snr(wave, flux, block_size=1.0):
     return SNR
 
 
-
 if __name__ == "__main__":
     from edibles.utils.edibles_oracle import EdiblesOracle
     from edibles.utils.edibles_spectrum import EdiblesSpectrum
+    from edibles.utils.ContinuumFitter import ContinuumFitter
     import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use('Qt5Agg', force=True)
 
     normalized = False
     # data to fit, around HD183143 Na 3300 doublet, order only
@@ -679,7 +704,16 @@ if __name__ == "__main__":
     sp = EdiblesSpectrum(filename)
     wave, flux = sp.bary_wave, sp.flux # 2 comps if no /10
     if normalized:
-        flux = flux / np.percentile(flux, 75)
+        idx = (wave > 3300.5) & (wave < 3304.5)
+        wave, flux = wave[idx], flux[idx]
+        normalizer = ContinuumFitter(wave=wave, flux=flux)
+        cont, anchor = normalizer.SplineManualRegion(n_anchors=6, n_regions=99)
+        plt.plot(normalizer.wave, normalizer.flux, color="0.5")
+        plt.scatter(anchor.T[0], anchor.T[1], marker="x", s=80, color="r")
+        plt.plot(normalizer.wave, cont(normalizer.wave), color="orange")
+        plt.show()
+
+        flux = flux / cont(wave)
 
     # initializing ISLineFitter
     print("="*40)
@@ -687,7 +721,11 @@ if __name__ == "__main__":
     test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
     # Verbose = 0, 1, 2
 
-    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b")
+    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b",
+                                  n_components_min=1, n_components_max=2)
+
+    # Report result
     print(best_result.fit_report())
-    print(best_result.chisqr)
+    # print("Chi-square of best fit result is: %.2f" % best_result.chisqr)
+    # print("Reduced Chi-square of is: %.2f" % (best_result.chisqr / (len(flux) - 1)))
     test_fitter.plotModel(which=-2)
