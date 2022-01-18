@@ -186,95 +186,160 @@ check_data(data_all)
 wave2fit, flux2fit = data_all["3302Doublet"][0], data_all["3302Doublet"][1]
 
 # start ISLineFitter by feeding the data and tell it the data is normalized.
-fitter = ISLineFitter(wave2fit, flux2fit, verbose=1, normalized=True)
+fitter = ISLineFitter(wave2fit, flux2fit, verbose=0, normalized=True)
 
 # We can adjust the fitting with the following set-ups:
 # What we are trying to fit? Na!
-# What is the region we want to use? Everything within wave2fit! (i.e. min to max)
+# What is the region we want to use? Everything between min and max of wave2fit!
 # What criteria do we use to tell if the fit is good? BIC!
-best_result = fitter.fit(species="NaI",
-                         WaveMin=np.min(wave2fit), WaveMax=np.max(wave2fit),
-                         criteria="bic")
+auto_result = fitter.fit(species="NaI", WaveMin=np.min(wave2fit), WaveMax=np.max(wave2fit),
+                         criteria="bic", n_components_min=1, n_components_max=1)
+# Latest update on Jan-18: I update ISLineFitter so you can add min and max number of velocity components
+# For this example I'm using 1 for both, that is, ISLineFitter will only try to use 1 velocity component.
 
-# Let's take a look at the result...
-print(best_result.fit_report())
-fitter.plotModel(which=-2)
+# Let's take a look at the result, and load the result to the SightLine class, a data structure
+print(auto_result.fit_report())
+fitter.plotModel(which=-1)
 
-
-print(a)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Step 2, build the model
-# For a sight line, we can have one or multiple clouds (velocity components), and
-# within each cloud, we can have one or multiple species. The SightLine class is
-# designed to store the information. We start with a new and empty Sightline.
+# Use SightLine class to store the auto-fit parameters
+# The result is at auto_result.params["par_name"].value
 model_builder = SightLine()
+# V_off is stored to a cloud
+model_builder.AddCloud(cloud_name="Cloud_0", known_v_cloud=auto_result.params["V_off_Cloud0"].value)
+# N and b are with the species
+model_builder.AddSpecies(cloud="Cloud_0", species="NaI",
+                         known_N=auto_result.params["N_Cloud0"].value,
+                         known_b=auto_result.params["b_Cloud0"].value)
+# Add resolution information
+model_builder.AddROI(data_all["3302Doublet"][0], resolution=2.8)
+model_builder.AddROI([data_all["Na_D1"][0], data_all["Na_D1"][0]], resolution=2.8)
 
-# For your project, we will be focusing on Na. We will build a simple model with just
-# one cloud, and compare it to the data you just see. So we add one cloud to the model.
-# We will call it Cloud_0 with velocity offset of -5.0 km/s
-model_builder.AddCloud(cloud_name="Cloud_0", v_cloud=13.15)
-model_builder.AddSpecies(cloud="Cloud_0", species="NaI", known_N=3.945e13, known_b=0.37)
+# Take a look on what we have in model_builder
+# we will define a new function to compare data and model for furture use
+def CompareModelData(model_builder, data_all):
+    figure = plt.figure(figsize=[8, 4], dpi=200)
+    for i, key in enumerate(["3302Doublet", "Na_D1", "Na_D2"]):
+        ax = figure.add_subplot(1, 3, i + 1)
 
-model_builder.AddCloud(cloud_name="Cloud_1", v_cloud=10.99)
-model_builder.AddSpecies(cloud="Cloud_1", species="NaI", known_N=5.542e13, known_b=2.91)
+        ax.plot(data_all[key][0], data_all[key][1], color="k", label="data")
+        ax.plot(data_all[key][0], model_builder(data_all[key][0], plot=False), color="r", label="model")
+        ax.set_xlabel(key)
+        if i == 0:
+            ax.set_ylabel("Normalized Flux")
+        ax.grid()
+        # ax.legend()
+    plt.show()
 
-model_builder.AddROI(wave, resolution=2.8)
-flux_model = model_builder(wave, plot=False)
+print(model_builder)
+CompareModelData(model_builder, data_all)
 
-plt.plot(wave, flux, color="k")
-plt.plot(wave, flux_model, color="r")
-plt.show()
+#####################################################################
+# Step 4, Play with the parameters
+#####################################################################
+import copy
+class TuneParameter():
+    """
+    This class is ued to collect what is from the fitted model (info stored in model_builder) and what
+    do you think that should be changed. The code will combine the two pieces of data and create a new
+    model based on your input.
+
+    It is an infinite loop unless you tell it to stop. The loop is like this:
+    1. The code ask you if you want to quit. If you type q or Q, it will quit and eventually end the
+       entire script. Note your normalization data will be lost too! Other wise, it will proceed.
+    2. It will ask you if you want to change one of the four free parameters: column density, velocity
+       offset, Gaussian broadening parameter (b), and the resolving power around Na D lines. The code
+       will report the current value, if want to change it, type in the new number and hit enter,
+       otherwise, hit enter without typing anything. If you did not type a number, the code will ask
+       you to do it again.
+    3. Although you can type any value for each parameters, there could be some "safe boundaries" to
+       think about:
+       N: should be positive, and not "too different" from the current value (plus minus ~25% at most)
+       b: my guess is 0.1 - about 5.0. Very small b will slow down the code
+       v_off: I would say -100 to 100. v_off move around the lines, you would not want to chang it too much
+       resolving power: 1 to 15. I doubt if it would be much smaller than 2.8 though.
+    """
+
+    def __init__(self, model_builder, data_all):
+        self.old_model = model_builder
+        self.data_all = data_all
+        self.parameter = {}
+        self.parameter["v_off"] = self.old_model.clouds["Cloud_0"].v_cloud.value
+        self.parameter["b"] = self.old_model.clouds["Cloud_0"].species["NaI"].b.value
+        N = self.old_model.clouds["Cloud_0"].species["NaI"].N.value
+        N_mag = np.floor(np.log10(N))
+        self.parameter["N_mag"] = int(N_mag)
+        self.parameter["N"] = N / (10 ** N_mag)
+        self.parameter["Resolution"] = self.old_model.ROI.all_regions[1]["Resolution"]
+
+    def main(self):
+        while True:
+            # At the begining of the loop, check if you want to quit
+            message = "Press any key to continue, or Q to quit.\n"
+            response = input(message)
+            if response.upper() == "Q":
+                break
 
 
-# Add NaD lines
-file_all = fits_log.getFilteredObsList(object=["HD 23180"],
-                                       OrdersOnly=True,
-                                       Wave=5890)
-for filename in file_all:
-    if "20170827" in filename and "O4" in filename:
-        break
+            # make a copy of the fitted model, nothing has changed by far
+            new_model = copy.deepcopy(self.old_model)
 
-sp2 = EdiblesSpectrum(filename)
-wave2, flux2 = sp2.bary_wave, sp2.flux
-idx2 = (wave2 > 5887.5) & (wave2 < 5898.5)
-wave2, flux2 = wave2[idx2], flux2[idx2]
+            # check if you want to use different N, v, b, and resolution
+            # the processes are similar though: create a message for you, collect your response,
+            # and if you want to change anything, assign the new value to the parameter.
 
-plt.plot(wave2, flux2)
-plt.grid()
-plt.show()
+            # N
+            message = "Change column density N (in the unit of 10E%i)? Currently %.2f" % \
+                      (self.parameter["N_mag"], self.parameter["N"])
+            N = self.__parseFloatInput(message)
+            if N is not None:
+                new_model.clouds["Cloud_0"].species["NaI"].N.value = N * 10**self.parameter["N_mag"]
+
+            # v
+            message = "Change velocity offset in km/s? Currently %.2f" % self.parameter["v_off"]
+            v_off = self.__parseFloatInput(message)
+            if v_off is not None:
+                new_model.clouds["Cloud_0"].v_cloud.value = v_off
+
+            # b
+            message = "Change broadening parameter b in km/s? Currently %.2f" % self.parameter["b"]
+            b = self.__parseFloatInput(message)
+            if b is not None:
+                new_model.clouds["Cloud_0"].species["NaI"].b.value = b
+
+            # resolution?
+            message = "Change resolving power around Na D lines in km/s? Currently %.2f" \
+                      % self.parameter["Resolution"]
+            resolution = self.__parseFloatInput(message)
+            if resolution is not None:
+                new_model.ROI.all_regions[1]["Resolution"] = resolution
+
+            # Draw!
+            print("Ok, based on your new parameter, the model spectrum looks like this...")
+            CompareModelData(new_model, self.data_all)
+
+    def __parseFloatInput(self, message):
+        # this method is used to gather your input. The conditions are:
+        # 1. you type nothing and it will return None, the code will not change anything
+        # 2. you type a number and the code will use it to update the parameter value
+        # 3. you type something that does not look like a number, the code will ask you to input again.
+
+        message = message + "\n"
+        while True:
+            response = input(message)
+            if response == "":
+                response = None
+                break
+            else:
+                try:
+                    response = float(response)
+                    break
+                except:
+                    print("Invalid input, please type a float number")
+
+        return response
 
 
-normalizer = ContinuumFitter(wave2, flux2)
-while True:
-    cont, anchor = normalizer.SplineManualRegion(n_anchors=6, n_regions=99)
-    make_test_plot(normalizer, cont, anchor)
-    while True:
-        message = "Are you happy with the normalization and ready to proceed?[Y/N]"
-        response = input(message)
-        if response.upper() in ["Y", "N"]:
-            break
-    if response.upper() == "Y":
-        flux2 = flux2 / cont(wave2)
-        break
-
-
-model_builder.AddROI(wave2, resolution=2.8)
-flux_model2 = model_builder(wave2, plot=False)
-plt.plot(wave2, flux2, color="k")
-plt.plot(wave2, flux_model2, color="r")
-plt.show()
+# Everything is coded inside the TuneParameter class, please see the comment within
+turner = TuneParameter(model_builder, data_all)
+turner.main()
+# note when you type q to end the session, you finish the script and lose the normalized data

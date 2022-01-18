@@ -698,7 +698,7 @@ if __name__ == "__main__":
     import matplotlib
     matplotlib.use('Qt5Agg', force=True)
 
-    normalized = True
+    normalized = False
     # data to fit, around HD183143 Na 3300 doublet, order only
     pythia = EdiblesOracle()
     List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
