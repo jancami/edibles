@@ -184,7 +184,8 @@ class ISLineFitter():
             self.__afterFit(model2fit, result, n_components)
             stop_flag = self.bayesianCriterion(criteria=criteria)
             if self.verbose >= 1:
-                self.plotModel(which=-1, v_next=self.getNextVoff(), sleep=10)
+                self.plotModel(which=-1, n_components=n_components,
+                               v_next=self.getNextVoff(), sleep=10)
 
             if n_components_max is not None:
                 if n_components >= n_components_max:
@@ -269,7 +270,7 @@ class ISLineFitter():
 
         return model2fit, pars_guess
 
-    def plotModel(self, which=-1, v_next=None, sleep=None):
+    def plotModel(self, which=-1, n_components=None, v_next=None, sleep=None):
         
         fig=plt.figure(figsize=(10, 6.5))
         plt.gcf().subplots_adjust(hspace=0)
@@ -300,7 +301,8 @@ class ISLineFitter():
         plt.plot(self.wave2fit, self.flux2fit / continuum,
                  marker='D', fillstyle='none', color='black',
                  label='Data')
-        if which >= 1:
+        #if which >= 1:
+        if (n_components not in [0, None]) or (n_components is None and which >= 1):
             line_model = self.model_all[which].right
             flux_comps = line_model.calcIndividualComponent(self.result_all[which].params, self.wave2fit)
             for com_idx, flux_single in enumerate(flux_comps):
@@ -733,8 +735,8 @@ if __name__ == "__main__":
         wave, flux = wave[idx], flux[idx]
         normalizer = ContinuumFitter(wave=wave, flux=flux)
         cont, anchor = normalizer.SplineManualRegion(n_anchors=6, n_regions=99)
-        make_test_plot(normalizer, cont, anchor)
 
+        make_test_plot(normalizer, cont, anchor)
         flux = flux / cont(wave)
 
     # initializing ISLineFitter
@@ -742,8 +744,8 @@ if __name__ == "__main__":
     test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
     # Verbose = 0, 1, 2
 
-    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b",)
-#                                  n_components_min=1, n_components_max=2)
+    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b",
+                                  n_components_min=1, n_components_max=2)
 
     # Report result
     print(best_result.fit_report())
