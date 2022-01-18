@@ -696,33 +696,54 @@ if __name__ == "__main__":
     import matplotlib
     matplotlib.use('Qt5Agg', force=True)
 
-    normalized = False
+    normalized = True
     # data to fit, around HD183143 Na 3300 doublet, order only
     pythia = EdiblesOracle()
     List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
     filename = List.values.tolist()[1]
     sp = EdiblesSpectrum(filename)
     wave, flux = sp.bary_wave, sp.flux # 2 comps if no /10
+
+    def make_test_plot(tester, continuum, anchor):
+        fig = plt.figure(figsize=(10, 6.5))
+        plt.gcf().subplots_adjust(hspace=0)
+        spec = gridspec.GridSpec(ncols=1, nrows=2,
+                                 height_ratios=[4, 4])
+
+        # Top panel for raw data and overall fitting
+        ax0 = fig.add_subplot(spec[0])
+        plt.gca().xaxis.set_visible(False)
+        plt.step(tester.wave, tester.flux, color="0.5")
+        plt.scatter(anchor.T[0], anchor.T[1], marker="x", s=80, color="r")
+        plt.plot(tester.wave, continuum(tester.wave), color="orange")
+        plt.ylabel("Raw Data")
+
+        # Lower panel for normalized data and multi components
+        ax1 = fig.add_subplot(spec[1])
+        plt.step(tester.wave, tester.flux / continuum(tester.wave),color="0.5")
+        plt.scatter(anchor.T[0], np.ones_like(anchor.T[1]), marker="x", s=80, color="r")
+        plt.plot(tester.wave, np.ones_like(tester.wave), linestyle="--", color="orange")
+        plt.ylabel("Normalized Data")
+        plt.xlabel('Wavelenght $\AA$')
+        plt.show()
+
+
     if normalized:
         idx = (wave > 3300.5) & (wave < 3304.5)
         wave, flux = wave[idx], flux[idx]
         normalizer = ContinuumFitter(wave=wave, flux=flux)
         cont, anchor = normalizer.SplineManualRegion(n_anchors=6, n_regions=99)
-        plt.plot(normalizer.wave, normalizer.flux, color="0.5")
-        plt.scatter(anchor.T[0], anchor.T[1], marker="x", s=80, color="r")
-        plt.plot(normalizer.wave, cont(normalizer.wave), color="orange")
-        plt.show()
+        make_test_plot(normalizer, cont, anchor)
 
         flux = flux / cont(wave)
 
     # initializing ISLineFitter
     print("="*40)
-    print("Testing ISLineFitter, Finger Crossed!")
     test_fitter = ISLineFitter(wave, flux, verbose=1, normalized=normalized)
     # Verbose = 0, 1, 2
 
-    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b",
-                                  n_components_min=1, n_components_max=2)
+    best_result = test_fitter.fit(species="NaI", windowsize=1.5, WaveMax=3310, criteria="b",)
+#                                  n_components_min=1, n_components_max=2)
 
     # Report result
     print(best_result.fit_report())

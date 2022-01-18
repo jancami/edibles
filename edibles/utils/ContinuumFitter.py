@@ -183,9 +183,9 @@ if __name__ == "__main__":
 
         # Lower panel for normalized data and multi components
         ax1 = fig.add_subplot(spec[1])
-        plt.step(testTester.wave, testTester.flux / continuum(testTester.wave),color="0.5")
+        plt.step(tester.wave, tester.flux / continuum(tester.wave),color="0.5")
         plt.scatter(anchor.T[0], np.ones_like(anchor.T[1]), marker="x", s=80, color="r")
-        plt.plot(testTester.wave, np.ones_like(testTester.wave), linestyle="--", color="orange")
+        plt.plot(tester.wave, np.ones_like(tester.wave), linestyle="--", color="orange")
         plt.ylabel("Normalized Data")
         plt.xlabel('Wavelenght $\AA$')
         plt.show()
