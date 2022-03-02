@@ -70,7 +70,7 @@ all_targets = [
     #["HD 149757", -15.1, "HD149757, O9.2 IV, Ebv=0.32, fH2=0.63"],
 ]
 order = "O3"
-scale = True
+scale = False
 fits_log = EdiblesOracle()
 
 
@@ -101,7 +101,8 @@ for i, target in enumerate(all_targets):
             scaler = EW2match / measurer.EW
         flux = (flux - 1.0) * scaler + 1.0
 
-    plt.plot(wave, flux, label=target[-1])
+    plt.plot(wave, flux,
+             label=target[-1] + ", EW=%.2f mAA" % measurer.EW)
 
 plt.grid()
 plt.legend(loc="lower right")
