@@ -84,10 +84,11 @@ peak5data = data5000[np.logical_and(data5000[:, 0]>=peakmins[4], data5000[:, 0]<
 peak1Params = voigtUniPeak(peak1data, 0.0002402523653397399)
 print(peak1Params)
 
-print(np.linspace(0, data5000[:, 0].size, 6, dtype = int))
-#for i in range(6): print(i)
-print(data5000[0:7759, 0].size)
 
+# +
+#print(np.linspace(0, data5000[:, 0].size, 6, dtype = int))
+#for i in range(6): print(i)
+#print(data5000[0:7759, 0].size)
 
 # +
 #fits multiple peaks given the number of peaks and the standard deviation (noise) in the data
@@ -137,10 +138,9 @@ def voigtMultiPeakNG(peakData2, nosPeak1, sd2):
         
         return tbr1
 
-
+# +
+#allPeakParams = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
+#print(allPeakParams)
 # -
-
-allPeakParams = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
-print(allPeakParams)
 
 

@@ -57,7 +57,8 @@ print(np.greater_equal(a11[0, :, :], a2))
 #print(a11[np.greater_equal(a11[0, :, :], a2)])
 
 # +
-#stacking function which takes spectrum data and parameters of peaks and outputs stacked peak (but is not normalising)
+# Stacking function which takes spectrum data and parameters of peaks (start, centre and end) 
+# and outputs stacked peak (but is not normalising)
 
 def nonNormalisedLinearStacker(fdata1, peakParam1):
     
@@ -292,6 +293,144 @@ peakParam[4, 2] = 5365.142247
 peakParam[4, 1] = 5361.090278
 # -
 
-nonNormalisedLinearStacker(data5000, peakParam)
+nonNormalisedLinearStacker(data100, peakParam)
+
+
+# +
+# Stacking function which takes spectrum data and parameters of peaks (centre and fwhm) 
+# and outputs stacked peak (but is not normalising)
+
+def widthNormLinStacker(fdata2, peakParam2):
+    
+    P2 = peakParam2.shape[0]
+    
+    
+    #plotting spectrum
+    
+    ffig2, faxs2 = plt.subplots(3, 2, figsize=(12,15))
+    
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    
+    faxs2[0, 0].plot(fdata2[:, 0], fdata2[:, 1], label = 'Spectrum')
+    
+    faxs2[0, 0].set_title('Full spectrum')
+    faxs2[0, 0].set(xlabel = 'Wavelength in Å', ylabel = 'Relative intensity')
+    faxs2[0, 0].legend()
+    
+    
+    #extracting wavelengths and intensities within ranges given by peakParam2
+    
+    fpeakdata2 = np.empty(shape = P2, dtype = object)
+    
+    for i2 in range(P2):
+        #fpeakdata2[i2] = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0], fdata1[:, 0]<=peakParam2[i2, 2]), :]
+        #total width of peak is being taken to be 4*FWHM
+        
+        fpeakdata2[i2] = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0]-2*peakParam2[i2, 1], fdata2[:, 0]<=peakParam2[i2, 0]+2*peakParam2[i2, 1]), :]
+        pkLbl2 = 'Just peak ' + str(i2+1)
+        faxs2[0, 1].plot(fpeakdata2[i2][:, 0], fpeakdata2[i2][:, 1], label = pkLbl2)
+    
+    faxs2[0, 1].set_title('Spectrum with just peaks')
+    faxs2[0, 1].set(xlabel = 'Wavelength in Å', ylabel = 'Relative intensity')
+    faxs2[0, 1].legend()
+    
+    
+    #shifting the above peaks by central value and dividing by FWHM/2
+    
+    fpdshifted2 = fpeakdata2
+    
+    for j2 in range(P2):
+        fpdshifted2[j2][:, 0] = (fpeakdata2[j2][:, 0] - peakParam2[j2, 0])/(peakParam2[j2, 1]/2)
+        fpdshifted2[j2][:, 1] = fpeakdata2[j2][:, 1]
+        shPkLbl2 = 'Shifted peak ' + str(j2+1)
+        faxs2[1, 0].plot(fpdshifted2[j2][:, 0], fpdshifted2[j2][:, 1], label = shPkLbl2)
+    
+    faxs2[1, 0].set_title('Spectrum with peaks shifted')
+    faxs2[1, 0].set(xlabel = 'Relative Wavelength (shifted by peak) in Å', ylabel = 'Relative intensity')
+    faxs2[1, 0].legend()
+    
+    
+    #calculating no of points, wavelength ranges and corresponding equally distributed wavelengths
+    
+    fnosPoints2 = fpdshifted2[0].shape[0]
+    #minWave2 = peakParam2[0][0]-peakParam2[0][1]
+    #maxWave2 = peakParam2[0][2]-peakParam2[0][1]
+    minWave2 = np.min(fpdshifted2[0][:, 0])
+    maxWave2 = np.max(fpdshifted2[0][:, 0])
+    
+    for k2 in range(P2):
+        if fpdshifted2[k2].shape[0] > fnosPoints2:
+            fnosPoints2 = fpdshifted2[k2].shape[0]
+        if np.min(fpdshifted2[k2][:, 0]) > minWave2:
+            minWave2 = np.min(fpdshifted2[k2][:, 0])
+        if np.max(fpdshifted2[k2][:, 0]) < maxWave2:
+            maxWave2 = np.max(fpdshifted2[k2][:, 0])
+    
+    fwavelengths2 = np.linspace(minWave2, maxWave2, num = fnosPoints2)
+    
+    
+    #interpolation
+    
+    ffa2 = np.empty(shape = P2, dtype = object)
+    
+    for l2 in range(P2):
+        ffa2[l2] = interp1d(fpdshifted2[l2][:, 0], fpdshifted2[l2][:, 1])
+    
+    
+    #plotting interpolated peaks and stacked peak
+    
+    ffinalData2 = np.zeros((fnosPoints2, 2))
+    ffinalData2[:, 0] = fwavelengths2
+    
+    for m2 in range(P2):
+        tmpHol2 = ffa2[m2](fwavelengths2)
+        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/float(P2))
+        lab2 = 'Interpolated peak ' + str(m2+1)
+        faxs2[1, 1].plot(fwavelengths2, tmpHol2, label = lab2)
+    
+    faxs2[1, 1].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Stacked peak')
+    
+    faxs2[1, 1].set_title('Spectrum with peaks interpolated in calculated range and stacked peak')
+    faxs2[1, 1].set(xlabel = 'Relative Wavelength (shifted by peak) in Å', ylabel = 'Relative intensity')
+    faxs2[1, 1].legend()
+    
+    faxs2[2, 0].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Just stacked peak')
+    
+    faxs2[2, 0].set_title('Just stacked peak')
+    faxs2[2, 0].set(xlabel = 'Relative Wavelength (shifted by peak) in Å', ylabel = 'Relative intensity')
+    faxs2[2, 0].legend()
+    
+    ffig2.delaxes(faxs2[2, 1])
+    
+    plt.subplots_adjust(hspace=0.3, wspace=0.2)
+    
+    fullTitle2 = 'Plots for stacking'
+    plt.suptitle(fullTitle2, size = 18)
+# -
+
+from peakBasedFunctions import voigtMultiPeakNG
+
+pParRaw = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
+
+# +
+pPar = np.zeros((5,2))
+#print(pParRaw)
+
+pPar[0, 0] = pParRaw['Centre1']
+pPar[1, 0] = pParRaw['Centre2']
+pPar[2, 0] = pParRaw['Centre3']
+pPar[3, 0] = pParRaw['Centre4']
+pPar[4, 0] = pParRaw['Centre5']
+
+pPar[0, 1] = pParRaw['FWHM1']
+pPar[1, 1] = pParRaw['FWHM2']
+pPar[2, 1] = pParRaw['FWHM3']
+pPar[3, 1] = pParRaw['FWHM4']
+pPar[4, 1] = pParRaw['FWHM5']
+
+print(pPar)
+# -
+
+widthNormLinStacker(data5000, pPar)
 
 
