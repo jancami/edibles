@@ -42,11 +42,12 @@ def voigtUniPeak(peakData1, sd1):
 # +
 #importing data
 
-data5000 = np.loadtxt('Pentacene_air_snr5000.txt')
+#data5000 = np.loadtxt('Pentacene_air_snr5000.txt')
 
 # +
 #peak parameters found by hand (required only for testing purposes)
 
+"""
 peakmins = np.zeros(5)
 peakmaxs = np.zeros(5)
 peakcens = np.zeros(5)
@@ -70,20 +71,23 @@ peakcens[3] = 5337.921532
 peakmins[4] = 5358.495471
 peakmaxs[4] = 5365.142247
 peakcens[4] = 5361.090278
+"""
 
 # +
 #extracting wavelengths and intensities within ranges from lab data
 
+"""
 peak1data = data5000[np.logical_and(data5000[:, 0]>=peakmins[0], data5000[:, 0]<=peakmaxs[0])]
 peak2data = data5000[np.logical_and(data5000[:, 0]>=peakmins[1], data5000[:, 0]<=peakmaxs[1])]
 peak3data = data5000[np.logical_and(data5000[:, 0]>=peakmins[2], data5000[:, 0]<=peakmaxs[2])]
 peak4data = data5000[np.logical_and(data5000[:, 0]>=peakmins[3], data5000[:, 0]<=peakmaxs[3])]
 peak5data = data5000[np.logical_and(data5000[:, 0]>=peakmins[4], data5000[:, 0]<=peakmaxs[4])]
-# -
+"""
 
-peak1Params = voigtUniPeak(peak1data, 0.0002402523653397399)
-print(peak1Params)
 
+# +
+#peak1Params = voigtUniPeak(peak1data, 0.0002402523653397399)
+#print(peak1Params)
 
 # +
 #print(np.linspace(0, data5000[:, 0].size, 6, dtype = int))

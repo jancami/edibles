@@ -23,6 +23,7 @@ from scipy.interpolate import interp1d
 # +
 #some testing for working of numpy arrays, please ignore
 
+"""
 a1 = np.array([0, 1, 2, 3])
 b1 = np.array([4, 5, 6])
 print(a1)
@@ -40,8 +41,10 @@ cells2 = np.empty(2, dtype = object)
 print(cells2)
 cells2[0] = a1
 print(cells2)
+"""
 # -
 
+"""
 a1 = np.array([[3, 2, 4, 8, 0, 9], [2, 1, 8, 2, 1, 7]])
 print(a1)
 a2 = np.array([2, 3, 7, 1])
@@ -55,6 +58,8 @@ print(a11)
 #print(a11[:, :, :])
 print(np.greater_equal(a11[0, :, :], a2))
 #print(a11[np.greater_equal(a11[0, :, :], a2)])
+"""
+
 
 # +
 # Stacking function which takes spectrum data and parameters of peaks (start, centre and end) 
@@ -258,17 +263,20 @@ def nonNormalisedLinearStacker(fdata1, peakParam1):
 # +
 #loading the pentacene lab data and simulated spectrum
 
+"""
 data5000 = np.loadtxt('Pentacene_air_snr5000.txt')
 data2000 = np.loadtxt('Pentacene_air_snr2000.txt')
 data1000 = np.loadtxt('Pentacene_air_snr1000.txt')
 data500 = np.loadtxt('Pentacene_air_snr500.txt')
 data100 = np.loadtxt('Pentacene_air_snr100.txt')
+"""
 
 # +
 #putting the just found peak values and ranges
 #I took minimas of peak as central value here
 
-# #%matplotlib inline
+"""
+#%matplotlib inline
 
 peakParam = np.zeros((5,3))
 
@@ -291,10 +299,11 @@ peakParam[3, 1] = 5337.921532
 peakParam[4, 0] = 5358.495471
 peakParam[4, 2] = 5365.142247
 peakParam[4, 1] = 5361.090278
-# -
+"""
 
-nonNormalisedLinearStacker(data100, peakParam)
 
+# +
+#nonNormalisedLinearStacker(data100, peakParam)
 
 # +
 # Stacking function which takes spectrum data and parameters of peaks (centre and fwhm) 
@@ -305,6 +314,7 @@ def widthNormLinStacker(fdata2, peakParam2):
     P2 = peakParam2.shape[0]
     
     
+    #print("Kuch to kar")
     #plotting spectrum
     
     ffig2, faxs2 = plt.subplots(3, 2, figsize=(12,15))
@@ -388,6 +398,8 @@ def widthNormLinStacker(fdata2, peakParam2):
         lab2 = 'Interpolated peak ' + str(m2+1)
         faxs2[1, 1].plot(fwavelengths2, tmpHol2, label = lab2)
     
+    #print(ffinalData2.shape)
+    
     faxs2[1, 1].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Stacked peak')
     
     faxs2[1, 1].set_title('Spectrum with peaks interpolated in calculated range and stacked peak')
@@ -406,13 +418,18 @@ def widthNormLinStacker(fdata2, peakParam2):
     
     fullTitle2 = 'Plots for stacking'
     plt.suptitle(fullTitle2, size = 18)
-# -
-
-from peakBasedFunctions import voigtMultiPeakNG
-
-pParRaw = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
+    
+    #print(ffinalData2.shape)
+    return ffinalData2
 
 # +
+#from peakBasedFunctions import voigtMultiPeakNG
+
+# +
+#pParRaw = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
+# -
+
+"""
 pPar = np.zeros((5,2))
 #print(pParRaw)
 
@@ -429,8 +446,10 @@ pPar[3, 1] = pParRaw['FWHM4']
 pPar[4, 1] = pParRaw['FWHM5']
 
 print(pPar)
-# -
+"""
 
-widthNormLinStacker(data5000, pPar)
+# +
+#widthNormLinStacker(data5000, pPar)
+# -
 
 
