@@ -27,12 +27,14 @@ import os.path
 #loading raw data, change the file name for respective molecule and run this part
 
 #put address for file
-dataRaw = np.loadtxt('C:/Users/hkhan/edibles/edibles/data/Labdata/CRDS/2MethylNaphthalene.dat', skiprows = 1)
+dataRaw = np.loadtxt('C:/Users/hkhan/edibles/edibles/data/Labdata/CRDS/PERYLENE.DAT', skiprows = 1)
 plt.plot(dataRaw[:, 0], dataRaw[:, 1], label = 'Raw Data')
 plt.legend()
 
 # +
 #workup of 1st column of data, change the option and run this part
+
+# %matplotlib notebook
 
 #If in first column of file - wavelength is given in nm set option = 0
 #                           - wavelength is given in angstrom set option = 1
@@ -55,6 +57,8 @@ plt.legend()
 
 # +
 #input flat range here and then run this part
+
+# %matplotlib inline
 
 flatRange = [3120, 3150]
 
