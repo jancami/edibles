@@ -142,9 +142,152 @@ def voigtMultiPeakNG(peakData2, nosPeak1, sd2):
         
         return tbr1
 
+
 # +
 #allPeakParams = voigtMultiPeakNG(data5000, 5, 0.0002402523653397399)
 #print(allPeakParams)
-# -
+# +
+#fits multiple peaks given the number of peaks, the cuts for the peaks (1D array) 
+#and the standard deviation (noise) in the data
 
+def voigtMultiPeakCuts(peakData3, nosPeak2, cuts1, sd3):
+    if (not isinstance(nosPeak2, int)) or nosPeak2 < 1:
+        print('Please enter valid number of peaks (>=1)')
+    elif not (cuts1.size == nosPeak2 + 1) :
+        print('Please provide right number of cuts (number of peaks + 1)')
+    else:
+        xForFit3 = peakData3[:, 0]
+        yForFit3 = 1 - peakData3[:, 1]
+        
+        #sorter1 = np.argsort(peakData3[:, 0])
+        #idxs2 = sorter[np.searchsorted(peakData3[:, 0], cuts1, sorter = sorter1)]
+        #print(idxs2)
+        xRanges1 = np.empty(shape = nosPeak2, dtype = object)
+        yRanges1 = np.empty(shape = nosPeak2, dtype = object) 
+        for it5 in range(nosPeak2):
+            xRanges1[it5] = xForFit3[np.logical_and(xForFit3 >= cuts1[it5], xForFit3 <= cuts1[it5+1])]
+            yRanges1[it5] = yForFit3[np.logical_and(xForFit3 >= cuts1[it5], xForFit3 <= cuts1[it5+1])]
+        #print(xRanges1)
+        
+        vmarr2 = np.empty(shape = nosPeak2, dtype = object)
+        
+        vmarr2[0] = VoigtModel(prefix = 'VM1_')
+        params3 = vmarr2[0].guess(yRanges1[0], x = xRanges1[0])
+        
+        if nosPeak2 > 1:
+            for it3 in range(nosPeak2-1):
+                pref2 = 'VM' + str(it3+2) + '_'
+                vmarr2[it3+1] = VoigtModel(prefix = pref2)
+                params3.update(vmarr2[it3+1].guess(yRanges1[it3], x = xRanges1[it3]))
+            
+            mod3 = np.sum(vmarr2)
+        else:
+            mod3 = vmarr2[0]
+        
+        res3 = mod3.fit(yForFit3, params3, x = xForFit3, weights = 1/sd3)
+        plt.plot(xForFit3, (1 - yForFit3), label = 'Data')
+        plt.plot(xForFit3, (1 - res3.best_fit), label = 'Multipeak Voigt profile fit')
+        plt.legend()
+        
+        tbr2 = {}
+        
+        for it4 in range(nosPeak2):
+            cenkey2 = 'Centre' + str(it4+1)
+            cenval2 = 'VM' + str(it4+1) + '_center'
+            fwhmkey2 = 'FWHM' + str(it4+1)
+            fwhmval2 = 'VM' + str(it4+1) + '_fwhm'
+            tbr2.update({cenkey2: res3.params[cenval2].value})
+            tbr2.update({fwhmkey2: res3.params[fwhmval2].value})
+        
+        tbr2.update({'ChiSq': res3.chisqr})
+        tbr2.update({'RedChiSq': res3.redchi})
+        
+        return tbr2
+# +
+#fits multiple peaks given the number of peaks, the ranges for the peaks (2D array) 
+#and the standard deviation (noise) in the data
+
+def voigtMultiPeakRanges(peakData3, nosPeak2, ranges1, sd3):
+    if (not isinstance(nosPeak2, int)) or nosPeak2 < 1:
+        print('Please enter valid number of peaks (>=1)')
+    elif not (ranges1.shape[0] == nosPeak2) :
+        print('Please provide right number of range (= number of peaks)')
+    else:
+        xForFit3 = peakData3[:, 0]
+        yForFit3 = 1 - peakData3[:, 1]
+        
+        #sorter1 = np.argsort(peakData3[:, 0])
+        #idxs2 = sorter[np.searchsorted(peakData3[:, 0], cuts1, sorter = sorter1)]
+        #print(idxs2)
+        xRanges1 = np.empty(shape = nosPeak2, dtype = object)
+        yRanges1 = np.empty(shape = nosPeak2, dtype = object) 
+        for it5 in range(nosPeak2):
+            xRanges1[it5] = xForFit3[np.logical_and(xForFit3 >= ranges1[it5, 0], xForFit3 <= ranges1[it5, 1])]
+            yRanges1[it5] = yForFit3[np.logical_and(xForFit3 >= ranges1[it5, 0], xForFit3 <= ranges1[it5, 1])]
+        #print(xRanges1)
+        
+        vmarr2 = np.empty(shape = nosPeak2, dtype = object)
+        
+        vmarr2[0] = VoigtModel(prefix = 'VM1_')
+        params3 = vmarr2[0].guess(yRanges1[0], x = xRanges1[0])
+        params3['VM1_center'].set(min = ranges1[0, 0], max = ranges1[0, 1])
+        
+        if nosPeak2 > 1:
+            for it3 in range(nosPeak2-1):
+                pref2 = 'VM' + str(it3+2) + '_'
+                vmarr2[it3+1] = VoigtModel(prefix = pref2)
+                params3.update(vmarr2[it3+1].guess(yRanges1[it3], x = xRanges1[it3]))
+                params3[pref2+'center'].set(min = ranges1[it3, 0], max = ranges1[it3, 1])
+            mod3 = np.sum(vmarr2)
+        else:
+            mod3 = vmarr2[0]
+        
+        res3 = mod3.fit(yForFit3, params3, x = xForFit3, weights = 1/sd3)
+        plt.plot(xForFit3, (1 - yForFit3), label = 'Data')
+        plt.plot(xForFit3, (1 - res3.best_fit), label = 'Multipeak Voigt profile fit')
+        plt.legend()
+        
+        tbr2 = {}
+        
+        for it4 in range(nosPeak2):
+            cenkey2 = 'Centre' + str(it4+1)
+            cenval2 = 'VM' + str(it4+1) + '_center'
+            fwhmkey2 = 'FWHM' + str(it4+1)
+            fwhmval2 = 'VM' + str(it4+1) + '_fwhm'
+            tbr2.update({cenkey2: res3.params[cenval2].value})
+            tbr2.update({fwhmkey2: res3.params[fwhmval2].value})
+        
+        tbr2.update({'ChiSq': res3.chisqr})
+        tbr2.update({'RedChiSq': res3.redchi})
+        
+        return tbr2
+# +
+#fits many single peaks at once in the given ranges of wavelengths
+
+def voigtNUniPeak(peakData4, ranges2, sd4):
+    tbr3 = {}
+    
+    N1 = ranges2.shape[0]
+    
+    for it6 in range(N1):
+        #hol1 = voigtUniPeak(peakData4[np.logical_and(peakData4[:, 0] >= ranges2[it6, 0], 
+        #                                             peakData4[:, 0] <= ranges2[it6, 1])], sd4)
+        yForFit1 = 1 - peakData4[np.logical_and(peakData4[:, 0] >= ranges2[it6, 0], peakData4[:, 0] <= ranges2[it6, 1]), 1]
+        xForFit1 = peakData4[np.logical_and(peakData4[:, 0] >= ranges2[it6, 0], peakData4[:, 0] <= ranges2[it6, 1]), 0]
+        mod1 = VoigtModel()
+        params1 = mod1.guess(yForFit1, x = xForFit1)
+        res1 = mod1.fit(yForFit1, params1, x = xForFit1, weights = 1/sd4)
+        #plt.plot(xForFit1, (1 - yForFit1), label = 'Data')
+        plt.plot(xForFit1, (1 - res1.best_fit), label = 'Fitted peak ' + str(it6+1))
+        cenkey3 = 'Centre' + str(it6+1)
+        fwhmkey3 = 'FWHM' + str(it6+1)
+        chikey1 = 'ChiSq' + str(it6+1)
+        rchikey1 = 'RedChiSq' + str(it6+1)
+        tbr3.update({cenkey3: res1.params['center'].value})
+        tbr3.update({fwhmkey3: res1.params['fwhm'].value})
+        tbr3.update({chikey1: res1.chisqr})
+        tbr3.update({rchikey1: res1.redchi})
+    
+    return tbr3
+# -
 
