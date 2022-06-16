@@ -22,24 +22,23 @@ from peakBasedFunctions import voigtNUniPeak
 from stackingFunctions import widthNormLinStacker
 from edibles.utils.functions import vac2air_ciddor
 import os.path
+from edibles.utils.ContinuumFitter import ContinuumFitter
 
 # +
 #loading raw data, change the file name for respective molecule and run this part
 
 #put address for file
-dataRaw = np.loadtxt('C:/Users/hkhan/edibles/edibles/data/Labdata/CRDS/PERYLENE.DAT', skiprows = 1)
+dataRaw = np.loadtxt('C:/Users/hkhan/edibles/edibles/data/Labdata/CRDS/PYRENE.DAT', skiprows = 1)
 plt.plot(dataRaw[:, 0], dataRaw[:, 1], label = 'Raw Data')
 plt.legend()
 
 # +
 #workup of 1st column of data, change the option and run this part
 
-# %matplotlib notebook
-
-#If in first column of file - wavelength is given in nm set option = 0
-#                           - wavelength is given in angstrom set option = 1
-#                           - wave number if given in 1/cm set option = 2
-option = 0
+#If in first column of file - wavelength is given in nm, set option = 0
+#                           - wavelength is given in angstrom, set option = 1
+#                           - wave number if given in 1/cm, set option = 2
+option = 2
 
 data = np.zeros(dataRaw.shape)
 
@@ -54,39 +53,47 @@ data[:, 1] = dataRaw[:, 1]
     
 plt.plot(data[:, 0], data[:, 1], label = '1st column worked up')
 plt.legend()
-
 # +
-#input flat range here and then run this part
+#run this part to select points to find continuum
+#select points (in strict increasing wavelength order) by left clicking
+#once done selecting, press centre mouse key to end selecting
 
-# %matplotlib inline
+CF1 = ContinuumFitter(data[:, 0], data[:, 1])
+CS, contPoints  = CF1.SplineManualAnchor()
 
-flatRange = [3120, 3150]
 
 # +
 #workup of 2nd column of data, just run this part
 #donot run it twice in sequence!!! (run from loading of raw data if you want to run this part again)
 
-# %matplotlib notebook
-
-data[:, 1] = 1 - 0.01*(dataRaw[:, 1] - np.mean(dataRaw[np.logical_and(data[:, 0] >= flatRange[0], data[:, 0] <= flatRange[1]), 1]))/(np.max(dataRaw[:, 1]) - np.mean(dataRaw[np.logical_and(data[:, 0] >= flatRange[0], data[:, 0] <= flatRange[1]), 1]))
+data[:, 1] = 1 - 0.01*(dataRaw[:, 1] - CS(data[:, 0]))/(np.max(dataRaw[:, 1]) - CS(data[dataRaw[:, 1] == np.max(dataRaw[:, 1]), 0]))
 plt.plot(data[:, 0], data[:, 1], label = 'Final data')
 plt.legend()
 
 # +
-#input rough peak ranges (min, max) here from interacting with above graph and then run this part
+#run this part to select start and end points of peak (in strict increasing wavelength order)
+#select only start and end points of peaks, nothing else
+#make sure no. of points selected is two times no. of peaks
 
-peakRanges = np.array([[3104, 3107],
-                       [3108, 3111],
-                       [3113, 3116],
-                       [3151, 3153.4],
-                       [3153.4, 3154.3]])
+CF2 = ContinuumFitter(data[:, 0], data[:, 1])
+wvs1 = CF2.SelectPoints(n=100, y_message = 'Select peak start and end points')[:, 0]
+peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
+
+# +
+#just run this part to check peak ranges
+
+print(peakRanges)
 
 # +
 #calculation of sd here, just run this part
 
-# %matplotlib inline
+sdArr = data
 
-sd = np.std(data[np.logical_and(data[:, 0] >= flatRange[0], data[:, 0] <= flatRange[1]), 1])
+for it2 in range(peakRanges.shape[0]):
+    #print(np.logical_and(sdArr[:, 0] >= peakRanges[it2, 0], sdArr[:, 0] <= peakRanges[it2, 1]).shape)
+    sdArr = np.delete(sdArr, np.logical_and(sdArr[:, 0] >= peakRanges[it2, 0], sdArr[:, 0] <= peakRanges[it2, 1]), 0)
+
+sd = np.std(sdArr[:, 1])
 print(sd)
 
 # +
@@ -111,7 +118,7 @@ for it1 in range(peakRanges.shape[0]):
 print(params)
 
 #change fileName here according to molecule
-fileName = '2MethylNaphthaleneParams.txt'
+fileName = 'Lab Spectra Parameters/PyreneParams.txt'
 
 if not os.path.exists(fileName):
     np.savetxt(fileName, params)
