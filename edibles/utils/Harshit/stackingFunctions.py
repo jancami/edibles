@@ -314,7 +314,6 @@ def widthNormLinStacker(fdata2, peakParam2):
     P2 = peakParam2.shape[0]
     
     
-    #print("Kuch to kar")
     #plotting spectrum
     
     ffig2, faxs2 = plt.subplots(3, 2, figsize=(12,15))
@@ -328,37 +327,45 @@ def widthNormLinStacker(fdata2, peakParam2):
     faxs2[0, 0].legend()
     
     
-    #extracting wavelengths and intensities within ranges given by peakParam2
+    #extracting peaks
     
-    fpeakdata2 = np.empty(shape = P2, dtype = object)
+    fpdshifted2 = np.empty(shape = P2, dtype = object)
+    skipper1 = 0
+    nonSkip = np.array([])
     
     for i2 in range(P2):
-        #fpeakdata2[i2] = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0], fdata1[:, 0]<=peakParam2[i2, 2]), :]
+        #extracting wavelengths and intensities within ranges given by peakParam2
         #total width of peak is being taken to be 4*FWHM
+        tbc1 = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0]-2*peakParam2[i2, 1]
+                                     , fdata2[:, 0]<=peakParam2[i2, 0]+2*peakParam2[i2, 1]), :]
         
-        fpeakdata2[i2] = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0]-2*peakParam2[i2, 1], fdata2[:, 0]<=peakParam2[i2, 0]+2*peakParam2[i2, 1]), :]
-        pkLbl2 = 'Just peak ' + str(i2+1)
-        faxs2[0, 1].plot(fpeakdata2[i2][:, 0], fpeakdata2[i2][:, 1], label = pkLbl2)
+        #if it does not find 90% of the wavelengths in a peak's range, it skips that peak
+        if tbc1.shape[0] == 0 or (np.min(tbc1[:, 0]) >= peakParam2[i2, 0] - 0.90*2*peakParam2[i2, 1]) or (np.max(tbc1[:, 0]) <= peakParam2[i2, 0] + 0.90*2*peakParam2[i2, 1]):
+            skipper1 = skipper1 + 1
+        else:
+            nonSkip = np.append(nonSkip, i2)
+            
+            pkLbl2 = 'Just peak ' + str(i2+1)
+            faxs2[0, 1].plot(tbc1[:, 0], tbc1[:, 1], label = pkLbl2)
+            
+            #shifting the above peaks by central value and dividing by FWHM/2
+            tbc2 = tbc1
+            tbc2[:, 0] = (tbc1[:, 0] - peakParam2[i2, 0])/(peakParam2[i2, 1]/2)
+            fpdshifted2[i2 - skipper1] = tbc2
+            shPkLbl2 = 'Shifted peak ' + str(i2+1)
+            faxs2[1, 0].plot(fpdshifted2[i2 - skipper1][:, 0], fpdshifted2[i2 - skipper1][:, 1], label = shPkLbl2)
     
     faxs2[0, 1].set_title('Spectrum with just peaks')
     faxs2[0, 1].set(xlabel = 'Wavelength in Å', ylabel = 'Relative intensity')
-    faxs2[0, 1].legend()
-    
-    
-    #shifting the above peaks by central value and dividing by FWHM/2
-    
-    fpdshifted2 = fpeakdata2
-    
-    for j2 in range(P2):
-        fpdshifted2[j2][:, 0] = (fpeakdata2[j2][:, 0] - peakParam2[j2, 0])/(peakParam2[j2, 1]/2)
-        fpdshifted2[j2][:, 1] = fpeakdata2[j2][:, 1]
-        shPkLbl2 = 'Shifted peak ' + str(j2+1)
-        faxs2[1, 0].plot(fpdshifted2[j2][:, 0], fpdshifted2[j2][:, 1], label = shPkLbl2)
+    #faxs2[0, 1].legend()
     
     faxs2[1, 0].set_title('Spectrum with peaks shifted')
     faxs2[1, 0].set(xlabel = 'Relative Wavelength (shifted by peak) in Å', ylabel = 'Relative intensity')
-    faxs2[1, 0].legend()
+    #faxs2[1, 0].legend()
     
+    fpdshifted2 = fpdshifted2[ : P2 - skipper1]
+    #print(skipper1)
+    #print(fpdshifted2.shape)
     
     #calculating no of points, wavelength ranges and corresponding equally distributed wavelengths
     
@@ -368,7 +375,8 @@ def widthNormLinStacker(fdata2, peakParam2):
     minWave2 = np.min(fpdshifted2[0][:, 0])
     maxWave2 = np.max(fpdshifted2[0][:, 0])
     
-    for k2 in range(P2):
+    for k2 in range(fpdshifted2.shape[0]):
+        print('Peak ' + str(nonSkip[k2]) + ' - ' + str(np.min(fpdshifted2[k2][:, 0])) + ' to ' + str(np.max(fpdshifted2[k2][:, 0])))
         if fpdshifted2[k2].shape[0] > fnosPoints2:
             fnosPoints2 = fpdshifted2[k2].shape[0]
         if np.min(fpdshifted2[k2][:, 0]) > minWave2:
@@ -376,14 +384,17 @@ def widthNormLinStacker(fdata2, peakParam2):
         if np.max(fpdshifted2[k2][:, 0]) < maxWave2:
             maxWave2 = np.max(fpdshifted2[k2][:, 0])
     
+    #print(minWave2)
+    #print(maxWave2)
+    
     fwavelengths2 = np.linspace(minWave2, maxWave2, num = fnosPoints2)
     
     
     #interpolation
     
-    ffa2 = np.empty(shape = P2, dtype = object)
+    ffa2 = np.empty(shape = fpdshifted2.shape[0], dtype = object)
     
-    for l2 in range(P2):
+    for l2 in range(fpdshifted2.shape[0]):
         ffa2[l2] = interp1d(fpdshifted2[l2][:, 0], fpdshifted2[l2][:, 1])
     
     
@@ -392,10 +403,10 @@ def widthNormLinStacker(fdata2, peakParam2):
     ffinalData2 = np.zeros((fnosPoints2, 2))
     ffinalData2[:, 0] = fwavelengths2
     
-    for m2 in range(P2):
+    for m2 in range(fpdshifted2.shape[0]):
         tmpHol2 = ffa2[m2](fwavelengths2)
-        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/float(P2))
-        lab2 = 'Interpolated peak ' + str(m2+1)
+        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/float(fpdshifted2.shape[0]))
+        lab2 = 'Interpolated peak ' + str(nonSkip[m2]+1)
         faxs2[1, 1].plot(fwavelengths2, tmpHol2, label = lab2)
     
     #print(ffinalData2.shape)
@@ -404,7 +415,7 @@ def widthNormLinStacker(fdata2, peakParam2):
     
     faxs2[1, 1].set_title('Spectrum with peaks interpolated in calculated range and stacked peak')
     faxs2[1, 1].set(xlabel = 'Relative Wavelength (shifted by peak) in Å', ylabel = 'Relative intensity')
-    faxs2[1, 1].legend()
+    #faxs2[1, 1].legend()
     
     faxs2[2, 0].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Just stacked peak')
     

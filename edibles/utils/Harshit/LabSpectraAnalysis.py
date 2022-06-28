@@ -105,7 +105,10 @@ plt.legend()
 print(rawParams)
 
 # +
-#load raw parameters into array passable in stacker, change the file name according to molecule and run this part
+#to load raw parameters into array passable in stacker, change the file name according to molecule and run this part
+#if you want to force edit, change fEdit to 1, otherwise keep it to 0
+
+fEdit = 1
 
 params = np.zeros((peakRanges.shape[0], 2))
 
@@ -120,7 +123,7 @@ print(params)
 #change fileName here according to molecule
 fileName = 'Lab Spectra Parameters/PyreneParams.txt'
 
-if not os.path.exists(fileName):
+if (not os.path.exists(fileName)) or fEdit == 1:
     np.savetxt(fileName, params)
 
 # +
