@@ -441,7 +441,6 @@ if __name__ == "__main__":
     print("1. Results from getFilteredObsList: ")
     print(List)
 
-
     # EXAMPLE 2: Find all objects that match certain criteria. 
     List=pythia.getFilteredObjects(object=["HD 145502"], EBV_min=0.5, fH2_max=.3)
     print("2. Results from getFilteredObjects: ")

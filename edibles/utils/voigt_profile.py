@@ -385,7 +385,7 @@ if __name__ == "__main__":
     well as for the various forms of the normalized Voigt profiles. One test aims to
     reproduce the high-resolution profile for the K line of omi Per (form Welty et al.)
     """
-    show_example = 2
+    show_example = 1
 
     if show_example == 1:
         #############################################################
