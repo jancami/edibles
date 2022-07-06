@@ -222,13 +222,6 @@ def dataInRange(data1, rangeArr1):
     return data1[np.logical_and(data1[:, 0] >= rangeArr1[0], data1[:, 0] <= rangeArr1[1]), :]
 
 
-# -
-
-testData1 = dataInRange(datasContRem[0][1], [4650, 4660])
-print(testData1)
-plt.plot(testData1[:, 0], testData1[:, 1])
-plt.show()
-
 # +
 #removing the emission lines from the spectrum
 #if on jupyter, just run this part
@@ -280,9 +273,6 @@ if not ((len(datasEmRem) - 2 * (len(datasEmRem)//2)) == 0):
     ffig5.delaxes(faxs3[len(datasEmRem)//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
-# -
-
-print((datasEmRem[0][1] == datasContRem[0][1]).all())
 
 # +
 #removing the stellar lines from the spectrum
