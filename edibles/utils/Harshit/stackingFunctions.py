@@ -356,83 +356,88 @@ def widthNormLinStacker(fdata2, peakParam2):
             shPkLbl2 = 'Shifted peak ' + str(i2+1)
             faxs2[1, 0].plot(fpdshifted2[i2 - skipper1][:, 0], fpdshifted2[i2 - skipper1][:, 1], label = shPkLbl2)
     
-    faxs2[0, 1].set_title('Spectrum with just peaks')
-    faxs2[0, 1].set(xlabel = 'Wavelength in Å', ylabel = 'Relative intensity')
-    #faxs2[0, 1].legend()
+    if skipper1 == P2:
+        ffig2.clf()
+        print('No peaks in range')
+        return np.array([])
+    else:
+        faxs2[0, 1].set_title('Spectrum with just peaks')
+        faxs2[0, 1].set(xlabel = 'Wavelength in Å', ylabel = 'Relative intensity')
+        #faxs2[0, 1].legend()
     
-    faxs2[1, 0].set_title('Spectrum with peaks shifted')
-    faxs2[1, 0].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
-    #faxs2[1, 0].legend()
+        faxs2[1, 0].set_title('Spectrum with peaks shifted')
+        faxs2[1, 0].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
+        #faxs2[1, 0].legend()
     
-    fpdshifted2 = fpdshifted2[ : P2 - skipper1]
-    #print(skipper1)
-    #print(fpdshifted2.shape)
+        fpdshifted2 = fpdshifted2[ : P2 - skipper1]
+        #print(skipper1)
+        #print(fpdshifted2.shape)
     
-    #calculating no of points, wavelength ranges and corresponding equally distributed wavelengths
+        #calculating no of points, wavelength ranges and corresponding equally distributed wavelengths
     
-    fnosPoints2 = fpdshifted2[0].shape[0]
-    #minWave2 = peakParam2[0][0]-peakParam2[0][1]
-    #maxWave2 = peakParam2[0][2]-peakParam2[0][1]
-    minWave2 = np.min(fpdshifted2[0][:, 0])
-    maxWave2 = np.max(fpdshifted2[0][:, 0])
+        fnosPoints2 = fpdshifted2[0].shape[0]
+        #minWave2 = peakParam2[0][0]-peakParam2[0][1]
+        #maxWave2 = peakParam2[0][2]-peakParam2[0][1]
+        minWave2 = np.min(fpdshifted2[0][:, 0])
+        maxWave2 = np.max(fpdshifted2[0][:, 0])
     
-    for k2 in range(fpdshifted2.shape[0]):
-        #print('Peak ' + str(nonSkip[k2]) + ' - ' + str(np.min(fpdshifted2[k2][:, 0])) + ' to ' + str(np.max(fpdshifted2[k2][:, 0])))
-        if fpdshifted2[k2].shape[0] > fnosPoints2:
-            fnosPoints2 = fpdshifted2[k2].shape[0]
-        if np.min(fpdshifted2[k2][:, 0]) > minWave2:
-            minWave2 = np.min(fpdshifted2[k2][:, 0])
-        if np.max(fpdshifted2[k2][:, 0]) < maxWave2:
-            maxWave2 = np.max(fpdshifted2[k2][:, 0])
+        for k2 in range(fpdshifted2.shape[0]):
+            #print('Peak ' + str(nonSkip[k2]) + ' - ' + str(np.min(fpdshifted2[k2][:, 0])) + ' to ' + str(np.max(fpdshifted2[k2][:, 0])))
+            if fpdshifted2[k2].shape[0] > fnosPoints2:
+                fnosPoints2 = fpdshifted2[k2].shape[0]
+            if np.min(fpdshifted2[k2][:, 0]) > minWave2:
+                minWave2 = np.min(fpdshifted2[k2][:, 0])
+            if np.max(fpdshifted2[k2][:, 0]) < maxWave2:
+                maxWave2 = np.max(fpdshifted2[k2][:, 0])
     
-    #print(minWave2)
-    #print(maxWave2)
+        #print(minWave2)
+        #print(maxWave2)
     
-    fwavelengths2 = np.linspace(minWave2, maxWave2, num = fnosPoints2)
-    
-    
-    #interpolation
-    
-    ffa2 = np.empty(shape = fpdshifted2.shape[0], dtype = object)
-    
-    for l2 in range(fpdshifted2.shape[0]):
-        ffa2[l2] = interp1d(fpdshifted2[l2][:, 0], fpdshifted2[l2][:, 1])
+        fwavelengths2 = np.linspace(minWave2, maxWave2, num = fnosPoints2)
     
     
-    #plotting interpolated peaks and stacked peak
+        #interpolation
     
-    ffinalData2 = np.zeros((fnosPoints2, 2))
-    ffinalData2[:, 0] = fwavelengths2
+        ffa2 = np.empty(shape = fpdshifted2.shape[0], dtype = object)
     
-    for m2 in range(fpdshifted2.shape[0]):
-        tmpHol2 = ffa2[m2](fwavelengths2)
-        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/float(fpdshifted2.shape[0]))
-        lab2 = 'Interpolated peak ' + str(nonSkip[m2]+1)
-        faxs2[1, 1].plot(fwavelengths2, tmpHol2, label = lab2)
+        for l2 in range(fpdshifted2.shape[0]):
+            ffa2[l2] = interp1d(fpdshifted2[l2][:, 0], fpdshifted2[l2][:, 1])
     
-    #print(ffinalData2.shape)
     
-    faxs2[1, 1].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Stacked peak')
+        #plotting interpolated peaks and stacked peak
     
-    faxs2[1, 1].set_title('Spectrum with peaks interpolated in calculated range and stacked peak')
-    faxs2[1, 1].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
-    #faxs2[1, 1].legend()
+        ffinalData2 = np.zeros((fnosPoints2, 2))
+        ffinalData2[:, 0] = fwavelengths2
     
-    faxs2[2, 0].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Just stacked peak')
+        for m2 in range(fpdshifted2.shape[0]):
+            tmpHol2 = ffa2[m2](fwavelengths2)
+            ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/float(fpdshifted2.shape[0]))
+            lab2 = 'Interpolated peak ' + str(nonSkip[m2]+1)
+            faxs2[1, 1].plot(fwavelengths2, tmpHol2, label = lab2)
     
-    faxs2[2, 0].set_title('Just stacked peak')
-    faxs2[2, 0].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
-    faxs2[2, 0].legend()
+        #print(ffinalData2.shape)
     
-    ffig2.delaxes(faxs2[2, 1])
+        faxs2[1, 1].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Stacked peak')
     
-    plt.subplots_adjust(hspace=0.3, wspace=0.2)
+        faxs2[1, 1].set_title('Spectrum with peaks interpolated in calculated range and stacked peak')
+        faxs2[1, 1].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
+        #faxs2[1, 1].legend()
     
-    fullTitle2 = 'Plots for stacking'
-    plt.suptitle(fullTitle2, size = 18)
+        faxs2[2, 0].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Just stacked peak')
     
-    #print(ffinalData2.shape)
-    return ffinalData2
+        faxs2[2, 0].set_title('Just stacked peak')
+        faxs2[2, 0].set(xlabel = 'Shifted and normalised wavelength', ylabel = 'Relative intensity')
+        faxs2[2, 0].legend()
+    
+        ffig2.delaxes(faxs2[2, 1])
+    
+        plt.subplots_adjust(hspace=0.3, wspace=0.2)
+    
+        fullTitle2 = 'Plots for stacking'
+        plt.suptitle(fullTitle2, size = 18)
+    
+        #print(ffinalData2.shape)
+        return ffinalData2
 
 # +
 #from peakBasedFunctions import voigtMultiPeakNG
@@ -472,9 +477,25 @@ print(pPar)
 #where structure of xinfo (or yinfo) is as ->
 #[quantity name, units if any ('No units' if no units)]
 
-def observationStacker(obsData, axsInfo):
+def observationStacker(obsDataRaw, axsInfo, saveJPG = False, address = ''):
+    assert (not saveJPG) or address != '', 'Enter some valid address'
     
-    P2 = len(obsData)
+    P2 = len(obsDataRaw)
+    
+    
+    #removing empty observations
+    
+    obsData = np.empty(shape = P2, dtype = object)
+    
+    skipper2 = 0
+    
+    for i2 in range(P2):
+        if obsDataRaw[i2].shape[0] == 0:
+            skipper2 = skipper2 + 1
+        else:
+            obsData[i2 - skipper2] = obsDataRaw[i2]
+    
+    obsData = obsData[ : P2 - skipper2]
     
     
     #plotting all observations
@@ -483,7 +504,7 @@ def observationStacker(obsData, axsInfo):
     
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     
-    for i1 in range(P2):
+    for i1 in range(len(obsData)):
         obsLab1 = 'Observation ' + str(i1+1)
         faxs2[0].plot(obsData[i1][:, 0], obsData[i1][:, 1], label = obsLab1)
     
@@ -511,7 +532,7 @@ def observationStacker(obsData, axsInfo):
     minWave2 = np.min(obsData[0][:, 0])
     maxWave2 = np.max(obsData[0][:, 0])
     
-    for k2 in range(P2):
+    for k2 in range(len(obsData)):
         #print('Peak ' + str(nonSkip[k2]) + ' - ' + str(np.min(fpdshifted2[k2][:, 0])) + ' to ' + str(np.max(fpdshifted2[k2][:, 0])))
         if obsData[k2].shape[0] > fnosPoints2:
             fnosPoints2 = obsData[k2].shape[0]
@@ -530,7 +551,7 @@ def observationStacker(obsData, axsInfo):
     
     ffa2 = np.empty(shape = P2, dtype = object)
     
-    for l2 in range(P2):
+    for l2 in range(len(obsData)):
         ffa2[l2] = interp1d(obsData[l2][:, 0], obsData[l2][:, 1])
     
     
@@ -539,7 +560,7 @@ def observationStacker(obsData, axsInfo):
     ffinalData2 = np.zeros((fnosPoints2, 2))
     ffinalData2[:, 0] = fwavelengths2
     
-    for m2 in range(P2):
+    for m2 in range(len(obsData)):
         tmpHol2 = ffa2[m2](fwavelengths2)
         ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/P2)
     
@@ -555,9 +576,10 @@ def observationStacker(obsData, axsInfo):
     fullTitle2 = 'Plots for stacking'
     plt.suptitle(fullTitle2, size = 18)
     
+    if saveJPG:
+        plt.savefig(address)
+    
     #print(ffinalData2.shape)
     return ffinalData2
 # -
-
-
 

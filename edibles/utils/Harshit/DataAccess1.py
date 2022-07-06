@@ -29,14 +29,18 @@ starName = 'HD 183143' #do put space between HD and number
 # Perylene -> 5
 # Phenanthrene -> 6
 # Pyrene -> 7
+# Phenalenyl -> 8
 # Any other molecule -> 0 and input the molecule name (according to parameters file)
-moleculeNo = 5
+moleculeNo = 7
 
 #put lower range of wavelengths to extract from edibles data
-minWave = 4000
+minWave = 3000
 
 #put upper range of wavelengths to extract from edibles data
-maxWave = 4200
+maxWave = 6000
+
+#if you want to force edit final stacked data file, change fEdit to 1, otherwise keep it to 0
+fEdit = 0
 
 # +
 #getting molecule name from given molecule number above
@@ -56,6 +60,8 @@ elif moleculeNo == 6:
     molName = 'Phenanthrene'
 elif moleculeNo == 7:
     molName = 'Pyrene'
+elif moleculeNo == 8:
+    molName = 'Phenalenyl'
 elif moleculeNo == 0:
     molName = input('Enter molecule file name (as in parameters file):\n')
 
@@ -72,6 +78,9 @@ from stackingFunctions import widthNormLinStacker
 from lmfit.models import VoigtModel
 import copy
 from stackingFunctions import observationStacker
+from peakBasedFunctions import voigtUniPeak
+from edibles import PYTHONDIR
+import os.path
 
 # +
 #loading relevant data files from edibles
@@ -85,7 +94,7 @@ fnames = rawList.tolist()
 #extracting information from data files and plotting the graphs
 #if on jupyter, just run this part
 
-#structure of array of all datasRaw array is as ->
+#structure of array of datasRaw array is as ->
 #[array of info of first observation,
 # array of info of second observation,
 # array of info of third observation,.....]
@@ -103,13 +112,45 @@ plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 for it1, file in enumerate(fnames):
     sp = EdiblesSpectrum(file)
-    sp.getSpectrum(xmin = minWave, xmax = maxWave)
+    #print('minWave is '+str(minWave))
+    #print('raw_wave min is '+str(np.min(sp.raw_wave)))
+    #print('maxWave is '+str(maxWave))
+    #print('raw_wave max is '+str(np.max(sp.raw_wave)))
+    
+    leftEdge = 0
+    rightEdge = 0
+    
+    if minWave <= np.min(sp.raw_wave):
+        leftEdge = 1
+        #print('Left edge detected')
+    if maxWave >= np.max(sp.raw_wave):
+        rightEdge = 1
+        #print('Right edge detected')
+    
+    #sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave))
+    #               , xmax = min(maxWave, np.max(sp.raw_wave)))
+    sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave)+1)
+                   , xmax = min(maxWave, np.max(sp.raw_wave)-1))
+    #sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave[sp.raw_wave != np.min(sp.raw_wave)])), 
+    #               xmax = min(maxWave, np.max(sp.raw_wave[sp.raw_wave != np.max(sp.raw_wave)])))
     
     #infoArr first column  -> date (string)
     #        second column -> data
     infoArr = np.empty(shape = 2, dtype = object)
     infoArr[0] = str(sp.datetime.day) + '/' + str(sp.datetime.month) + '/' + str(sp.datetime.year)
-    infoArr[1] = np.array([sp.bary_wave, sp.bary_flux]).transpose()
+    infoArr[1] = np.delete(np.array([sp.bary_wave, sp.bary_flux]).transpose(), 
+                           np.logical_or(sp.bary_wave <= np.min(sp.bary_wave) + 40.0*leftEdge, 
+                                         sp.bary_wave >= np.max(sp.bary_wave) - 40.0*rightEdge), 0)
+    
+    #if leftEdge:
+    #    infoArr[1] = np.delete(infoArr[1], infoArr[1][:, 0] <= np.min(infoArr[1][:, 0]) + 40.0, 0)
+    #    print('Left edge deletion happened')
+        
+    #if rightEdge:
+    #    infoArr[1] = np.delete(infoArr[1], infoArr[1][:, 0] >= np.max(infoArr[1][:, 0]) - 40.0, 0)
+    #    print('Right edge deletion happened')
+    
+    #print(infoArr[1])
     
     datasRaw[it1] = infoArr
     
@@ -118,7 +159,8 @@ for it1, file in enumerate(fnames):
     else:
         desax1 = faxs1[it1//2, it1 - 2 * (it1//2)]
     
-    desax1.plot(sp.bary_wave, sp.bary_flux, label="Barycentric")
+    #desax1.plot(sp.wave, sp.flux, label="Geocentric")
+    desax1.plot(datasRaw[it1][1][:, 0], datasRaw[it1][1][:, 1], label="Barycentric")
     tit1 = 'Merged spectra of ' + starName + ', observation ' + str(it1+1) + ' (On ' + str(sp.datetime.day) + '/' + str(sp.datetime.month) + '/' + str(sp.datetime.year) + ')'
     desax1.set_title(tit1)
     desax1.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
@@ -129,11 +171,12 @@ if not ((len(fnames) - 2 * (len(fnames)//2)) == 0):
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
+
 # +
 #removing the continuum from the spectrum
 #if on jupyter, just run this part
 
-#structure of array of all datasContRem array (after continuum removal is done) is as ->
+#structure of array of datasContRem array (after continuum removal is done) is as ->
 #[array of info of first observation,
 # array of info of second observation,
 # array of info of third observation,.....]
@@ -141,12 +184,12 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 #where structure of array of info of a observation is as ->
 #[date of observation as a string, array of data of observation]
 #
-#where in the array of data of observation, first column is the wavelengths 
+#where in the array of data of observation (artifacts removed), first column is the wavelengths 
 #and second column is the respective intensities (continuum removed)
 
 datasContRem = copy.deepcopy(datasRaw)
 
-ffig2, faxs2 = plt.subplots(-((-len(datasContRem))//2), 2, figsize=(12,-5*((-len(datasContRem))//2)))
+ffig2, faxs2 = plt.subplots(-((-len(datasRaw))//2), 2, figsize=(12,-5*((-len(datasRaw))//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 for it2 in range(len(datasContRem)):
@@ -170,11 +213,27 @@ if not ((len(datasContRem) - 2 * (len(datasContRem)//2)) == 0):
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
+
 # +
-#removing the stellar lines from the spectrum
+#helper function for accessing a section of data in given wavelength range (length 2 array)
 #if on jupyter, just run this part
 
-#structure of array of all datasLineRem array (after stellar line removal is done) is as ->
+def dataInRange(data1, rangeArr1):
+    return data1[np.logical_and(data1[:, 0] >= rangeArr1[0], data1[:, 0] <= rangeArr1[1]), :]
+
+
+# -
+
+testData1 = dataInRange(datasContRem[0][1], [4650, 4660])
+print(testData1)
+plt.plot(testData1[:, 0], testData1[:, 1])
+plt.show()
+
+# +
+#removing the emission lines from the spectrum
+#if on jupyter, just run this part
+
+#structure of array of datasLineRem array (after stellar line removal is done) is as ->
 #[array of info of first observation,
 # array of info of second observation,
 # array of info of third observation,.....]
@@ -182,21 +241,76 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 #where structure of array of info of a observation is as ->
 #[date of observation as a string, array of data of observation]
 #
-#where in the array of data of observation, first column is the wavelengths 
+#where in the array of data of observation (artifacts removed), first column is the wavelengths 
+#and second column is the respective intensities (continuum and emission lines removed)
+
+datasEmRem = copy.deepcopy(datasContRem)
+
+ffig5, faxs5 = plt.subplots(-((-len(datasEmRem))//2), 2, figsize=(12,-5*((-len(datasEmRem))//2)))
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+for it10 in range(len(datasEmRem)):
+    CF4 = ContinuumFitter(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1])
+    wvs2 = CF4.SelectPoints(n=100, y_message = 'Select emission peak start and end points')[:, 0]
+    peakRanges2 = np.reshape(wvs2, (int(wvs2.size/2), 2))
+    for it11 in range(peakRanges2.shape[0]):
+        #yForFit1 = 1 - datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
+        #xForFit1 = datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
+        #mod1 = VoigtModel()
+        #params1 = mod1.guess(yForFit1, x = xForFit1)
+        #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
+        #print('Doing peak ' + str(it11))
+        dcir = dataInRange(datasContRem[it10][1], peakRanges2[it11])
+        res2 = voigtUniPeak(peakData1 = dcir, plot = 0, absOrEm = 1, retMod = True)
+        datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(1 + res2.best_fit)
+        
+    if(len(datasEmRem) < 3):
+        desax5 = faxs5[it10]
+    else:
+        desax5 = faxs5[it10//2, it10 - 2 * (it10//2)]
+    
+    desax5.plot(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1], label="Barycentric (Emission lines not removed)")
+    desax5.plot(datasEmRem[it10][1][:, 0], datasEmRem[it10][1][:, 1], label="Barycentric (Emission lines removed)")
+    tit5 = 'Spectra of ' + starName + ', observation ' + str(it10+1) + ' (On ' + datasEmRem[it10][0] + ')'
+    desax5.set_title(tit5)
+    desax5.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
+    desax5.legend()
+
+if not ((len(datasEmRem) - 2 * (len(datasEmRem)//2)) == 0):
+    ffig5.delaxes(faxs3[len(datasEmRem)//2, 1])
+
+plt.subplots_adjust(hspace=0.3, wspace=0.2)
+# -
+
+print((datasEmRem[0][1] == datasContRem[0][1]).all())
+
+# +
+#removing the stellar lines from the spectrum
+#if on jupyter, just run this part
+
+#structure of array of datasLineRem array (after stellar line removal is done) is as ->
+#[array of info of first observation,
+# array of info of second observation,
+# array of info of third observation,.....]
+#
+#where structure of array of info of a observation is as ->
+#[date of observation as a string, array of data of observation]
+#
+#where in the array of data of observation (artifacts removed), first column is the wavelengths 
 #and second column is the respective intensities (continuum and stellar line removed)
 
-datasLineRem = copy.deepcopy(datasContRem)
+datasLineRem = copy.deepcopy(datasEmRem)
 
 ffig3, faxs3 = plt.subplots(-((-len(datasLineRem))//2), 2, figsize=(12,-5*((-len(datasLineRem))//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 for it3 in range(len(datasLineRem)):
-    CF3 = ContinuumFitter(datasContRem[it3][1][:, 0], datasContRem[it3][1][:, 1])
+    CF3 = ContinuumFitter(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1])
     wvs1 = CF3.SelectPoints(n=100, y_message = 'Select peak start and end points')[:, 0]
     peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
     for it4 in range(peakRanges.shape[0]):
-        yForFit1 = 1 - datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
-        xForFit1 = datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
+        yForFit1 = 1 - datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
+        xForFit1 = datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
         mod1 = VoigtModel()
         params1 = mod1.guess(yForFit1, x = xForFit1)
         res1 = mod1.fit(yForFit1, params1, x = xForFit1)
@@ -207,7 +321,7 @@ for it3 in range(len(datasLineRem)):
     else:
         desax3 = faxs3[it3//2, it3 - 2 * (it3//2)]
     
-    desax3.plot(datasContRem[it3][1][:, 0], datasContRem[it3][1][:, 1], label="Barycentric (Lines unremoved)")
+    desax3.plot(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1], label="Barycentric (Lines unremoved)")
     desax3.plot(datasLineRem[it3][1][:, 0], datasLineRem[it3][1][:, 1], label="Barycentric (Lines removed)")
     tit3 = 'Spectra of ' + starName + ', observation ' + str(it3+1) + ' (On ' + datasLineRem[it3][0] + ')'
     desax3.set_title(tit3)
@@ -236,7 +350,7 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 #where structure of array of info of a observation is as ->
 #[date of observation as a string, array of data of observation]
 #
-#where in the array of data of observation, first column is the wavelengths (shifted in frame of cloud) 
+#where in the array of data of observation (artifacts removed), first column is the wavelengths (shifted in frame of cloud) 
 #and second column is the respective intensities (continuum and stellar line removed)
 
 
@@ -256,14 +370,14 @@ datas = np.empty(shape = len(vels), dtype = object)
 for it7 in range(len(vels)):
     datas[it7] = copy.deepcopy(datasLineRem)
 
-ffig4, faxs4 = plt.subplots(-((-len(datas)*len(vels))//2), 2, figsize=(12,-5*((-len(datas)*len(vels))//2)))
+ffig4, faxs4 = plt.subplots(-((-len(datasLineRem)*len(vels))//2), 2, figsize=(12,-5*((-len(datasLineRem)*len(vels))//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-for it5 in range(len(datas)):
+for it5 in range(len(datasLineRem)):
     for it6 in range(len(vels)):
         datas[it6][it5][1][:, 0] = datas[it6][it5][1][:, 0] * (1 + (float(vels[it6])/299792.458))
         
-        if(len(datas)*len(vels) < 3):
+        if(len(datasLineRem)*len(vels) < 3):
             desax4 = faxs4[it5*len(vels) + it6]
         else:
             desax4 = faxs4[(it5*len(vels) + it6)//2, it5*len(vels) + it6 - 2 * ((it5*len(vels) + it6)//2)]
@@ -275,7 +389,7 @@ for it5 in range(len(datas)):
         desax4.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
         desax4.legend()
         
-if not ((len(datas)*len(vels) - 2 * ((len(datas)*len(vels))//2)) == 0):
+if not ((len(datasLineRem)*len(vels) - 2 * ((len(datasLineRem)*len(vels))//2)) == 0):
     ffig4.delaxes(faxs4[(len(datas)*len(vels))//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
@@ -315,4 +429,23 @@ for it8 in range(len(datas)):
         
 #print(totalStack.shape)
 #print(stackRanges)
-finalStacked = observationStacker(totalStack, [['Normalised wavelength', 'No units'], ['Flux', 'No units']])
+fileName = PYTHONDIR + '/data/FinalStacks/' + starName + '/' + starName.replace(' ','') + '_' + molName + '.txt'
+imgFileName = PYTHONDIR + '/data/FinalStacks/' + starName + '/' + starName.replace(' ','') + '_' + molName + '.jpg'
+
+if (not os.path.exists(fileName)) or fEdit == 1:
+    imgSav = True
+    imgAdd = imgFileName
+else:
+    imgSav = False
+    imgAdd = ''
+
+finalStacked = observationStacker(totalStack, 
+                                  [['Normalised wavelength', 'No units'], ['Flux', 'No units']],
+                                  saveJPG = imgSav,
+                                  address = imgAdd)
+
+if (not os.path.exists(fileName)) or fEdit == 1:
+    np.savetxt(fileName, finalStacked)
+# -
+
+

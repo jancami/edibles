@@ -28,7 +28,7 @@ from edibles.utils.ContinuumFitter import ContinuumFitter
 #loading raw data, change the file name for respective molecule and run this part
 
 #put address for file
-dataRaw = np.loadtxt('C:/Users/hkhan/edibles/edibles/data/Labdata/CRDS/PYRENE.DAT', skiprows = 1)
+dataRaw = np.loadtxt(r'C:\Users\hkhan\edibles\edibles\data\Labdata\SchmidtLab\UNSWphenalenyl_D1.DAT', skiprows = 1)
 plt.plot(dataRaw[:, 0], dataRaw[:, 1], label = 'Raw Data')
 plt.legend()
 
@@ -76,12 +76,13 @@ plt.legend()
 #make sure no. of points selected is two times no. of peaks
 
 CF2 = ContinuumFitter(data[:, 0], data[:, 1])
-wvs1 = CF2.SelectPoints(n=100, y_message = 'Select peak start and end points')[:, 0]
+wvs1 = CF2.SelectPoints(n=100, y_message = 'Select peak start and end points', vetoTimeout = True)[:, 0]
 peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
 
 # +
 #just run this part to check peak ranges
 
+#peakRanges = np.delete(peakRanges, 3, 0) #use to delete some peaks that just aren't worth changing
 print(peakRanges)
 
 # +
@@ -108,7 +109,7 @@ print(rawParams)
 #to load raw parameters into array passable in stacker, change the file name according to molecule and run this part
 #if you want to force edit, change fEdit to 1, otherwise keep it to 0
 
-fEdit = 1
+fEdit = 0
 
 params = np.zeros((peakRanges.shape[0], 2))
 
@@ -121,7 +122,7 @@ for it1 in range(peakRanges.shape[0]):
 print(params)
 
 #change fileName here according to molecule
-fileName = 'Lab Spectra Parameters/PyreneParams.txt'
+fileName = 'Lab Spectra Parameters/PhenalenylParams.txt'
 
 if (not os.path.exists(fileName)) or fEdit == 1:
     np.savetxt(fileName, params)

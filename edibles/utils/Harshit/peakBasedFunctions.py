@@ -19,24 +19,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit.models import VoigtModel
+import copy
 
 
 # +
-#fits voigt profile to individual peaks given the standard deviation (noise) in the data
+#fits voigt profile to individual peaks
+#
+#parameters ->
+#peakData1 - data to fit voigt profile to (Nx2 array)
+#sd1 - standard deviation value to be given if needed (if not needed, simply don't give that argument)
+#absOrEm - 0 (default) if you want to fit an absorption line, 1 if you want to fit an emission line
+#plot - 0 (default) if you don't want to plot anything, 1 if you want to plot only fit, 2 if you want to plot both data and fit
+#retMod - False (default) if you want only parameters returned, True if you want to return the fitted model itself, 
 
-def voigtUniPeak(peakData1, sd1):
-    yForFit1 = 1 - peakData1[:, 1]
-    xForFit1 = peakData1[:, 0]
+def voigtUniPeak(peakData1, sd1 = 1, absOrEm = 0, plot = 2, retMod = False):
+    assert absOrEm == 0 or absOrEm == 1, 'Please enter valid value for parameter absOrEm (0 or 1)'
+    assert plot == 0 or plot == 1 or plot == 2, 'Please enter valid value for parameter plot (0, 1 or 2)'
+    
+    yForFit1 = (1 - 2*absOrEm)*(1 - peakData1[:, 1])
+    
+    xForFit1 = copy.deepcopy(peakData1[:, 0])
     mod1 = VoigtModel()
     params1 = mod1.guess(yForFit1, x = xForFit1)
     res1 = mod1.fit(yForFit1, params1, x = xForFit1, weights = 1/sd1)
-    plt.plot(xForFit1, (1 - yForFit1), label = 'Data')
-    plt.plot(xForFit1, (1 - res1.best_fit), label = 'Voigt profile fit')
-    plt.legend()
-    return {'Centre': res1.params['center'].value, 
-            'FWHM': res1.params['fwhm'].value, 
-            'ChiSq': res1.chisqr, 
-            'RedChiSq': res1.redchi}
+    
+    if plot == 1:
+        plt.plot(xForFit1, (1 - res1.best_fit), label = 'Voigt profile fit')
+        plt.legend()
+    elif plot == 2:
+        plt.plot(xForFit1, (1 - yForFit1), label = 'Data')
+        plt.plot(xForFit1, (1 - res1.best_fit), label = 'Voigt profile fit')
+        plt.legend()
+    
+    if retMod:
+        return res1
+    else:
+        return {'Centre': res1.params['center'].value, 
+                'FWHM': res1.params['fwhm'].value, 
+                'ChiSq': res1.chisqr, 
+                'RedChiSq': res1.redchi}
 
 
 # +
