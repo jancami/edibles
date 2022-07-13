@@ -562,7 +562,7 @@ def observationStacker(obsDataRaw, axsInfo, saveJPG = False, address = ''):
     
     for m2 in range(len(obsData)):
         tmpHol2 = ffa2[m2](fwavelengths2)
-        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/P2)
+        ffinalData2[:, 1] = ffinalData2[:, 1] + (tmpHol2/len(obsData))
     
     
     faxs2[1].plot(ffinalData2[:, 0], ffinalData2[:, 1], label = 'Just stacked peak')

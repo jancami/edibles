@@ -19,7 +19,7 @@
 #if on jupyter, again change the parameters and then run this part!!!
 
 #put star name
-starName = 'HD 183143' #do put space between HD and number
+starName = 'HD 147889' #do put space between HD and number
 
 #select molecule as follows -
 # 2-Methylnaphthalene -> 1
@@ -37,10 +37,13 @@ moleculeNo = 7
 minWave = 3000
 
 #put upper range of wavelengths to extract from edibles data
-maxWave = 6000
+maxWave = 5500
 
-#if you want to force edit final stacked data file, change fEdit to 1, otherwise keep it to 0
-fEdit = 0
+#if you want to force edit cleaned up data file, change fEdit to 1, otherwise keep it to 0
+fEdit1 = 0
+
+#if you want to force edit final stacked data and image files, change fEdit to 1, otherwise keep it to 0
+fEdit2 = 0
 
 # +
 #getting molecule name from given molecule number above
@@ -81,6 +84,11 @@ from stackingFunctions import observationStacker
 from peakBasedFunctions import voigtUniPeak
 from edibles import PYTHONDIR
 import os.path
+import warnings
+from astropy.modeling import models
+from astropy import units as u
+from specutils.spectra import Spectrum1D
+from specutils.fitting import fit_generic_continuum
 
 # +
 #loading relevant data files from edibles
@@ -89,6 +97,7 @@ import os.path
 pythia = EdiblesOracle()
 rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
 fnames = rawList.tolist()
+obs = len(fnames)
 
 # +
 #extracting information from data files and plotting the graphs
@@ -105,9 +114,9 @@ fnames = rawList.tolist()
 #where in the array of data of observation, first column is the wavelengths 
 #and second column is the respective intensities
 
-datasRaw = np.empty(shape = len(fnames), dtype = object)
+datasRaw = np.empty(shape = obs, dtype = object)
 
-ffig1, faxs1 = plt.subplots(-((-len(fnames))//2), 2, figsize=(12,-5*((-len(fnames))//2)))
+ffig1, faxs1 = plt.subplots(-(-obs//2), 2, figsize=(12,-5*(-obs//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 for it1, file in enumerate(fnames):
@@ -154,23 +163,22 @@ for it1, file in enumerate(fnames):
     
     datasRaw[it1] = infoArr
     
-    if(len(fnames) < 3):
+    if(obs < 3):
         desax1 = faxs1[it1]
     else:
-        desax1 = faxs1[it1//2, it1 - 2 * (it1//2)]
+        desax1 = faxs1[it1//2, it1%2]
     
     #desax1.plot(sp.wave, sp.flux, label="Geocentric")
     desax1.plot(datasRaw[it1][1][:, 0], datasRaw[it1][1][:, 1], label="Barycentric")
-    tit1 = 'Merged spectra of ' + starName + ', observation ' + str(it1+1) + ' (On ' + str(sp.datetime.day) + '/' + str(sp.datetime.month) + '/' + str(sp.datetime.year) + ')'
+    tit1 = 'Merged spectra of ' + starName + ', observation ' + str(it1+1) + ' (On ' + datasRaw[it1][0]+ ')'
     desax1.set_title(tit1)
     desax1.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
     desax1.legend()
 
-if not ((len(fnames) - 2 * (len(fnames)//2)) == 0):
-    ffig1.delaxes(faxs1[len(fnames)//2, 1])
+if obs%2 != 0:
+    ffig1.delaxes(faxs1[obs//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
-
 
 # +
 #removing the continuum from the spectrum
@@ -189,27 +197,47 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
 datasContRem = copy.deepcopy(datasRaw)
 
-ffig2, faxs2 = plt.subplots(-((-len(datasRaw))//2), 2, figsize=(12,-5*((-len(datasRaw))//2)))
+ffig2, faxs2 = plt.subplots(obs, 2, figsize=(12,5*obs))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-for it2 in range(len(datasContRem)):
-    CF2 = ContinuumFitter(datasRaw[it2][1][:, 0], datasRaw[it2][1][:, 1])
-    CS1, contPoints1  = CF2.SplineManualAnchor()
-    datasContRem[it2][1][:, 1] = datasRaw[it2][1][:, 1]/CS1(datasRaw[it2][1][:, 0])
+for it2 in range(obs):
+    #CF2 = ContinuumFitter(datasRaw[it2][1][:, 0], datasRaw[it2][1][:, 1])
+    #CS1, contPoints1  = CF2.SplineManualAnchor()
+    #datasContRem[it2][1][:, 1] = datasRaw[it2][1][:, 1]/CS1(datasRaw[it2][1][:, 0])
     
-    if(len(datasContRem) < 3):
-        desax2 = faxs2[it2]
-    else:
-        desax2 = faxs2[it2//2, it2 - 2 * (it2//2)]
-    
-    desax2.plot(datasContRem[it2][1][:, 0], datasContRem[it2][1][:, 1], label="Barycentric")
-    tit2 = 'Continuum divided spectra of ' + starName + ', observation ' + str(it2+1) + ' (On ' + datasContRem[it2][0] + ')'
-    desax2.set_title(tit2)
-    desax2.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
-    desax2.legend()
+    x1 = copy.deepcopy(datasRaw[it2][1][:, 0])
+    y1 = copy.deepcopy(datasRaw[it2][1][:, 1])
 
-if not ((len(datasContRem) - 2 * (len(datasContRem)//2)) == 0):
-    ffig2.delaxes(faxs2[len(datasContRem)//2, 1])
+    spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
+
+    with warnings.catch_warnings():  # Ignore warnings
+        warnings.simplefilter('ignore')
+        g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
+    
+    datasContRem[it2][1][:, 1] = y1/g1_fit(x1*u.angstrom)
+    
+    if(obs < 2):
+        desax2i = faxs2[0]
+        desax2ii = faxs2[1]
+    else:
+        desax2i = faxs2[it2, 0]
+        desax2ii = faxs2[it2, 1]
+    
+    desax2i.plot(x1, y1, label = "Raw data")
+    desax2i.plot(x1, g1_fit(x1*u.angstrom), label = "Continuum")
+    tit2i = 'Raw data and continuum of ' + starName + ', observation ' + str(it2+1) + ' (On ' + datasContRem[it2][0] + ')'
+    desax2i.set_title(tit2i)
+    desax2i.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
+    desax2i.legend()
+    
+    desax2ii.plot(x1, datasContRem[it2][1][:, 1], label = 'Barycentric')
+    tit2ii = 'Continuum divided spectra of ' + starName + ', observation ' + str(it2+1) + ' (On ' + datasContRem[it2][0] + ')'
+    desax2ii.set_title(tit2ii)
+    desax2ii.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Relative flux')
+    desax2ii.legend()
+
+#if obs%2 != 0:
+#    ffig2.delaxes(faxs2[obs//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
@@ -239,38 +267,45 @@ def dataInRange(data1, rangeArr1):
 
 datasEmRem = copy.deepcopy(datasContRem)
 
-ffig5, faxs5 = plt.subplots(-((-len(datasEmRem))//2), 2, figsize=(12,-5*((-len(datasEmRem))//2)))
+ffig5, faxs5 = plt.subplots(-(-obs//2), 2, figsize=(12,-5*(-obs//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-for it10 in range(len(datasEmRem)):
+for it10 in range(obs):
     CF4 = ContinuumFitter(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1])
-    wvs2 = CF4.SelectPoints(n=100, y_message = 'Select emission peak start and end points')[:, 0]
-    peakRanges2 = np.reshape(wvs2, (int(wvs2.size/2), 2))
-    for it11 in range(peakRanges2.shape[0]):
-        #yForFit1 = 1 - datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
-        #xForFit1 = datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
-        #mod1 = VoigtModel()
-        #params1 = mod1.guess(yForFit1, x = xForFit1)
-        #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
-        #print('Doing peak ' + str(it11))
-        dcir = dataInRange(datasContRem[it10][1], peakRanges2[it11])
-        res2 = voigtUniPeak(peakData1 = dcir, plot = 0, absOrEm = 1, retMod = True)
-        datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(1 + res2.best_fit)
-        
-    if(len(datasEmRem) < 3):
+    wvs2Full = CF4.SelectPoints(n=100, y_message = 'Select emission peak start and end points', nearest = False, vetoTimeout = True)
+    
+    if(obs < 3):
         desax5 = faxs5[it10]
     else:
-        desax5 = faxs5[it10//2, it10 - 2 * (it10//2)]
+        desax5 = faxs5[it10//2, it10%2]
     
-    desax5.plot(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1], label="Barycentric (Emission lines not removed)")
-    desax5.plot(datasEmRem[it10][1][:, 0], datasEmRem[it10][1][:, 1], label="Barycentric (Emission lines removed)")
+    if(wvs2Full.shape[0] == 0):
+        desax5.plot(datasEmRem[it10][1][:, 0], datasEmRem[it10][1][:, 1], label="Barycentric (No lines to remove)")
+    
+    else:
+        wvs2 = wvs2Full[:, 0]
+        peakRanges2 = np.reshape(wvs2, (int(wvs2.size/2), 2))
+        for it11 in range(peakRanges2.shape[0]):
+            #yForFit1 = 1 - datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
+            #xForFit1 = datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
+            #mod1 = VoigtModel()
+            #params1 = mod1.guess(yForFit1, x = xForFit1)
+            #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
+            #print('Doing peak ' + str(it11))
+            dcir = dataInRange(datasContRem[it10][1], peakRanges2[it11])
+            res2 = voigtUniPeak(peakData1 = dcir, plot = 0, absOrEm = 1, retMod = True)
+            datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(1 + res2.best_fit)
+        
+        desax5.plot(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1], label="Barycentric (Emission lines not removed)")
+        desax5.plot(datasEmRem[it10][1][:, 0], datasEmRem[it10][1][:, 1], label="Barycentric (Emission lines removed)")
+    
     tit5 = 'Spectra of ' + starName + ', observation ' + str(it10+1) + ' (On ' + datasEmRem[it10][0] + ')'
     desax5.set_title(tit5)
-    desax5.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
+    desax5.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Relative flux')
     desax5.legend()
 
-if not ((len(datasEmRem) - 2 * (len(datasEmRem)//2)) == 0):
-    ffig5.delaxes(faxs3[len(datasEmRem)//2, 1])
+if obs%2 != 0:
+    ffig5.delaxes(faxs3[obs//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
@@ -291,35 +326,45 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
 datasLineRem = copy.deepcopy(datasEmRem)
 
-ffig3, faxs3 = plt.subplots(-((-len(datasLineRem))//2), 2, figsize=(12,-5*((-len(datasLineRem))//2)))
+ffig3, faxs3 = plt.subplots(-(-obs//2), 2, figsize=(12,-5*(-obs//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-for it3 in range(len(datasLineRem)):
+for it3 in range(obs):
     CF3 = ContinuumFitter(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1])
-    wvs1 = CF3.SelectPoints(n=100, y_message = 'Select peak start and end points')[:, 0]
-    peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
-    for it4 in range(peakRanges.shape[0]):
-        yForFit1 = 1 - datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
-        xForFit1 = datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
-        mod1 = VoigtModel()
-        params1 = mod1.guess(yForFit1, x = xForFit1)
-        res1 = mod1.fit(yForFit1, params1, x = xForFit1)
-        datasLineRem[it3][1][np.logical_and(datasLineRem[it3][1][:, 0] >= peakRanges[it4, 0], datasLineRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1] = (1 - yForFit1)/(1 - res1.best_fit)
-        
-    if(len(datasLineRem) < 3):
+    wvs1Full = CF3.SelectPoints(n=100, y_message = 'Select absorption peak start and end points', nearest = False, vetoTimeout = True)
+    
+    if(obs < 3):
         desax3 = faxs3[it3]
     else:
-        desax3 = faxs3[it3//2, it3 - 2 * (it3//2)]
+        desax3 = faxs3[it3//2, it3%2]
     
-    desax3.plot(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1], label="Barycentric (Lines unremoved)")
-    desax3.plot(datasLineRem[it3][1][:, 0], datasLineRem[it3][1][:, 1], label="Barycentric (Lines removed)")
+    if(wvs1Full.shape[0] == 0):
+        desax3.plot(datasLineRem[it3][1][:, 0], datasLineRem[it3][1][:, 1], label="Barycentric (No lines to remove)")
+    
+    else:
+        wvs1 = wvs1Full[:, 0]
+        peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
+        for it4 in range(peakRanges.shape[0]):
+            #yForFit1 = 1 - datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
+            #xForFit1 = datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
+            #mod1 = VoigtModel()
+            #params1 = mod1.guess(yForFit1, x = xForFit1)
+            #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
+            dcir1 = dataInRange(datasEmRem[it3][1], peakRanges[it4])
+            res1 = voigtUniPeak(peakData1 = dcir1, plot = 0, retMod = True)
+            datasLineRem[it3][1][np.logical_and(datasLineRem[it3][1][:, 0] >= peakRanges[it4, 0], datasLineRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1] = dcir1[:, 1]/(1 - res1.best_fit)
+        
+        desax3.plot(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1], label="Barycentric (Absorption lines not removed)")
+        desax3.plot(datasLineRem[it3][1][:, 0], datasLineRem[it3][1][:, 1], label="Barycentric (Absorption lines removed)")
+    
+    
     tit3 = 'Spectra of ' + starName + ', observation ' + str(it3+1) + ' (On ' + datasLineRem[it3][0] + ')'
     desax3.set_title(tit3)
-    desax3.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
+    desax3.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Relative flux')
     desax3.legend()
 
-if not ((len(datasLineRem) - 2 * (len(datasLineRem)//2)) == 0):
-    ffig3.delaxes(faxs3[len(datasLineRem)//2, 1])
+if obs%2 != 0:
+    ffig3.delaxes(faxs3[obs//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
@@ -356,31 +401,32 @@ with open(r'E:\college\mitacs\codes\cloudVels.txt') as f:
             vels = line[1].split(';')
             break
 
-datas = np.empty(shape = len(vels), dtype = object)
-for it7 in range(len(vels)):
+clouds = len(vels)
+datas = np.empty(shape = clouds, dtype = object)
+for it7 in range(clouds):
     datas[it7] = copy.deepcopy(datasLineRem)
 
-ffig4, faxs4 = plt.subplots(-((-len(datasLineRem)*len(vels))//2), 2, figsize=(12,-5*((-len(datasLineRem)*len(vels))//2)))
+ffig4, faxs4 = plt.subplots(-((-obs*clouds)//2), 2, figsize=(12,-7*((-obs*clouds)//2)))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-for it5 in range(len(datasLineRem)):
-    for it6 in range(len(vels)):
+for it6 in range(clouds):
+    for it5 in range(obs):
         datas[it6][it5][1][:, 0] = datas[it6][it5][1][:, 0] * (1 + (float(vels[it6])/299792.458))
         
-        if(len(datasLineRem)*len(vels) < 3):
-            desax4 = faxs4[it5*len(vels) + it6]
+        if(obs*clouds < 3):
+            desax4 = faxs4[it6*obs + it5]
         else:
-            desax4 = faxs4[(it5*len(vels) + it6)//2, it5*len(vels) + it6 - 2 * ((it5*len(vels) + it6)//2)]
+            desax4 = faxs4[(it6*obs + it5)//2, (it6*obs + it5)%2]
     
         lab1 = 'In frame of cloud ' + str(it6+1)
         desax4.plot(datas[it6][it5][1][:, 0], datas[it6][it5][1][:, 1], label=lab1)
         tit4 = 'Spectra of ' + starName + ', observation ' + str(it5+1) + ' (On ' + datas[it6][it5][0] + ')'
         desax4.set_title(tit4)
-        desax4.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Flux')
+        desax4.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Relative flux')
         desax4.legend()
         
-if not ((len(datasLineRem)*len(vels) - 2 * ((len(datasLineRem)*len(vels))//2)) == 0):
-    ffig4.delaxes(faxs4[(len(datas)*len(vels))//2, 1])
+if (obs*clouds)%2 != 0:
+    ffig4.delaxes(faxs4[(obs*clouds)//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
@@ -393,7 +439,7 @@ molParam = np.loadtxt(paramFile)
 #print(perylene)
 
 # +
-#stacking
+#saving cleaned up data, stacking and saving stacked data and image
 #if on jupyter, just run this part
 
 #print(datas[0].shape)
@@ -410,19 +456,22 @@ for it10 in range(len(datas)):
         
 totalStack = np.zeros((totalpoints, 2))
 """
-totalStack = np.empty(shape = len(datas)*len(datas[0]), dtype = object)
+totalStack = np.empty(shape = clouds*obs, dtype = object)
 #print(totalStack.shape)
 
-for it8 in range(len(datas)):
-    for it9 in range(len(datas[it8])):
-        totalStack[it8 * len(datas[it8]) + it9] = widthNormLinStacker(datas[it8][it9][1], molParam)
+for it8 in range(clouds):
+    for it9 in range(obs):
+        totalStack[it8*obs + it9] = widthNormLinStacker(datas[it8][it9][1], molParam)
+        clupFile = 'E:\\college\\mitacs\\Cleaned\\' + starName + '\\' + starName.replace(' ','') + '_Observation' + str(it8*obs + it9 + 1) + '_' + datas[it8][it9][0] +'.txt'
+        if (not os.path.exists(clupFile)) or fEdit1 == 1:
+            np.savetxt(clupFile, datas[it8][it9][1])
         
 #print(totalStack.shape)
 #print(stackRanges)
-fileName = PYTHONDIR + '/data/FinalStacks/' + starName + '/' + starName.replace(' ','') + '_' + molName + '.txt'
-imgFileName = PYTHONDIR + '/data/FinalStacks/' + starName + '/' + starName.replace(' ','') + '_' + molName + '.jpg'
+fileName = 'E:\\college\\mitacs\\FinalStacks\\' + starName + '\\' + starName.replace(' ','') + '_' + molName + '.txt'
+imgFileName = 'E:\\college\\mitacs\\FinalStacks\\' + starName + '\\' + starName.replace(' ','') + '_' + molName + '.jpg'
 
-if (not os.path.exists(fileName)) or fEdit == 1:
+if (not os.path.exists(fileName)) or fEdit2 == 1:
     imgSav = True
     imgAdd = imgFileName
 else:
@@ -430,11 +479,11 @@ else:
     imgAdd = ''
 
 finalStacked = observationStacker(totalStack, 
-                                  [['Normalised wavelength', 'No units'], ['Flux', 'No units']],
+                                  [['Normalised wavelength', 'No units'], ['Relative flux', 'No units']],
                                   saveJPG = imgSav,
                                   address = imgAdd)
 
-if (not os.path.exists(fileName)) or fEdit == 1:
+if (not os.path.exists(fileName)) or fEdit2 == 1:
     np.savetxt(fileName, finalStacked)
 # -
 
