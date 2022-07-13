@@ -17,7 +17,7 @@ class ContinuumFitter():
         self.wave = wave
         self.flux = flux
 
-    def SelectPoints(self, n=5, nearest=True, y_message=None):
+    def SelectPoints(self, n=5, nearest=True, y_message=None, vetoTimeout = False):
         """
         Use interactive backend to select points
         :param n: int, max number of points to be selected
@@ -35,7 +35,11 @@ class ContinuumFitter():
         ax.grid()
         if y_message is not None:
             ax.set_ylabel(y_message)
-        timeout = np.median([30, 200, n*5])
+
+        if vetoTimeout:
+            timeout = 0
+        else:
+            timeout = np.median([30, 200, n*5])
         points = tmp_plt.ginput(n, timeout=timeout, mouse_add=1, mouse_pop=3, mouse_stop=2)
         tmp_plt.close()
         points = np.asarray(points)
