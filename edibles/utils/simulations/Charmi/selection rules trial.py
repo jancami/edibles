@@ -139,10 +139,10 @@ Allowed_Jprimes = (P_branch_Jprimes*2) + (Q_branch_Jprimes*2) + (R_branch_Jprime
 Allowed_Ks = pP_Branch_K + rP_Branch_K + pQ_Branch_K + rQ_Branch_K +  pR_Branch_K + rR_Branch_K
 Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
 
-print(len(Allowed_Js))
-print(len(Allowed_Jprimes))
-print(len(Allowed_Ks))
-print(len(Allowed_Kprimes))
+# print(len(Allowed_Js))
+# print(len(Allowed_Jprimes))
+# print(len(Allowed_Ks))
+# print(len(Allowed_Kprimes))
 
 columns = {'J' : Allowed_Js,'Jprime': Allowed_Jprimes, 'K' : Allowed_Ks, 'Kprime' : Allowed_Kprimes}
 selection_rules = pd.DataFrame(columns)
@@ -168,7 +168,7 @@ for i in range(len(selection_rules['J'])):
 
 selection_rules['Label'] = label
 
-#print(selection_rules.to_string())
+print(selection_rules.to_string())
 
-print(max(selection_rules['K']))
+#print(max(selection_rules['K']))
     
