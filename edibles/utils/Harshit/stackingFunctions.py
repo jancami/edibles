@@ -19,6 +19,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from peakBasedFunctions import voigtUniPeak
 
 # +
 #some testing for working of numpy arrays, please ignore
@@ -309,7 +310,7 @@ peakParam[4, 1] = 5361.090278
 # Stacking function which takes spectrum data and parameters of peaks (centre and fwhm) 
 # and outputs stacked peak
 
-def widthNormLinStacker(fdata2, peakParam2):
+def widthNormLinStacker(fdata2, peakParam2, hide = False, extent = 4):
     
     P2 = peakParam2.shape[0]
     
@@ -335,12 +336,12 @@ def widthNormLinStacker(fdata2, peakParam2):
     
     for i2 in range(P2):
         #extracting wavelengths and intensities within ranges given by peakParam2
-        #total width of peak is being taken to be 4*FWHM
-        tbc1 = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0]-2*peakParam2[i2, 1]
-                                     , fdata2[:, 0]<=peakParam2[i2, 0]+2*peakParam2[i2, 1]), :]
+        #total width of peak is being taken to be extent*FWHM
+        tbc1 = fdata2[np.logical_and(fdata2[:, 0]>=peakParam2[i2, 0]-(extent/2)*peakParam2[i2, 1]
+                                     , fdata2[:, 0]<=peakParam2[i2, 0]+(extent/2)*peakParam2[i2, 1]), :]
         
         #if it does not find 90% of the wavelengths in a peak's range, it skips that peak
-        if tbc1.shape[0] == 0 or (np.min(tbc1[:, 0]) >= peakParam2[i2, 0] - 0.90*2*peakParam2[i2, 1]) or (np.max(tbc1[:, 0]) <= peakParam2[i2, 0] + 0.90*2*peakParam2[i2, 1]):
+        if tbc1.shape[0] == 0 or (np.min(tbc1[:, 0]) >= peakParam2[i2, 0] - 0.90*(extent/2)*peakParam2[i2, 1]) or (np.max(tbc1[:, 0]) <= peakParam2[i2, 0] + 0.90*(extent/2)*peakParam2[i2, 1]):
             #print('Range ' + str(peakParam2[i2, 0]) + ' to ' + str())
             skipper1 = skipper1 + 1
         else:
@@ -357,7 +358,8 @@ def widthNormLinStacker(fdata2, peakParam2):
             faxs2[1, 0].plot(fpdshifted2[i2 - skipper1][:, 0], fpdshifted2[i2 - skipper1][:, 1], label = shPkLbl2)
     
     if skipper1 == P2:
-        ffig2.clf()
+        #ffig2.clf()
+        plt.close(ffig2)
         print('No peaks in range')
         return np.array([])
     else:
@@ -435,7 +437,9 @@ def widthNormLinStacker(fdata2, peakParam2):
     
         fullTitle2 = 'Plots for stacking'
         plt.suptitle(fullTitle2, size = 18)
-    
+        
+        if hide:
+            plt.close(ffig2)
         #print(ffinalData2.shape)
         return ffinalData2
 
@@ -581,5 +585,72 @@ def observationStacker(obsDataRaw, axsInfo, saveJPG = False, address = ''):
     
     #print(ffinalData2.shape)
     return ffinalData2
+# +
+#fits voigt and null hypothesis to stack (remember to subtract res.best_fit from base to get back y values)
+#
+#parameters ->
+#peakData - data to fit voigt profile to (Nx2 array)
+#flatReg - a length 2 array telling rightmost and leftmost points of left and right flat sections respectively (sd calculation)
+#plot - 0 (default) if you don't want to plot anything, 2 if you want to plot both data and fits, 1 if you want to plot only fit
+#retMods - True (default) if you want models returned as well as fits parameters, True if you want only fit parameters
+#base - 1 (default), value of the baseline y value from which y is subtracted while fitting voigt profile
+
+def stackCheck(stack, flatReg = [-2.0, 2.0], plot = 0, retMods = True, base = 1):
+    assert plot == 0 or plot == 1 or plot == 2, 'Please enter valid value for parameter plot (0, 1 or 2)'
+    
+    calcSD = np.std(stack[np.logical_or(stack[:, 0] < flatReg[0], stack[:, 0] > flatReg[1]), 1])
+    res1 = voigtUniPeak(stack, sd = calcSD, plot = 0, retMod = True, base = base, centre = 0.0, sigma = 2/3.6013)
+    vChi = res1.chisqr
+    vRedChi = res1.redchi
+    res2 = voigtUniPeak(stack, sd = calcSD, plot = 0, retMod = True, base = base, amp = 0.0)
+    nChi = res2.chisqr
+    nRedChi = res2.redchi
+    
+    likelihood = np.exp(-vRedChi)/(np.exp(-vRedChi) + np.exp(-nRedChi)) #don't use this!!
+    
+    N = stack.shape[0]
+    vBCI = N*np.log(vChi/N) + np.log(N)
+    nBCI = N*np.log(nChi/N)
+    
+    if plot == 1:
+        fig, ax = plt.subplots()
+        ax.plot(stack[:, 0], base - res1.best_fit, label = 'Voigt fit')
+        ax.plot(stack[:, 0], base - res1.best_fit, label = 'Null hypothesis (flat)')
+        ax.set_title('Fits of stack')
+        ax.set(xlabel = 'Relative wavelength', ylabel = 'Relative flux')
+        ax.legend()
+        
+        fig.show()
+    
+    if plot == 2:
+        fig, ax = plt.subplots()
+        ax.plot(stack[:, 0], stack[:, 1], label = 'Stack')
+        ax.plot(stack[:, 0], base - res1.best_fit, label = 'Voigt fit')
+        ax.plot(stack[:, 0], base - res1.best_fit, label = 'Null hypothesis (flat)')
+        ax.set_title('Fits of stack')
+        ax.set(xlabel = 'Relative wavelength', ylabel = 'Relative flux')
+        ax.legend()
+        
+        fig.show()
+    
+    if retMods:
+        return {'Voigt model': res1,
+                'Null model': res2,
+                'Chi sqr of voigt': vChi,
+                'Chi sqr of null': nChi,
+                'BCI of voigt': vBCI,
+                'BCI of null': nBCI,
+                'Red chi of voigt': vRedChi,
+                'Red chi of null': nRedChi,
+                'Likelihood': likelihood}
+    else:
+        return {'Chi sqr of voigt': vChi,
+                'Chi sqr of null': nChi,
+                'BCI of voigt': vBCI,
+                'BCI of null': nBCI,
+                'Red chi of voigt': vRedChi,
+                'Red chi of null': nRedChi,
+                'Likelihood': likelihood}
 # -
+
 

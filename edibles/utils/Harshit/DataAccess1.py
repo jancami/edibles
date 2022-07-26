@@ -19,7 +19,7 @@
 #if on jupyter, again change the parameters and then run this part!!!
 
 #put star name
-starName = 'HD 147889' #do put space between HD and number
+starName = 'HD 61827' #do put space between HD and number
 
 #select molecule as follows -
 # 2-Methylnaphthalene -> 1
@@ -31,7 +31,7 @@ starName = 'HD 147889' #do put space between HD and number
 # Pyrene -> 7
 # Phenalenyl -> 8
 # Any other molecule -> 0 and input the molecule name (according to parameters file)
-moleculeNo = 7
+moleculeNo = 8
 
 #put lower range of wavelengths to extract from edibles data
 minWave = 3000
@@ -462,7 +462,7 @@ totalStack = np.empty(shape = clouds*obs, dtype = object)
 for it8 in range(clouds):
     for it9 in range(obs):
         totalStack[it8*obs + it9] = widthNormLinStacker(datas[it8][it9][1], molParam)
-        clupFile = 'E:\\college\\mitacs\\Cleaned\\' + starName + '\\' + starName.replace(' ','') + '_Observation' + str(it8*obs + it9 + 1) + '_' + datas[it8][it9][0] +'.txt'
+        clupFile = 'E:\\college\\mitacs\\Cleaned\\' + starName + '\\' + starName.replace(' ','') + '_Observation' + str(it8*obs + it9 + 1) + '_' + datas[it8][it9][0].replace('/','_') +'.txt'
         if (not os.path.exists(clupFile)) or fEdit1 == 1:
             np.savetxt(clupFile, datas[it8][it9][1])
         
@@ -471,7 +471,7 @@ for it8 in range(clouds):
 fileName = 'E:\\college\\mitacs\\FinalStacks\\' + starName + '\\' + starName.replace(' ','') + '_' + molName + '.txt'
 imgFileName = 'E:\\college\\mitacs\\FinalStacks\\' + starName + '\\' + starName.replace(' ','') + '_' + molName + '.jpg'
 
-if (not os.path.exists(fileName)) or fEdit2 == 1:
+if (not os.path.exists(imgFileName)) or fEdit2 == 1:
     imgSav = True
     imgAdd = imgFileName
 else:

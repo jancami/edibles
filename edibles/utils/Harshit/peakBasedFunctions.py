@@ -23,41 +23,49 @@ import copy
 
 
 # +
-#fits voigt profile to individual peaks
+#fits voigt profile to individual peaks (remember to subtract res.best_fit from base to get back y values)
 #
 #parameters ->
-#peakData1 - data to fit voigt profile to (Nx2 array)
-#sd1 - standard deviation value to be given if needed (if not needed, simply don't give that argument)
-#absOrEm - 0 (default) if you want to fit an absorption line, 1 if you want to fit an emission line
-#plot - 0 (default) if you don't want to plot anything, 1 if you want to plot only fit, 2 if you want to plot both data and fit
-#retMod - False (default) if you want only parameters returned, True if you want to return the fitted model itself, 
+#peakData - data to fit voigt profile to (Nx2 array)
+#sd - 1 (default) if you don't want to take into account standard deviation while fitting, give value otherwise
+#plot - 2 (default) if you want to plot both data and fit, 0 if you don't want to plot anything, 1 if you want to plot only fit
+#retMod - False (default) if you want only parameters returned, True if you want to return the fitted model itself
+#base - 1 (default), value of the baseline y value from which y is subtracted while fitting voigt profile
+#centre - None (default) if you don't want constrain (fix) centre of voigt profile to any value, give value otherwise
+#sigma - None (default) if you don't want constrain (fix) sigma of voigt profile to any value, give value otherwise
 
-def voigtUniPeak(peakData1, sd1 = 1, absOrEm = 0, plot = 2, retMod = False):
-    assert absOrEm == 0 or absOrEm == 1, 'Please enter valid value for parameter absOrEm (0 or 1)'
+def voigtUniPeak(peakData, sd = 1, plot = 2, retMod = False, base = 1, centre = None, sigma = None, amp = None):
     assert plot == 0 or plot == 1 or plot == 2, 'Please enter valid value for parameter plot (0, 1 or 2)'
     
-    yForFit1 = (1 - 2*absOrEm)*(1 - peakData1[:, 1])
+    yForFit = base - peakData[:, 1]
     
-    xForFit1 = copy.deepcopy(peakData1[:, 0])
-    mod1 = VoigtModel()
-    params1 = mod1.guess(yForFit1, x = xForFit1)
-    res1 = mod1.fit(yForFit1, params1, x = xForFit1, weights = 1/sd1)
+    xForFit = copy.deepcopy(peakData[:, 0])
+    mod = VoigtModel()
+    params = mod.guess(yForFit, x = xForFit)
+    params['center'].set(value = centre, vary = centre is None)
+    params['sigma'].set(value = sigma, vary = sigma is None)
+    params['amplitude'].set(value = amp, vary = amp is None)
+    res = mod.fit(yForFit, params, x = xForFit, weights = 1/sd)
     
     if plot == 1:
-        plt.plot(xForFit1, (1 - res1.best_fit), label = 'Voigt profile fit')
-        plt.legend()
+        fig, ax = plt.subplots()
+        ax.plot(xForFit, (base - res.best_fit), label = 'Voigt profile fit')
+        ax.legend()
+        fig.show()
     elif plot == 2:
-        plt.plot(xForFit1, (1 - yForFit1), label = 'Data')
-        plt.plot(xForFit1, (1 - res1.best_fit), label = 'Voigt profile fit')
-        plt.legend()
+        fig, ax = plt.subplots()
+        ax.plot(xForFit, (base - yForFit), label = 'Data')
+        ax.plot(xForFit, (base - res.best_fit), label = 'Voigt profile fit')
+        ax.legend()
+        fig.show()
     
     if retMod:
-        return res1
+        return res
     else:
-        return {'Centre': res1.params['center'].value, 
-                'FWHM': res1.params['fwhm'].value, 
-                'ChiSq': res1.chisqr, 
-                'RedChiSq': res1.redchi}
+        return {'Centre': res.params['center'].value, 
+                'FWHM': res.params['fwhm'].value, 
+                'ChiSq': res.chisqr, 
+                'RedChiSq': res.redchi}
 
 
 # +
@@ -285,7 +293,7 @@ def voigtMultiPeakRanges(peakData3, nosPeak2, ranges1, sd3):
 # +
 #fits many single peaks at once in the given ranges of wavelengths
 
-def voigtNUniPeak(peakData4, ranges2, sd4):
+def voigtNUniPeak(peakData, ranges, sd = 1, absOrEm = 0, plot = 2, retMod = False, centre = None, sigma = None):
     tbr3 = {}
     
     N1 = ranges2.shape[0]
