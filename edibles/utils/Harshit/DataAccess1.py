@@ -284,7 +284,9 @@ for it10 in range(obs):
     
     else:
         wvs2 = wvs2Full[:, 0]
+        wvs2y = wvs2Full[:, 1]
         peakRanges2 = np.reshape(wvs2, (int(wvs2.size/2), 2))
+        peakRanges2y = np.reshape(wvs2y, (int(wvs2y.size/2), 2))
         for it11 in range(peakRanges2.shape[0]):
             #yForFit1 = 1 - datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
             #xForFit1 = datasContRem[it3][1][np.logical_and(datasContRem[it3][1][:, 0] >= peakRanges[it4, 0], datasContRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
@@ -293,8 +295,9 @@ for it10 in range(obs):
             #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
             #print('Doing peak ' + str(it11))
             dcir = dataInRange(datasContRem[it10][1], peakRanges2[it11])
-            res2 = voigtUniPeak(peakData1 = dcir, plot = 0, absOrEm = 1, retMod = True)
-            datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(1 + res2.best_fit)
+            base1 = np.linspace(peakRanges2y[it11, 0], peakRanges2y[it11, 1], num = dcir.shape[0])
+            res2 = voigtUniPeak(peakData1 = dcir, plot = 0, base = base1, retMod = True)
+            datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(base1 - res2.best_fit)
         
         desax5.plot(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1], label="Barycentric (Emission lines not removed)")
         desax5.plot(datasEmRem[it10][1][:, 0], datasEmRem[it10][1][:, 1], label="Barycentric (Emission lines removed)")
@@ -343,7 +346,9 @@ for it3 in range(obs):
     
     else:
         wvs1 = wvs1Full[:, 0]
+        wvs1y = wvs1Full[:, 1]
         peakRanges = np.reshape(wvs1, (int(wvs1.size/2), 2))
+        peakRangesy = np.reshape(wvs1y, (int(wvs1y.size/2), 2))
         for it4 in range(peakRanges.shape[0]):
             #yForFit1 = 1 - datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1]
             #xForFit1 = datasEmRem[it3][1][np.logical_and(datasEmRem[it3][1][:, 0] >= peakRanges[it4, 0], datasEmRem[it3][1][:, 0] <= peakRanges[it4, 1]), 0]
@@ -351,8 +356,9 @@ for it3 in range(obs):
             #params1 = mod1.guess(yForFit1, x = xForFit1)
             #res1 = mod1.fit(yForFit1, params1, x = xForFit1)
             dcir1 = dataInRange(datasEmRem[it3][1], peakRanges[it4])
-            res1 = voigtUniPeak(peakData1 = dcir1, plot = 0, retMod = True)
-            datasLineRem[it3][1][np.logical_and(datasLineRem[it3][1][:, 0] >= peakRanges[it4, 0], datasLineRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1] = dcir1[:, 1]/(1 - res1.best_fit)
+            base2 = np.linspace(peakRangesy[it4, 0], peakRangesy[it4, 1], num = dcir1.shape[0])
+            res1 = voigtUniPeak(peakData1 = dcir1, plot = 0, base = base2, retMod = True)
+            datasLineRem[it3][1][np.logical_and(datasLineRem[it3][1][:, 0] >= peakRanges[it4, 0], datasLineRem[it3][1][:, 0] <= peakRanges[it4, 1]), 1] = dcir1[:, 1]/(base2 - res1.best_fit)
         
         desax3.plot(datasEmRem[it3][1][:, 0], datasEmRem[it3][1][:, 1], label="Barycentric (Absorption lines not removed)")
         desax3.plot(datasLineRem[it3][1][:, 0], datasLineRem[it3][1][:, 1], label="Barycentric (Absorption lines removed)")
@@ -486,5 +492,24 @@ finalStacked = observationStacker(totalStack,
 if (not os.path.exists(fileName)) or fEdit2 == 1:
     np.savetxt(fileName, finalStacked)
 # -
+plt.plot(datasContRem[3][1][:, 0], datasContRem[3][1][:, 1])
+
+
+CF5 = ContinuumFitter(datasContRem[3][1][:, 0], datasContRem[3][1][:, 1])
+wvs3Full = CF5.SelectPoints(n=2, y_message = 'Select absorption peak start and end points', nearest = False, vetoTimeout = True)
+
+wvs3Full
+
+relDat = copy.deepcopy(dataInRange(datasContRem[3][1], wvs3Full[:, 0]))
+print(relDat.shape)
+
+base1 = np.linspace(wvs3Full[0, 1], wvs3Full[1, 1], num = relDat.shape[0])
+
+fitm = voigtUniPeak(relDat, plot = 0, retMod = True, base = base1)
+fitm2 = voigtUniPeak(relDat, plot = 0, retMod = True)
+
+plt.plot(relDat[:, 0], relDat[:, 1])
+plt.plot(relDat[:, 0], base1 - fitm.best_fit)
+plt.plot(relDat[:, 0], 1 - fitm2.best_fit)
 
 
