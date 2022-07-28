@@ -11,13 +11,15 @@ import numpy as np
 
 #pgopher input
 
-coronene = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\My DIBs research\Pgopher practice plots\Coronene P,Q and R Branches\coronene line lists pgopher\coronene_strengthtest2_k5.txt", delim_whitespace = True)
+coronene = pd.read_csv(r'C:/Users/Charmi Bhatt/OneDrive/Desktop/My DIBs research/Pgopher practice plots/Coronene P,Q and R Branches/coronene line lists pgopher/coronene at 3kelvin.txt', delim_whitespace = True)
 coronene = coronene.sort_values(by=['position'], ascending=True)
 
-ground_J = coronene['J']
-excited_J = coronene['Jprime']
-ground_K = coronene['K']
+ground_J = coronene['J'] #coronene[(coronene['J'] <= 10)] 
+excited_J = coronene['Jprime'] #coronene[(coronene['Jprime'] <= 10)] #
+ground_K = coronene['K'] #coronene[(coronene['Jprime'] <= 10)] #
 excited_K = coronene['Kprime']
+
+
 
 JandKs = {'ground_J' : ground_J , 'excited_J' : excited_J, 'ground_K' : ground_K, 'excited_K' : excited_K }
 
@@ -81,6 +83,7 @@ class Rotational_Spectra:
             excited_E = self.excited_B*J*(J + 1) + (self.excited_C - self.excited_B)*(K**2)
             self.excited_energies.append(excited_E)
             
+        # BJ(J+1) + (C-B)K**2   
         # self.excited_energies = excited_energies
         # self.linelist['excited_energies'] = self.excited_energies
             
@@ -165,7 +168,7 @@ class Rotational_Spectra:
     def intensity(self):
         
         for i in range(len(linelist.index)):
-            strength = self.honl_london_factors()[i] * self.Boltzmann()[i]
+            strength = (self.honl_london_factors()[i] * self.Boltzmann()[i])
             self.intensities.append(strength)
             
         
@@ -197,59 +200,51 @@ class Rotational_Spectra:
         # self.normalized_intensity()
         
         plt.figure(figsize=(20,6))
-        plt.stem(self.wavenos, self.normalized_intensities, linefmt = 'y', markerfmt = 'yo')
+        plt.stem(self.wavenos, - self.normalized_intensities, linefmt = 'y', markerfmt = 'yo') #, bottom=1)
     
-    def smooth_spectra(self): 
+    def smooth_spectra(self, plot=True): 
         
         waves = []
         smoothed_data = []
         
         def gaussian(x, mu, sig):
-            return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+            return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
 
         for i in range(len(self.linelist)):
             wavelength = (1/self.wavenos[i])*1e8
             waves.append(wavelength)
             
-        x = np.linspace(np.min(waves),np.max(waves), 10000)
+        x = np.linspace(np.min(waves) - 0.1 ,np.max(waves) + 0.1, 10000)
         y = np.zeros(x.shape)
         
         for i in range(len(waves)):
             y = y + self.normalized_intensities[i]*gaussian(x, waves[i], waves[i]/(2.355*110000))
         
-        plt.figure(figsize=(20,6))
-        plt.stem(waves, self.normalized_intensities)
-        plt.plot(x, y/max(y), color = 'black', linewidth = 5, label= ('Temperature = ' + str(self.T) + 'K'))
-        plt.legend()
+        if plot:
+            plt.figure(figsize=(20,6))
+            plt.stem(waves, self.normalized_intensities)
+            plt.plot(x, y/max(y), color = 'black', linewidth = 5, label= ('Temperature = ' + str(self.T) + 'K'))
+            plt.xlim(6613.6, 6614)
+            plt.legend()
         
+        def area_under_curve(x,y):
+          
+           sum_of_areas = 0
+           for i in range(1, len(x)):
+               h = x[i] - x[i-1]
+               sum_of_areas += h * (y[i-1] + y[i]) / 2
+        
+           return sum_of_areas 
+
+        print('area under curve is  ' + str(area_under_curve(x, y)))  
+        print('sum of normalized intenisities is  ' + str(np.sum(self.normalized_intensities)))
     
+        return y
     
-a = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=2, origin=15120)
-# b = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=5, origin=15120)
-# c = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=7, origin=15120)
-
-'''plot function should always go after linelist'''
-
-# molecules = (a,b,c)
-
-# for m in molecules:
-#     m.get_linelist()
-#     m.smooth_spectra()
-#     plt.show()
+a = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=3, origin=15120)
 
 a.get_linelist()
-print(a.with_partition_function())
-
-# ratio = a.intensities / coronene['strength']
-# a.linelist['ratio'] = ratio
-# plt.scatter(a.linelist['ground_J'], a.linelist['ratio'])
-# plt.title('Normalized intensity / Normlaized Pgopher strength')
-# plt.xlabel('J')
-# plt.ylabel('ratio')
-# plt.show()
-
-# print(a.linelist['ratio'])
-
+a.plot_rotational_spectra()
 
 
 
