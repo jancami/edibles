@@ -8,7 +8,7 @@ To do:
 import numpy as np
 import pandas as pd
 
-Jmax = 5
+Jmax = 10
 
 #here Kmax = Jmax (i.e all K allowed)
 
