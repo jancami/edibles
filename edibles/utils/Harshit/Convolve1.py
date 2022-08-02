@@ -38,7 +38,7 @@ amp = copy.deepcopy(data[:, 1])
 fig1, ax1 = plt.subplots(figsize = (12,5))
 
 for it1 in range(len(waves)):
-    ax1.plot([waves[it1], waves[it1]], [0, amp[it1]], color = 'red')
+    ax1.plot([waves[it1], waves[it1]], [1, 1-amp[it1]], color = 'red')
 
 ax1.set(xlabel = r'Wavelength ($\AA$)', ylabel = 'Normalised intensities')
 fig1.show()

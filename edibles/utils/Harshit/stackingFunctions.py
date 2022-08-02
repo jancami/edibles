@@ -612,6 +612,8 @@ def stackCheck(stack, flatReg = [-2.0, 2.0], plot = 0, retMods = True, base = 1)
     vBCI = N*np.log(vChi/N) + np.log(N)
     nBCI = N*np.log(nChi/N)
     
+    f = (nChi - vChi)/vRedChi
+    
     if plot == 1:
         fig, ax = plt.subplots()
         ax.plot(stack[:, 0], base - res1.best_fit, label = 'Voigt fit')
@@ -638,19 +640,21 @@ def stackCheck(stack, flatReg = [-2.0, 2.0], plot = 0, retMods = True, base = 1)
                 'Null model': res2,
                 'Chi sqr of voigt': vChi,
                 'Chi sqr of null': nChi,
-                'BCI of voigt': vBCI,
-                'BCI of null': nBCI,
+                'BIC of voigt': vBCI,
+                'BIC of null': nBCI,
                 'Red chi of voigt': vRedChi,
                 'Red chi of null': nRedChi,
-                'Likelihood': likelihood}
+                'Likelihood': likelihood,
+                'f': f}
     else:
         return {'Chi sqr of voigt': vChi,
                 'Chi sqr of null': nChi,
-                'BCI of voigt': vBCI,
-                'BCI of null': nBCI,
+                'BIC of voigt': vBCI,
+                'BIC of null': nBCI,
                 'Red chi of voigt': vRedChi,
                 'Red chi of null': nRedChi,
-                'Likelihood': likelihood}
+                'Likelihood': likelihood,
+                'f': f}
 # -
 
 

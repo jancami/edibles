@@ -31,7 +31,7 @@ starName = 'HD 61827' #do put space between HD and number
 # Pyrene -> 7
 # Phenalenyl -> 8
 # Any other molecule -> 0 and input the molecule name (according to parameters file)
-moleculeNo = 8
+moleculeNo = 2
 
 #put lower range of wavelengths to extract from edibles data
 minWave = 3000
@@ -181,6 +181,26 @@ if obs%2 != 0:
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
 # +
+#removing some bad observations
+#put in the observations (array) which are bad and you want to remove them, and then run this part!!!
+badObs = np.array([3])
+#print(badObs-1)
+
+#structure of array of datasBadRem array is as ->
+#[array of info of first observation,
+# array of info of second observation,
+# array of info of third observation,.....]
+#
+#where structure of array of info of a observation is as ->
+#[date of observation as a string, array of data of observation]
+#
+#where in the array of data of observation, first column is the wavelengths 
+#and second column is the respective intensities
+
+datasBadRem = copy.deepcopy(np.delete(datasRaw, badObs - 1))
+obs = len(datasBadRem)
+
+# +
 #removing the continuum from the spectrum
 #if on jupyter, just run this part
 
@@ -195,7 +215,7 @@ plt.subplots_adjust(hspace=0.3, wspace=0.2)
 #where in the array of data of observation (artifacts removed), first column is the wavelengths 
 #and second column is the respective intensities (continuum removed)
 
-datasContRem = copy.deepcopy(datasRaw)
+datasContRem = copy.deepcopy(datasBadRem)
 
 ffig2, faxs2 = plt.subplots(obs, 2, figsize=(12,5*obs))
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -205,8 +225,8 @@ for it2 in range(obs):
     #CS1, contPoints1  = CF2.SplineManualAnchor()
     #datasContRem[it2][1][:, 1] = datasRaw[it2][1][:, 1]/CS1(datasRaw[it2][1][:, 0])
     
-    x1 = copy.deepcopy(datasRaw[it2][1][:, 0])
-    y1 = copy.deepcopy(datasRaw[it2][1][:, 1])
+    x1 = copy.deepcopy(datasBadRem[it2][1][:, 0])
+    y1 = copy.deepcopy(datasBadRem[it2][1][:, 1])
 
     spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
 
@@ -296,7 +316,7 @@ for it10 in range(obs):
             #print('Doing peak ' + str(it11))
             dcir = dataInRange(datasContRem[it10][1], peakRanges2[it11])
             base1 = np.linspace(peakRanges2y[it11, 0], peakRanges2y[it11, 1], num = dcir.shape[0])
-            res2 = voigtUniPeak(peakData1 = dcir, plot = 0, base = base1, retMod = True)
+            res2 = voigtUniPeak(peakData = dcir, plot = 0, base = base1, retMod = True)
             datasEmRem[it10][1][np.logical_and(datasEmRem[it10][1][:, 0] >= peakRanges2[it11, 0], datasEmRem[it10][1][:, 0] <= peakRanges2[it11, 1]), 1] = dcir[:, 1]/(base1 - res2.best_fit)
         
         desax5.plot(datasContRem[it10][1][:, 0], datasContRem[it10][1][:, 1], label="Barycentric (Emission lines not removed)")
@@ -308,7 +328,7 @@ for it10 in range(obs):
     desax5.legend()
 
 if obs%2 != 0:
-    ffig5.delaxes(faxs3[obs//2, 1])
+    ffig5.delaxes(faxs5[obs//2, 1])
 
 plt.subplots_adjust(hspace=0.3, wspace=0.2)
 
@@ -492,24 +512,4 @@ finalStacked = observationStacker(totalStack,
 if (not os.path.exists(fileName)) or fEdit2 == 1:
     np.savetxt(fileName, finalStacked)
 # -
-plt.plot(datasContRem[3][1][:, 0], datasContRem[3][1][:, 1])
-
-
-CF5 = ContinuumFitter(datasContRem[3][1][:, 0], datasContRem[3][1][:, 1])
-wvs3Full = CF5.SelectPoints(n=2, y_message = 'Select absorption peak start and end points', nearest = False, vetoTimeout = True)
-
-wvs3Full
-
-relDat = copy.deepcopy(dataInRange(datasContRem[3][1], wvs3Full[:, 0]))
-print(relDat.shape)
-
-base1 = np.linspace(wvs3Full[0, 1], wvs3Full[1, 1], num = relDat.shape[0])
-
-fitm = voigtUniPeak(relDat, plot = 0, retMod = True, base = base1)
-fitm2 = voigtUniPeak(relDat, plot = 0, retMod = True)
-
-plt.plot(relDat[:, 0], relDat[:, 1])
-plt.plot(relDat[:, 0], base1 - fitm.best_fit)
-plt.plot(relDat[:, 0], 1 - fitm2.best_fit)
-
 

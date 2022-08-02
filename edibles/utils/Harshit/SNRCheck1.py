@@ -168,10 +168,13 @@ for it2 in range(iters):
     print('Reduced chi square for voigt fit (iteration ' + str(it2+1) + ') is ' + str(rc1))
     rc2 = dict1['Red chi of null']
     print('Reduced chi square for null hypothesis (iteration ' + str(it2+1) + ') is ' + str(rc2))
-    BCI1 = dict1['BCI of voigt']
-    print('BCI for voigt fit (iteration ' + str(it2+1) + ') is ' + str(BCI1))
-    BCI2 = dict1['BCI of null']
-    print('BCI for null hypothesis (iteration ' + str(it2+1) + ') is ' + str(BCI2))
+    BCI1 = dict1['BIC of voigt']
+    print('BIC for voigt fit (iteration ' + str(it2+1) + ') is ' + str(BCI1))
+    BCI2 = dict1['BIC of null']
+    print('BIC for null hypothesis (iteration ' + str(it2+1) + ') is ' + str(BCI2))
+    fval = dict1['f']
+    print('f value is ' + str(fval))
+    print('****')
     #lk = dict1['Likelihood']
     #print('Likelihood of it being a detection is ' + str(lk*100) + r'%')
     
@@ -190,6 +193,10 @@ for it2 in range(iters):
     desax2.plot(stack[:, 0], stack[:, 1], label = 'Stack')
     desax2.plot(stack[:, 0], (1 - res1.best_fit), label = 'Voigt fit')
     desax2.plot(stack[:, 0], (1 - res2.best_fit), label = 'Null hypothesis')
+    lowerY = np.ones(stack[:, 0].shape) - np.std(stack[np.logical_or(stack[:, 0] > 2.5, stack[:, 0] < -2.5), 1])
+    upperY = np.ones(stack[:, 0].shape) + np.std(stack[np.logical_or(stack[:, 0] > 2.5, stack[:, 0] < -2.5), 1])
+    desax2.plot(stack[:, 0], lowerY, 'r', label = 'One sigma limit')
+    desax2.plot(stack[:, 0], upperY, 'r')
     desax2.legend()
     tit2 = 'Stack for simulated spectrum ' + str(it2+1)
     desax2.set_title(tit2)
@@ -244,7 +251,7 @@ print(avgLk[:, 4])
 
 SNRs = [10, 12, 14, 16, 20]
 mols = ['2MethylNaphthalene', 'Acenaphthene', 'Benzoghiperylene', 'Pentacene', 'Perylene', 'Phenanthrene', 'Pyrene', 'Phenalenyl']
-indIter = 20
+indIter = 30
 
 fails = np.zeros((len(SNRs), len(mols)))
 
@@ -268,7 +275,7 @@ for it7, mol in enumerate(mols):
             dict2 = stackCheck(stack, flatReg = [-2.5, 2.5], retMods = False)
             bic1 = dict2['BCI of voigt']
             bic2 = dict2['BCI of null']
-            fails[it8, it7] = fails[it8, it7] + int(bic2 > bic1)
+            fails[it8, it7] = fails[it8, it7] + int(bic2 < bic1)
             print('Doing mol ' + str(it7) + ', SNR ' + str(it8) + ', iteration ' + str(it9))
 # -
 
@@ -277,5 +284,40 @@ plt.plot(SNRs, fails[:, 5], 'o-')
 fails
 
 np.sum(fails, axis = 1)/(len(mols)*indIter)
+
+# +
+#check for all SNRs for with spectra with single molecules only
+
+SNRs = [20, 30, 40, 50]
+mols = ['2MethylNaphthalene', 'Acenaphthene', 'Benzoghiperylene', 'Pentacene', 'Perylene', 'Phenanthrene', 'Pyrene', 'Phenalenyl']
+indIter = 30
+
+fails2 = np.zeros((len(SNRs), len(mols)))
+
+for it7, mol in enumerate(mols):
+    parFile = PYTHONDIR + '\\utils\\Harshit\\Lab Spectra Parameters\\' + molName + 'Params.txt'
+    molPar = np.loadtxt(parFile)
+    peaks = molPar.shape[0]
+    for it8, snr in enumerate(SNRs):
+        for it9 in range(indIter):
+            y = np.random.normal(signal, 1/snr, x.shape)
+            ynew = copy.deepcopy(y)
+            for it10 in range(peaks):
+                fwhm = molPar[it10, 1]
+                fL = 2*fwhm/3.6013
+                fG = 2.355*fwhm/3.6013
+                voi = Voigt1D(x_0 = molPar[it10, 0], fwhm_L = fL, fwhm_G = fG)
+                ynew = ynew - 0.01*voi(x)/voi(molPar[it10, 0])
+            
+            data = np.array([x, ynew]).transpose()
+            stack = widthNormLinStacker(data, molParam, hide = True, extent = 5)
+            dict2 = stackCheck(stack, flatReg = [-2.5, 2.5], retMods = False)
+            bic1 = dict2['BCI of voigt']
+            bic2 = dict2['BCI of null']
+            fails2[it8, it7] = fails2[it8, it7] + int(bic2 < bic1)
+            print('Doing mol ' + str(it7) + ', SNR ' + str(it8) + ', iteration ' + str(it9))
+# -
+
+fails2
 
 
