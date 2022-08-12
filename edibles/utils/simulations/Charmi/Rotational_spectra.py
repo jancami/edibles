@@ -241,7 +241,7 @@ class Rotational_Spectra:
     
         return y
     
-a = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=3, origin=15120)
+a = Rotational_Spectra(0.0111, 0.005552, 3, 3, temperature=2, origin=15120)
 
 a.get_linelist()
 a.plot_rotational_spectra()
