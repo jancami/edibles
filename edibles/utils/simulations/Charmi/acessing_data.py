@@ -16,10 +16,10 @@ from specutils.fitting import fit_generic_continuum
 
 starName = 'HD 166937'
 #put lower range of wavelengths to extract from edibles data
-minWave = 6500
+minWave = 6612
 
 #put upper range of wavelengths to extract from edibles data
-maxWave = 6700
+maxWave = 6616
 
 pythia = EdiblesOracle()
 rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
