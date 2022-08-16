@@ -13,9 +13,11 @@ from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_generic_continuum
 import timeit
 
-np.set_printoptions(threshold=sys.maxsize)
 
-plt.figure(figsize=(20,6))
+plt.figure(figsize=(50,6))
+
+
+
 
 def get_rotational_spectrum(T, ground_B, delta_B):
     
@@ -261,7 +263,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
       
     linelist['intensities'] = intensities
     
-    normalized_intensities = 1 - .1*(intensities / max(intensities))
+    normalized_intensities =  1 - 0.1*(intensities / max(intensities))
     linelist['normalized_intensities'] = normalized_intensities
     
    
@@ -281,15 +283,15 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     
     
-    for i in linelist.index:
-        smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))
+    # for i in linelist.index:
+    #     smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))
     
     
-    smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+    # smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
     
-    endg = timeit.default_timer()
-    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')
-    print('-------------')
+    # endg = timeit.default_timer()
+    # print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')
+    # print('-------------')
     wavelength = []
     for i in range(len(wavenos)):
         wavelength.append(1/wavenos[i]*1e8)
@@ -347,16 +349,46 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     data[:,1] = y1/g1_fit(x1*u.angstrom)
     
     plt.figure(figsize=(20,6))
-    plt.plot(data[:, 0] + 0.5, data[:, 1]/max(data[:, 1]))
+    #plt.plot(data[:, 0] + 0.5, data[:, 1]/max(data[:, 1]))
+    
+    
+    #%%
+    
+    plt.figure(figsize=(30,6))
+    plt.stem(wavenos, normalized_intensities,  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
+    #plt.plot(smooth_wavelength, (smooth_norm_intensities))
+    plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
+    plt.xlim(15118, 15122)
+    plt.show()
     
     
     
-    
-    #plt.stem(wavelength, normalized_intensities, bottom=1)
-    plt.plot(smooth_wavelength, (smooth_norm_intensities))
-    plt.title('T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
 
-    #%%    
+
+ 
+get_rotational_spectrum(8.9, 0.01913, -0.85)
+
+pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition a\pgopher_kerr_condition_a_Jmax_300_A1g_E1u.txt", delim_whitespace=(True))
+
+pgopher_position = pgopher['position']
+pgopher_strength = 1 - 0.1*(pgopher['strength']/max(pgopher['strength']))
+
+plt.figure(figsize=(30,6))
+plt.stem(pgopher_position, pgopher_strength,  label = 'pgopher', bottom = 1)
+plt.title('Pgopher Kerr condition a')
+plt.xlim(15118, 15122)
+plt.legend()
+
+
+
+
+
+
+
+
+
+
+       
     
 #kerr_1996
 
@@ -366,11 +398,3 @@ def get_rotational_spectrum(T, ground_B, delta_B):
 
 # for T, B, d in zip(Ts, ground_Bs, delta_Bs):
 #     get_rotational_spectrum(T, B, d)
-    
-get_rotational_spectrum(100, 0.0111, -0.85)
-    
-# Ts = np.linspace(1,100,10)
-# #deltas = np.linspace(-0.1, -4, 10)
-
-# #for d in deltas:
-# get_rotational_spectrum(100, 0.0295, -1)
