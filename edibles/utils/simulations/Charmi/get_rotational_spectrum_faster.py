@@ -366,16 +366,18 @@ def get_rotational_spectrum(T, ground_B, delta_B):
 
 
  
-get_rotational_spectrum(8.9, 0.01913, -0.85)
+#get_rotational_spectrum(101.3, 0.00286, -0.21)
 
-pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition a\pgopher_kerr_condition_a_Jmax_300_A1g_E1u.txt", delim_whitespace=(True))
+pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
 
 pgopher_position = pgopher['position']
 pgopher_strength = 1 - 0.1*(pgopher['strength']/max(pgopher['strength']))
 
+print(pgopher['position'])
+print(pgopher['strength'])
 plt.figure(figsize=(30,6))
 plt.stem(pgopher_position, pgopher_strength,  label = 'pgopher', bottom = 1)
-plt.title('Pgopher Kerr condition a')
+plt.title('Pgopher Kerr condition d')
 plt.xlim(15118, 15122)
 plt.legend()
 
