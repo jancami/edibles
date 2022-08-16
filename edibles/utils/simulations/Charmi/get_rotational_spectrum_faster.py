@@ -1,10 +1,21 @@
 # -*- coding: utf-8 -*-
-
+import sys
 import numpy as np
 import pandas as pd
 import astropy.constants as const
 import matplotlib.pyplot as plt
+from edibles.utils.edibles_oracle import EdiblesOracle
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
+import warnings
+from astropy.modeling import models
+from astropy import units as u
+from specutils.spectra import Spectrum1D
+from specutils.fitting import fit_generic_continuum
+import timeit
 
+np.set_printoptions(threshold=sys.maxsize)
+
+plt.figure(figsize=(20,6))
 
 def get_rotational_spectrum(T, ground_B, delta_B):
     
@@ -12,10 +23,10 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_C = delta_B
     
     origin = 15120
-    Jmax = 20   #Kmax = Jmax (i.e all K allowed)
+    Jmax = 300 #Kmax = Jmax (i.e all K allowed)
     resolution = 100000
     
-
+    startc = timeit.default_timer()
     
     '''Calculating Linelist'''
     #%%
@@ -178,6 +189,13 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_J = linelist['delta_J']
     delta_K = linelist ['delta_K']
     
+    print('Jmax is  ' + str(Jmax))
+    print('length of linelist  ' + str(len(linelist)))
+    endc = timeit.default_timer()
+    print('---------------')
+    print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
+    startl = timeit.default_timer()
+    
     ground_Es = []
     for J,K in zip(ground_Js, ground_Ks):
                 ground_E = ground_B*J*(J + 1) + (ground_C - ground_B)*(K**2)
@@ -236,49 +254,123 @@ def get_rotational_spectrum(T, ground_B, delta_B):
         
     linelist['BD_factors'] = BD_factors
     
-    intensities = []
-    
+    intensities = [] 
     for i in range(len(linelist.index)):
                 strength = (HL_factors[i] * BD_factors[i])
                 intensities.append(strength)
       
     linelist['intensities'] = intensities
     
-    normalized_intensities = 1 - (intensities / max(intensities))
-    
+    normalized_intensities = 1 - .1*(intensities / max(intensities))
     linelist['normalized_intensities'] = normalized_intensities
     
+   
+    
+    endl = timeit.default_timer()
+    print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
+    startg = timeit.default_timer()
+    #%%
     def gaussian(x, mu, sig):
                 return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
+    
     
             
     smooth_wavenos = np.linspace(np.min(wavenos) - 0.5 ,np.max(wavenos) + 0.5, 10000)
     smooth_intensities = np.zeros(smooth_wavenos.shape)
     
-    for i in range(len(wavenos)):
+    
+    
+    
+    for i in linelist.index:
         smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))
     
-    smooth_norm_intensities = 1 - (smooth_intensities/ max(smooth_intensities))
     
+    smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+    
+    endg = timeit.default_timer()
+    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')
+    print('-------------')
     wavelength = []
     for i in range(len(wavenos)):
-        wavelength.append(1/wavenos[i])
+        wavelength.append(1/wavenos[i]*1e8)
         
-    smooth_wavelength = 1/smooth_wavenos
+    smooth_wavelength = 1/smooth_wavenos*1e8
     
-    #%%
+#%%
+    starName = 'HD 166937'
+    #put lower range of wavelengths to extract from edibles data
+    minWave = 6612
     
+    #put upper range of wavelengths to extract from edibles data
+    maxWave = 6616
+    
+    pythia = EdiblesOracle()
+    rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
+    fnames = rawList.tolist()
+    obs = len(fnames)
+    
+    
+    sp = EdiblesSpectrum(fnames[0])
+        
+    sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave)+1)
+                        , xmax = min(maxWave, np.max(sp.raw_wave)-1))
+    
+                       
+    #data = np.array([sp.bary_wave, sp.bary_flux]).transpose()
+    leftEdge = 0
+    rightEdge = 0
+        
+    if minWave <= np.min(sp.raw_wave):
+        leftEdge = 1
+        #print('Left edge detected')
+    if maxWave >= np.max(sp.raw_wave):
+        rightEdge = 1
+    
+    data = np.delete(np.array([sp.bary_wave, sp.bary_flux]).transpose(), 
+                                np.logical_or(sp.bary_wave <= np.min(sp.bary_wave) + 40.0*leftEdge, 
+                                              sp.bary_wave >= np.max(sp.bary_wave) - 40.0*rightEdge), 0)
+    
+    v = -6.5
+    
+    data[:, 0] = data[:, 0]*(1+v/299792.458)
+    
+    x1 = data[:,0]
+    y1= data[:,1]
+    
+    spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
+    
+    with warnings.catch_warnings():  # Ignore warnings
+        warnings.simplefilter('ignore')
+        g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
+    
+    
+    data[:,1] = y1/g1_fit(x1*u.angstrom)
     
     plt.figure(figsize=(20,6))
-    plt.stem(wavelength, normalized_intensities, bottom=1)
-    plt.plot(smooth_wavelength, smooth_norm_intensities, color = 'black')
+    plt.plot(data[:, 0] + 0.5, data[:, 1]/max(data[:, 1]))
+    
+    
+    
+    
+    #plt.stem(wavelength, normalized_intensities, bottom=1)
+    plt.plot(smooth_wavelength, (smooth_norm_intensities))
     plt.title('T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
-    
 
-Ts = (8.9, 20.2, 61.2, 101.3)    
-ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
-delta_Bs = (-0.85, -0.42, -0.17, -0.21)
-
-for T, B, d in zip(Ts, ground_Bs, delta_Bs):
-    get_rotational_spectrum(T, B, d)
+    #%%    
     
+#kerr_1996
+
+# Ts = (8.9, 20.2, 61.2, 101.3)    
+# ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
+# delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+
+# for T, B, d in zip(Ts, ground_Bs, delta_Bs):
+#     get_rotational_spectrum(T, B, d)
+    
+get_rotational_spectrum(100, 0.0111, -0.85)
+    
+# Ts = np.linspace(1,100,10)
+# #deltas = np.linspace(-0.1, -4, 10)
+
+# #for d in deltas:
+# get_rotational_spectrum(100, 0.0295, -1)
