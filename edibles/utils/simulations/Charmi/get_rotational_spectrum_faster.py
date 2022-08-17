@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-import sys
+
 import numpy as np
 import pandas as pd
 import astropy.constants as const
 import matplotlib.pyplot as plt
-from edibles.utils.edibles_oracle import EdiblesOracle
-from edibles.utils.edibles_spectrum import EdiblesSpectrum
-import warnings
-from astropy.modeling import models
-from astropy import units as u
-from specutils.spectra import Spectrum1D
-from specutils.fitting import fit_generic_continuum
 import timeit
+import scipy.stats as ss
+from astropy.convolution import Gaussian1DKernel, convolve
 
 
 plt.figure(figsize=(50,6))
@@ -25,7 +20,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_C = delta_B
     
     origin = 15120
-    Jmax = 300 #Kmax = Jmax (i.e all K allowed)
+    Jmax = 400 #Kmax = Jmax (i.e all K allowed)
     resolution = 100000
     
     startc = timeit.default_timer()
@@ -191,6 +186,8 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_J = linelist['delta_J']
     delta_K = linelist ['delta_K']
     
+    
+    print('----------------------')
     print('Jmax is  ' + str(Jmax))
     print('length of linelist  ' + str(len(linelist)))
     endc = timeit.default_timer()
@@ -270,8 +267,12 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     endl = timeit.default_timer()
     print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
-    startg = timeit.default_timer()
+    
     #%%
+    
+    
+    
+    
     def gaussian(x, mu, sig):
                 return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
     
@@ -279,19 +280,44 @@ def get_rotational_spectrum(T, ground_B, delta_B):
             
     smooth_wavenos = np.linspace(np.min(wavenos) - 0.5 ,np.max(wavenos) + 0.5, 10000)
     smooth_intensities = np.zeros(smooth_wavenos.shape)
+    scipy_smooth = np.zeros(smooth_wavenos.shape)
+    astropy_smooth = np.zeros(smooth_wavenos.shape)
+    
+    
+    startg = timeit.default_timer()    
+    for i in linelist.index:
+        smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))  
+    endg = timeit.default_timer()
+    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')    
+    smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+    
+    
+    startss = timeit.default_timer()    
+    for i in linelist.index:
+        scipy_smooth = scipy_smooth + normalized_intensities[i]*ss.norm.pdf(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))    
+    endss = timeit.default_timer()
+    print('>>>> scipy takes   ' + str(endss -startss) + '  sec')
+    print('-------------')
+    scipy_smooth_norm = 1 - 0.1*(scipy_smooth/max(scipy_smooth))
+    
+    
+    def area_under_curve(x,y):
+          
+           sum_of_areas = 0
+           for i in range(1, len(x)):
+               h = smooth_wavenos[i] - smooth_wavenos[i-1]
+               sum_of_areas += h * (smooth_intensities[i-1] + smooth_intensities[i]) / 2
+        
+           return sum_of_areas 
+
+    print('area under gaussian curve is  ' + str(area_under_curve(smooth_wavenos, smooth_intensities)))
+    print('area under scipy curve is  ' + str(area_under_curve(smooth_wavenos, scipy_smooth)))
+    print('sum of normalized intenisities is  ' + str(np.sum(normalized_intensities)))
+    print('---------------')
     
     
     
     
-    # for i in linelist.index:
-    #     smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))
-    
-    
-    # smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
-    
-    # endg = timeit.default_timer()
-    # print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')
-    # print('-------------')
     wavelength = []
     for i in range(len(wavenos)):
         wavelength.append(1/wavenos[i]*1e8)
@@ -299,66 +325,15 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     smooth_wavelength = 1/smooth_wavenos*1e8
     
 #%%
-    starName = 'HD 166937'
-    #put lower range of wavelengths to extract from edibles data
-    minWave = 6612
-    
-    #put upper range of wavelengths to extract from edibles data
-    maxWave = 6616
-    
-    pythia = EdiblesOracle()
-    rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
-    fnames = rawList.tolist()
-    obs = len(fnames)
-    
-    
-    sp = EdiblesSpectrum(fnames[0])
-        
-    sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave)+1)
-                        , xmax = min(maxWave, np.max(sp.raw_wave)-1))
-    
-                       
-    #data = np.array([sp.bary_wave, sp.bary_flux]).transpose()
-    leftEdge = 0
-    rightEdge = 0
-        
-    if minWave <= np.min(sp.raw_wave):
-        leftEdge = 1
-        #print('Left edge detected')
-    if maxWave >= np.max(sp.raw_wave):
-        rightEdge = 1
-    
-    data = np.delete(np.array([sp.bary_wave, sp.bary_flux]).transpose(), 
-                                np.logical_or(sp.bary_wave <= np.min(sp.bary_wave) + 40.0*leftEdge, 
-                                              sp.bary_wave >= np.max(sp.bary_wave) - 40.0*rightEdge), 0)
-    
-    v = -6.5
-    
-    data[:, 0] = data[:, 0]*(1+v/299792.458)
-    
-    x1 = data[:,0]
-    y1= data[:,1]
-    
-    spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
-    
-    with warnings.catch_warnings():  # Ignore warnings
-        warnings.simplefilter('ignore')
-        g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
-    
-    
-    data[:,1] = y1/g1_fit(x1*u.angstrom)
-    
-    plt.figure(figsize=(20,6))
-    #plt.plot(data[:, 0] + 0.5, data[:, 1]/max(data[:, 1]))
-    
     
     #%%
     
     plt.figure(figsize=(30,6))
-    plt.stem(wavenos, normalized_intensities,  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
-    #plt.plot(smooth_wavelength, (smooth_norm_intensities))
+    plt.stem(wavelength, normalized_intensities,  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
+    plt.plot(smooth_wavelength, scipy_smooth_norm, color='black')
+    plt.plot(smooth_wavelength, smooth_norm_intensities)
     plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
-    plt.xlim(15118, 15122)
+    #plt.xlim(15118, 15122)
     plt.show()
     
     
@@ -366,20 +341,20 @@ def get_rotational_spectrum(T, ground_B, delta_B):
 
 
  
-#get_rotational_spectrum(101.3, 0.00286, -0.21)
+get_rotational_spectrum(10.3, 0.01286, -0.41)
 
-pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
+# pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
 
-pgopher_position = pgopher['position']
-pgopher_strength = 1 - 0.1*(pgopher['strength']/max(pgopher['strength']))
+# pgopher_position = pgopher['position']
+# pgopher_strength = 1 - 0.1*(pgopher['strength']/max(pgopher['strength']))
 
-print(pgopher['position'])
-print(pgopher['strength'])
-plt.figure(figsize=(30,6))
-plt.stem(pgopher_position, pgopher_strength,  label = 'pgopher', bottom = 1)
-plt.title('Pgopher Kerr condition d')
-plt.xlim(15118, 15122)
-plt.legend()
+# print(pgopher['position'])
+# print(pgopher['strength'])
+# plt.figure(figsize=(30,6))
+# plt.stem(pgopher_position, pgopher_strength,  label = 'pgopher', bottom = 1)
+# plt.title('Pgopher Kerr condition d')
+# plt.xlim(15118, 15122)
+# plt.legend()
 
 
 
