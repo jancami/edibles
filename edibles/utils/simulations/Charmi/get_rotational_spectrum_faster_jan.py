@@ -20,7 +20,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_C = delta_B
     
     origin = 15120
-    Jmax = 100 #Kmax = Jmax (i.e all K allowed)
+    Jmax = 400 #Kmax = Jmax (i.e all K allowed)
     resolution = 100000
     
     startc = timeit.default_timer()
@@ -334,9 +334,11 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     #%%
     
     plt.figure(figsize=(30,6))
-    plt.stem(wavelength, normalized_intensities,  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
+    plt.stem(wavelength, normalized_intensities/max(normalized_intensities),  label='calculated', linefmt='y', markerfmt='yo')
+    #plt.yscale('log')
+    #plt.ylim(.01,1)
     #plt.plot(smooth_wavelength, scipy_smooth_norm, color='black')
-    plt.plot(smooth_wavelength, smooth_intensities, color='blue')
+    plt.plot(smooth_wavelength, smooth_intensities/max(smooth_intensities), color='blue')
     plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
     #plt.xlim(15118, 15122)
     plt.show()
@@ -344,9 +346,9 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     
 
-T = 10.3
-B_ground = 0.01286
-delta_B = -0.41
+T = 101.3
+B_ground = 0.00286
+delta_B = -0.21
  
 get_rotational_spectrum(T, B_ground, delta_B)
 
