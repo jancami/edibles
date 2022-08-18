@@ -9,10 +9,6 @@ import scipy.stats as ss
 from astropy.convolution import Gaussian1DKernel, convolve
 
 
-plt.figure(figsize=(50,6))
-
-
-
 
 def get_rotational_spectrum(T, ground_B, delta_B):
     
@@ -20,8 +16,8 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     delta_C = delta_B
     
     origin = 15120
-    Jmax = 400 #Kmax = Jmax (i.e all K allowed)
-    resolution = 100000
+    Jmax = 300 #Kmax = Jmax (i.e all K allowed)
+    resolution = 85000
     
     startc = timeit.default_timer()
     
@@ -177,7 +173,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
         if linelist['excited_J'][i] - linelist['ground_J'][i] == 1 and linelist['excited_K'][i] - linelist['ground_K'][i] == 1:
             label.append('rR')
     
-    linelist['Label'] = label
+    linelist['label'] = label
     
     ground_Js = linelist['ground_J']
     excited_Js = linelist['excited_J']
@@ -270,69 +266,50 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     #%%
     
-    
-    
-    
-    def gaussian(x, mu, sig):
-                return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
-    
-    
-            
-    smooth_wavenos = np.linspace(np.min(wavenos) - 0.5 ,np.max(wavenos) + 0.5, 10000)
-    smooth_intensities = np.zeros(smooth_wavenos.shape)
-    scipy_smooth = np.zeros(smooth_wavenos.shape)
-    astropy_smooth = np.zeros(smooth_wavenos.shape)
-    
-    
-    startg = timeit.default_timer()    
-    for i in linelist.index:
-        smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))  
-    endg = timeit.default_timer()
-    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')    
-    smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
-    
-    
-    startss = timeit.default_timer()    
-    for i in linelist.index:
-        scipy_smooth = scipy_smooth + normalized_intensities[i]*ss.norm.pdf(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))    
-    endss = timeit.default_timer()
-    print('>>>> scipy takes   ' + str(endss -startss) + '  sec')
-    print('-------------')
-    scipy_smooth_norm = 1 - 0.1*(scipy_smooth/max(scipy_smooth))
-    
-    
-    def area_under_curve(x,y):
-          
-           sum_of_areas = 0
-           for i in range(1, len(x)):
-               h = smooth_wavenos[i] - smooth_wavenos[i-1]
-               sum_of_areas += h * (smooth_intensities[i-1] + smooth_intensities[i]) / 2
-        
-           return sum_of_areas 
-
-    print('area under gaussian curve is  ' + str(area_under_curve(smooth_wavenos, smooth_intensities)))
-    print('area under scipy curve is  ' + str(area_under_curve(smooth_wavenos, scipy_smooth)))
-    print('sum of normalized intenisities is  ' + str(np.sum(normalized_intensities)))
-    print('---------------')
-    
-    
+    linelist = linelist[(linelist['label'] == 'rR')]
+    print('length of linelist is : ' + str(len(linelist)))
     
     
     wavelength = []
-    for i in range(len(wavenos)):
-        wavelength.append(1/wavenos[i]*1e8)
-        
-    smooth_wavelength = 1/smooth_wavenos*1e8
+    for i in range(len(linelist['wavenos'])):
+        wavelength.append(1/linelist['wavenos'].iloc[i]*1e8)
+     
+    wavelength_spacing = 0.033
+    grid_size = int(((np.max(wavelength) + 0.05) - (np.min(wavelength) - 0.05))/wavelength_spacing)     
+    
+    smooth_wavelength = np.linspace(np.min(wavelength) - 0.05 ,np.max(wavelength) + 0.05, grid_size)
+    smooth_intensities = np.zeros(smooth_wavelength.shape)
+    
+    startg = timeit.default_timer()
+    
+    for idx,wavepoint in np.ndenumerate(smooth_wavelength):
+        w_int = ss.norm.pdf(wavelength, wavepoint, wavepoint/(2.355*resolution)) * linelist['normalized_intensities']
+        smooth_intensities[idx] = w_int.sum()
+    
+    smooth_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+    endg = timeit.default_timer()
+    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')  
+    
+    print('max wavelength is:' + str(np.max(wavelength)))
+    print('min wavelength is:' + str(np.min(wavelength)))
+    print('Max - min wavelength is:' + str(np.max(wavelength)-np.min(wavelength)))
+    print('grid size is: ' + str(grid_size))
+    
+    
+    print('delta lambda is :')
+    for i in range(len(smooth_wavelength[0:3])):
+        print(smooth_wavelength[i+1] - smooth_wavelength[i])
+    
+    
     
 #%%
     
     #%%
     
     plt.figure(figsize=(30,6))
-    plt.stem(wavelength, normalized_intensities,  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
-    plt.plot(smooth_wavelength, scipy_smooth_norm, color='black')
-    plt.plot(smooth_wavelength, smooth_norm_intensities)
-    plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
+    plt.stem(wavelength, linelist['normalized_intensities'],  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
+    plt.plot(smooth_wavelength, smooth_intensities)
+    plt.title('Calculated rR: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
     #plt.xlim(15118, 15122)
     plt.show()
     
@@ -341,8 +318,30 @@ def get_rotational_spectrum(T, ground_B, delta_B):
 
 
  
-get_rotational_spectrum(10.3, 0.01286, -0.41)
+get_rotational_spectrum(101.3, 0.00286, -0.21)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''Previously used codes'''
 # pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
 
 # pgopher_position = pgopher['position']
@@ -356,7 +355,34 @@ get_rotational_spectrum(10.3, 0.01286, -0.41)
 # plt.xlim(15118, 15122)
 # plt.legend()
 
+# def area_under_curve(x,y):
+          
+    #        sum_of_areas = 0
+    #        for i in range(1, len(x)):
+    #            h = smooth_wavenos[i] - smooth_wavenos[i-1]
+    #            sum_of_areas += h * (smooth_intensities[i-1] + smooth_intensities[i]) / 2
+        
+    #        return sum_of_areas 
 
+    # print('area under gaussian curve is  ' + str(area_under_curve(smooth_wavenos, smooth_intensities)))
+    # print('area under scipy curve is  ' + str(area_under_curve(smooth_wavenos, scipy_smooth)))
+    # print('sum of normalized intenisities is  ' + str(np.sum(normalized_intensities)))
+    # print('---------------')
+    
+# for i in linelist.index:
+    #     smooth_intensities = smooth_intensities + normalized_intensities[i]*gaussian(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))  
+    # endg = timeit.default_timer()
+    # print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')    
+    # smooth_norm_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+    
+    # startss = timeit.default_timer()    
+    # for i in linelist.index:
+    #     scipy_smooth = scipy_smooth + normalized_intensities[i]*ss.norm.pdf(smooth_wavenos, wavenos[i], wavenos[i]/(2.355*resolution))    
+    # endss = timeit.default_timer()
+    # print('>>>> scipy takes   ' + str(endss -startss) + '  sec')
+    # print('-------------')
+    # scipy_smooth_norm = 1 - 0.1*(scipy_smooth/max(scipy_smooth))
+    
 
 
 
