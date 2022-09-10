@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+#To do:
+#Add comments at each major step,
+#remove ground_C = ground_B/2 and generalize for any symmetry,
+#add centrifugal and coriolis contributions to waveno
+
+
 import numpy as np
 import pandas as pd
 import astropy.constants as const
@@ -9,15 +15,14 @@ import scipy.stats as ss
 from astropy.convolution import Gaussian1DKernel, convolve
 
 
-
 def get_rotational_spectrum(T, ground_B, delta_B):
     
     ground_C = ground_B/2
     delta_C = delta_B
     
     origin = 15120
-    Jmax = 300 #Kmax = Jmax (i.e all K allowed)
-    resolution = 85000
+    Jmax = 300  #Kmax = Jmax (i.e all K allowed)
+    resolution = 1e5
     
     startc = timeit.default_timer()
     
@@ -256,7 +261,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
       
     linelist['intensities'] = intensities
     
-    normalized_intensities =  1 - 0.1*(intensities / max(intensities))
+    normalized_intensities = (intensities / max(intensities))
     linelist['normalized_intensities'] = normalized_intensities
     
    
@@ -265,60 +270,53 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
     
     #%%
+   
+    '''Smoothening the linelist'''
     
-    linelist = linelist[(linelist['label'] == 'rR')]
+    #%%
+   
     print('length of linelist is : ' + str(len(linelist)))
     
-    
-    wavelength = []
-    for i in range(len(linelist['wavenos'])):
-        wavelength.append(1/linelist['wavenos'].iloc[i]*1e8)
-     
-    wavelength_spacing = 0.033
-    grid_size = int(((np.max(wavelength) + 0.05) - (np.min(wavelength) - 0.05))/wavelength_spacing)     
-    
-    smooth_wavelength = np.linspace(np.min(wavelength) - 0.05 ,np.max(wavelength) + 0.05, grid_size)
-    smooth_intensities = np.zeros(smooth_wavelength.shape)
+    #given that Resolution = 100,000 at wavelength (lambda) = 6614A, 
+    #delta_lambda = 0.06614 and wavelength_stepsize = 0.033 (2 peaks per FWHM)
+    #similarly for waveno (i.e 15120), delta_nu = 0.15 and thus waveno_stepsize = 0.075
+       
+    waveno_stepsize = 0.075
+    grid_size = int(((np.max(linelist['wavenos']) + 0.5) - (np.min(linelist['wavenos']) - 0.5))/waveno_stepsize)  
+
+    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 0.5 ,np.max(linelist['wavenos']) + 0.5, grid_size)
+    smooth_intensities = np.zeros(smooth_wavenos.shape)
     
     startg = timeit.default_timer()
     
-    for idx,wavepoint in np.ndenumerate(smooth_wavelength):
-        w_int = ss.norm.pdf(wavelength, wavepoint, wavepoint/(2.355*resolution)) * linelist['normalized_intensities']
+    for idx,wavepoint in np.ndenumerate(smooth_wavenos):
+        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, wavepoint/(2.355*resolution)) * (linelist['intensities']) 
+        
         smooth_intensities[idx] = w_int.sum()
     
-    smooth_intensities = 1 - 0.1*(smooth_intensities/max(smooth_intensities))
+   
     endg = timeit.default_timer()
+    
     print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')  
     
-    print('max wavelength is:' + str(np.max(wavelength)))
-    print('min wavelength is:' + str(np.min(wavelength)))
-    print('Max - min wavelength is:' + str(np.max(wavelength)-np.min(wavelength)))
-    print('grid size is: ' + str(grid_size))
-    
-    
-    print('delta lambda is :')
-    for i in range(len(smooth_wavelength[0:3])):
-        print(smooth_wavelength[i+1] - smooth_wavelength[i])
-    
-    
-    
-#%%
     
     #%%
     
+    
+    
     plt.figure(figsize=(30,6))
-    plt.stem(wavelength, linelist['normalized_intensities'],  label='calculated', bottom = 1, linefmt='y', markerfmt='yo')
-    plt.plot(smooth_wavelength, smooth_intensities)
-    plt.title('Calculated rR: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
-    #plt.xlim(15118, 15122)
+    plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
+    plt.plot(smooth_wavenos, 1-0.1*(smooth_intensities/max(smooth_intensities)), color = 'black', linewidth = 3)
+    plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
+    # plt.xlim(15119.0, 15119.7)
     plt.show()
-    
-    
-    
 
 
- 
-get_rotational_spectrum(101.3, 0.00286, -0.21)
+T = 61.2
+ground_B = 0.00336
+delta_B = -0.17  
+
+get_rotational_spectrum(T, ground_B, delta_B)
 
 
 
@@ -342,6 +340,10 @@ get_rotational_spectrum(101.3, 0.00286, -0.21)
 
 
 '''Previously used codes'''
+
+#%%
+
+
 # pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
 
 # pgopher_position = pgopher['position']
@@ -385,13 +387,44 @@ get_rotational_spectrum(101.3, 0.00286, -0.21)
     
 
 
+# wavelength = []
+#     for i in range(len(linelist['wavenos'])):
+#         wavelength.append(1/linelist['wavenos'].iloc[i]*1e8)
+     
+#     wavelength_spacing = 0.033
+#     grid_size = int(((np.max(wavelength) + 0.05) - (np.min(wavelength) - 0.05))/wavelength_spacing)  
+
+ # print('max wavelength is:' + str(np.max(wavelength)))
+ #    print('min wavelength is:' + str(np.min(wavelength)))
+ #    print('Max - min wavelength is:' + str(np.max(wavelength)-np.min(wavelength)))
+ #    print('grid size is: ' + str(grid_size))
+    
+    
+ #    print('delta lambda is :')
+ #    for i in range(len(smooth_wavelength[0:3])):
+ #        print(smooth_wavelength[i+1] - smooth_wavelength[i])
 
 
+ # plt.figure(figsize=(30,6))  
+    # def gaussian(x, mu, sig):
+    #         return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
 
-
-
-
-       
+    # for i in linelist.index:
+    #     peak = (linelist['intensities'][i])*gaussian(smooth_wavenos, linelist['wavenos'][i], linelist['wavenos'][i]/(2.355*resolution))  
+    #     plt.plot(smooth_wavenos, peak)
+    #     print(peak)
+    #     smooth_intensities = smooth_intensities + peak
+    
+    # smooth_norm_intensities = (smooth_intensities/max(smooth_intensities))
+    
+#linelist.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\work.xlsx", index=False)
+      
+ #linelist = linelist[(linelist['label'] == 'rR')]
+ #linelist = linelist[(linelist['ground_K'] <= 5)]
+ 
+ # for i in range(len(smooth_wavenos[0:3])):
+ #         print(smooth_wavenos[i+1] - smooth_wavenos[i])
+    
     
 #kerr_1996
 
