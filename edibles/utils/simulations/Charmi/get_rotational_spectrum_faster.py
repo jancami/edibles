@@ -13,188 +13,199 @@ import matplotlib.pyplot as plt
 import timeit
 import scipy.stats as ss
 from astropy.convolution import Gaussian1DKernel, convolve
+import matplotlib as mpl
+import seaborn as sns
+
+startc = timeit.default_timer()
+
+origin = 15120
+Jmax = 300  #Kmax = Jmax (i.e all K allowed)
+resolution = 1e5
+    
+#%%   
+P_branch_Js = list((range(1,Jmax+1)))
+all_P_branch_Js = []
+for j in P_branch_Js:
+    for i in range(j):
+      all_P_branch_Js.append(j)
+    
+P_branch_Jprimes = []
+for j in all_P_branch_Js:
+    if j != 0:
+        P_branch_Jprimes.append(j-1)
+        
+pP_Branch_K = []        
+for j in P_branch_Js:
+    stages = list(range(0,j))
+    for i in stages:
+        pP_Branch_K.append(j-i)
+        
+
+pP_Branch_Kprime = []
+for k in pP_Branch_K:
+    pP_Branch_Kprime.append(k-1)
+        
+rP_Branch_K = []        
+for j in P_branch_Js:
+    stages = list(range(0,j))
+    stages.sort(reverse=True)
+    for i in stages:
+        rP_Branch_K.append(i)
 
 
+rP_Branch_Kprime = []
+for k in rP_Branch_K:
+    rP_Branch_Kprime.append(k+1)
+    
+
+'''Q Branch'''
+
+Q_branch_Js = list((range(0,Jmax+1)))
+
+all_Q_branch_Js = []
+for j in Q_branch_Js:
+    # if j ==0:
+    #     all_Q_branch_Js.append(j)
+    if j!= 0:
+        for i in range(j):
+          all_Q_branch_Js.append(j)
+      
+Q_branch_Jprimes = []
+for j in all_Q_branch_Js:
+        Q_branch_Jprimes.append(j)
+        
+pQ_Branch_K = []        
+for j in Q_branch_Js:
+    stages = list(range(0,j))
+    for i in stages:
+        pQ_Branch_K.append(j-i)
+        
+
+pQ_Branch_Kprime = []
+for k in pQ_Branch_K:
+    pQ_Branch_Kprime.append(k-1)
+    
+rQ_Branch_K = []        
+for j in Q_branch_Js:
+    stages = list(range(0,j))
+    stages.sort(reverse=True)
+    for i in stages:
+        rQ_Branch_K.append(i)
+
+
+rQ_Branch_Kprime = []
+for k in rQ_Branch_K:
+    rQ_Branch_Kprime.append(k+1)
+    
+        
+
+        
+'''R Branch'''
+        
+R_branch_Js = list((range(0,Jmax)))
+all_R_branch_Js = []
+for j in R_branch_Js:
+    if j ==0:
+        all_R_branch_Js.append(j)
+    elif j!= 0:
+        for i in range(j+1):
+          all_R_branch_Js.append(j)
+              
+R_branch_Jprimes = []
+for j in all_R_branch_Js:
+    if j <= Jmax-1:
+        R_branch_Jprimes.append(j+1)
+        
+pR_Branch_K = []        
+for j in R_branch_Js:
+    stages = list(range(0,j+1))
+    # if j!= 0:
+    for i in stages:
+        pR_Branch_K.append(j-(i-1))
+    
+
+pR_Branch_Kprime = []
+for k in pR_Branch_K:
+    pR_Branch_Kprime.append(k-1)
+    
+rR_Branch_K = []        
+for j in R_branch_Js:
+    stages = list(range(0,j+1))
+    stages.sort(reverse=True)
+    for i in stages:
+        rR_Branch_K.append(i)
+
+
+rR_Branch_Kprime = []
+for k in rR_Branch_K:
+    rR_Branch_Kprime.append(k+1)
+    
+        
+
+
+
+Allowed_Js = (all_P_branch_Js*2) + (all_Q_branch_Js*2) + (all_R_branch_Js*2)
+Allowed_Jprimes = (P_branch_Jprimes*2) + (Q_branch_Jprimes*2) + (R_branch_Jprimes*2)
+Allowed_Ks = pP_Branch_K + rP_Branch_K + pQ_Branch_K + rQ_Branch_K +  pR_Branch_K + rR_Branch_K
+Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
+
+columns = {'ground_J' : Allowed_Js,'excited_J': Allowed_Jprimes, 'ground_K' : Allowed_Ks, 'excited_K' : Allowed_Kprimes}
+combinations = pd.DataFrame(columns)
+
+
+
+label = []
+
+for i in range(len(combinations['ground_J'])):
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == -1 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
+        label.append('pP')
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == -1 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
+        label.append('rP')
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == 0 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
+        label.append('pQ')
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == 0 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
+        label.append('rQ')
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == 1 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
+        label.append('pR')
+    if combinations['excited_J'][i] - combinations['ground_J'][i] == 1 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
+        label.append('rR')
+
+combinations['label'] = label
+
+ground_Js = combinations['ground_J']
+excited_Js = combinations['excited_J']
+ground_Ks = combinations['ground_K']
+excited_Ks = combinations['excited_K']
+# delta_J = combinations['delta_J']
+# delta_K = combinations ['delta_K']
+
+
+print('----------------------')
+print('Jmax is  ' + str(Jmax))
+print('length of combinations  ' + str(len(combinations)))
+endc = timeit.default_timer()
+print('---------------')
+print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
+startl = timeit.default_timer()
+
+#%%
 def get_rotational_spectrum(T, ground_B, delta_B):
     
     ground_C = ground_B/2
     delta_C = delta_B
+    excited_B = ground_B + ((delta_B/100)*ground_B)
+    excited_C = ground_C + ((delta_C/100)*ground_C)
     
-    origin = 15120
-    Jmax = 300  #Kmax = Jmax (i.e all K allowed)
-    resolution = 1e5
+    global combinations
     
-    startc = timeit.default_timer()
+    linelist = combinations
+   
+    delta_J = linelist['excited_J'] - linelist['ground_J']
+    delta_K = linelist['excited_K'] - linelist['ground_K']
+
     
     '''Calculating Linelist'''
     #%%
-    excited_B = ground_B + ((delta_B/100)*ground_B)
-    excited_C = ground_C + ((delta_C/100)*ground_C)
-    P_branch_Js = list((range(1,Jmax+1)))
-    all_P_branch_Js = []
-    for j in P_branch_Js:
-        for i in range(j):
-          all_P_branch_Js.append(j)
-        
-    P_branch_Jprimes = []
-    for j in all_P_branch_Js:
-        if j != 0:
-            P_branch_Jprimes.append(j-1)
-            
-    pP_Branch_K = []        
-    for j in P_branch_Js:
-        stages = list(range(0,j))
-        for i in stages:
-            pP_Branch_K.append(j-i)
-            
-    
-    pP_Branch_Kprime = []
-    for k in pP_Branch_K:
-        pP_Branch_Kprime.append(k-1)
-            
-    rP_Branch_K = []        
-    for j in P_branch_Js:
-        stages = list(range(0,j))
-        stages.sort(reverse=True)
-        for i in stages:
-            rP_Branch_K.append(i)
-    
-    
-    rP_Branch_Kprime = []
-    for k in rP_Branch_K:
-        rP_Branch_Kprime.append(k+1)
-        
-    
-    '''Q Branch'''
-    
-    Q_branch_Js = list((range(0,Jmax+1)))
-    
-    all_Q_branch_Js = []
-    for j in Q_branch_Js:
-        # if j ==0:
-        #     all_Q_branch_Js.append(j)
-        if j!= 0:
-            for i in range(j):
-              all_Q_branch_Js.append(j)
-          
-    Q_branch_Jprimes = []
-    for j in all_Q_branch_Js:
-            Q_branch_Jprimes.append(j)
-            
-    pQ_Branch_K = []        
-    for j in Q_branch_Js:
-        stages = list(range(0,j))
-        for i in stages:
-            pQ_Branch_K.append(j-i)
-            
-    
-    pQ_Branch_Kprime = []
-    for k in pQ_Branch_K:
-        pQ_Branch_Kprime.append(k-1)
-        
-    rQ_Branch_K = []        
-    for j in Q_branch_Js:
-        stages = list(range(0,j))
-        stages.sort(reverse=True)
-        for i in stages:
-            rQ_Branch_K.append(i)
-    
-    
-    rQ_Branch_Kprime = []
-    for k in rQ_Branch_K:
-        rQ_Branch_Kprime.append(k+1)
-        
-            
-    
-            
-    '''R Branch'''
-            
-    R_branch_Js = list((range(0,Jmax)))
-    all_R_branch_Js = []
-    for j in R_branch_Js:
-        if j ==0:
-            all_R_branch_Js.append(j)
-        elif j!= 0:
-            for i in range(j+1):
-              all_R_branch_Js.append(j)
-                  
-    R_branch_Jprimes = []
-    for j in all_R_branch_Js:
-        if j <= Jmax-1:
-            R_branch_Jprimes.append(j+1)
-            
-    pR_Branch_K = []        
-    for j in R_branch_Js:
-        stages = list(range(0,j+1))
-        # if j!= 0:
-        for i in stages:
-            pR_Branch_K.append(j-(i-1))
-        
-    
-    pR_Branch_Kprime = []
-    for k in pR_Branch_K:
-        pR_Branch_Kprime.append(k-1)
-        
-    rR_Branch_K = []        
-    for j in R_branch_Js:
-        stages = list(range(0,j+1))
-        stages.sort(reverse=True)
-        for i in stages:
-            rR_Branch_K.append(i)
-    
-    
-    rR_Branch_Kprime = []
-    for k in rR_Branch_K:
-        rR_Branch_Kprime.append(k+1)
-        
-            
-    
-    
-    
-    Allowed_Js = (all_P_branch_Js*2) + (all_Q_branch_Js*2) + (all_R_branch_Js*2)
-    Allowed_Jprimes = (P_branch_Jprimes*2) + (Q_branch_Jprimes*2) + (R_branch_Jprimes*2)
-    Allowed_Ks = pP_Branch_K + rP_Branch_K + pQ_Branch_K + rQ_Branch_K +  pR_Branch_K + rR_Branch_K
-    Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
-    
-    columns = {'ground_J' : Allowed_Js,'excited_J': Allowed_Jprimes, 'ground_K' : Allowed_Ks, 'excited_K' : Allowed_Kprimes}
-    linelist = pd.DataFrame(columns)
-    
-    linelist['delta_J'] = linelist['excited_J'] - linelist['ground_J']
-    linelist['delta_K'] = linelist['excited_K'] - linelist['ground_K']
-    
-    label = []
-    
-    for i in range(len(linelist['ground_J'])):
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == -1 and linelist['excited_K'][i] - linelist['ground_K'][i] == -1:
-            label.append('pP')
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == -1 and linelist['excited_K'][i] - linelist['ground_K'][i] == 1:
-            label.append('rP')
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == 0 and linelist['excited_K'][i] - linelist['ground_K'][i] == -1:
-            label.append('pQ')
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == 0 and linelist['excited_K'][i] - linelist['ground_K'][i] == 1:
-            label.append('rQ')
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == 1 and linelist['excited_K'][i] - linelist['ground_K'][i] == -1:
-            label.append('pR')
-        if linelist['excited_J'][i] - linelist['ground_J'][i] == 1 and linelist['excited_K'][i] - linelist['ground_K'][i] == 1:
-            label.append('rR')
-    
-    linelist['label'] = label
-    
-    ground_Js = linelist['ground_J']
-    excited_Js = linelist['excited_J']
-    ground_Ks = linelist['ground_K']
-    excited_Ks = linelist['excited_K']
-    delta_J = linelist['delta_J']
-    delta_K = linelist ['delta_K']
-    
-    
-    print('----------------------')
-    print('Jmax is  ' + str(Jmax))
-    print('length of linelist  ' + str(len(linelist)))
-    endc = timeit.default_timer()
-    print('---------------')
-    print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
-    startl = timeit.default_timer()
     
     ground_Es = []
     for J,K in zip(ground_Js, ground_Ks):
@@ -275,6 +286,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     #%%
    
+    #linelist = linelist[(linelist['intensities'] >= 0.001*max(linelist['intensities']))]
     print('length of linelist is : ' + str(len(linelist)))
     
     #given that Resolution = 100,000 at wavelength (lambda) = 6614A, 
@@ -294,6 +306,8 @@ def get_rotational_spectrum(T, ground_B, delta_B):
         
         smooth_intensities[idx] = w_int.sum()
     
+    # smooth_wavenos = linelist['smooth_wavenos']
+    # smooth_intensities = linelist['smooth_intensities']
    
     endg = timeit.default_timer()
     
@@ -303,20 +317,50 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     #%%
     
     
+
+    with sns.color_palette("flare", n_colors=3):
+        plt.figure(figsize=(30,6))
+        #plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
+        plt.plot(smooth_wavenos, 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 3) #, label = str(delta_B))
+        plt.title('ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
+        #plt.xlim(15100.0, 15140.0)
+        #plt.legend(title="delta_B")
+        #plt.show()
+       
+    #return linelist
     
-    plt.figure(figsize=(30,6))
-    plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
-    plt.plot(smooth_wavenos, 1-0.1*(smooth_intensities/max(smooth_intensities)), color = 'black', linewidth = 3)
-    plt.title('Calculated: T = ' + str(T) + 'K ,  ground_B =  ' + str(ground_B))
-    # plt.xlim(15119.0, 15119.7)
-    plt.show()
+
+plt.figure(figsize=(22,6))
+
+startplot =  timeit.default_timer()
+# Ts = np.linspace(10, 100, 1)
+# #ground_Bs = (0.001, 0.003, 0.007, 0.01, 0.03, 0.07, 0.1)
+# ground_B = 0.1
+# delta_Bs = (-1, -2, -3)
 
 
-T = 61.2
-ground_B = 0.00336
-delta_B = -0.17  
+# for T in Ts:
+#     plt.figure(figsize=(22,6))
+#     for delta_B in delta_Bs:
+#         get_rotational_spectrum(T, ground_B , delta_B)
+#     plt.show()
 
-get_rotational_spectrum(T, ground_B, delta_B)
+# endplot =  timeit.default_timer()
+
+# print(endplot - startplot)
+        
+        
+Ts = (8.9, 20.2, 61.2, 101.3)    
+ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
+delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+
+for T, B, d in zip(Ts, ground_Bs, delta_Bs):
+    get_rotational_spectrum(T, B, d) 
+
+        
+    
+
+
 
 
 
