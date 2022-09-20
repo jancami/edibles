@@ -189,7 +189,7 @@ print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B, zeta):
+def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
     
     ground_C = ground_B/2
     delta_C = 0
@@ -299,13 +299,14 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta):
     waveno_stepsize = 0.075
     grid_size = int(((np.max(linelist['wavenos']) + 0.5) - (np.min(linelist['wavenos']) - 0.5))/waveno_stepsize)  
 
-    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 100) # grid_size)
+    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 1000) # grid_size)
     smooth_intensities = np.zeros(smooth_wavenos.shape)
     
     startg = timeit.default_timer()
     
     for idx,wavepoint in np.ndenumerate(smooth_wavenos):
-        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, wavepoint/(2.355*resolution)) * (linelist['intensities']) 
+        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, sig) * (linelist['intensities']) 
+        #w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, wavepoint/(2.355*resolution)) * (linelist['intensities']) 
         
         smooth_intensities[idx] = w_int.sum()
     
@@ -325,7 +326,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta):
     plt.figure(figsize=(15,6))
     #plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
     plt.plot(((1/smooth_wavenos)*1e8), 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 3, color = 'black') #, label = str(delta_B))
-    plt.title('ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
+    plt.title(str(con) + ':  ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
     plt.xlim(6612, 6615)
     #plt.legend(title="delta_B")
     plt.show()
@@ -335,28 +336,29 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta):
 
 #plt.figure(figsize=(22,6))
 
-# T = 8.9
-# ground_B = 0.01913
-# delta_B = -0.85
-# zeta = -0.46
-
-# get_rotational_spectrum(T, ground_B, delta_B, zeta)
-
-        
         
 Ts = (8.9, 20.2, 61.2, 101.3)    
 ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
 delta_Bs = (-0.85, -0.42, -0.17, -0.21)
 zeta = (-0.46, -0.43, -0.49, -0.54)
+sigma = (0.1358, 0.1571, 0.1953, 0.1995)
+conditions = ('condition a', 'condition b', 'condition c', 'condition d')
 
-for T, B, d, z in zip(Ts, ground_Bs, delta_Bs, zeta):
-    get_rotational_spectrum(T, B, d, z) 
+for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
+    get_rotational_spectrum(T, B, d, z, sig, con) 
     
 
 
         
     
+# T = 61.2
+# ground_B = 0.00336
+# delta_B = -0.17
+# zeta = -0.49
 
+# get_rotational_spectrum(T, ground_B, delta_B, zeta)
+
+        
 
 
 
