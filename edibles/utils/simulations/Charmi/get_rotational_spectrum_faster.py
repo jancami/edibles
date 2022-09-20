@@ -19,7 +19,7 @@ import seaborn as sns
 startc = timeit.default_timer()
 
 origin = 15120
-Jmax = 300  #Kmax = Jmax (i.e all K allowed)
+Jmax = 300 #Kmax = Jmax (i.e all K allowed)
 resolution = 1e5
     
 #%%   
@@ -189,10 +189,10 @@ print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B):
+def get_rotational_spectrum(T, ground_B, delta_B, zeta):
     
     ground_C = ground_B/2
-    delta_C = delta_B
+    delta_C = 0
     excited_B = ground_B + ((delta_B/100)*ground_B)
     excited_C = ground_C + ((delta_C/100)*ground_C)
     
@@ -202,7 +202,6 @@ def get_rotational_spectrum(T, ground_B, delta_B):
    
     delta_J = linelist['excited_J'] - linelist['ground_J']
     delta_K = linelist['excited_K'] - linelist['ground_K']
-
     
     '''Calculating Linelist'''
     #%%
@@ -215,9 +214,13 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     linelist['ground_Es'] = ground_Es 
     
     excited_Es = []
-    for J,K in zip(excited_Js, excited_Ks):
-                excited_E = excited_B*J*(J + 1) + (excited_C - excited_B)*(K**2)
-                excited_Es.append(excited_E)
+    for J,K, del_K in zip(excited_Js, excited_Ks, delta_K):
+        if del_K == -1:
+                excited_E = excited_B*J*(J + 1) + (excited_C - excited_B)*(K**2) - ((-2*excited_C*zeta))*K + excited_C**2
+        elif del_K == 1:
+                excited_E = excited_B*J*(J + 1) + (excited_C - excited_B)*(K**2) + ((-2*excited_C*zeta))*K + excited_C**2
+
+        excited_Es.append(excited_E)
                 
     linelist['excited_Es'] = excited_Es
     
@@ -296,7 +299,7 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     waveno_stepsize = 0.075
     grid_size = int(((np.max(linelist['wavenos']) + 0.5) - (np.min(linelist['wavenos']) - 0.5))/waveno_stepsize)  
 
-    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 0.5 ,np.max(linelist['wavenos']) + 0.5, grid_size)
+    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 100) # grid_size)
     smooth_intensities = np.zeros(smooth_wavenos.shape)
     
     startg = timeit.default_timer()
@@ -318,44 +321,38 @@ def get_rotational_spectrum(T, ground_B, delta_B):
     
     
 
-    with sns.color_palette("flare", n_colors=3):
-        plt.figure(figsize=(30,6))
-        #plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
-        plt.plot(smooth_wavenos, 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 3) #, label = str(delta_B))
-        plt.title('ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
-        #plt.xlim(15100.0, 15140.0)
-        #plt.legend(title="delta_B")
-        #plt.show()
-       
-    #return linelist
+    #with sns.color_palette("flare", n_colors=4):
+    plt.figure(figsize=(15,6))
+    #plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
+    plt.plot(((1/smooth_wavenos)*1e8), 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 3, color = 'black') #, label = str(delta_B))
+    plt.title('ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
+    plt.xlim(6612, 6615)
+    #plt.legend(title="delta_B")
+    plt.show()
+   
+
     
 
-plt.figure(figsize=(22,6))
+#plt.figure(figsize=(22,6))
 
-startplot =  timeit.default_timer()
-# Ts = np.linspace(10, 100, 1)
-# #ground_Bs = (0.001, 0.003, 0.007, 0.01, 0.03, 0.07, 0.1)
-# ground_B = 0.1
-# delta_Bs = (-1, -2, -3)
+# T = 8.9
+# ground_B = 0.01913
+# delta_B = -0.85
+# zeta = -0.46
 
+# get_rotational_spectrum(T, ground_B, delta_B, zeta)
 
-# for T in Ts:
-#     plt.figure(figsize=(22,6))
-#     for delta_B in delta_Bs:
-#         get_rotational_spectrum(T, ground_B , delta_B)
-#     plt.show()
-
-# endplot =  timeit.default_timer()
-
-# print(endplot - startplot)
         
         
 Ts = (8.9, 20.2, 61.2, 101.3)    
 ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
 delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+zeta = (-0.46, -0.43, -0.49, -0.54)
 
-for T, B, d in zip(Ts, ground_Bs, delta_Bs):
-    get_rotational_spectrum(T, B, d) 
+for T, B, d, z in zip(Ts, ground_Bs, delta_Bs, zeta):
+    get_rotational_spectrum(T, B, d, z) 
+    
+
 
         
     
@@ -478,3 +475,20 @@ for T, B, d in zip(Ts, ground_Bs, delta_Bs):
 
 # for T, B, d in zip(Ts, ground_Bs, delta_Bs):
 #     get_rotational_spectrum(T, B, d)
+
+#startplot =  timeit.default_timer()
+# Ts = np.linspace(10, 100, 1)
+# #ground_Bs = (0.001, 0.003, 0.007, 0.01, 0.03, 0.07, 0.1)
+# ground_B = 0.1
+# delta_Bs = (-1, -2, -3)
+
+
+# for T in Ts:
+#     plt.figure(figsize=(22,6))
+#     for delta_B in delta_Bs:
+#         get_rotational_spectrum(T, ground_B , delta_B)
+#     plt.show()
+
+# endplot =  timeit.default_timer()
+
+# print(endplot - startplot)
