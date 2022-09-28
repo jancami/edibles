@@ -12,9 +12,75 @@ import astropy.constants as const
 import matplotlib.pyplot as plt
 import timeit
 import scipy.stats as ss
-from astropy.convolution import Gaussian1DKernel, convolve
-import matplotlib as mpl
-import seaborn as sns
+from edibles.utils.edibles_oracle import EdiblesOracle
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
+import warnings
+from astropy.modeling import models
+from astropy import units as u
+from specutils.spectra import Spectrum1D
+from specutils.fitting import fit_generic_continuum
+
+pgopher_smooth = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_a\condition_a_pgopher_smooth.dat", delim_whitespace=(True))
+
+#plt.plot(pgopher_smooth['Position'], 1-0.08*((pgopher_smooth['Intensity'])/max(pgopher_smooth['Intensity'])))
+
+
+
+'''EDIBLES data'''
+#%%
+starName = 'HD 166937'
+#put lower range of wavelengths to extract from edibles data
+minWave = 6612
+
+#put upper range of wavelengths to extract from edibles data
+maxWave = 6616
+
+pythia = EdiblesOracle()
+rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
+fnames = rawList.tolist()
+obs = len(fnames)
+
+
+sp = EdiblesSpectrum(fnames[0])
+    
+sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave)+1)
+                    , xmax = min(maxWave, np.max(sp.raw_wave)-1))
+
+                   
+#data = np.array([sp.bary_wave, sp.bary_flux]).transpose()
+leftEdge = 0
+rightEdge = 0
+    
+if minWave <= np.min(sp.raw_wave):
+    leftEdge = 1
+    #print('Left edge detected')
+if maxWave >= np.max(sp.raw_wave):
+    rightEdge = 1
+
+data = np.delete(np.array([sp.bary_wave, sp.bary_flux]).transpose(), 
+                            np.logical_or(sp.bary_wave <= np.min(sp.bary_wave) + 40.0*leftEdge, 
+                                          sp.bary_wave >= np.max(sp.bary_wave) - 40.0*rightEdge), 0)
+
+v = -6.5 #velocity of the cloud
+
+data[:, 0] = data[:, 0]*(1+v/299792.458) # doppler shift
+
+x1 = data[:,0]
+y1= data[:,1]
+
+spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
+
+with warnings.catch_warnings():  # Ignore warnings
+    warnings.simplefilter('ignore')
+    g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
+
+
+data[:,1] = y1/g1_fit(x1*u.angstrom)
+
+#plt.figure(figsize=(20,6))
+#plt.plot(data[:, 0], data[:, 1]/max(data[:, 1]))
+
+#%%
 
 startc = timeit.default_timer()
 
@@ -22,6 +88,7 @@ origin = 15120
 Jmax = 300 #Kmax = Jmax (i.e all K allowed)
 resolution = 1e5
     
+'''Combinations'''
 #%%   
 P_branch_Js = list((range(1,Jmax+1)))
 all_P_branch_Js = []
@@ -305,14 +372,16 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
     startg = timeit.default_timer()
     
     for idx,wavepoint in np.ndenumerate(smooth_wavenos):
-        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, sig) * (linelist['intensities']) 
-        #w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, wavepoint/(2.355*resolution)) * (linelist['intensities']) 
-        
+        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, sigma) * (linelist['intensities']) 
         smooth_intensities[idx] = w_int.sum()
     
-    # smooth_wavenos = linelist['smooth_wavenos']
-    # smooth_intensities = linelist['smooth_intensities']
-   
+    # def gaussian(x, mu, sig):
+    #         return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
+
+    # smooth_gau = np.zeros(smooth_wavenos.shape)
+    # for i in linelist.index:
+    #     smooth_gau = smooth_gau + (linelist['normalized_intensities'][i])*gaussian(smooth_wavenos, linelist['wavenos'][i], sigma)
+        
     endg = timeit.default_timer()
     
     print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')  
@@ -324,11 +393,20 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
 
     #with sns.color_palette("flare", n_colors=4):
     plt.figure(figsize=(15,6))
-    #plt.stem(linelist['wavenos'], 1-0.1*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', linefmt='y', markerfmt='yo', bottom=1)
-    plt.plot(((1/smooth_wavenos)*1e8), 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 3, color = 'black') #, label = str(delta_B))
-    plt.title(str(con) + ':  ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
-    plt.xlim(6612, 6615)
-    #plt.legend(title="delta_B")
+    
+    #plt.stem((1/linelist['wavenos'])*1e8, 1-0.08*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', bottom = 1, linefmt='y', markerfmt='yo') #, bottom=1)
+
+    #plt.stem(pgopher_ll['Position'], 1-0.08*(pgopher_ll['Intensity']/max(pgopher_ll['Intensity'])), bottom=1)
+    #plt.plot(pgopher_smooth['Position'], 1-0.08*(pgopher_smooth['Intensity']/max(pgopher_smooth['Intensity'])))
+
+    
+    plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_intensities/max(smooth_intensities)), linewidth = 1, color = 'black') #, label = str(delta_B))
+    #plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_gau/max(smooth_gau)))
+    
+    plt.plot(data[:, 0] + 0.5 , (data[:, 1]/max(data[:, 1])))
+    
+    #plt.title(str(con) + ':  ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
+    plt.xlim(6612.5, 6615.5)
     plt.show()
    
 
@@ -337,30 +415,52 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
 #plt.figure(figsize=(22,6))
 
         
-Ts = (8.9, 20.2, 61.2, 101.3)    
-ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
-delta_Bs = (-0.85, -0.42, -0.17, -0.21)
-zeta = (-0.46, -0.43, -0.49, -0.54)
-sigma = (0.1358, 0.1571, 0.1953, 0.1995)
-conditions = ('condition a', 'condition b', 'condition c', 'condition d')
+# Ts = (8.9, 20.2, 61.2, 101.3)    
+# ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
+# delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+# zeta = (-0.46, -0.43, -0.49, -0.54)
+# sigma = (0.1358, 0.1571, 0.1953, 0.1995)
+# conditions = ('condition a', 'condition b', 'condition c', 'condition d')
 
-for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
-    get_rotational_spectrum(T, B, d, z, sig, con) 
+# for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
+#     get_rotational_spectrum(T, B, d, z, sig, con) 
     
 
-
+#print(pgopher_ll['Intensity'])
         
     
+T = 8.9
+ground_B = 0.01913
+delta_B = -0.85
+zeta = -0.46
+sigma = 0.1358
+conditions = 'condition a'
+
+# T = 20.2
+# ground_B = 0.00947
+# delta_B = -0.42
+# zeta = -0.43
+# sigma = 0.1571
+# conditions = 'condition b'
+
 # T = 61.2
 # ground_B = 0.00336
 # delta_B = -0.17
 # zeta = -0.49
+# sigma = 0.1953
+# conditions = 'condition c'
 
-# get_rotational_spectrum(T, ground_B, delta_B, zeta)
+# T = 101.3
+# ground_B = 0.00286
+# delta_B = -0.21
+# zeta = -0.54
+# sigma = 0.1995
+# conditions = 'condition d'
+
+
+get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions)
 
         
-
-
 
 
 
@@ -385,6 +485,14 @@ for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions
 '''Previously used codes'''
 
 #%%
+
+#pgopher_ll = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\kerr's_condition_d_pgopher_linelist.txt", delim_whitespace=True)
+
+
+
+# pgopher_ll['Intensity'] = pd.to_numeric(pgopher_ll['Intensity'], errors = 'coerce')
+# print(pgopher_ll['Intensity'])
+
 
 
 # pgopher = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_d\dddd.txt", delim_whitespace=(True))
@@ -449,14 +557,7 @@ for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions
 
 
  # plt.figure(figsize=(30,6))  
-    # def gaussian(x, mu, sig):
-    #         return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
-
-    # for i in linelist.index:
-    #     peak = (linelist['intensities'][i])*gaussian(smooth_wavenos, linelist['wavenos'][i], linelist['wavenos'][i]/(2.355*resolution))  
-    #     plt.plot(smooth_wavenos, peak)
-    #     print(peak)
-    #     smooth_intensities = smooth_intensities + peak
+    
     
     # smooth_norm_intensities = (smooth_intensities/max(smooth_intensities))
     
