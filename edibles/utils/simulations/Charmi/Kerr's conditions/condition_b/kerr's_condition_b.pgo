@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Mixture Version="PGOPHER 10.1.182 4 Dec 2018 16:58 32 bit (Delphi 18.5/18)">
+<Mixture Version="PGOPHER 10.1.182 4 Dec 2018 16:58 32 bit (Delphi 18.5/18)" PlotUnits="angVac">
   <Species Name="Species" Jmax="600">
     <SymmetricMolecule Name="SymmetricTop" PointGroup="D6h" Jmax="600">
       <SymmetricManifold Name="Ground" Initial="True" Jmax="600">
@@ -12,7 +12,8 @@
         <SymmetricTop Name="v=1" Symmetry="E1u">
           <Parameter Name="Origin" Value="15120"/>
           <Parameter Name="B" Value="0.009430226"/>
-          <Parameter Name="C" Value="0.004715113"/>
+          <Parameter Name="C" Value="0.004735"/>
+          <Parameter Name="zeta" Value="-0.43"/>
         </SymmetricTop>
       </SymmetricManifold>
       <TransitionMoments Bra="Excited" Ket="Ground">
@@ -20,9 +21,12 @@
       </TransitionMoments>
     </SymmetricMolecule>
   </Species>
+  <Parameter Name="Gaussian" Value="0.1571"/>
   <Parameter Name="Temperature" Value="20.2"/>
-  <Parameter Name="Fmin" Value="15118.0422940135"/>
-  <Parameter Name="Fmax" Value="15122.5417793672"/>
+  <Parameter Name="Fmin" Value="6618.02918795701"/>
+  <Parameter Name="Fmax" Value="6610.4445048728"/>
+  <FormSettings Name="ConstantsWindow" ActiveObject="SymmetricTop: Species - SymmetricTop - Excited - v=1"/>
+  <FormSettings Name="LogWindow" ObsFileName="pgopher_conditionb.lin"/>
   <FormSettings Name="LineWindow" AdvancedItem="True" ShowLines="50000" FirstLine="11624" LastLine="11660"
 Lines="
 SymmetricTop	Excited	79	6	27	Ground	80	0	14	15118.228713207		3.48903153271853e-6	0	rP0(80)	Excited v=1 79  1 +1 A1u - Ground v=0 80  0 A1g
@@ -11686,6 +11690,4 @@ SymmetricTop	Excited	45	9	4	Ground	46	3	3	15118.752172192		1.98988615436556e-6	0
 SymmetricTop	Excited	44	6	3	Ground	45	0	2	15118.750517783		1.07115157564565e-6	0	rP36A1g(45)	Excited v=1 44 37 +1 A1u - Ground v=0 45 36 A1g
 SymmetricTop	Excited	44	7	3	Ground	45	1	2	15118.750517783		1.07115157564565e-6	0	rP36A2g(45)	Excited v=1 44 37 +1 A2u - Ground v=0 45 36 A2g
 "/>
-  <FormSettings Name="ConstantsWindow" ActiveObject="SymmetricTop: Species - SymmetricTop - Excited - v=1"/>
-  <FormSettings Name="LogWindow" ObsFileName="pgopher_conditionb.lin"/>
 </Mixture>

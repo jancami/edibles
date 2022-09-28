@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<Mixture Version="PGOPHER 10.1.182 4 Dec 2018 16:58 32 bit (Delphi 18.5/18)">
+<Mixture Version="PGOPHER 10.1.182 4 Dec 2018 16:58 32 bit (Delphi 18.5/18)" PlotUnits="angVac">
   <Species Name="Species" Jmax="600">
     <SymmetricMolecule Name="SymmetricTop" PointGroup="D6h" Jmax="600">
       <SymmetricManifold Name="Ground" Initial="True" Jmax="600">
-        <SymmetricTop Name="v=0" Symmetry="A1g">
+        <SymmetricTop Name="v=0">
           <Parameter Name="B" Value="0.01913"/>
           <Parameter Name="C" Value="0.009565"/>
         </SymmetricTop>
@@ -12,7 +12,8 @@
         <SymmetricTop Name="v=1" Symmetry="E1u">
           <Parameter Name="Origin" Value="15120"/>
           <Parameter Name="B" Value="0.018967395"/>
-          <Parameter Name="C" Value="0.0094836975"/>
+          <Parameter Name="C" Value="0.009565"/>
+          <Parameter Name="zeta" Value="-0.46"/>
         </SymmetricTop>
       </SymmetricManifold>
       <TransitionMoments Bra="Excited" Ket="Ground">
@@ -20,9 +21,10 @@
       </TransitionMoments>
     </SymmetricMolecule>
   </Species>
+  <Parameter Name="Gaussian" Value="0.1358"/>
   <Parameter Name="Temperature" Value="8.9"/>
-  <Parameter Name="Fmin" Value="15117.634408807"/>
-  <Parameter Name="Fmax" Value="15122.1674781222"/>
+  <Parameter Name="Fmin" Value="6614.79152728707"/>
+  <Parameter Name="Fmax" Value="6612.80865621107"/>
   <FormSettings Name="ConstantsWindow" ActiveObject="SymmetricTop: Species - SymmetricTop - Excited - v=1"/>
   <FormSettings Name="LineWindow" AdvancedItem="True" ShowLines="50000" FirstLine="1955" LastLine="2048"
 Lines="
@@ -2075,5 +2077,4 @@ SymmetricTop	Excited	39	8	9	Ground	39	2	5	15120.03965649		1.33299206292064e-5	0	
 SymmetricTop	Excited	39	9	9	Ground	39	3	5	15120.03965649		1.33299206292064e-5	0	pQ15B2g(39)	Excited v=1 39 14 -1 B2u - Ground v=0 39 15 B2g
 SymmetricTop	Excited	39	11	19	Ground	39	5	9	15120.0183313225		1.30097307460472e-5	0	pQ14(39)	Excited v=1 39 13 -1 E2u - Ground v=0 39 14 E2g
 "/>
-  <FormSettings Name="LogWindow" ObsFileName="..\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition a\pgopher_kerr_condition_a_Jmax_300_A1g_E1u.txt"/>
 </Mixture>

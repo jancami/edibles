@@ -68,6 +68,11 @@ with warnings.catch_warnings():  # Ignore warnings
 
 data[:,1] = y1/g1_fit(x1*u.angstrom)
 
-plt.figure(figsize=(20,6))
-plt.plot(data[:, 0], data[:, 1]/max(data[:, 1]))
+a = 0.9*(data[:, 1]/max(data[:, 1]))
 
+plt.figure(figsize=(20,6))
+plt.plot(data[:, 0], a)
+
+# a = data[:, 1]/max(data[:, 1])
+
+print(np.min(a))
