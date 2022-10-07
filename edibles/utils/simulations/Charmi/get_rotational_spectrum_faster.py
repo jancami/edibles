@@ -19,16 +19,16 @@ from astropy.modeling import models
 from astropy import units as u
 from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_generic_continuum
+import seaborn as sns
 
-pgopher_smooth = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_a\condition_a_pgopher_smooth.dat", delim_whitespace=(True))
+pgopher_smooth = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_c\condition_c_pgopher_smooth.dat", delim_whitespace=(True))
+kerr = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\kerr-96-data.txt", delim_whitespace=(True))
 
-#plt.plot(pgopher_smooth['Position'], 1-0.08*((pgopher_smooth['Intensity'])/max(pgopher_smooth['Intensity'])))
-
-
+combinations = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Jmax=300.txt", delim_whitespace=(True))
 
 '''EDIBLES data'''
 #%%
-starName = 'HD 166937'
+starName = 'HD 185418'
 #put lower range of wavelengths to extract from edibles data
 minWave = 6612
 
@@ -81,6 +81,8 @@ data[:,1] = y1/g1_fit(x1*u.angstrom)
 #plt.plot(data[:, 0], data[:, 1]/max(data[:, 1]))
 
 #%%
+plt.figure(figsize=(15,6))
+    
 
 startc = timeit.default_timer()
 
@@ -88,175 +90,11 @@ origin = 15120
 Jmax = 300 #Kmax = Jmax (i.e all K allowed)
 resolution = 1e5
     
-'''Combinations'''
-#%%   
-P_branch_Js = list((range(1,Jmax+1)))
-all_P_branch_Js = []
-for j in P_branch_Js:
-    for i in range(j):
-      all_P_branch_Js.append(j)
-    
-P_branch_Jprimes = []
-for j in all_P_branch_Js:
-    if j != 0:
-        P_branch_Jprimes.append(j-1)
-        
-pP_Branch_K = []        
-for j in P_branch_Js:
-    stages = list(range(0,j))
-    for i in stages:
-        pP_Branch_K.append(j-i)
-        
 
-pP_Branch_Kprime = []
-for k in pP_Branch_K:
-    pP_Branch_Kprime.append(k-1)
-        
-rP_Branch_K = []        
-for j in P_branch_Js:
-    stages = list(range(0,j))
-    stages.sort(reverse=True)
-    for i in stages:
-        rP_Branch_K.append(i)
-
-
-rP_Branch_Kprime = []
-for k in rP_Branch_K:
-    rP_Branch_Kprime.append(k+1)
-    
-
-'''Q Branch'''
-
-Q_branch_Js = list((range(0,Jmax+1)))
-
-all_Q_branch_Js = []
-for j in Q_branch_Js:
-    # if j ==0:
-    #     all_Q_branch_Js.append(j)
-    if j!= 0:
-        for i in range(j):
-          all_Q_branch_Js.append(j)
-      
-Q_branch_Jprimes = []
-for j in all_Q_branch_Js:
-        Q_branch_Jprimes.append(j)
-        
-pQ_Branch_K = []        
-for j in Q_branch_Js:
-    stages = list(range(0,j))
-    for i in stages:
-        pQ_Branch_K.append(j-i)
-        
-
-pQ_Branch_Kprime = []
-for k in pQ_Branch_K:
-    pQ_Branch_Kprime.append(k-1)
-    
-rQ_Branch_K = []        
-for j in Q_branch_Js:
-    stages = list(range(0,j))
-    stages.sort(reverse=True)
-    for i in stages:
-        rQ_Branch_K.append(i)
-
-
-rQ_Branch_Kprime = []
-for k in rQ_Branch_K:
-    rQ_Branch_Kprime.append(k+1)
-    
-        
-
-        
-'''R Branch'''
-        
-R_branch_Js = list((range(0,Jmax)))
-all_R_branch_Js = []
-for j in R_branch_Js:
-    if j ==0:
-        all_R_branch_Js.append(j)
-    elif j!= 0:
-        for i in range(j+1):
-          all_R_branch_Js.append(j)
-              
-R_branch_Jprimes = []
-for j in all_R_branch_Js:
-    if j <= Jmax-1:
-        R_branch_Jprimes.append(j+1)
-        
-pR_Branch_K = []        
-for j in R_branch_Js:
-    stages = list(range(0,j+1))
-    # if j!= 0:
-    for i in stages:
-        pR_Branch_K.append(j-(i-1))
-    
-
-pR_Branch_Kprime = []
-for k in pR_Branch_K:
-    pR_Branch_Kprime.append(k-1)
-    
-rR_Branch_K = []        
-for j in R_branch_Js:
-    stages = list(range(0,j+1))
-    stages.sort(reverse=True)
-    for i in stages:
-        rR_Branch_K.append(i)
-
-
-rR_Branch_Kprime = []
-for k in rR_Branch_K:
-    rR_Branch_Kprime.append(k+1)
-    
-        
-
-
-
-Allowed_Js = (all_P_branch_Js*2) + (all_Q_branch_Js*2) + (all_R_branch_Js*2)
-Allowed_Jprimes = (P_branch_Jprimes*2) + (Q_branch_Jprimes*2) + (R_branch_Jprimes*2)
-Allowed_Ks = pP_Branch_K + rP_Branch_K + pQ_Branch_K + rQ_Branch_K +  pR_Branch_K + rR_Branch_K
-Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
-
-columns = {'ground_J' : Allowed_Js,'excited_J': Allowed_Jprimes, 'ground_K' : Allowed_Ks, 'excited_K' : Allowed_Kprimes}
-combinations = pd.DataFrame(columns)
-
-
-
-label = []
-
-for i in range(len(combinations['ground_J'])):
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == -1 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
-        label.append('pP')
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == -1 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
-        label.append('rP')
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == 0 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
-        label.append('pQ')
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == 0 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
-        label.append('rQ')
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == 1 and combinations['excited_K'][i] - combinations['ground_K'][i] == -1:
-        label.append('pR')
-    if combinations['excited_J'][i] - combinations['ground_J'][i] == 1 and combinations['excited_K'][i] - combinations['ground_K'][i] == 1:
-        label.append('rR')
-
-combinations['label'] = label
-
-ground_Js = combinations['ground_J']
-excited_Js = combinations['excited_J']
-ground_Ks = combinations['ground_K']
-excited_Ks = combinations['excited_K']
-# delta_J = combinations['delta_J']
-# delta_K = combinations ['delta_K']
-
-
-print('----------------------')
-print('Jmax is  ' + str(Jmax))
-print('length of combinations  ' + str(len(combinations)))
-endc = timeit.default_timer()
-print('---------------')
-print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
+def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma):
     
     ground_C = ground_B/2
     delta_C = 0
@@ -264,6 +102,10 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
     excited_C = ground_C + ((delta_C/100)*ground_C)
     
     global combinations
+    ground_Js = combinations['ground_J']
+    excited_Js = combinations['excited_J']
+    ground_Ks = combinations['ground_K']
+    excited_Ks = combinations['excited_K']
     
     linelist = combinations
    
@@ -391,30 +233,76 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
     
     
 
-    #with sns.color_palette("flare", n_colors=4):
-    plt.figure(figsize=(15,6))
-    
-    #plt.stem((1/linelist['wavenos'])*1e8, 1-0.08*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', bottom = 1, linefmt='y', markerfmt='yo') #, bottom=1)
-
-    #plt.stem(pgopher_ll['Position'], 1-0.08*(pgopher_ll['Intensity']/max(pgopher_ll['Intensity'])), bottom=1)
-    #plt.plot(pgopher_smooth['Position'], 1-0.08*(pgopher_smooth['Intensity']/max(pgopher_smooth['Intensity'])))
-
-    
-    plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_intensities/max(smooth_intensities)), linewidth = 1, color = 'black') #, label = str(delta_B))
-    #plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_gau/max(smooth_gau)))
-    
-    plt.plot(data[:, 0] + 0.5 , (data[:, 1]/max(data[:, 1])))
-    
-    #plt.title(str(con) + ':  ground_B =  ' + str(ground_B) + ' Temperature = ' + str(T) + '   K')
-    plt.xlim(6612.5, 6615.5)
-    plt.show()
-   
-
-    
-
-#plt.figure(figsize=(22,6))
-
+    with sns.color_palette("flare", n_colors=10):
+        #plt.figure(figsize=(15,6))
         
+        'Calculated'
+        #plt.stem((1/linelist['wavenos'])*1e8, 1-0.08*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', bottom = 1, linefmt='y', markerfmt='yo') #, bottom=1)
+        axes[m,n].plot(((1/smooth_wavenos)*1e8), 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 1, color = '#a65628') #, label = str(delta_B))
+        #plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_gau/max(smooth_gau)))
+        
+        'PGOPHER'
+        #plt.stem(pgopher_ll['Position'], 1-0.08*(pgopher_ll['Intensity']/max(pgopher_ll['Intensity'])), bottom=1)
+        #plt.plot(pgopher_smooth['Position'], 1-0.08*(pgopher_smooth['Intensity']/max(pgopher_smooth['Intensity'])), label = "PGOPHER")
+    
+        'Kerr data'
+        #plt.plot(kerr['Position']+0.3, kerr['Intensity'], label = 'Kerr et al 1996')
+    
+        
+        
+        
+        #plt.legend(title = 'Calculated')
+        #plt.title('Condition C')
+        #plt.title('ground_B =  ' + str(ground_B) + ' Delta_B = ' + str(delta_B) + ',  zeta = ' + str(zeta) + '   Star Name =   ' + str(starName) )
+        
+        #plt.show()
+       
+        return linelist
+
+
+
+
+Ts = (10,30,70, 100)
+ground_Bs = (0.001, 0.005, 0.01)
+delta_B = -0.5
+zeta = -2
+sigma = 0.2
+conditions = 'condition c'
+
+
+fig, axes = plt.subplots(4, 3, figsize=(12,6), sharex=(True), sharey=(True))
+fig.suptitle('2D Parametric Study - Temperature x ground_B \n \n Delta_B =  ' + str(delta_B) + ',  Delta_C = 0,  zeta = ' + str(zeta) + ', sigma =  ' + str(sigma) + '\n' )
+
+
+rows = ['T = {} K'.format(row) for row in Ts]
+cols = ['ground_B = {}'.format(col) for col in ground_Bs]
+
+for ax, col in zip(axes[0], cols):
+    ax.set_title(col)
+    #ax.set_xlim(6612,6615)
+
+for ax, row in zip(axes[:,0], rows):
+    ax.set_ylabel(row, rotation=0, size='large', labelpad=40)
+    #ax.set_xlim(6612,6615)
+    
+fig.tight_layout()
+
+n = 0
+for ground_B in ground_Bs:
+    m = 0
+    for T in Ts:
+        get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma)
+        m = m + 1
+    n = n + 1
+    
+#plt.plot(data[:, 0] + 0.57 , (data[:, 1]/max(data[:, 1])), color = 'black')#, label = 'EDIBLES')
+
+    
+
+
+
+#kerr's conditions   
+   
 # Ts = (8.9, 20.2, 61.2, 101.3)    
 # ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
 # delta_Bs = (-0.85, -0.42, -0.17, -0.21)
@@ -424,43 +312,9 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions):
 
 # for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
 #     get_rotational_spectrum(T, B, d, z, sig, con) 
-    
-
-#print(pgopher_ll['Intensity'])
         
-    
-T = 8.9
-ground_B = 0.01913
-delta_B = -0.85
-zeta = -0.46
-sigma = 0.1358
-conditions = 'condition a'
-
-# T = 20.2
-# ground_B = 0.00947
-# delta_B = -0.42
-# zeta = -0.43
-# sigma = 0.1571
-# conditions = 'condition b'
-
-# T = 61.2
-# ground_B = 0.00336
-# delta_B = -0.17
-# zeta = -0.49
-# sigma = 0.1953
-# conditions = 'condition c'
-
-# T = 101.3
-# ground_B = 0.00286
-# delta_B = -0.21
-# zeta = -0.54
-# sigma = 0.1995
-# conditions = 'condition d'
 
 
-get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions)
-
-        
 
 
 
@@ -595,3 +449,31 @@ get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma, conditions)
 # endplot =  timeit.default_timer()
 
 # print(endplot - startplot)
+
+# T = 8.9
+# ground_B = 0.01913
+# delta_B = -0.85
+# zeta = -0.46
+# sigma = 0.1358
+# conditions = 'condition a'
+
+# T = 20.2
+# ground_B = 0.00947
+# delta_B = -0.42
+# zeta = -0.43
+# sigma = 0.1571
+# conditions = 'condition b'
+
+# T = 61.2
+# ground_B = 0.00336
+# delta_B = -0.17
+# zeta = -0.49
+# sigma = 0.1953
+# conditions = 'condition c'
+
+# T = 101.3
+# ground_B = 0.00286
+# delta_B = -0.21
+# zeta = -0.54
+# sigma = 0.1995
+# conditions = 'condition d'
