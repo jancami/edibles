@@ -268,14 +268,16 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
 
 
-Ts = (28, 30, 40, 50, 60, 70, 80, 90, 100)
-#T = 28
-ground_B = 0.005
-delta_B = 0
-delta_C = 0
+Ts = (5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+ground_B = 0.05
+delta_B = -0.4
+delta_C = -0.4
 zeta = -0.5
 sigma = 0.1953
 conditions = 'condition c' 
+
+#get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+
 
 for T in Ts:
     get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
