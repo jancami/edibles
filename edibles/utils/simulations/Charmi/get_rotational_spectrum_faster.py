@@ -20,20 +20,24 @@ from astropy import units as u
 from specutils.spectra import Spectrum1D
 from specutils.fitting import fit_generic_continuum
 import seaborn as sns
+from scipy.signal import argrelextrema
 
-pgopher_smooth = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_c\condition_c_pgopher_smooth.dat", delim_whitespace=(True))
+
+pgopher_smooth_0 = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_c\condition_c_pgopher_smooth.dat", delim_whitespace=(True))
+pgopher_smooth_same = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\condition_c\Kerr_Condition_C_PGOPHER_and_Calculated\condition_c_delta_b=delta_c.dat", delim_whitespace=(True))
 kerr = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Kerr's conditions\kerr-96-data.txt", delim_whitespace=(True))
+
 
 combinations = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Jmax=300.txt", delim_whitespace=(True))
 
 '''EDIBLES data'''
 #%%
-starName = 'HD 185418'
+starName = 'HD 166937'
 #put lower range of wavelengths to extract from edibles data
-minWave = 6612
+minWave = 5795
 
 #put upper range of wavelengths to extract from edibles data
-maxWave = 6616
+maxWave = 5800
 
 pythia = EdiblesOracle()
 rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
@@ -46,39 +50,20 @@ sp = EdiblesSpectrum(fnames[0])
 sp.getSpectrum(xmin = max(minWave, np.min(sp.raw_wave)+1)
                     , xmax = min(maxWave, np.max(sp.raw_wave)-1))
 
-                   
-#data = np.array([sp.bary_wave, sp.bary_flux]).transpose()
-leftEdge = 0
-rightEdge = 0
-    
-if minWave <= np.min(sp.raw_wave):
-    leftEdge = 1
-    #print('Left edge detected')
-if maxWave >= np.max(sp.raw_wave):
-    rightEdge = 1
+data = np.array([sp.bary_wave, sp.bary_flux]).transpose()                  
+wave_data = data[:,0]
+int_data = data[:,1]
 
-data = np.delete(np.array([sp.bary_wave, sp.bary_flux]).transpose(), 
-                            np.logical_or(sp.bary_wave <= np.min(sp.bary_wave) + 40.0*leftEdge, 
-                                          sp.bary_wave >= np.max(sp.bary_wave) - 40.0*rightEdge), 0)
+c = 299792458  # in m/s speed of light
+v = -6.5 #velocity_of_cloud
 
-v = -6.5 #velocity of the cloud
+wave_data = wave_data*(1+ (v/c))
 
-data[:, 0] = data[:, 0]*(1+v/299792.458) # doppler shift
+spectrum1 = Spectrum1D(flux = int_data*u.dimensionless_unscaled, spectral_axis = wave_data*u.angstrom)
 
-x1 = data[:,0]
-y1= data[:,1]
+g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 1))
 
-spectrum1 = Spectrum1D(flux = y1*u.dimensionless_unscaled, spectral_axis = x1*u.angstrom)
-
-with warnings.catch_warnings():  # Ignore warnings
-    warnings.simplefilter('ignore')
-    g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
-
-
-data[:,1] = y1/g1_fit(x1*u.angstrom)
-
-#plt.figure(figsize=(20,6))
-#plt.plot(data[:, 0], data[:, 1]/max(data[:, 1]))
+int_data = int_data/g1_fit(wave_data*u.angstrom)
 
 #%%
 plt.figure(figsize=(15,6))
@@ -86,18 +71,22 @@ plt.figure(figsize=(15,6))
 
 startc = timeit.default_timer()
 
-origin = 15120
+origin = 0 #17250 #15676 
 Jmax = 300 #Kmax = Jmax (i.e all K allowed)
 resolution = 1e5
     
+peak_seps = []
+pq_peak_seps =[]
+qr_peak_seps =[]
+BT = []
 
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma):
+def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     ground_C = ground_B/2
-    delta_C = 0
+    delta_C = delta_C
     excited_B = ground_B + ((delta_B/100)*ground_B)
     excited_C = ground_C + ((delta_C/100)*ground_C)
     
@@ -198,7 +187,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma):
     
     #%%
    
-    #linelist = linelist[(linelist['intensities'] >= 0.001*max(linelist['intensities']))]
+    #linelist = linelist[(linelist['intensities'] >= 0.000001*max(linelist['intensities']))]
     print('length of linelist is : ' + str(len(linelist)))
     
     #given that Resolution = 100,000 at wavelength (lambda) = 6614A, 
@@ -227,92 +216,116 @@ def get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma):
     endg = timeit.default_timer()
     
     print('>>>> gaussian takes   ' + str(endg -startg) + '  sec')  
+    smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()
+    #print(smooth_data.shape)
+    smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.0001*(max(smooth_data[:,1]))), axis = 0)
+    #print(smooth_data.shape)
+    
+    np.savetxt('smooth_1.txt',  smooth_data, delimiter= " ")
+    
+    x = smooth_data[:,0]
+    y = np.array(1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])))
+
+    
+    minima = [argrelextrema(y, np.less)]
+    minima_ind = minima[0]
+    peak_sep_pr = (x[minima_ind][-1] - x[minima_ind][0])
+    
+    peak_sep_pq = (x[minima_ind][1] - x[minima_ind][0])
+    peak_sep_qr = (x[minima_ind][-1] - x[minima_ind][1])
+    
+    peak_seps.append(peak_sep_pr)
+    pq_peak_seps.append(peak_sep_pq)
+    qr_peak_seps.append(peak_sep_qr)
+    
+    print(peak_seps)
+    
+    BT.append(T)
     
     
     #%%
     
+    P_Branch = linelist[(linelist['label'].str[1] == "P")]
+    Q_Branch = linelist[(linelist['label'].str[1] == "Q")]
+    R_Branch = linelist[(linelist['label'].str[1] == "R")]
+
     
+    
+    peak_p = linelist[linelist['intensities'] == max(P_Branch['intensities'])]
+    peak_q = linelist[linelist['intensities'] == max(Q_Branch['intensities'])]
+    peak_r = linelist[linelist['intensities'] == max(R_Branch['intensities'])]
+
+    #linelist.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Calculated_linelist_kerr_condition_c.xlsx", index=False)
 
     with sns.color_palette("flare", n_colors=10):
         #plt.figure(figsize=(15,6))
         
         'Calculated'
-        #plt.stem((1/linelist['wavenos'])*1e8, 1-0.08*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', bottom = 1, linefmt='y', markerfmt='yo') #, bottom=1)
-        axes[m,n].plot(((1/smooth_wavenos)*1e8), 1-0.1*(smooth_intensities/max(smooth_intensities)), linewidth = 1, color = '#a65628') #, label = str(delta_B))
-        #plt.plot(((1/smooth_wavenos)*1e8), 1-0.08*(smooth_gau/max(smooth_gau)))
-        
-        'PGOPHER'
-        #plt.stem(pgopher_ll['Position'], 1-0.08*(pgopher_ll['Intensity']/max(pgopher_ll['Intensity'])), bottom=1)
-        #plt.plot(pgopher_smooth['Position'], 1-0.08*(pgopher_smooth['Intensity']/max(pgopher_smooth['Intensity'])), label = "PGOPHER")
+    #plt.stem((1/linelist['wavenos'])*1e8, 1-0.08*(linelist['intensities']/max(linelist['intensities'])),  label='calculated', bottom = 1, linefmt='y', markerfmt='yo') #, bottom=1)
+    #axes[m,n].plot(((smooth_data[:,0])), 1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])), linewidth = 1) #, label = str(delta_B))
+    #plt.plot(((smooth_data[:,0])), 1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])), linewidth = 1 , label = str(T))
+        plt.plot(x,y, label = str(peak_sep_pr))
+        plt.scatter(x[minima_ind], y[minima_ind], marker = '*')
+    #print(x[minima_ind])
     
-        'Kerr data'
-        #plt.plot(kerr['Position']+0.3, kerr['Intensity'], label = 'Kerr et al 1996')
+    'PGOPHER'
+    #plt.stem(pgopher_ll['Position'], 1-0.08*(pgopher_ll['Intensity']/max(pgopher_ll['Intensity'])), bottom=1)
+    #plt.plot(pgopher_smooth['Position'], 1-0.06*(pgopher_smooth['Intensity']/max(pgopher_smooth['Intensity'])), label = "PGOPHER")
+
+    'Obs data'
+    #plt.plot(kerr['Position']+0.3, 1-0.1*(kerr['Intensity']/max(kerr['Intensity'])), label = 'Kerr et al 1996')
+    ##plt.plot(ccmarshall['Position']+0.2, (ccmarshall['Intensity']/max(ccmarshall['Intensity'])), label = 'ccmarshall 2015')
+    #plt.plot(wave_data+0.425, int_data/max(int_data), color = 'black') #, label = 'EDIBLES')
+
+
+
+
+    # axes[m,n].vlines(x = (1/peak_p['wavenos'])*1e8, ymin=0.9, ymax =1, color = 'black', linestyles = "solid")
+    # axes[m,n].vlines(x = (1/peak_q['wavenos'])*1e8, ymin=0.9, ymax =1, color = 'black', linestyles = "dashed")
+    # axes[m,n].vlines(x = (1/peak_r['wavenos'])*1e8, ymin=0.9, ymax =1, color = 'black', linestyles = "dotted")
+
+    plt.legend(title = 'peak_sep')
     
-        
-        
-        
-        #plt.legend(title = 'Calculated')
-        #plt.title('Condition C')
-        #plt.title('ground_B =  ' + str(ground_B) + ' Delta_B = ' + str(delta_B) + ',  zeta = ' + str(zeta) + '   Star Name =   ' + str(starName) )
-        
-        #plt.show()
+    plt.xlabel('Wavelength')
+    plt.ylabel('Normalized Intenisty')
+    plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) #+ '   StarName:  ' + str(starName))
+    
+    #plt.show()
        
-        return linelist
+    return linelist
 
 
 
 
-Ts = (10,30,70, 100)
-ground_Bs = (0.001, 0.005, 0.01)
-delta_B = -0.5
-zeta = -2
-sigma = 0.2
-conditions = 'condition c'
+Ts = np.linspace(10,100,10)  #(10, 30, 70, 100)
+ground_B = (0.05)
+delta_B = 0
+delta_C = 0
+zeta = -0.35
+sigma = 0.1953
+conditions = 'condition c' 
 
 
-fig, axes = plt.subplots(4, 3, figsize=(12,6), sharex=(True), sharey=(True))
-fig.suptitle('2D Parametric Study - Temperature x ground_B \n \n Delta_B =  ' + str(delta_B) + ',  Delta_C = 0,  zeta = ' + str(zeta) + ', sigma =  ' + str(sigma) + '\n' )
+# T = 61.2
+# ground_B = 0.00336
+# delta_B = -0.17
+# delta_C = (-0.17)
+# zeta = -0.49
+# sigma = 0.1953
+# conditions = 'condition c'
 
-
-rows = ['T = {} K'.format(row) for row in Ts]
-cols = ['ground_B = {}'.format(col) for col in ground_Bs]
-
-for ax, col in zip(axes[0], cols):
-    ax.set_title(col)
-    #ax.set_xlim(6612,6615)
-
-for ax, row in zip(axes[:,0], rows):
-    ax.set_ylabel(row, rotation=0, size='large', labelpad=40)
-    #ax.set_xlim(6612,6615)
-    
-fig.tight_layout()
-
-n = 0
-for ground_B in ground_Bs:
-    m = 0
-    for T in Ts:
-        get_rotational_spectrum(T, ground_B, delta_B, zeta, sigma)
-        m = m + 1
-    n = n + 1
-    
-#plt.plot(data[:, 0] + 0.57 , (data[:, 1]/max(data[:, 1])), color = 'black')#, label = 'EDIBLES')
-
-    
-
-
-
-#kerr's conditions   
-   
-# Ts = (8.9, 20.2, 61.2, 101.3)    
-# ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
-# delta_Bs = (-0.85, -0.42, -0.17, -0.21)
-# zeta = (-0.46, -0.43, -0.49, -0.54)
-# sigma = (0.1358, 0.1571, 0.1953, 0.1995)
-# conditions = ('condition a', 'condition b', 'condition c', 'condition d')
-
-# for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
-#     get_rotational_spectrum(T, B, d, z, sig, con) 
+for T in Ts:
+        get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
         
+# plt.plot(BT, peak_seps, marker = 'o', label = 'ground_B =  '+ str(ground_B))
+# plt.legend()
+# plt.xlabel('T')
+# plt.ylabel('peak separation ')
+# plt.title('ground_B =  ' + str(ground_B) + ' cm-1    Delta_B = ' + str(delta_B) + ',    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta) + '   T = 10 -100K' ) #+ '   StarName:  ' + str(starName))
+# print(peak_seps)
+# print(pq_peak_seps)
+# print(qr_peak_seps)
+    
 
 
 
@@ -327,10 +340,51 @@ for ground_B in ground_Bs:
 
 
 
+# fig, axes = plt.subplots(4, 5, figsize=(15,6), sharex=(True), sharey=(True))
+# fig.suptitle('2D Parametric Study - Temperature x ground_B \n \n Delta_B =  ' + str(delta_B) + ',  Delta_C = 0,  zeta = ' + str(zeta) + ', sigma =  ' + str(sigma) + '\n' )
+
+
+# rows = ['T = {} K'.format(row) for row in Ts]
+# cols = ['ground_B = {}'.format(col) for col in ground_Bs]
+
+# for ax, col in zip(axes[0], cols):
+#     ax.set_title(col)
+#     #ax.set_xlim(6612,6615)
+
+# for ax, row in zip(axes[:,0], rows):
+#     ax.set_ylabel(row, rotation=0, size='large', labelpad=100)
+#     #ax.set_xlim(6612,6615)
+    
+# fig.tight_layout()
+# #fig.supxlabel('Wavenuumbers')
+# #fig.supylabel('Intensity')
+
+# n = 0
+# for ground_B in ground_Bs:
+#     m = 0
+#     for T in Ts:
+#         get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+#         m = m + 1
+#     n = n + 1
+    
+# #plt.plot(data[:, 0] + 0.57 , (data[:, 1]/max(data[:, 1])), color = 'black')#, label = 'EDIBLES')
+
+    
 
 
 
+# #kerr's conditions   
+   
+# # Ts = (8.9, 20.2, 61.2, 101.3)    
+# # ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
+# # delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+# # zeta = (-0.46, -0.43, -0.49, -0.54)
+# # sigma = (0.1358, 0.1571, 0.1953, 0.1995)
+# # conditions = ('condition a', 'condition b', 'condition c', 'condition d')
 
+# # for T, B, d, z, sig, con in zip(Ts, ground_Bs, delta_Bs, zeta, sigma, conditions):
+# #     get_rotational_spectrum(T, B, d, z, sig, con) 
+        
 
 
 
