@@ -268,11 +268,11 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
 
 
-Ts = (5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+Ts = (10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
 ground_B = 0.05
-delta_B = -0.4
-delta_C = -0.4
-zeta = -0.5
+delta_B = 0
+delta_C = 0
+zeta = -0.35
 sigma = 0.1953
 conditions = 'condition c' 
 
@@ -284,7 +284,7 @@ for T in Ts:
 
 
 peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold])
-np.savetxt('peak_seps_B={}_delta_B ={}.txt'.format(ground_B, delta_B), peak_sep_data)
+np.savetxt('zeta 0.35 peak_seps_B={}_delta_B ={}.txt'.format(ground_B, delta_B), peak_sep_data)
     
 
 
