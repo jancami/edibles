@@ -236,7 +236,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     # print(peak_sep_pq)
     # print(peak_sep_qr)
-    # print(peak_sep_pr)
+    print(peak_sep_pr)
 
     pr_peak_seps.append(peak_sep_pr)
     pq_peak_seps.append(peak_sep_pq)
@@ -270,26 +270,26 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
 
 
-Ts = (7, 10) #, 20, 30, 40, 50, 60, 70)
-#T = 70
-ground_B = 0.05
+#Ts =(21, 30, 40, 50, 60, 70)
+T = 19
+ground_B = 0.005
 delta_B = 0
 delta_C = 0
-zeta = 0
+zeta = -1.6
 sigma = 0.1953
 conditions = 'condition c' 
 
-#get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
 
 
-for T in Ts:
-    get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+# for T in Ts:
+#     get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
 
 
-peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold, qr_pq_diff])
-np.savetxt('peak_seps_zeta={}_B={}_delta_B ={}.txt'.format(zeta, ground_B, delta_B), peak_sep_data)
+# peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold, qr_pq_diff])
+# np.savetxt('peak_seps_zeta={}_B={}_delta_B ={}.txt'.format(zeta, ground_B, delta_B), peak_sep_data)
     
-print(qr_pq_diff)
+# print(qr_pq_diff)
 
 # #kerr's conditions   
    
