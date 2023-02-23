@@ -173,8 +173,8 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
       
     linelist['intensities'] = intensities
     
-    normalized_intensities = (intensities / max(intensities))
-    linelist['normalized_intensities'] = normalized_intensities
+    #normalized_intensities = (intensities / max(intensities))
+    #linelist['normalized_intensities'] = normalized_intensities
     
    
     
