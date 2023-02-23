@@ -8,7 +8,7 @@ To do:
 import numpy as np
 import pandas as pd
 
-Jmax = 10
+Jmax = 1
 
 #here Kmax = Jmax (i.e all K allowed)
 
@@ -334,12 +334,12 @@ combinations.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\e
 
 
 
-print('----------------------')
-print('Jmax is  ' + str(Jmax))
-print('length of combinations  ' + str(len(combinations)))
-endc = timeit.default_timer()
-print('---------------')
-print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
+# print('----------------------')
+# print('Jmax is  ' + str(Jmax))
+# print('length of combinations  ' + str(len(combinations)))
+# endc = timeit.default_timer()
+# print('---------------')
+# print('>>>> combnination calclulation takes   ' + str(endc-startc) + '  sec')
 
 
     
