@@ -172,7 +172,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
     
     smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()    
-    smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.0001*(max(smooth_data[:,1]))), axis = 0)
+    smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.001*(max(smooth_data[:,1]))), axis = 0)
     
     
     
@@ -196,6 +196,17 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
         
     'Calculated'
     axes[m,n].plot(((smooth_data[:,0])), 1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])), linewidth = 1) #, label = str(delta_B))
+    axes[m,n].xaxis.set_major_locator(plt.MultipleLocator(5))
+    axes[m,n].xaxis.set_minor_locator(plt.MultipleLocator(1))
+    axes[m,n].set_xlim(-12,12)
+    axes[m,n].axhline(y=1, linestyle = '--', color = 'gray')
+    #axes[m,n].xticks(fontsize=14)
+    
+    
+    axes[m,n].yaxis.set_major_locator(plt.MultipleLocator(0.05))
+    axes[m,n].yaxis.set_minor_locator(plt.MultipleLocator(0.01))
+
+    #axes[m,n].yticks(fontsize=14)
     print(m)
     print(n)
     
@@ -207,8 +218,10 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
 
 
-Ts = (2.7, 10, 30, 70, 100)  #(10, 30, 70, 100)
+Ts = (2.7, 10, 30, 70, 100)  
 ground_Bs = (0.000501, 0.001584, 0.005011, 0.0158489, 0.0501187)
+B_label = ('5.0 x 10$^{-4}$', '1.6 x 10$^{-3}$', '5.0 x 10$^{-3}$', '1.6 x 10$^{-2}$', '5.0 x 10$^{-2}$' )
+
 
 # Ts = (10,20)
 # ground_Bs = (0.05, 0.001)
@@ -218,22 +231,23 @@ zeta = -0.55
 sigma = 0.1953
 conditions = 'condition c' 
 
-fig, axes = plt.subplots(5, 5, figsize=(15,8), sharex=(True), sharey=(True))
-fig.suptitle('2D Parametric survey with $ T_{rot} $ and B \n \n 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + '$cm^{-1}$ \n' , size ='xx-large')
+fig, axes = plt.subplots(5, 5, figsize=(19,10), sharex=(True), sharey=(True))
+#fig.suptitle('2D Parametric survey with $ T_{rot} $ and B \n \n 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + '$cm^{-1}$ \n' , size ='xx-large')
+fig.suptitle(' 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta^{\prime}  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + 'cm$^{-1}$ \n' , size ='xx-large')
 
 
 rows = ['T = {} K'.format(row) for row in Ts ]
-cols = ['B = {} $cm^{}$ '.format(col, {-1}) for col in ground_Bs]
+cols = ['B = {} cm$^{}$ '.format(col, {-1}) for col in B_label]
 
 for ax, col in zip(axes[0], cols):
-    ax.set_title(col)
+    ax.set_title(col, fontsize = 15)
     #ax.set_xlim(6612,6615)
     
 for ax, col in zip(axes[4], cols):
-    ax.set_xlabel('Wavenumber ($cm^{-1}$)', labelpad =10)
+    ax.set_xlabel('Wavenumber (cm$^{-1}$)', labelpad =10, fontsize = 13)
 
 for ax, row in zip(axes[:,0], rows):
-    ax.set_ylabel('Intensity', rotation=90, labelpad=7)
+    ax.set_ylabel('Intensity', rotation=90, labelpad=7, fontsize = 13)
     #ax.set_xlim(6612,6615)
     
 fig.tight_layout()
@@ -241,7 +255,7 @@ pad = 25 # in points
 
 for ax, row in zip(axes[:,0], rows):
     ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
-                xycoords=ax.yaxis.label, textcoords='offset points', ha='right', va='center')
+                xycoords=ax.yaxis.label, textcoords='offset points', ha='right', va='center', fontsize=15)
 
 fig.tight_layout()
 

@@ -25,7 +25,7 @@ starName = 'HD 185418'
 minWave = 6612
 
 #put upper range of wavelengths to extract from edibles data
-maxWave = 6616
+maxWave = 6615
 
 pythia = EdiblesOracle()
 rawList = pythia.getFilteredObsList(object = [starName], MergedOnly = True, WaveMin = minWave, WaveMax = maxWave)
@@ -61,12 +61,16 @@ plt.plot(wave_data, (int_data/max(int_data)), color = 'black', label = 'getSpect
 
 spectrum1 = Spectrum1D(flux = int_data*u.dimensionless_unscaled, spectral_axis = wave_data*u.angstrom)
 
-g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 5))
+g1_fit = fit_generic_continuum(spectrum1, model = models.Legendre1D(degree = 1))
 
 int_data = int_data/g1_fit(wave_data*u.angstrom)
 
-#plt.plot(wave_data, int_data/max(int_data), label='fit_generic_continuum')
+plt.plot(wave_data, int_data/max(int_data), label='fit_generic_continuum')
 plt.legend()
+
+print(len(wave_data))
+print(wave_data)
+print(len(int_data))
 
 
 
