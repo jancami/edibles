@@ -39,7 +39,7 @@ newold = []
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
+def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma, conditions = None):
     
     ground_C = ground_B/2
     delta_C = delta_C
@@ -178,7 +178,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.0001*(max(smooth_data[:,1]))), axis = 0)
     #print(smooth_data.shape)
     
-    np.savetxt('smooth_1.txt',  smooth_data, delimiter= " ")
+   # np.savetxt('condition_c_smooth.txt',  smooth_data, delimiter= " ")
     
     x = smooth_data[:,0]
     y = np.array(1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])))
@@ -186,17 +186,18 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     minima = [argrelextrema(y, np.less)]
     minima_ind = minima[0][0]
-    minima_ind_plus_one = np.array(minima_ind) + 1
-    minima_ind_minus_one = np.array(minima_ind) - 1
+    print(x[minima_ind])
+    # minima_ind_plus_one = np.array(minima_ind) + 1
+    # minima_ind_minus_one = np.array(minima_ind) - 1
     
-    P_parabola_x = (x[minima_ind_minus_one[0]], x[minima_ind[0]], x[minima_ind_plus_one[0]])
-    Q_parabola_x = (x[minima_ind_minus_one[1]], x[minima_ind[1]], x[minima_ind_plus_one[1]])
-    R_parabola_x = (x[minima_ind_minus_one[2]], x[minima_ind[2]], x[minima_ind_plus_one[2]])
+    # P_parabola_x = (x[minima_ind_minus_one[0]], x[minima_ind[0]], x[minima_ind_plus_one[0]])
+    # Q_parabola_x = (x[minima_ind_minus_one[1]], x[minima_ind[1]], x[minima_ind_plus_one[1]])
+    # R_parabola_x = (x[minima_ind_minus_one[2]], x[minima_ind[2]], x[minima_ind_plus_one[2]])
     
     
-    P_parabola_y = (y[minima_ind_minus_one[0]], y[minima_ind[0]], y[minima_ind_plus_one[0]])
-    Q_parabola_y = (y[minima_ind_minus_one[1]], y[minima_ind[1]], y[minima_ind_plus_one[1]])
-    R_parabola_y = (y[minima_ind_minus_one[2]], y[minima_ind[2]], y[minima_ind_plus_one[2]])
+    # P_parabola_y = (y[minima_ind_minus_one[0]], y[minima_ind[0]], y[minima_ind_plus_one[0]])
+    # Q_parabola_y = (y[minima_ind_minus_one[1]], y[minima_ind[1]], y[minima_ind_plus_one[1]])
+    # R_parabola_y = (y[minima_ind_minus_one[2]], y[minima_ind[2]], y[minima_ind_plus_one[2]])
     
     
        
@@ -225,68 +226,123 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     
     
-    vertex_of_parabola(P_parabola_x, P_parabola_y)
-    vertex_of_parabola(Q_parabola_x, Q_parabola_y)
-    vertex_of_parabola(R_parabola_x, R_parabola_y)
+    # vertex_of_parabola(P_parabola_x, P_parabola_y)
+    # vertex_of_parabola(Q_parabola_x, Q_parabola_y)
+    # vertex_of_parabola(R_parabola_x, R_parabola_y)
     
     
-    peak_sep_pq = (vertex[1] - vertex[0]) 
-    peak_sep_qr = (vertex[2] - vertex[1])
-    peak_sep_pr = (vertex[2] - vertex[0])
+    # peak_sep_pq = (vertex[1] - vertex[0]) 
+    # peak_sep_qr = (vertex[2] - vertex[1])
+    # peak_sep_pr = (vertex[2] - vertex[0])
     
     # print(peak_sep_pq)
     # print(peak_sep_qr)
-    print(peak_sep_pr)
+    # print(peak_sep_pr)
 
-    pr_peak_seps.append(peak_sep_pr)
-    pq_peak_seps.append(peak_sep_pq)
-    qr_peak_seps.append(peak_sep_qr)
-    qr_pq_diff.append(peak_sep_qr - peak_sep_pq)
+    # pr_peak_seps.append(peak_sep_pr)
+    # pq_peak_seps.append(peak_sep_pq)
+    # qr_peak_seps.append(peak_sep_qr)
+    # qr_pq_diff.append(peak_sep_qr - peak_sep_pq)
     
     # print(pr_peak_seps)
     # print(pq_peak_seps)
     # print(qr_peak_seps)
     
-    new = peak_sep_pr
-    old = (x[minima_ind][-1] - x[minima_ind][0])
+    # new = peak_sep_pr
+    # old = (x[minima_ind][-1] - x[minima_ind][0])
         
-    newold.append(new - old)    
+    # newold.append(new - old)    
     
-    Temp.append(T)
+    # Temp.append(T)
     
     
     #%%
     
     
     
-    # with sns.color_palette("flare", n_colors=2):        
+    with sns.color_palette("flare", n_colors=5):        
         
-    #     'Calculated'
-    plt.plot(x,y) #, label = str(peak_sep_pr))
+        #plt.plot(x - x[minima_ind][-2], y, label = 'Simulated at ' + str(T) + ' K') #, '+ str(peak_sep_qr - peak_sep_pq))
+        #plt.plot((x +0.04 + condition)  ,y, label = 'Simulated at ' + str(T) + ' K') #, '+ str(peak_sep_qr - peak_sep_pq))
+        plt.plot(x,y, label = str(zeta))
+        
+        
+        #plt.legend(title = ''r'$\zeta^{\prime}$', loc = 'lower right', fontsize = 13)
+        #plt.title('T = ' + str(T) + ' K , B = ' + str(ground_B) + 'cm$^{-1}$, 'r'  $\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\sigma = $'+ str(sigma) + 'cm$^{-1}$', fontsize = 13)
+        plt.xticks(fontsize=15) #, rotation=90)
+        plt.yticks(fontsize=15) #, rotation=90)
+        plt.legend(title = ''r'$\zeta$', fontsize=15)
+        #plt.legend(fontsize = 15)
+        
+        
+        plt.gca().xaxis.set_major_locator(plt.MultipleLocator(1))
+        plt.gca().xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+
+        plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(0.01))
+
+        plt.title('T = ' + str(T) + ' K,  B = ' + str(ground_B) + ' cm$^{-1}$ 'r'  $\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '%' , fontsize = 15)
+        # plt.axvline(x = -0.70, color = 'black', linestyle = 'dotted')
+        # plt.axvline(x = -0.58, color = 'black', linestyle = 'dotted')
+        # plt.axvline(x = 0.64, color = 'black', linestyle = 'dotted')
+        # plt.axvline(x = 0.78, color = 'black', linestyle = 'dotted')
+        #plt.axvline(x = 0, color = 'black', linestyle = 'dotted')
+        
+        
+        # plt.axvline(x = vertex[0] - 0.1 , color = 'black', linestyle = '--')
+        # plt.axvline(x = vertex [0] + 0.1, color = 'black', linestyle = '--')
+        #plt.title('Effect of 'r'$\zeta $    at B = ' + str(ground_B) + ' $cm^{-1}$, T = ' + str(T) + r' K,   $\Delta B =$ $\Delta C =$ ' + str(delta_C) + '%')
+        plt.xlabel('Wavenumber (in cm$^{-1}$)', fontsize = 15)
+        plt.ylabel('Normalized Intensity', fontsize = 15)
         #plt.scatter(x[minima_ind], y[minima_ind], marker = '*')
         
 
 
 
-
-
-#Ts =(21, 30, 40, 50, 60, 70)
-T = 19
-ground_B = 0.005
-delta_B = 0
-delta_C = 0
-zeta = -1.6
+zetas = (-0.35, -0.40, -0.45, -0.50, -0.55)
+T = 61.2
+ground_B = 0.00336
+delta_B = -0.17
+delta_C = -0.17
+zeta = -0.49
 sigma = 0.1953
-conditions = 'condition c' 
+condition = 'condition c'
 
-get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+conditions = (0,0)
+
+# Ts = (8.9, 20.2, 61.2, 101.3)    
+# ground_Bs = (0.01913, 0.00947, 0.00336, 0.00286)
+# delta_Bs = (-0.85, -0.42, -0.17, -0.21)
+# delta_Cs = (-0.85, -0.42, -0.17, -0.21)
+# zetas = (-0.46, -0.43, -0.49, -0.54)
+# sigmas = (0.1358, 0.1571, 0.1953, 0.1995)
+# conditions = ('condition a', 'condition b', 'condition c', 'condition d')
+
+plt.figure(figsize=(15,8))
+
+#get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+
+#for delta_B, delta_C in zip(delta_Bs, delta_Cs):
+    
+# for T, ground_B, delta_B, delta_C, zeta, sigma, condition in zip(Ts, ground_Bs, delta_Bs, delta_Cs, zetas, sigmas, conditions):
+#      get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+
+#for T, condition in zip(Ts, conditions):
+for zeta in zetas:
+    get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma, condition)
 
 
-# for T in Ts:
-#     get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+# HD166937 = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Heather's data\HD166937_avg_spectra.txt", sep=',')
 
+# plt.plot(((1/HD166937['Wavelength'])- 0.0001512079)*1e8, 1-(1-HD166937['Flux'])/(1-0.903)*0.1 , color = 'black', label = 'HD 166937')
+# plt.xlim(-2.5, 2.5)
 
-# peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold, qr_pq_diff])
+# HD185418 = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Heather's data\HD185418_avg_spectra.txt", sep=',')
+
+# plt.plot((((1/HD185418['Wavelength'])- 0.0001512079)*1e8)-0.1, 1-(1-HD185418['Flux'])/(1-0.822)*0.1, color = 'gray', label = 'HD 185418')
+
+# plt.legend(fontsize=15)
+
+#peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold, qr_pq_diff])
 # np.savetxt('peak_seps_zeta={}_B={}_delta_B ={}.txt'.format(zeta, ground_B, delta_B), peak_sep_data)
     
 # print(qr_pq_diff)
@@ -422,19 +478,24 @@ get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
 
 # print(endplot - startplot)
 
+# Ts = (8,11)
 # T = 8.9
 # ground_B = 0.01913
 # delta_B = -0.85
+# delta_C = -0.85
 # zeta = -0.46
 # sigma = 0.1358
-# conditions = 'condition a'
+#conditions = 'condition a'
 
-# T = 20.2
+
+#T = 20.2
+# Ts = (15,21)
 # ground_B = 0.00947
 # delta_B = -0.42
+# delta_C = -0.42
 # zeta = -0.43
 # sigma = 0.1571
-# conditions = 'condition b'
+# #conditions = 'condition b'
 
 # T = 61.2
 # ground_B = 0.00336
@@ -443,9 +504,11 @@ get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
 # sigma = 0.1953
 # conditions = 'condition c'
 
+# Ts = (45,60)
 # T = 101.3
 # ground_B = 0.00286
 # delta_B = -0.21
+# delta_C = -0.21
 # zeta = -0.54
 # sigma = 0.1995
 # conditions = 'condition d'
@@ -461,3 +524,7 @@ get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
 # peak_r = linelist[linelist['intensities'] == max(R_Branch['intensities'])]
 
 # #linelist.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Calculated_linelist_kerr_condition_c.xlsx", index=False)
+
+#peak_sep_data = np.column_stack([Temp, pq_peak_seps, qr_peak_seps, pr_peak_seps, newold, qr_pq_diff])
+# np.savetxt('peak_seps_zeta={}_B={}_delta_B ={}.txt'.format(zeta, ground_B, delta_B), peak_sep_data)
+    
