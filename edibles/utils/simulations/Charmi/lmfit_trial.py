@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from lmfit import Model
 
 
-def gaussianabc(b,c):
+def custom(b,c):
     amp, cen, wid = 1, 1, 0.3
     """1-d gaussian: gaussian(x, amp, cen, wid)"""
     return (amp / (np.sqrt(2*np.pi) * wid)) * np.exp(-(b*c-cen)**2 / (2*wid**2))
@@ -16,10 +16,10 @@ mu, sigma = 0, 0.1 # mean and standard deviation
 s = np.random.normal(mu, sigma, 1000)
 b = np.linspace(-1,3,1000)
 c = 5
-y = gaussianabc(b, c)+s
+y = custom(b, c)+s
 plt.plot(b, y)
 
-gmodel = Model(gaussianabc)
+gmodel = Model(custom)
 result = gmodel.fit(y, b=b, c=c, independent_vars=[ 'b','c']) #, amp=2, cen=1.2, wid=1)
 
 print(result.fit_report())

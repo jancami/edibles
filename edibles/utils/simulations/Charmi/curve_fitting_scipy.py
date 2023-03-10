@@ -5,38 +5,44 @@ import matplotlib.pyplot as plt
 import timeit
 import scipy
 import scipy.stats as ss
-from edibles.utils.edibles_oracle import EdiblesOracle
-from edibles.utils.edibles_spectrum import EdiblesSpectrum
-import warnings
-from astropy.modeling import models
-from astropy import units as u
-from specutils.spectra import Spectrum1D
-from specutils.fitting import fit_generic_continuum
-import seaborn as sns
-from scipy.signal import argrelextrema
 from lmfit import Model
+# from edibles.utils.edibles_oracle import EdiblesOracle
+# from edibles.utils.edibles_spectrum import EdiblesSpectrum
+# import warnings
+# from astropy.modeling import models
+# from astropy import units as u
+# from specutils.spectra import Spectrum1D
+# from specutils.fitting import fit_generic_continuum
+# import seaborn as sns
+# from scipy.signal import argrelextrema
+# from lmfit import Model
 
 
 full_start = timeit.default_timer()
 
-Obs_data = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Heather's data\6614_HD_166937.txt", sep = ',')
-plt.plot(Obs_data['Wavelength'], Obs_data['Flux'])
-plt.show()
-print(Obs_data.shape)
+Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD_166937.txt", sep = ',')
 
-flux_data =  np.array(Obs_data['Flux'])
-wavelength_data = np.array(Obs_data['Flux'])
+y_obs_data =  np.array(Obs_data['Flux'])
+x_obs_data = np.array(Obs_data['Wavelength'])
 
-origin = 15120
+plt.Figure(figsize=(15,8))
+
+plt.plot(x_obs_data+0.4, y_obs_data)
+
+
+origin = 15116.5
 #Jmax = 300 (Kmax = Jmax (i.e all K allowed))
-combinations = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Jmax=300.txt", delim_whitespace=(True))
+combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
 
 
-startl = timeit.default_timer()
+
 
 #%%
-def get_rotational_spectrum(b, T):
+def get_rotational_spectrum(xx, b, T):
     
+    startl = timeit.default_timer()
+    
+    x_obs_data = xx
     ground_B = b
     delta_B = -0.17
     delta_C = -0.17
@@ -44,7 +50,7 @@ def get_rotational_spectrum(b, T):
     sigma = 0.1953
     
     #rotational constants in cm-1
-    ground_C = ground_B/2
+    ground_C = b/2
     delta_C = delta_C
     excited_B = ground_B + ((delta_B/100)*ground_B)
     excited_C = ground_C + ((delta_C/100)*ground_C)
@@ -183,51 +189,55 @@ def get_rotational_spectrum(b, T):
 
     #with sns.color_palette("flare", n_colors=2):
         
-    #plt.plot(simu_wavelength, simu_intenisty)
+    # plt.plot(simu_wavelength, simu_intenisty, color = 'red')
     
-    plt.xlabel('Wavelength')
-    plt.ylabel('Normalized Intenisty')
-    plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
+    # plt.xlabel('Wavelength')
+    # plt.ylabel('Normalized Intenisty')
+    # plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
     
-    final_array = np.array([simu_wavelength, simu_intenisty])
+    model_data = np.array([simu_wavelength, simu_intenisty]).transpose()
+    model_data = model_data[::-1]
     
-    data_matching_x = np.linspace(min(Obs_data['Wavelength']), max(Obs_data['Wavelength']), len(Obs_data['Wavelength']))
+    x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
+    
+    y_model_data = np.interp(x_for_model, model_data[:,0], model_data[:,1])
+    
+    
+    
+    return  y_model_data
+    
+    
+# get_rotational_spectrum(x_obs_data, b =  0.005, T = 10)
 
-    data_matching_y = np.interp(data_matching_x, final_array[:,0], final_array[:,1])
-    
-    
-    return  data_matching_y
-    
-    
-
-
-mod = Model(get_rotational_spectrum, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
+mod = Model(get_rotational_spectrum) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
 #params = mod.guess(flux_data, x = np.linspace(0.005,0.01,5))
 params = mod.make_params(verbose = True, b = 0.005, T = 3)
 
 
-# params['b'].min = 0.005 
-# params['b'].max = 0.01
-# params['T'].min = 2.7
-# params['T'].max = 10
+params['b'].min = 0.005 
+params['b'].max = 0.01
+params['T'].min = 2.7
+params['T'].max = 100
 
-res = mod.fit(flux_data, params, b = 0.005, T = 3)
+res = mod.fit(y_obs_data, params, xx= x_obs_data, b = 0.005, T = 3, weights = 1/0.7)
 
-plt.plot(wavelength_data, flux_data, label = 'Data')
-plt.plot(wavelength_data, res.best_fit, label = 'Fit')
+#plt.plot(x_obs_data, y_obs_data, label = 'Data')
+plt.plot(x_obs_data, res.best_fit, label = 'Fit')
 plt.legend()
 
 print(res.fit_report())
 
-# #guess = [2.7, 0.005]
-# popt, pcov = scipy.optimize.curve_fit(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess, bounds = ([2.7, 0.005], [5, 0.007]))
-# #popt, pcov = scipy.optimize.least_squares(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess, bounds = ([2.7, 0.005], [5, 0.007]), xtol = 0.05, ftol = 0.05)
+# guess = [0.003, 19]
+popt, pcov = scipy.optimize.curve_fit(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess) #, bounds = ([0.003, 19], [0.0033, 33]))
+# # #popt, pcov = scipy.optimize.least_squares(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess, bounds = ([2.7, 0.005], [5, 0.007]), xtol = 0.05, ftol = 0.05)
 
 # print(popt)
 # print(pcov)
 
-# # plt.plot(Obs_data['Wavelength'], get_rotational_spectrum(*popt), 'r-',
-# #          label='fit: T=%5.3f, B=%5.3f' % tuple(popt))
+# xx = x_obs_data
+# plt.plot(x_obs_data, get_rotational_spectrum(xx, *popt), 'r-',
+#           label='fit: B=%5.3f, T=%5.3f' % tuple(popt))
+# plt.legend()
 
 full_end = timeit.default_timer()
 print(full_end - full_start)
