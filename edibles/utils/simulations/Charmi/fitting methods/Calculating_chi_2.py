@@ -1,27 +1,64 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar  3 12:28:52 2023
+
+@author: charmibhatt
+"""
 import numpy as np
 import pandas as pd
 import astropy.constants as const
 import matplotlib.pyplot as plt
 import timeit
 import scipy.stats as ss
+from scipy.signal import argrelextrema
+from matplotlib import cm
+
+Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD_166937.txt", sep = ',')
+
+y_obs_data =  np.array(Obs_data['Flux'])
+x_obs_data = np.array(Obs_data['Wavelength'])
 
 
 
 
-origin = 0 
-#Jmax = 300 (Kmax = Jmax (i.e all K allowed))
+x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
+y_obs_data = np.interp(x_for_model, Obs_data['Wavelength'], Obs_data['Flux'])
+
+
+stepsize_B = 0.002
+Bs  = np.arange(0.0005, 0.05, stepsize_B)
+#Bs  = np.arange(0.0005, 0.01, stepsize_B)
+#Bs  = np.arange(1, 10, 4)
+print(Bs)
+print(len(Bs))
+
+stepsize_T= 5
+Ts =  np.arange(5, 100, stepsize_T)
+#Ts =  np.arange(5, 100, 40)
+print(Ts)
+print(len(Ts))
+
+
+origin = 15120.9
 combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
 
-
-
-
-startl = timeit.default_timer()
-
-#%%
-def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
+def get_rotational_spectrum(xx, B, T):
+    
+    
+    
+    
+    startl = timeit.default_timer()
+    
+    x_obs_data = xx
+    ground_B = B
+    delta_B = -0.17
+    delta_C = -0.17
+    zeta = -0.49
+    sigma = 0.1953
     
     #rotational constants in cm-1
-    ground_C = ground_B/2
+    ground_C = B/2
     delta_C = delta_C
     excited_B = ground_B + ((delta_B/100)*ground_B)
     excited_C = ground_C + ((delta_C/100)*ground_C)
@@ -109,13 +146,13 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
       
     linelist['intensities'] = intensities
     
-    normalized_intensities = (intensities / max(intensities))
-    linelist['normalized_intensities'] = normalized_intensities
+    # normalized_intensities = (intensities / max(intensities))
+    # linelist['normalized_intensities'] = normalized_intensities
     
    
     
     endl = timeit.default_timer()
-    print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
+    #print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
     #%%
    
     '''Smoothening the linelist'''
@@ -134,12 +171,13 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
     endg = timeit.default_timer()
     
-    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
+    #print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
     
     smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()    
     smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.001*(max(smooth_data[:,1]))), axis = 0)
     
     simu_waveno = smooth_data[:, 0]
+    simu_wavelength = (1/simu_waveno)*1e8
     simu_intenisty = 1-0.1*(smooth_data[:, 1]/max(smooth_data[:, 1]))
     
     
@@ -159,23 +197,108 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
 
     #with sns.color_palette("flare", n_colors=2):
         
-    plt.plot(simu_waveno, simu_intenisty)
+    # plt.plot(simu_wavelength, simu_intenisty, color = 'red')
     
-    plt.xlabel('Wavelength')
-    plt.ylabel('Normalized Intenisty')
-    plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
+    # plt.xlabel('Wavelength')
+    # plt.ylabel('Normalized Intenisty')
+    # plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
     
-    print(linelist)
+    model_data = np.array([simu_wavelength, simu_intenisty]).transpose()
+    model_data = model_data[::-1]
+    
+    x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
+    
+    y_model_data = np.interp(x_for_model, model_data[:,0], model_data[:,1])
     
     
-T = 61.2
-ground_B = 0.00336
-delta_B = -0.17
-delta_C = (-0.17)
-zeta = -0.49
-sigma = 0.1953
-conditions = 'condition c'
+    
+    return  y_model_data
+ 
+BB, TT = np.meshgrid(Bs, Ts)
 
-plt.figure(figsize = (15,8))
-get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
+#ax = plt.axes(projection='3d')
+
+
+
+   
+# red_chi_2D = np.zeros(shape = (1,len(Bs)))
+# ax = plt.axes(projection='3d')
+# for T in Ts:
+#     reduced_chis = []
+#     for B in Bs:
+#         print(B)
+#         print(T)
+#         num = (get_rotational_spectrum(x_obs_data, B, T) - y_obs_data)**2
+#         chi_squared = np.sum((num)/(0.004)**2)
+#         reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
+#         reduced_chis.append(reduced_chi_squared)
+      
+#     red_chi_2D  = np.vstack([red_chi_2D , reduced_chis])   
     
+# red_chi_2D = np.delete(red_chi_2D,0, 0)
+# print(red_chi_2D)
+# ax.plot_surface(BB, TT, red_chi_2D, cmap=plt.cm.YlGnBu_r,
+#                             linewidth=0, antialiased=False)
+# print(BB.shape)
+# print(TT.shape)
+# print(red_chi_2D.shape)
+
+np.savetxt('BB_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_stepsize_' + str(stepsize_B) + '_.txt',  BB, delimiter = ' ')
+np.savetxt('Bmax_0.05_TT_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts)) + '_stepsize_' + str(stepsize_T) + '_.txt',  TT, delimiter = ' ')
+#np.savetxt('red_chi_coarse_Bmax_0.01.txt', red_chi_2D, delimiter = ' ')
+
+
+
+
+
+
+
+#np.savetxt('chi_plane_cordinates_meshgrid.txt', chi_plane, delimiter=' ')
+
+# chi_arr = np.zeros(shape = (1,len(Bs)))
+#         for T in Ts:
+#             chis = []
+#             for B in Bs:
+#                 chi =  B
+#                 chis.append(chi)
+#             print(chis)
+#             print('----')
+#             chi_arr = np.vstack([chi_arr, chis])   
+#             print(chi_arr)
+#             print('----')
+            
+#         chis = np.delete(chi_arr, 0, 0)
+#         print(chis)
+    
+#     rc_array = np.vstack([reduced_chis]) 
+#     print(rc_array)
+#     #ax.scatter3D(B, T, rc_array)
+#     ax.plot_surface(B, T, rc_array, cmap=cm.coolwarm,
+#                        linewidth=0, antialiased=False) #rstride=1, cstride=1,
+#     print('--------------')
+    
+    
+# T_arr = np.array([[25.9, 22.84, 22.53],
+#                  [16.46, 2.448, 9.312]])
+# ax.plot_surface(BB, TT, T_arr.transpose(), cmap=cm.coolwarm,
+#                    linewidth=5, antialiased=True)
+
+
+
+            
+# chi_plane = np.array([B_grid, T_grid, reduced_chis]).transpose()
+# np.savetxt('chi_plane_cordinates.txt', chi_plane, delimiter=' ')
+# print(chi_plane)
+
+
+
+# plt.plot(x_obs_data, y_obs_data)
+# plt.plot(x_obs_data, get_rotational_spectrum(x_obs_data, B = 0.003, T = 61.2))
+
+
+
+
+# y_obs_data =  np.array(Obs_data['Flux'])
+# minima = [argrelextrema(y_obs_data, np.less)]
+# minima_ind = minima[0]
+# print(y_obs_data(minima_ind))
