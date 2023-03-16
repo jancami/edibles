@@ -26,15 +26,15 @@ x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
 y_obs_data = np.interp(x_for_model, Obs_data['Wavelength'], Obs_data['Flux'])
 
 
-stepsize_B = 0.002
-Bs  = np.arange(0.0005, 0.05, stepsize_B)
+stepsize_B = 0.00001
+Bs  = np.arange(0.0028, 0.0035, stepsize_B)
 #Bs  = np.arange(0.0005, 0.01, stepsize_B)
 #Bs  = np.arange(1, 10, 4)
 print(Bs)
 print(len(Bs))
 
-stepsize_T= 5
-Ts =  np.arange(5, 100, stepsize_T)
+stepsize_T= 0.5
+Ts =  np.arange(60, 68, stepsize_T)
 #Ts =  np.arange(5, 100, 40)
 print(Ts)
 print(len(Ts))
@@ -43,12 +43,8 @@ print(len(Ts))
 origin = 15120.9
 combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
 
+startl = timeit.default_timer()
 def get_rotational_spectrum(xx, B, T):
-    
-    
-    
-    
-    startl = timeit.default_timer()
     
     x_obs_data = xx
     ground_B = B
@@ -152,7 +148,7 @@ def get_rotational_spectrum(xx, B, T):
    
     
     endl = timeit.default_timer()
-    #print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
+    print('>>>> linelist calculation takes   ' + str(endl-startl) + '  sec')
     #%%
    
     '''Smoothening the linelist'''
@@ -171,7 +167,7 @@ def get_rotational_spectrum(xx, B, T):
 
     endg = timeit.default_timer()
     
-    #print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
+    print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
     
     smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()    
     smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.001*(max(smooth_data[:,1]))), axis = 0)
@@ -221,31 +217,31 @@ BB, TT = np.meshgrid(Bs, Ts)
 
 
    
-# red_chi_2D = np.zeros(shape = (1,len(Bs)))
-# ax = plt.axes(projection='3d')
-# for T in Ts:
-#     reduced_chis = []
-#     for B in Bs:
-#         print(B)
-#         print(T)
-#         num = (get_rotational_spectrum(x_obs_data, B, T) - y_obs_data)**2
-#         chi_squared = np.sum((num)/(0.004)**2)
-#         reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
-#         reduced_chis.append(reduced_chi_squared)
+red_chi_2D = np.zeros(shape = (1,len(Bs)))
+ax = plt.axes(projection='3d')
+for T in Ts:
+    reduced_chis = []
+    for B in Bs:
+        print(B)
+        print(T)
+        num = (get_rotational_spectrum(x_obs_data, B, T) - y_obs_data)**2
+        chi_squared = np.sum((num)/(0.004)**2)
+        reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
+        reduced_chis.append(reduced_chi_squared)
       
-#     red_chi_2D  = np.vstack([red_chi_2D , reduced_chis])   
+    red_chi_2D  = np.vstack([red_chi_2D , reduced_chis])   
     
-# red_chi_2D = np.delete(red_chi_2D,0, 0)
-# print(red_chi_2D)
-# ax.plot_surface(BB, TT, red_chi_2D, cmap=plt.cm.YlGnBu_r,
-#                             linewidth=0, antialiased=False)
-# print(BB.shape)
-# print(TT.shape)
-# print(red_chi_2D.shape)
+red_chi_2D = np.delete(red_chi_2D,0, 0)
+print(red_chi_2D)
+ax.plot_surface(BB, TT, red_chi_2D, cmap=plt.cm.YlGnBu_r,
+                            linewidth=0, antialiased=False)
+print(BB.shape)
+print(TT.shape)
+print(red_chi_2D.shape)
 
 np.savetxt('BB_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_stepsize_' + str(stepsize_B) + '_.txt',  BB, delimiter = ' ')
 np.savetxt('Bmax_0.05_TT_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts)) + '_stepsize_' + str(stepsize_T) + '_.txt',  TT, delimiter = ' ')
-#np.savetxt('red_chi_coarse_Bmax_0.01.txt', red_chi_2D, delimiter = ' ')
+np.savetxt('red_chi_finer_B_0.0028_to_0.0035.txt', red_chi_2D, delimiter = ' ')
 
 
 
