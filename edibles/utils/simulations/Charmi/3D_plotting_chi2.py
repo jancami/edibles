@@ -13,6 +13,13 @@ import matplotlib.pyplot as plt
 import timeit
 import scipy.stats as ss
 from scipy.signal import argrelextrema
+from matplotlib import cm
+
+Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD_166937.txt", sep = ',')
+
+y_obs_data =  np.array(Obs_data['Flux'])
+x_obs_data = np.array(Obs_data['Wavelength'])
+
 
 # chi_plane_cordinates = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/chi_plane_cordinates.txt', delim_whitespace=(True))
 # #ax.scatter3D(chi_plane_cordinates.iloc[:,0], chi_plane_cordinates.iloc[:,1], chi_plane_cordinates.iloc[:,2]) #, c = chi_plane_cordinates.iloc[:,2]) #rstride=1, cstride=1
@@ -24,10 +31,23 @@ BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils
 TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_5_Tmax_95_stepsize_5_.txt', delim_whitespace=(True), header = None)
 red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_coarse.txt', delim_whitespace=(True), header = None)
 
+#coarse grid
 #upto 0.01
 BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.0005_Bmax_0.009500000000000001_stepsize_0.001_.txt', delim_whitespace=(True), header = None)
 TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/TT_Tmin_5_Tmax_95_stepsize_5_.txt', delim_whitespace=(True), header = None)
 red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_coarse_Bmax_0.01.txt', delim_whitespace=(True), header = None)
+
+#fine grid
+BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.002_Bmax_0.004899999999999995_stepsize_0.0001_.txt', delim_whitespace=(True), header = None)
+TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_35_Tmax_89_stepsize_1_.txt', delim_whitespace=(True), header = None)
+red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_fine_B_0.002_to_0.005.txt', delim_whitespace=(True), header = None)
+
+#finer grid
+BB = pd.read_csv(r'//Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.0028_Bmax_0.0034900000000000018_stepsize_1e-05_.txt', delim_whitespace=(True), header = None)
+TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_60.0_Tmax_67.5_stepsize_0.5_.txt', delim_whitespace=(True), header = None)
+red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_finer_B_0.0028_to_0.0035.txt', delim_whitespace=(True), header = None)
+
+
 
 print(BB.shape)
 print(TT.shape)
@@ -36,15 +56,15 @@ print(red_chi.shape)
 #print(red_chi)
 #BB = BB.pop(BB.columns[0])
 
-print((BB))
-print(BB.shape)
 
-fig = plt.figure(figsize=(12,10))
+chi = 179 * red_chi
+fig = plt.figure(figsize=(15,10))
 ax = plt.axes(projection='3d')
-ax.tick_params(axis='both', which='major', labelsize=20)
+ax.tick_params(axis='both', which='major', labelsize=20, rotation = 60)
 ax.tick_params(axis='both', which='minor', labelsize=8)
-ax.plot_surface(BB, TT, red_chi, rstride=1, cstride=1, cmap='summer', edgecolor='none', alpha = 0.7)
-ax.view_init(20, 100)
+ax.plot_surface(BB, TT, chi, rstride=1, cstride=1, cmap='summer', edgecolor='none', alpha = 1)
+ax.view_init(0, 90)
+ax.set_xlim(0.0028,0.0032)
 
 ax.set_xlabel('B', size = 20, labelpad = 20)
 ax.set_ylabel('T', size = 20, labelpad = 20)
@@ -87,25 +107,132 @@ def detect_local_minima(arr):
     detected_minima = local_min ^ eroded_background
     return np.where(detected_minima)  
 
-    
-local_minima_locations = detect_local_minima(red_chi)
+
+#value = 214.26
+chi = 179 * red_chi 
+
+local_minima_locations = detect_local_minima(chi)
 print(local_minima_locations)
 
 lml_i = local_minima_locations[0]
 lml_j= local_minima_locations[1]
 
+print(TT[25][5])
+
 print('------------')
 for i,j in zip(lml_i, lml_j):
-    ax.scatter3D(BB.iloc[i][j], TT.iloc[i][j], red_chi.iloc[i][j], marker = 'o', c = 'black')
+    ax.scatter3D(BB.iloc[i][j], TT.iloc[i][j], chi.iloc[i][j], marker = 'o', c = 'black')
     print(BB.iloc[i][j])
+    #print(BB[i][j])
     print(TT.iloc[i][j])
     print(red_chi.iloc[i][j])
-    print('------------')
+    print(chi.iloc[i][j])
+    print('----///////--------')
 
 
 
+'''chi2 + 1'''
+
+# chi = 179 * red_chi 
+# indices = []   
+# lower_value = 213.26
+# upper_value = 218.26
+
+# for i in range(len(chi)):
+#         for j in range(len(chi[i])):
+#             if lower_value < chi[i][j] < upper_value:
+#                 indices.append((i, j))
+                
+# local_chi = []
+# local_red_chi = []
+# local_BB = []
+# local_TT = []
+
+# for i in range(len(indices)):
+#     index = indices[i]
+#     index = indices[i]
+#     ii = index[0]
+#     jj = index[1]
+#     # print(ii)
+#     # print(jj)
+#     local_chi.append(chi[ii][jj])
+#     local_red_chi.append(red_chi[ii][jj])
+#     local_BB.append(BB[ii][jj])
+#     local_TT.append(TT[ii][jj])
+    
+
+# chi_plus_one_coordinates = np.array([local_BB, local_TT, local_chi, local_red_chi]).transpose()
+# np.set_printoptions(suppress=True, precision=4)
+
+# print((chi_plus_one_coordinates))
+            
+# print(red_chi.iloc[3:7][23:27])
+
+# # Specify the portion to be printed
+# start_row = 1
+# end_row = 9
+# start_col = 19
+# end_col = 31
+
+# np.set_printoptions(suppress=True, precision=6)
+# # Loop through the specified portion and print each element
+# for i in range(start_row, end_row):
+#     for j in range(start_col, end_col):
+#         print(chi.iloc[i][j], end=" ")
+#     print()
+    
+# B_uncertainty_in_chi= np.array(chi.iloc[start_row:end_row, start_col:end_col])
+# B_uncertainty_in_BB= np.array(BB.iloc[start_row:end_row, start_col:end_col])
+# B_uncertainty_in_TT= np.array(TT.iloc[start_row:end_row, start_col:end_col])
+
+# ax.plot_surface(B_uncertainty_in_BB, B_uncertainty_in_TT, B_uncertainty_in_chi,rstride=1, cstride=1, cmap='autumn', edgecolor='none', alpha = 1)
+
+#print(B_uncertainty)
+
+# Save the new array into a text file
+#np.savetxt("B_uncertainty.txt", B_uncertainty)
 
 
+
+# print(red_chi)
+
+# value = chi.iloc[i][j] 
+
+# print(value)
+# value_plus_one = value + 1
+# print(value_plus_one)
+
+# arr = chi
+# lower_value = value
+# upper_value = value_plus_one
+
+# def modify_array_between_values(arr, lower_value, upper_value):
+#     # Find the indices of all elements that are between lower_value and upper_value
+#     indices = []
+#     for i in range(len(arr)):
+#         for j in range(len(arr[i])):
+#             if lower_value < arr[i][j] < upper_value:
+#                 indices.append((i, j))
+    
+#     def modify_array_to_keep_shape(arr, indices):
+#     # Create a new 2D array of None values with the same shape as the original array
+#         new_arr = [[None for j in range(len(arr[i]))] for i in range(len(arr))]
+    
+#         # Copy the values from the original array to the new array at the specified indices
+#         for i, j in indices:
+#             new_arr[i][j] = arr[i][j]
+        
+#         return new_arr
+                
+
+# arr = chi
+# lower_value = value
+# upper_value = value_plus_one
+# print(modify_array_between_values(arr, lower_value, upper_value))
+
+
+
+#print(modify_array_to_keep_shape(chi, indices))
 
 
 
@@ -114,6 +241,6 @@ for i,j in zip(lml_i, lml_j):
 
 #ax.plot_surface(BB, TT, red_chi, rstride=1, cstride=1, cmap='viridis', edgecolor='none', alpha = 0.5)
 
-# ax.contour(BB, TT, red_chi, zdir='z', offset=500, cmap='coolwarm')
-# ax.contour(BB, TT, red_chi, zdir='z', offset=400, cmap='coolwarm')
+#ax.contour(BB, TT, red_chi, zdir='y', offset=50, cmap='coolwarm')
+# ax.contour(BB, TT, red_chi, zdir='y', offset=40, cmap='coolwarm')
 # ax.contour(BB, TT, red_chi, zdir='z', offset=40, cmap='coolwarm')
