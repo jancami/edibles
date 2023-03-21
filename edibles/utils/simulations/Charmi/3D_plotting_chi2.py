@@ -59,16 +59,16 @@ print(red_chi.shape)
 
 chi = 179 * red_chi
 fig = plt.figure(figsize=(15,10))
-ax = plt.axes(projection='3d')
-ax.tick_params(axis='both', which='major', labelsize=20, rotation = 60)
+ax = plt.axes(projection='3d', computed_zorder=False)
+ax.tick_params(axis='x', which='major', labelsize=15, rotation = 60)
 ax.tick_params(axis='both', which='minor', labelsize=8)
-ax.plot_surface(BB, TT, chi, rstride=1, cstride=1, cmap='summer', edgecolor='none', alpha = 1)
-ax.view_init(0, 90)
-ax.set_xlim(0.0028,0.0032)
+ax.plot_surface(BB, TT, red_chi, rstride=1, cstride=1, cmap='summer', edgecolor='none', alpha = 1)
+ax.view_init(20, 100)
+#ax.set_xlim(0.0028,0.0032)
 
-ax.set_xlabel('B', size = 20, labelpad = 20)
-ax.set_ylabel('T', size = 20, labelpad = 20)
-ax.set_zlabel(r'$\chi^{2}$',  size = 20, labelpad = 20, rotation   = 90)
+ax.set_xlabel('B', size = 20, labelpad = 50)
+ax.set_ylabel('T', size = 20, labelpad = 30)
+ax.set_zlabel(r'$\chi^{2}$',  size = 20, labelpad = 20, rotation   = 90, zorder = 1, alpha = 0.8)
 
 
 import scipy.ndimage.filters as filters
@@ -117,11 +117,15 @@ print(local_minima_locations)
 lml_i = local_minima_locations[0]
 lml_j= local_minima_locations[1]
 
-print(TT[25][5])
+#print(TT.iloc[26][11])
+
+# i = 26
+# j= 11
+# ax.scatter3D(BB.iloc[i][j], TT.iloc[i][j], red_chi.iloc[i][j], marker = 'o', c = 'black', zorder = 2)
 
 print('------------')
 for i,j in zip(lml_i, lml_j):
-    ax.scatter3D(BB.iloc[i][j], TT.iloc[i][j], chi.iloc[i][j], marker = 'o', c = 'black')
+    ax.scatter3D(BB.iloc[i][j], TT.iloc[i][j], red_chi.iloc[i][j], marker = 'o', c = 'black', zorder = 2)
     print(BB.iloc[i][j])
     #print(BB[i][j])
     print(TT.iloc[i][j])

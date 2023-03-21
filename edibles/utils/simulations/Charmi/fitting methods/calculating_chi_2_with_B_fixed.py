@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar  3 12:28:52 2023
 
-@author: charmibhatt
-"""
 import numpy as np
 import pandas as pd
 import astropy.constants as const
@@ -31,18 +25,18 @@ x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
 y_obs_data = np.interp(x_for_model, x_obs_data, y_obs_data)
 
 
-stepsize_B = 0.00001
-Bs  = np.arange(0.0028, 0.0032, stepsize_B)
-#Bs  = np.arange(0.0005, 0.01, stepsize_B)
-#Bs  = np.arange(1, 10, 4)
-print(Bs)
-print(len(Bs))
+# stepsize_B = 0.00001
+# Bs  = np.arange(0.0028, 0.0032, stepsize_B)
+# #Bs  = np.arange(0.0005, 0.01, stepsize_B)
+# #Bs  = np.arange(1, 10, 4)
+# print(Bs)
+# print(len(Bs))
 
-stepsize_T= 0.5
-Ts =  np.arange(57, 68, stepsize_T)
+stepsize_T= 1
+Ts =  np.arange(35, 95, stepsize_T)
 #Ts =  np.arange(5, 100, 40)
-print(Ts)
-print(len(Ts))
+# print(Ts)
+# print(len(Ts))
 
 
 min_index = np.argmin(y_obs_data)
@@ -51,14 +45,14 @@ central_peak_wavelength = x_obs_data[min_index]
 
 origin = (1/central_peak_wavelength)*1e8
 
-print(origin)
+#print(origin)
 
 
 combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
 
 startl = timeit.default_timer()
-def get_rotational_spectrum(xx, B, T):
-    
+def get_rotational_spectrum(xx, T):
+    B = 0.00305
     x_obs_data = xx
     ground_B = B
     delta_B = -0.17
@@ -223,38 +217,45 @@ def get_rotational_spectrum(xx, B, T):
     
     return  y_model_data
  
-BB, TT = np.meshgrid(Bs, Ts)
+# BB, TT = np.meshgrid(Bs, Ts)
 
-ax = plt.axes(projection='3d')
+# ax = plt.axes(projection='3d')
 
 
 
    
-red_chi_2D = np.zeros(shape = (1,len(Bs)))
-ax = plt.axes(projection='3d')
+# red_chi_2D = np.zeros(shape = (1,len(Bs)))
+# ax = plt.axes(projection='3d')
+reduced_chis = []
+Temps = []
 for T in Ts:
-    reduced_chis = []
-    for B in Bs:
-        print(B)
-        print(T)
-        num = (get_rotational_spectrum(x_obs_data, B, T) - y_obs_data)**2
-        chi_squared = np.sum((num)/(0.004)**2)
-        reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
-        reduced_chis.append(reduced_chi_squared)
+    Temps.append(T)
+    num = (get_rotational_spectrum(x_obs_data, T) - y_obs_data)**2
+    chi_squared = np.sum((num)/(0.004)**2)
+    reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
+    reduced_chis.append(reduced_chi_squared)
       
-    red_chi_2D  = np.vstack([red_chi_2D , reduced_chis])   
     
-red_chi_2D = np.delete(red_chi_2D,0, 0)
-print(red_chi_2D)
-ax.plot_surface(BB, TT, red_chi_2D, cmap=plt.cm.YlGnBu_r,
-                            linewidth=0, antialiased=False)
-print(BB.shape)
-print(TT.shape)
-print(red_chi_2D.shape)
+print(reduced_chis)
+print(Ts)
 
-np.savetxt('185418_BB_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_stepsize_' + str(stepsize_B) + '_.txt',  BB, delimiter = ' ')
-np.savetxt('185418_Bmax_0.0032_TT_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts)) + '_stepsize_' + str(stepsize_T) + '_.txt',  TT, delimiter = ' ')
-np.savetxt('185418_red_chi_finer_B_0.0028_to_0.0032_57_to_68.txt', red_chi_2D, delimiter = ' ')
+T_and_chi  = np.array([reduced_chis, Ts]).transpose()
+print(T_and_chi)
+
+
+    #red_chi_2D  = np.vstack([red_chi_2D , reduced_chis])   
+    
+# red_chi_2D = np.delete(red_chi_2D,0, 0)
+# print(red_chi_2D)
+# ax.plot_surface(BB, TT, red_chi_2D, cmap=plt.cm.YlGnBu_r,
+#                             linewidth=0, antialiased=False)
+# print(BB.shape)
+# print(TT.shape)
+# print(red_chi_2D.shape)
+
+# np.savetxt('185418_BB_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_stepsize_' + str(stepsize_B) + '_.txt',  BB, delimiter = ' ')
+# np.savetxt('185418_Bmax_0.0032_TT_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts)) + '_stepsize_' + str(stepsize_T) + '_.txt',  TT, delimiter = ' ')
+# np.savetxt('185418_red_chi_finer_B_0.0028_to_0.0032_57_to_68.txt', red_chi_2D, delimiter = ' ')
 
 
 
