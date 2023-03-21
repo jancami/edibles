@@ -1,17 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  4 18:12:36 2022
-
-@author: Charmi Bhatt
-"""
-
-# -*- coding: utf-8 -*-
-
-#To do:
-#Add comments at each major step,
-#remove ground_C = ground_B/2 and generalize for any symmetry,
-#add centrifugal and coriolis contributions to waveno
-
 
 import numpy as np
 import pandas as pd
@@ -33,17 +19,19 @@ import scipy.stats as ss
 
 origin = 0 
 #Jmax = 300 (Kmax = Jmax (i.e all K allowed))
-#combinations = pd.read_csv(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Jmax=300.txt", delim_whitespace=(True))
-
 combinations = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt', delim_whitespace=(True))
 
 
+sigma_1 = 0.0107
+sigma_2 = 0.1070
 
+sigma_1_in_kms= sigma_1*2.355*3e5*6614e-8
+sigma_2_in_kms= sigma_2*2.355*3e5*6614e-8
 
 startl = timeit.default_timer()
 
 #%%
-def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
+def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta):
     
     ground_C = ground_B/2
     delta_C = delta_C
@@ -154,13 +142,20 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     # grid_size = int(((np.max(linelist['wavenos']) + 0.5) - (np.min(linelist['wavenos']) - 0.5))/waveno_stepsize)  
 
     smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 1000) # grid_size)
-    smooth_intensities = np.zeros(smooth_wavenos.shape)
+    smooth_intensities_1 = np.zeros(smooth_wavenos.shape)
+    smooth_intensities_2 = np.zeros(smooth_wavenos.shape)
     
     startg = timeit.default_timer()
     
+    
+    
     for idx,wavepoint in np.ndenumerate(smooth_wavenos):
-        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, sigma) * (linelist['intensities']) 
-        smooth_intensities[idx] = w_int.sum()
+        w_int = ss.norm.pdf(linelist['wavenos'], wavepoint, sigma_1) * (linelist['intensities']) 
+        smooth_intensities_1[idx] = w_int.sum()
+        
+    for idx,wavepoint in np.ndenumerate(smooth_wavenos):
+        w_int_ = ss.norm.pdf(linelist['wavenos'], wavepoint, sigma_2) * (linelist['intensities']) 
+        smooth_intensities_2[idx] = w_int_.sum()
     
     # def gaussian(x, mu, sig):
     #         return (np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.))))/np.sqrt(2*np.pi*np.power(sig, 2.))
@@ -173,8 +168,11 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     print('>>>> gaussian takes   ' + str(endg -startg) + '  sec') 
     
-    smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()    
-    smooth_data = np.delete(smooth_data, np.where(smooth_data[:,1] <= 0.001*(max(smooth_data[:,1]))), axis = 0)
+    smooth_data_1 = np.array([smooth_wavenos, smooth_intensities_1]).transpose()    
+    smooth_data_1 = np.delete(smooth_data_1, np.where(smooth_data_1[:,1] <= 0.001*(max(smooth_data_1[:,1]))), axis = 0)
+    
+    smooth_data_2 = np.array([smooth_wavenos, smooth_intensities_2]).transpose()    
+    smooth_data_2 = np.delete(smooth_data_2, np.where(smooth_data_2[:,1] <= 0.001*(max(smooth_data_2[:,1]))), axis = 0)
     
     
     
@@ -197,7 +195,8 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
         
         
     'Calculated'
-    axes[m,n].plot(((smooth_data[:,0])), 1-0.1*(smooth_data[:,1]/max(smooth_data[:,1])), linewidth = 1) #, label = str(delta_B))
+    axes[m,n].plot(((smooth_data_1[:,0])), 1-0.1*(smooth_data_1[:,1]/max(smooth_data_1[:,1])), linewidth = 1, color = 'green') #, label = str(delta_B))
+    axes[m,n].plot(((smooth_data_2[:,0])), 1-0.1*(smooth_data_2[:,1]/max(smooth_data_2[:,1])), linewidth = 1, color  = 'red') #, label = str(delta_B))
     axes[m,n].xaxis.set_major_locator(plt.MultipleLocator(5))
     axes[m,n].xaxis.set_minor_locator(plt.MultipleLocator(1))
     axes[m,n].set_xlim(-12,12)
@@ -227,50 +226,59 @@ B_label = ('5.0 x 10$^{-4}$', '1.6 x 10$^{-3}$', '5.0 x 10$^{-3}$', '1.6 x 10$^{
 
 # Ts = (10,20)
 # ground_Bs = (0.05, 0.001)
-delta_B = -0.8
-delta_C = -0.8
-zeta = -0.55
-sigma = 0.1953
-conditions = 'condition c' 
+delta_B = np.linspace(-0.8, 0, 5)
+delta_C = np.linspace(-0.8, 0, 5)
+zetas = np.linspace(-0.55, -0.35, 5)
 
-fig, axes = plt.subplots(5, 5, figsize=(19,10), sharex=(True), sharey=(True))
-#fig.suptitle('2D Parametric survey with $ T_{rot} $ and B \n \n 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + '$cm^{-1}$ \n' , size ='xx-large')
-fig.suptitle(' 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta^{\prime}  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + 'cm$^{-1}$ \n' , size ='xx-large')
-
-
-rows = ['T = {} K'.format(row) for row in Ts ]
-cols = ['B = {} cm$^{}$ '.format(col, {-1}) for col in B_label]
-
-for ax, col in zip(axes[0], cols):
-    ax.set_title(col, fontsize = 15)
-    #ax.set_xlim(6612,6615)
-    
-for ax, col in zip(axes[4], cols):
-    ax.set_xlabel('Wavenumber (cm$^{-1}$)', labelpad =10, fontsize = 13)
-
-for ax, row in zip(axes[:,0], rows):
-    ax.set_ylabel('Intensity', rotation=90, labelpad=7, fontsize = 13)
-    #ax.set_xlim(6612,6615)
-    
-fig.tight_layout()
-pad = 25 # in points
-
-for ax, row in zip(axes[:,0], rows):
-    ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
-                xycoords=ax.yaxis.label, textcoords='offset points', ha='right', va='center', fontsize=15)
-
-fig.tight_layout()
-
-
-
-n = 0
-for ground_B in ground_Bs:
-    m = 0
-    for T in Ts:
-        get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)
-        m = m + 1
+delta_B = 0
+delta_C = 0
+#for delta_B, delta_C in zip(delta_B, delta_C):
+for zeta in zetas:
+    fig, axes = plt.subplots(len(Ts), len(ground_Bs), figsize=(19,10), sharex=(True), sharey=(True))
+    n = 0
+    print(delta_B)
+    print(zeta)
+    for ground_B in ground_Bs:
+        m = 0
+        for T in Ts:
+            get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta)
+            m = m + 1
+            #fig.suptitle('2D Parametric survey with $ T_{rot} $ and B \n \n 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + '$cm^{-1}$ \n' , size ='xx-large')
+            fig.suptitle(' 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta^{\prime}  = $' + str(zeta) + ', 'r'$\sigma   (green) = $'+ str('{:.2f}'.format(sigma_1_in_kms) ) + ' km/s , 'r'$\sigma (red) = $'+ str('{:.2f}'.format(sigma_2_in_kms)) + ' km/s', size ='xx-large', y =1) #  + 'cm$^{-1}$ \n' 
+            
+            
+            rows = ['T = {} K'.format(row) for row in Ts ]
+            cols = ['B = {} cm$^{}$ '.format(col, {-1}) for col in B_label]
+            
+            for ax, col in zip(axes[0], cols):
+                ax.set_title(col, fontsize = 15)
+                #ax.set_xlim(-5,5)
+                
+            for ax, col in zip(axes[len(ground_Bs) - 1], cols):
+                ax.set_xlabel('Wavenumber (cm$^{-1}$)', labelpad =10, fontsize = 13)
+            
+            for ax, row in zip(axes[:,0], rows):
+                ax.set_ylabel('Intensity', rotation=90, labelpad=7, fontsize = 13)
+                #ax.set_xlim(6612,6615)
+                
+            fig.tight_layout()
+            pad = 25 # in points
+            
+            for ax, row in zip(axes[:,0], rows):
+                ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
+                            xycoords=ax.yaxis.label, textcoords='offset points', ha='right', va='center', fontsize=15)
+            
+            fig.tight_layout()
+            
+            plt.savefig('Delta_B_' + str(delta_B) + 'zeta_' + str(zeta) + 'with_linewidth.pdf' , dpi = 300, format = 'pdf' )
+        n = n + 1
         
-    n = n + 1
+    
+
+
+
+
+
     
 
 

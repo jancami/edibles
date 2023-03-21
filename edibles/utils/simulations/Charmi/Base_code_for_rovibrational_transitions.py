@@ -122,7 +122,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     
     #%%
    
-    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 1000) # grid_size)
+    smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1 ,np.max(linelist['wavenos']) + 1, 800) # grid_size)
     smooth_intensities = np.zeros(smooth_wavenos.shape)
     
     startg = timeit.default_timer()
@@ -165,7 +165,7 @@ def get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma):
     plt.ylabel('Normalized Intenisty')
     plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
     
-    print(linelist)
+    #print(linelist)
     
     
 T = 61.2
@@ -175,6 +175,27 @@ delta_C = (-0.17)
 zeta = -0.49
 sigma = 0.1953
 conditions = 'condition c'
+
+T = 8.9
+ground_B = 0.01913
+delta_B = -0.85
+zeta = -0.46
+sigma = 0.1358
+conditions = 'condition a'
+
+# T = 20.2
+# ground_B = 0.00947
+# delta_B = -0.42
+# zeta = -0.43
+# sigma = 0.1571
+# conditions = 'condition b'
+
+# T = 101.3
+# ground_B = 0.00286
+# delta_B = -0.21
+# zeta = -0.54
+# sigma = 0.1995
+# conditions = 'condition d'
 
 plt.figure(figsize = (15,8))
 get_rotational_spectrum(T, ground_B, delta_B, delta_C, zeta, sigma)

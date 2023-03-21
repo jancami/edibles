@@ -46,44 +46,51 @@ def detect_local_minima(arr):
 
 
 stepsize_B = 0.00001
-Bs  = np.arange(0.0028, 0.0035, stepsize_B)
+Bs  = np.arange(0.0028, 0.0032, stepsize_B)
 #Bs  = np.arange(0.0005, 0.01, stepsize_B)
 #Bs  = np.arange(1, 10, 4)
 print(Bs)
 print(len(Bs))
 
 stepsize_T= 0.5
-Ts =  np.arange(60, 68, stepsize_T)
+Ts =  np.arange(57, 68, stepsize_T)
 #Ts =  np.arange(5, 100, 40)
 print(Ts)
 print(len(Ts))
-
 BB, TT = np.meshgrid(Bs, Ts)
-points = np.empty((1120, 2))
+points = np.empty((902, 2)) #902
 points[:, 0] = BB.flatten()
 points[:, 1] = TT.flatten()
 
+#1666937 (broadest)
+BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.0028_Bmax_0.003200000000000001_stepsize_1e-05_.txt', delim_whitespace=(True), header = None)
+TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.0032_TT_Tmin_57.0_Tmax_67.5_stepsize_0.5_.txt', delim_whitespace=(True), header = None)
+red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_finer_B_0.0028_to_0.0032_57_to_68.txt', delim_whitespace=(True), header = None)
 
-BB = pd.read_csv(r'//Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.0028_Bmax_0.0034900000000000018_stepsize_1e-05_.txt', delim_whitespace=(True), header = None)
-TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_60.0_Tmax_67.5_stepsize_0.5_.txt', delim_whitespace=(True), header = None)
-red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_finer_B_0.0028_to_0.0035.txt', delim_whitespace=(True), header = None)
+#185418 (narrowest)
+BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/185418_BB_Bmin_0.0028_Bmax_0.003200000000000001_stepsize_1e-05_.txt', delim_whitespace=(True), header = None)
+TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/185418_Bmax_0.0032_TT_Tmin_57.0_Tmax_67.5_stepsize_0.5_.txt', delim_whitespace=(True), header = None)
+red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/185418_red_chi_finer_B_0.0028_to_0.0032_57_to_68.txt', delim_whitespace=(True), header = None)
+
+
+    
 print(BB.shape)
 print(TT.shape)
 print(red_chi.shape)
 
-ax = plt.axes(projection = '3d')
+ax = plt.axes(projection = '3d', computed_zorder=False)
 #ax.plot_surface(BB, TT, red_chi)
 
 red_chi = np.array(red_chi)
 
-f = interpolate.interp2d(BB, TT, red_chi, kind='quintic')
+#f = interpolate.interp2d(BB, TT, red_chi, kind='linear')
 
 
 #import matplotlib.pyplot as plt
 stepsize_B = 0.000001
-BBnew = np.arange(0.0028, 0.0035, stepsize_B)
-stepsize_T= 0.1
-TTnew =  np.arange(60, 68, stepsize_T)
+BBnew = np.arange(0.0028, 0.0032, stepsize_B)
+stepsize_T= 0.05
+TTnew =  np.arange(57, 68, stepsize_T)
 BBM, TTM = np.meshgrid(BBnew, TTnew)
 
 #red_chinew = f(BBnew, TTnew)
@@ -98,37 +105,36 @@ red_chinew = griddata(points, red_chi.flatten(), (BBM, TTM), method='linear')
 
 
 
-
-
-value = 214.26
 chi = 179 * red_chinew 
-ax.plot_surface(BBM, TTM, chi, rstride=1, cstride=1, alpha=0.2, linewidth=0, cmap='summer', zorder = 0.5) #antialiased=True)
+ax.plot_surface(BBM, TTM, chi, rstride=1, cstride=1, alpha=0.5, linewidth=0, cmap='summer', zorder = 1) #antialiased=True)
+
 
 local_minima_locations = detect_local_minima(red_chinew)
 print(local_minima_locations)
 lml_i = local_minima_locations[0]
 lml_j= local_minima_locations[1]
 
-red_chi_mins = []
+#red_chi_mins = []
 
-ax.scatter3D(BBM[25][249], TTM[25][249], chi[25][249], marker = 'o', c = 'black')
 
 # print('------------')
-# for i,j in zip(lml_i, lml_j):
-#     ax.scatter3D(BBM[i][j], TTM[i][j], chi[i][j], marker = 'o', c = 'black')
-#     print(BBM[i][j])
-#     #print(BB[i][j])
-#     print(TTM[i][j])
-#     print(red_chinew[i][j])
-#     red_chi_mins.append(red_chinew[i][j])
-#     print(chi[i][j])
-#     print('----///////--------')
+for i,j in zip(lml_i, lml_j):
+    #ax.scatter3D(BBM[i][j], TTM[i][j], chi[i][j], marker = 'o', c = 'black')
+    print(BBM[i][j])
+    #print(BB[i][j])
+    print(TTM[i][j])
+    print(red_chinew[i][j])
+    #red_chi_mins.append(red_chinew[i][j])
+    print(chi[i][j])
+    print(i)
+    print(j)
+    print('----///////--------')
 
 
 chi = 179 * red_chinew 
 indices = []   
-lower_value = 214.2671
-upper_value = 214.2673
+lower_value = 247.25 #214.2674
+upper_value = 247.255 #214.2676
 
 for i in range(len(chi)):
         for j in range(len(chi[i])):
@@ -146,14 +152,15 @@ print(indices)
 # chi_f = chi[indices]
 # print(chi_f.shape)
 
-chi[chi >= 214.26] = None
+#chi[chi >= 214.26] = None
+chi[chi >= 247.25] = None
 chi_local = chi
 print(chi)
 #print(max(chi.shape[0]))
 
 
 
-ax.plot_surface(BBM, TTM, chi_local, cmap = 'autumn', alpha = 1, zorder = 1)
+ax.plot_surface(BBM, TTM, chi_local, cmap = 'pink_r', alpha = 1, zorder = 2)
 indi = np.argwhere(~np.isnan(chi_local))
 
 BBM_local = []
@@ -163,37 +170,44 @@ for i in indi:
     jj = i[1]
     BBM_local.append(BBM[ii][jj])
     TTM_local.append(TTM[ii][jj])
-    
-B_minus = (min(BBM_local) - BBM[25][249])
-B_plus = (max(BBM_local) - BBM[25][249])
 
-print(B_minus)
-print(B_plus)
+
+i = 50 #110
+j = 399 #250 
+print('----///////--------')
+B_minus = (min(BBM_local) - BBM[i][j])
+B_plus = (max(BBM_local) - BBM[i][j])
+
+# print(B_minus)
+# print(B_plus)
 print(min(BBM_local))
-print(BBM[25][249])
+print(BBM[i][j])
 print(max(BBM_local))
 
 
-T_minus = (min(TTM_local) - TTM[25][249])
-T_plus = (max(TTM_local) - TTM[25][249])
+T_minus = (min(TTM_local) - TTM[i][j])
+T_plus = (max(TTM_local) - TTM[i][j])
 
 print(T_minus)
 print(T_plus)
 print(min(TTM_local))
-print(TTM[25][249])
+print(TTM[i][j])
 print(max(TTM_local))
 
 
 
 ax.view_init(20, 120)
 
-ax.set_xlim(0.0029,0.0032)
-ax.set_ylim(60, 66.4)
+#ax.set_xlim(0.00285,0.0032)
+# ax.set_ylim(60, 66.4)
+ax.scatter3D(BBM[i][j], TTM[i][j], chi[i][j], marker = 'o', c = 'black', zorder = 3, s= 5)
 
 
-ax.set_xlabel('B', size = 20, labelpad = 20)
-ax.set_ylabel('T', size = 20, labelpad = 20)
-ax.set_zlabel(r'$\chi^{2}$',  size = 20, labelpad = 20, rotation   = 90)
+ax.set_xlabel('B', size = 10, labelpad = 30)
+ax.set_ylabel('T', size = 10, labelpad = 30)
+ax.set_zlabel(r'$\chi^{2}$',  size = 10, labelpad = 10, rotation   = 90)
+ax.tick_params(axis='x', which='major', labelsize=10, rotation = 80)
+ax.tick_params(axis='y', which='major', labelsize=8, rotation = 0)
 
-
+ax.tick_params(axis='both', which='minor', labelsize=8)
 
