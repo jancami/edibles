@@ -37,6 +37,17 @@ BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils
 TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/TT_Tmin_5_Tmax_95_stepsize_5_.txt', delim_whitespace=(True), header = None)
 red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_coarse_Bmax_0.01.txt', delim_whitespace=(True), header = None)
 
+print((np.argmin(red_chi)))
+
+def find_min_2d_array(arr):
+    flat_arr = np.array(arr).flatten()  # flatten the 2D array into a 1D array
+    min_index = np.argmin(flat_arr)  # find the index of the minimum value
+    min_val = flat_arr[min_index]  # get the minimum value using the index
+    return min_val
+
+min_val = find_min_2d_array(red_chi)
+print(min_val) 
+
 #fine grid
 BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/BB_Bmin_0.002_Bmax_0.004899999999999995_stepsize_0.0001_.txt', delim_whitespace=(True), header = None)
 TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_35_Tmax_89_stepsize_1_.txt', delim_whitespace=(True), header = None)
@@ -47,11 +58,18 @@ BB = pd.read_csv(r'//Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/util
 TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/Bmax_0.05_TT_Tmin_60.0_Tmax_67.5_stepsize_0.5_.txt', delim_whitespace=(True), header = None)
 red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/red_chi_finer_B_0.0028_to_0.0035.txt', delim_whitespace=(True), header = None)
 
+#correct origin 166937
+BB = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/166937_BB_Bmin_0.0028_Bmax_0.004899999999999996_stepsize_0.0001_.txt', delim_whitespace=(True), header = None)
+TT = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/166937_Bmax_0.005_TT_Tmin_40_Tmax_69_stepsize_1_.txt', delim_whitespace=(True), header = None)
+red_chi = pd.read_csv(r'/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/166937_red_chi_Bmin_0.0028_Bmax_0.004899999999999996_Tmin_40_Tmax_69_.txt', delim_whitespace=(True), header = None)
+
+min_val = find_min_2d_array(red_chi)
+print(min_val) 
 
 
-print(BB.shape)
-print(TT.shape)
-print(red_chi.shape)
+# print(BB.to_string())
+# print(TT.to_string())
+# print(red_chi.to_string())
 
 #print(red_chi)
 #BB = BB.pop(BB.columns[0])
@@ -111,7 +129,7 @@ def detect_local_minima(arr):
 #value = 214.26
 chi = 179 * red_chi 
 
-local_minima_locations = detect_local_minima(chi)
+local_minima_locations = detect_local_minima(red_chi)
 print(local_minima_locations)
 
 lml_i = local_minima_locations[0]
@@ -137,32 +155,32 @@ for i,j in zip(lml_i, lml_j):
 
 '''chi2 + 1'''
 
-# chi = 179 * red_chi 
-# indices = []   
-# lower_value = 213.26
-# upper_value = 218.26
+chi = 179 * red_chi 
+indices = []   
+lower_value = 197.6
+upper_value = 197.7
 
-# for i in range(len(chi)):
-#         for j in range(len(chi[i])):
-#             if lower_value < chi[i][j] < upper_value:
-#                 indices.append((i, j))
+for i in range(len(chi)):
+        for j in range(len(chi.iloc[i])):
+            if lower_value < chi.iloc[i][j] < upper_value:
+                indices.append((i, j))
                 
-# local_chi = []
-# local_red_chi = []
-# local_BB = []
-# local_TT = []
+local_chi = []
+local_red_chi = []
+local_BB = []
+local_TT = []
 
-# for i in range(len(indices)):
-#     index = indices[i]
-#     index = indices[i]
-#     ii = index[0]
-#     jj = index[1]
-#     # print(ii)
-#     # print(jj)
-#     local_chi.append(chi[ii][jj])
-#     local_red_chi.append(red_chi[ii][jj])
-#     local_BB.append(BB[ii][jj])
-#     local_TT.append(TT[ii][jj])
+for i in range(len(indices)):
+    index = indices[i]
+    index = indices[i]
+    ii = index[0]
+    jj = index[1]
+    # print(ii)
+    # print(jj)
+    local_chi.append(chi[ii][jj])
+    local_red_chi.append(red_chi[ii][jj])
+    local_BB.append(BB[ii][jj])
+    local_TT.append(TT[ii][jj])
     
 
 # chi_plus_one_coordinates = np.array([local_BB, local_TT, local_chi, local_red_chi]).transpose()
@@ -194,57 +212,57 @@ for i,j in zip(lml_i, lml_j):
 #print(B_uncertainty)
 
 # Save the new array into a text file
-#np.savetxt("B_uncertainty.txt", B_uncertainty)
+# np.savetxt("B_uncertainty.txt", B_uncertainty)
 
 
 
-# print(red_chi)
+print(red_chi)
 
-# value = chi.iloc[i][j] 
+value = chi.iloc[i][j] 
 
-# print(value)
-# value_plus_one = value + 1
-# print(value_plus_one)
+print(value)
+value_plus_one = value + 1
+print(value_plus_one)
 
-# arr = chi
-# lower_value = value
-# upper_value = value_plus_one
+arr = chi
+lower_value = value
+upper_value = value_plus_one
 
-# def modify_array_between_values(arr, lower_value, upper_value):
-#     # Find the indices of all elements that are between lower_value and upper_value
-#     indices = []
-#     for i in range(len(arr)):
-#         for j in range(len(arr[i])):
-#             if lower_value < arr[i][j] < upper_value:
-#                 indices.append((i, j))
+def modify_array_between_values(arr, lower_value, upper_value):
+    # Find the indices of all elements that are between lower_value and upper_value
+    indices = []
+    for i in range(len(arr)):
+        for j in range(len(arr.iloc[i])):
+            if lower_value < arr.iloc[i][j] < upper_value:
+                indices.append((i, j))
     
-#     def modify_array_to_keep_shape(arr, indices):
-#     # Create a new 2D array of None values with the same shape as the original array
-#         new_arr = [[None for j in range(len(arr[i]))] for i in range(len(arr))]
+def modify_array_to_keep_shape(arr, indices):
+# Create a new 2D array of None values with the same shape as the original array
+    new_arr = [[None for j in range(len(arr.iloc[i]))] for i in range(len(arr))]
+
+    # Copy the values from the original array to the new array at the specified indices
+    for i, j in indices:
+        new_arr[i][j] = arr[i][j]
     
-#         # Copy the values from the original array to the new array at the specified indices
-#         for i, j in indices:
-#             new_arr[i][j] = arr[i][j]
-        
-#         return new_arr
-                
+    return new_arr
+            
 
-# arr = chi
-# lower_value = value
-# upper_value = value_plus_one
-# print(modify_array_between_values(arr, lower_value, upper_value))
+arr = chi
+lower_value = value
+upper_value = value_plus_one
+print(modify_array_between_values(arr, lower_value, upper_value))
 
 
 
-#print(modify_array_to_keep_shape(chi, indices))
+print(modify_array_to_keep_shape(chi, indices))
 
 
 
 
 #ax.contour3D(BB, TT, red_chi, cmap='binary')
 
-#ax.plot_surface(BB, TT, red_chi, rstride=1, cstride=1, cmap='viridis', edgecolor='none', alpha = 0.5)
+ax.plot_surface(BB, TT, red_chi, rstride=1, cstride=1, cmap='viridis', edgecolor='none', alpha = 0.5)
 
-#ax.contour(BB, TT, red_chi, zdir='y', offset=50, cmap='coolwarm')
+# ax.contour(BB, TT, red_chi, zdir='y', offset=50, cmap='coolwarm')
 # ax.contour(BB, TT, red_chi, zdir='y', offset=40, cmap='coolwarm')
 # ax.contour(BB, TT, red_chi, zdir='z', offset=40, cmap='coolwarm')

@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Wed Mar 22 17:19:14 2023
+
+@author: charmibhatt
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Mar  3 12:28:52 2023
 
 @author: charmibhatt
@@ -26,15 +34,16 @@ from lmfit import Model
 
 combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
 startl = timeit.default_timer()
-def get_rotational_spectrum(xx, B, T):
+def get_rotational_spectrum(xx, B, T, delta_B):
     
     print(B)
     print(T)
+    print(delta_B)
     print('-----------')
     x_obs_data = xx
     ground_B = B
-    delta_B = -0.17
-    delta_C = -0.17
+    delta_B = delta_B
+    delta_C = delta_B
     zeta = -0.49
     sigma = 0.1953
     
@@ -164,31 +173,28 @@ def get_rotational_spectrum(xx, B, T):
     
     
     
-    # P_Branch = linelist[(linelist['label'].str[1] == "P")]
-    # Q_Branch = linelist[(linelist['label'].str[1] == "Q")]
-    # R_Branch = linelist[(linelist['label'].str[1] == "R")]
+    P_Branch = linelist[(linelist['label'].str[1] == "P")]
+    Q_Branch = linelist[(linelist['label'].str[1] == "Q")]
+    R_Branch = linelist[(linelist['label'].str[1] == "R")]
 
     
     
-    # peak_p = linelist[linelist['intensities'] == max(P_Branch['intensities'])]
-    # peak_q = linelist[linelist['intensities'] == max(Q_Branch['intensities'])]
-    # peak_r = linelist[linelist['intensities'] == max(R_Branch['intensities'])]
+    peak_p = linelist[linelist['intensities'] == max(P_Branch['intensities'])]
+    peak_q = linelist[linelist['intensities'] == max(Q_Branch['intensities'])]
+    peak_r = linelist[linelist['intensities'] == max(R_Branch['intensities'])]
 
     #linelist.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\my_local_github\edibles\edibles\utils\simulations\Charmi\Calculated_linelist_kerr_condition_c.xlsx", index=False)
 
     #with sns.color_palette("flare", n_colors=2):
         
-   # plt.plot(simu_wavelength, simu_intenisty, color = 'red')
+    plt.plot(simu_wavelength, simu_intenisty, color = 'red')
     # plt.plot(x_obs_data, y_obs_data)
     # plt.xlabel('Wavelength')
     # plt.ylabel('Normalized Intenisty')
     # plt.title('Temperature = ' + str(T) + '  K  ground_B =  ' + str(ground_B) + ' cm-1  ground_C=  ' + str(ground_C) + ' cm-1  Delta_B = ' + str(delta_B) + '    Delta_C = ' + str(delta_C) +    '    zeta = ' +  str(zeta)) 
     
-    #model_data = np.array([simu_wavelength, simu_intenisty]).transpose()
     model_data = np.array([simu_wavelength, simu_intenisty]).transpose()
     model_data = model_data[::-1]
-    
-    
     
     x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
     
@@ -212,15 +218,14 @@ x_obs_data = np.array(Obs_data['Wavelength'])
 
 #scaling and making data evenly spaced
 x_for_model = np.linspace(min(x_obs_data), max(x_obs_data), len(x_obs_data))
-
 y_obs_data = np.interp(x_for_model, x_obs_data, y_obs_data)
 y_obs_data=  (y_obs_data - min(y_obs_data)) / (1 - min(y_obs_data)) * 0.1 + 0.9
 
-plt.plot(x_for_model, y_obs_data)
+
 min_index = np.argmin(y_obs_data)
 central_peak_wavelength = x_obs_data[min_index]
 origin = (1/central_peak_wavelength)*1e8
-plt.plot(x_obs_data, y_obs_data)
+# plt.plot(x_obs_data, y_obs_data)
 # plt.axvline(central_peak_wavelength)
 # plt.xlim(6613, 6614)
 
@@ -229,28 +234,30 @@ Bmin = 0.0028
 Bmax = 0.005
 stepsize_B = 0.0001
 Bs  = np.arange(Bmin, Bmax, stepsize_B)
-print(Bs)
-print(len(Bs))
+# print(Bs)
+# print(len(Bs))
 
 Tmin = 40
 Tmax = 70
 stepsize_T= 1
 Ts =  np.arange(Tmin, Tmax, stepsize_T)
-print(Ts)
-print(len(Ts))
+# print(Ts)
+# print(len(Ts))
 
 BB, TT = np.meshgrid(Bs, Ts)
 
 
 #ax = plt.axes(projection='3d')
-
-get_rotational_spectrum(x_obs_data, B = 0.0039, T = 51.6)
+'''Manual Chi2calculation'''
+# num = (get_rotational_spectrum(x_obs_data, B = 0.0042, T = 44.88, delta_B = -0.17) - y_obs_data)**2
+# chi_squared = np.sum((num)/(0.004)**2)
+# reduced_chi_squared = chi_squared/(len(y_obs_data) - 3)
+# print(reduced_chi_squared)
 
 '''Lm fit'''
-
 mod = Model(get_rotational_spectrum) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
 #params = mod.guess(flux_data, x = np.linspace(0.005,0.01,5))
-params = mod.make_params(verbose = True, B = 0.0029, T = 59)
+params = mod.make_params(verbose = True, B = 0.0029, T = 59, delta_B = -0.1)
 
 
 # params['b'].min = 0.005 
@@ -266,16 +273,6 @@ plt.legend()
 
 print(mod.param_names, mod.independent_vars)
 print(result.fit_report())
-
-'''Scipy Curve fit'''
-
-# guess = [0.003, 45]
-# popt, pcov = scipy.optimize.curve_fit(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess) #, bounds = ([0.003, 19], [0.0033, 33]))
-# # #popt, pcov = scipy.optimize.least_squares(get_rotational_spectrum, xdata = Obs_data['Wavelength'], ydata = Obs_data['Flux'], p0 = guess, bounds = ([2.7, 0.005], [5, 0.007]), xtol = 0.05, ftol = 0.05)
-
-# print(popt)
-# print(pcov)
-
 
 '''Calculating and saving chi2''' 
 # red_chi_2D = np.zeros(shape = (1,len(Bs)))
@@ -303,28 +300,6 @@ print(result.fit_report())
 # np.savetxt('166937_BB_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_stepsize_' + str(stepsize_B) + '_.txt',  BB, delimiter = ' ')
 # np.savetxt('166937_Bmax_0.005_TT_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts)) + '_stepsize_' + str(stepsize_T) + '_.txt',  TT, delimiter = ' ')
 # np.savetxt('166937_red_chi_Bmin_' + str(min(Bs)) + '_Bmax_' + str(max(Bs)) + '_Tmin_' + str(min(Ts)) + '_Tmax_' + str(max(Ts))+ '_.txt', red_chi_2D, delimiter = ' ')
-
-'''Manual Chi2calculation'''
-# num = (get_rotational_spectrum(x_obs_data, B = 0.00317, T = 74.62,) - y_obs_data)**2
-# chi_squared = np.sum((num)/(0.004)**2)
-# reduced_chi_squared = chi_squared/(len(y_obs_data) - 2)
-# print(reduced_chi_squared)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
