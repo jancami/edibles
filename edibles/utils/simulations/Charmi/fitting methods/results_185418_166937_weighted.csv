@@ -1,0 +1,2 @@
+result_name,B,delta_B,zeta,T_1,T_2,sigma_1,sigma_2,origin_1,origin_2,chi2,redchi,func_evals,B_unc,delta_B_unc,zeta_unc,T_1_unc,sigma_1_unc,origin_1_unc,T_2_unc,sigma_2_unc,origin_2_unc,B_init,T_init,delta_B_init,zeta_init,sigma_init,origin_init
+result1,0.009999967674240067,-0.6983080570804424,-0.9999999999998452,2.7,14.860419869113194,0.020000000000000018,0.28308259374155775,0.0,0.07372349796893962,134.06256604886835,8.378910378054272,1613,,,,,,,,,,0.01,2.7,-0.1,-0.1,0.02,0
