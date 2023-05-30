@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Mon May 15 18:35:34 2023
+
+@author: charmibhatt
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Mar  3 12:28:52 2023
 
 @author: charmibhatt
@@ -211,7 +219,7 @@ def get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin):
 
 
 
-Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD166937.txt", sep = ',')
+Obs_data = pd.read_csv(r"/Users/charmibhatt/Documents/GitHub/DIBs/5780_fitting/DIB5780_HD185418.txt", sep = ' ')
 Obs_data['Wavelength'] = (1/Obs_data['Wavelength'])*1e8
 Obs_data = Obs_data.iloc[::-1].reset_index(drop=True) #making it ascending order as we transformed wavelength into wavenumbers
 
@@ -310,7 +318,7 @@ def write_results_to_csv(results_list, filename):
             
             
             
-write_results_to_csv(results_list, 'results_166937_triple_peak_-1_to_2.csv')     
+write_results_to_csv(results_list, 'results_5780_HD185418.csv')     
             
 
 # '''Lm fit'''
