@@ -8,13 +8,12 @@ import sys
 with open("README.rst", 'r') as f:
     long_description = f.read()
 
-min_version = (3, 6)
-max_version = (3, 7)
+min_version = (3, 8)
 
-if sys.version_info < min_version or sys.version_info > max_version:
+if sys.version_info < min_version:
     error = """
 EDIBLES does not support Python {0}.{1}.
-Python 3.6 or 3.7 is required. Check your Python version like so:
+Python {2}.{3} or above is required. Check your Python version like so:
 
 python3 --version
 
