@@ -6,7 +6,6 @@ from edibles.models import ContinuumModel, VoigtModel
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
-
 def fit_NaI_Lines(target, date):
     """A function to fit Na I 2S-2P doublet lines - still very basic
 
@@ -39,7 +38,6 @@ def fit_NaI_Lines(target, date):
     sp = EdiblesSpectrum(files[0])
     print(sp.target)
     sp.getSpectrum(xmin=3300, xmax=3305)
-
 
     sigma = np.std(sp.flux)
     prominence = sigma
@@ -116,7 +114,6 @@ def fit_NaI_Lines(target, date):
     peaks, _ = find_peaks(-sp.flux, prominence=prominence)
     peak_wavelengths = [sp.wave[i] for i in peaks]
 
-
     voigt3 = VoigtModel(prefix='v3_')
     voigt3_pars = voigt3.make_params(lam_0=peak_wavelengths[0], b=1, d=0.001, tau_0=0.4)
     # voigt3_pars = voigt3.guess(sp.flux, x=sp.wave)
@@ -152,15 +149,10 @@ if __name__ == "__main__":
 
     from edibles.utils.edibles_oracle import EdiblesOracle
 
-
     target = 'HD170740'
     date = '20140916'
 
-
     dates = ['20140916', '20150424', '20160505', '20160612', '20170701']
 
-
-
     for date in dates:
-
         fit_NaI_Lines(target='HD170740', date=date)
