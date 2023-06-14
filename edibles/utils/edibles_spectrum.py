@@ -75,7 +75,7 @@ class EdiblesSpectrum:
         """Filename is relative to the EDIBLES_DATADIR environment variable
 
         """
-        if filename.starswith('/'):
+        if filename.startswith('/'):
             filename = filename[1:]
         self.filename = Path(DATADIR) / filename
         print(self.filename)
