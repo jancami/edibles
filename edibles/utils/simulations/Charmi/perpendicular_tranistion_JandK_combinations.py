@@ -404,76 +404,72 @@ selection_rules['delta_K'] = selection_rules['excited_K'] - selection_rules['gro
 
 # selection_rules['Label'] = label
 
-#print(selection_rules.to_string())
+print(selection_rules.to_string())
 
 
-ground_B = 0.011
-delta_B = 0.5
-delta_C = 0.5
-origin = 0
+# ground_B = 0.011
+# delta_B = 0.5
+# delta_C = 0.5
+# origin = 0
 
-ground_C = ground_B/2
-delta_C = delta_C
-excited_B = ground_B + ((delta_B/100)*ground_B)
-excited_C = ground_C + ((delta_C/100)*ground_C)
+# ground_C = ground_B/2
+# delta_C = delta_C
+# excited_B = ground_B + ((delta_B/100)*ground_B)
+# excited_C = ground_C + ((delta_C/100)*ground_C)
 
 
-ground_Js = selection_rules['ground_J']
-excited_Js = selection_rules['excited_J']
-ground_Ks = selection_rules['ground_K']
-excited_Ks = selection_rules['excited_K']
+# ground_Js = selection_rules['ground_J']
+# excited_Js = selection_rules['excited_J']
+# ground_Ks = selection_rules['ground_K']
+# excited_Ks = selection_rules['excited_K']
 
-linelist = selection_rules
+# linelist = selection_rules
    
-delta_J = linelist['excited_J'] - linelist['ground_J']
-delta_K = linelist['excited_K'] - linelist['ground_K']
+# delta_J = linelist['excited_J'] - linelist['ground_J']
+# delta_K = linelist['excited_K'] - linelist['ground_K']
 
-'''Calculating Linelist'''
-#%%
+# '''Calculating Linelist'''
+# #%%
 
-ground_Es = []
-for J,K in zip(ground_Js, ground_Ks):
-            ground_E = ground_B*J*(J + 1) + (ground_C - ground_B)*(K**2)
-            ground_Es.append(ground_E)
+# ground_Es = []
+# for J,K in zip(ground_Js, ground_Ks):
+#             ground_E = ground_B*J*(J + 1) + (ground_C - ground_B)*(K**2)
+#             ground_Es.append(ground_E)
             
-linelist['ground_Es'] = ground_Es 
+# linelist['ground_Es'] = ground_Es 
 
-excited_Es = []
-for J,K in zip(excited_Js, excited_Ks):
-            excited_E = excited_B*J*(J + 1) + (excited_C - excited_B)*(K**2) # - ((-2*excited_C*zeta))*K + excited_C**2
+# excited_Es = []
+# for J,K in zip(excited_Js, excited_Ks):
+#             excited_E = excited_B*J*(J + 1) + (excited_C - excited_B)*(K**2) # - ((-2*excited_C*zeta))*K + excited_C**2
     
-            excited_Es.append(excited_E)
+#             excited_Es.append(excited_E)
             
-linelist['excited_Es'] = excited_Es
+# linelist['excited_Es'] = excited_Es
 
-wavenos = []
-for i in range(len(linelist.index)):
-    wavenumber = origin + excited_Es[i] - ground_Es[i]
-    wavenos.append(wavenumber)
+# wavenos = []
+# for i in range(len(linelist.index)):
+#     wavenumber = origin + excited_Es[i] - ground_Es[i]
+#     wavenos.append(wavenumber)
     
-linelist['wavenos'] = wavenos
+# linelist['wavenos'] = wavenos
 
-print(linelist)
-# print(ground_Es)
-# print(excited_Es)
-# print(wavenos)
+# print(linelist)
+# # print(ground_Es)
+# # print(excited_Es)
+# # print(wavenos)
 
-for i in range(len(wavenos)):
-    plt.axhline(y=wavenos[i], xmin = 0.6, xmax = 0.8, color='green')
+# for i in range(len(wavenos)):
+#     plt.axhline(y=wavenos[i], xmin = 0.6, xmax = 0.8, color='green')
     
-plt.xlim(0,1)
+# plt.xlim(0,1)
 
-#plt.ylim(-0.12,0.12)
+# #plt.ylim(-0.12,0.12)
 
-plt.gca().set_ylabel('Wavenumber (in cm$^{-1}$)', fontsize = 15)
-plt.gca().set_title('Perpendicular    vs     parallel', fontsize = 15)
+# plt.gca().set_ylabel('Wavenumber (in cm$^{-1}$)', fontsize = 15)
+# plt.gca().set_title('Perpendicular    vs     parallel', fontsize = 15)
 
     
-linelist.to_excel(r"C:\Users\Charmi Bhatt\OneDrive\Desktop\MS_coursework\CHCl_3_parallel_transitions.xlsx", index=False)
 
-166, 331
-    
-    
     
     
     

@@ -16,45 +16,46 @@ from scipy.signal import argrelextrema
 
 
 
-# object_names = ['23180', '24398', '144470', '147165' , '147683', '149757', '166937', '170740', '184915', '185418', '185859', '203532']
-# object_names = ['203532']
+#object_names = ['23180', '24398', '144470', '147165' , '147683', '149757', '166937', '170740', '184915', '185418', '185859', '203532']
+object_names = ['185418']
 
-# for on in object_names:
-#     print('-----------')
-#     print(on)
-#     #Fit_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/results_{}_triple_peak_below_96.csv".format(on))
-#     Fit_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/results_5780_HD185418.csv")
-#     print(Fit_data)
-#     min_value = Fit_data['redchi'].min()
-#     Best_fit = Fit_data[Fit_data['redchi'] == min_value]
+for on in object_names:
+    print('-----------')
+    print(on)
+    #Fit_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/results_{}_triple_peak_below_96.csv".format(on))
+    Fit_data = pd.read_csv(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/results_5780_HD185418.csv")
+    print(Fit_data)
+    min_value = Fit_data['redchi'].min()
+    Best_fit = Fit_data[Fit_data['redchi'] == min_value]
     
-#     #Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD{}.txt".format(on), sep = ',')
-#     Obs_data = pd.read_csv(r"/Users/charmibhatt/Documents/GitHub/DIBs/5780_fitting/DIB5780_HD185418.txt", sep = ' ')
+    #Obs_data = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/6614_HD{}.txt".format(on), sep = ',')
+    #Obs_data = pd.read_csv(r"/Users/charmibhatt/Documents/GitHub/DIBs/5780_fitting/DIB5780_HD185418.txt", sep = ' ')
+    Obs_data = pd.read_csv(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/5780_fitting/DIB5780_HD185418.txt", delim_whitespace=(True))
 
-#     #Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= 6611) & (Obs_data['Wavelength']<= 6616)]
+    #Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= 6611) & (Obs_data['Wavelength']<= 6616)]
 
-#     #Obs_data['Wavelength'] = (1/Obs_data['Wavelength'])*1e8
-#     # Obs_data = Obs_data.iloc[::-1].reset_index(drop=True) #making it ascending order as we transformed wavelength into wavenumbers
-
-
-
-#     #shifting to zero and scaling flux between 0.9 and 1
-#     min_index = np.argmin(Obs_data['Flux'])
-#     Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index]
-#     Obs_data['Flux']=  (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
-
-#     #removing red wing
-#     #Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= -1) & (Obs_data['Wavelength']<= 1.2)]
-#     Obs_data_trp = Obs_data [(Obs_data['Flux'] <= 0.95)] #trp = triple peak structure
+    #Obs_data['Wavelength'] = (1/Obs_data['Wavelength'])*1e8
+    # Obs_data = Obs_data.iloc[::-1].reset_index(drop=True) #making it ascending order as we transformed wavelength into wavenumbers
 
 
-#     #making data evenly spaced
-#     x_equal_spacing = np.linspace(min(Obs_data['Wavelength']), max(Obs_data['Wavelength']), len(Obs_data['Wavelength']))
-#     y_obs_data = np.interp(x_equal_spacing, Obs_data['Wavelength'], Obs_data['Flux'])
 
-    # #Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.96)]
-    # Red_wing_cutoff = min(Obs_data_trp['Wavelength'])
-    # Blue_wing_cutoff = max(Obs_data_trp['Wavelength'])
+    #shifting to zero and scaling flux between 0.9 and 1
+    min_index = np.argmin(Obs_data['Flux'])
+    Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index]
+    Obs_data['Flux']=  (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
+
+    #removing red wing
+    #Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= -1) & (Obs_data['Wavelength']<= 1.2)]
+    Obs_data_trp = Obs_data [(Obs_data['Flux'] <= 0.95)] #trp = triple peak structure
+
+
+    #making data evenly spaced
+    x_equal_spacing = np.linspace(min(Obs_data['Wavelength']), max(Obs_data['Wavelength']), len(Obs_data['Wavelength']))
+    y_obs_data = np.interp(x_equal_spacing, Obs_data['Wavelength'], Obs_data['Flux'])
+
+    #Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.96)]
+    Red_wing_cutoff = min(Obs_data_trp['Wavelength'])
+    Blue_wing_cutoff = max(Obs_data_trp['Wavelength'])
     # print(Red_wing_cutoff)
     # print(Blue_wing_cutoff)
     
@@ -67,8 +68,9 @@ def get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin):
     
     startg = timeit.default_timer()
     
-   
-   
+    print(B)
+    print(T)
+    
     #rotational constants in cm-1
     ground_B = B
     ground_C = ground_B/2
@@ -79,7 +81,7 @@ def get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin):
     # origin = (1/Obs_data_trp['Wavelength'][min_index])*1e8 + origin
     
     
-    combinations = pd.read_csv(r"/Users/charmibhatt/Desktop/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
+    combinations = pd.read_csv(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
     
     ground_Js = combinations['ground_J']
     excited_Js = combinations['excited_J']
@@ -265,17 +267,18 @@ def get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin):
     
     #return  y_model_data
 
-# B = Best_fit['B'].item()
-# T = Best_fit['T'].item()
-# delta_B = Best_fit['delta_B'].item()
-# zeta = Best_fit['zeta'].item()
-# sigma = Best_fit['sigma'].item()
-# origin = Best_fit['origin'].item()
-# redchi = Best_fit['redchi'].item()
-# xx = x_equal_spacing
+B = Best_fit['B'].item()
+T = Best_fit['T'].item()
+delta_B = Best_fit['delta_B'].item()
+zeta = Best_fit['zeta'].item()
+sigma = Best_fit['sigma'].item()
+origin = Best_fit['origin'].item()
+redchi = Best_fit['redchi'].item()
+xx = x_equal_spacing
 
+get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin)
 
-get_rotational_spectrum(np.linspace(-5,5), B = 0.0099, T = 102.8485, delta_B = -0.003, zeta = -0.1705, sigma = 0.05, origin = 0.056)
+#get_rotational_spectrum(np.linspace(-5,5), B = 0.0099, T = 102.8485, delta_B = -0.003, zeta = -0.1705, sigma = 0.05, origin = 0.056)
 
     # num = (get_rotational_spectrum(xx, B, T, delta_B, zeta, sigma, origin) - y_obs_data)**2
     # chi_squared = np.sum((num)/(0.003)**2)

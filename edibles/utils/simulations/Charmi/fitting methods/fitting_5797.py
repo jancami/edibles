@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Thu Jun  8 09:55:26 2023
+
+@author: charmibhatt
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Mar  3 12:28:52 2023
 
 @author: charmibhatt
@@ -32,19 +40,20 @@ from lmfit import Parameters
 flux_list = np.array([])
 wave_list = np.array([])
 stddev_array = np.array([])
-spec_dir = Path("/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/")
+spec_dir = Path("/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/5797/")
 
 
-#sightlines = ['166937', '185418', '23180']
+#sightlines = ['144217', '144470', '145502', '147165', '149757', '179406', '184915']
 
-sightlines = ['23180', '24398', '144470', '147165' , '147683', '149757', '166937', '170740', '184915', '185418', '185859', '203532']
+sightlines = ['185418'] #, '166937'] #['23180', '24398', '144470', '147165' , '147683', '149757', '166937', '170740', '184915', '185418', '185859', '203532']
 
 
 def curve_to_fit_wavenos(sightline): 
         
-        file = '6614_HD{}.txt'.format(sightline)
+        file = 'HD{}_avg_spectra.csv'.format(sightline)
         Obs_data = pd.read_csv(spec_dir / file,
-                                sep=',')
+                               ) #delim_whitespace=(True))
+        
         Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8
         Obs_data = Obs_data.iloc[::-1].reset_index(
             drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
@@ -53,7 +62,6 @@ def curve_to_fit_wavenos(sightline):
         min_index = np.argmin(Obs_data['Flux'])
         Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
         Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
-
         # removing red wing
         # Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= -1) & (Obs_data['Wavelength']<= 1.2)]
         Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
@@ -65,12 +73,12 @@ def curve_to_fit_wavenos(sightline):
     
 
 for sightline in sightlines:
-    file = '6614_HD{}.txt'.format(sightline)
+    file ='HD{}_avg_spectra.csv'.format(sightline)
     Obs_data = pd.read_csv(spec_dir / file,
-                            sep=',')
+                            ) #delim_whitespace=(True))
+    print(Obs_data['Wavelength'])
         
-    Obs_data = pd.read_csv(spec_dir / file,
-                            sep=',')
+    
     Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8
     Obs_data = Obs_data.iloc[::-1].reset_index(
         drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
@@ -79,12 +87,10 @@ for sightline in sightlines:
     min_index = np.argmin(Obs_data['Flux'])
     Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index]
     Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
-
-
-   
     
-    
-    
+    # plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label  = sightline)
+    # plt.legend()
+    # plt.show()
     # removing red wing
     Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
 
@@ -116,15 +122,7 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin):
     # print(B)
     # print(T)
     # print('-----------')
-    sigma = 0.0289
-    
-    print(B)
-    print(T)
-    print(delta_B)
-    print(zeta)
-    print(sigma)
-    print(origin)
-    
+
     # rotational constants in cm-1
     ground_B = B
     ground_C = ground_B / 2
@@ -254,8 +252,7 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin):
     # model_data = model_data[::-1]
 
     model_data = np.array([simu_waveno, simu_intenisty]).transpose()
-    
-    
+    # print(model_data)
     # plt.figure(figsize=(15,8))
     # plt.plot(x_equal_spacing, y_obs_data, color= 'green')
 
@@ -332,7 +329,12 @@ def get_multi_spectra( **params_list):
     all_y_model_data = np.array([])
     
     for T, sigma, origin, sightline in zip(T_values, sigma_values, origin_values, sightlines):
-        
+        print(B)
+        print(T)
+        print(delta_B)
+        print(zeta)
+        print(sigma)
+        print(origin)
         x_equal_spacing = curve_to_fit_wavenos(sightline)
         model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin)
         #print(model_data)
@@ -340,7 +342,7 @@ def get_multi_spectra( **params_list):
         #print(one_sl_y_model_data )
         all_y_model_data = np.concatenate((all_y_model_data, one_sl_y_model_data))
         
-    
+    print(len(all_y_model_data))
     
     return all_y_model_data
 
@@ -362,7 +364,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin):
     params_list.extend(origin_list)
     
     
-    print(params_list)
+    # print(params_list)
     
     
     
@@ -376,8 +378,8 @@ def fit_model(B, delta_B, zeta, T, sigma, origin):
     last_origin_index = first_origin_index +len(sightlines) 
  
     params = Parameters()
-    params.add('B', value = B, min = 0.0005, max = 0.01)
-    params.add('delta_B', value = delta_B, min = -1, max =0)
+    params.add('B', value = B) #, min = 0.0005, max = 0.01)
+    params.add('delta_B', value = delta_B) #, min = -, max =0)
     params.add('zeta', value = zeta, min = -1, max = 1)
     
     for i, param_value in enumerate(params_list[first_T_index:last_T_index]):
@@ -387,7 +389,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin):
         params.add(f'sigma{i+1}', value=param_value, min = 0.05, max = 0.3)
         
     for i, param_value in enumerate(params_list[first_origin_index:last_origin_index]):
-        params.add(f'origin{i+1}', value=param_value, min = -1, max = 1)
+        params.add(f'origin{i+1}', value=param_value, min = -2, max = 2)
         
    
     #params = mod.make_params(B=B, T1=T, T2=T, delta_B=delta_B, zeta=zeta, sigma1=sigma, sigma2=sigma, origin1=origin, origin2=origin)
@@ -418,7 +420,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin):
 # # get_rotational_spectrum(x_equal_spacing, B = 0.0020, T = 300, delta_B = -0.005, zeta = -0.400, sigma = 0.262, origin =  0)
 # # get_rotational_spectrum(x_equal_spacing, B = 0.00276, T = 78.23, delta_B = -0.07, zeta = -0.36, sigma = 0.1917, origin =  0.0047)
 
-result1 = fit_model(B=0.001, T = 167, delta_B=-0.053, zeta=-0.197, sigma=0.127, origin=0.061)
+result1 = fit_model(B=0.005, T = 167, delta_B=-0.053, zeta=-0.197, sigma=0.127, origin=0.061)
 
 
 

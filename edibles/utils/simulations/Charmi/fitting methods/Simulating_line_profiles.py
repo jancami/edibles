@@ -1,46 +1,106 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue May 30 09:57:07 2023
+Created on Tue Jun 20 16:22:21 2023
 
 @author: charmibhatt
 """
 
+import pandas as pd
 import numpy as np
 import pandas as pd
 import astropy.constants as const
 import matplotlib.pyplot as plt
 import timeit
-# import scipy
-# import scipy.stats as ss
+import scipy.stats as ss
+from scipy.signal import argrelextrema
+from matplotlib import cm
+import numpy as np
+import pandas as pd
+import astropy.constants as const
+import matplotlib.pyplot as plt
+import timeit
+import scipy as sp
+import scipy.stats as ss
 from lmfit import Model
 import csv
-# import lmfit
+import lmfit
+from lmfit import minimize, Parameters, report_fit 
+import uncertainties as unc
+import uncertainties.umath as umath 
 import numba as nb
 from pathlib import Path
-from lmfit import Parameters
+from lmfit import Parameters      
 
-flux_list = np.array([])
-wave_list = np.array([])
-stddev_array = np.array([])
-#spec_dir = Path("/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/")
-spec_dir = Path("/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Research/Cami_2004_data/heliocentric/6614/")
+Jmax = 300
 
+def allowed_perperndicular_transitions(Jmax):
+    
+    'Take in Jmax and calculates the all allowed transitions. Here Jmax = Kmax'
 
-
-
-combinations = pd.read_csv(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Jmax=300.txt", delim_whitespace=(True))
-
-startl = timeit.default_timer()
+    '''P Branch'''
+    P_branch_Js = list(range(1, Jmax + 1))
+    all_P_branch_Js = [j for j in P_branch_Js for _ in range(j)]
+    P_branch_Jprimes = [j - 1 for j in all_P_branch_Js if j != 0]
+    pP_Branch_K = [j - i for j in P_branch_Js for i in range(j)]
+    pP_Branch_Kprime = [k - 1 for k in pP_Branch_K]
+    rP_Branch_K = [i for j in P_branch_Js for i in sorted(range(0, j), reverse=True)]
+    rP_Branch_Kprime = [k + 1 for k in rP_Branch_K]
+    
+    '''Q Branch'''
+    Q_branch_Js = list(range(0, Jmax + 1))
+    all_Q_branch_Js = [j for j in Q_branch_Js if j != 0 for _ in range(j)]
+    Q_branch_Jprimes = all_Q_branch_Js[:]
+    pQ_Branch_K = [j - i for j in Q_branch_Js for i in range(j)]
+    pQ_Branch_Kprime = [k - 1 for k in pQ_Branch_K]
+    rQ_Branch_K = [i for j in Q_branch_Js for i in sorted(range(0, j), reverse=True)]
+    rQ_Branch_Kprime = [k + 1 for k in rQ_Branch_K]
+    
+    '''R Branch'''
+    R_branch_Js = list(range(0, Jmax))
+    all_R_branch_Js = [j for j in R_branch_Js if j == 0 or j != 0 for _ in range(j + 1)]
+    R_branch_Jprimes = [j + 1 for j in all_R_branch_Js if j <= Jmax - 1]
+    pR_Branch_K = [j - (i - 1) for j in R_branch_Js for i in range(j + 1)]
+    pR_Branch_Kprime = [k - 1 for k in pR_Branch_K]
+    rR_Branch_K = [i for j in R_branch_Js for i in sorted(range(0, j + 1), reverse=True)]
+    rR_Branch_Kprime = [k + 1 for k in rR_Branch_K]
+    
+    '''Combine results'''
+    Allowed_Js = (all_P_branch_Js * 2) + (all_Q_branch_Js * 2) + (all_R_branch_Js * 2)
+    Allowed_Jprimes = (P_branch_Jprimes * 2) + (Q_branch_Jprimes * 2) + (R_branch_Jprimes * 2)
+    Allowed_Ks = pP_Branch_K + rP_Branch_K + pQ_Branch_K + rQ_Branch_K + pR_Branch_K + rR_Branch_K
+    Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
+    
+    columns = {'ground_J': Allowed_Js, 'excited_J': Allowed_Jprimes, 'ground_K': Allowed_Ks, 'excited_K': Allowed_Kprimes}
+    combinations = pd.DataFrame(columns)
+  
+    
+    combinations['delta_J'] = combinations['excited_J'] - combinations['ground_J']
+    combinations['delta_K'] = combinations['excited_K'] - combinations['ground_K']
+    
+    
+    delta_J_values = combinations['delta_J']
+    delta_K_values = combinations['delta_K']
+    
+    label = [
+        'pP' if delta_J == -1 and delta_K == -1
+        else 'rP' if delta_J == -1 and delta_K == 1
+        else 'pQ' if delta_J == 0 and delta_K == -1
+        else 'rQ' if delta_J == 0 and delta_K == 1
+        else 'pR' if delta_J == 1 and delta_K == -1
+        else 'rR'
+        for delta_J, delta_K in zip(delta_J_values, delta_K_values)
+    ]
+    
+    combinations['label'] = label
+        
+    return combinations
 
 
 def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin):
     startg = timeit.default_timer()
 
-    # print(B)
-    # print(T)
-    # print('-----------')
-
+    combinations  = allowed_perperndicular_transitions(Jmax)
     # rotational constants in cm-1
     ground_B = B
     ground_C = ground_B / 2
@@ -130,8 +190,8 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin):
 
     linelist['intensities'] = intensities
 
-    endl = timeit.default_timer()
-    #print('>>>> linelist calculation takes   ' + str(endl - startl) + '  sec')
+    # endl = timeit.default_timer()
+    # print('>>>> linelist calculation takes   ' + str(endl - startl) + '  sec')
 
     '''Smoothening the linelist'''
 
@@ -160,49 +220,38 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin):
     simu_waveno = smooth_data[:, 0]
     simu_intenisty = 1 - 0.1 * (smooth_data[:, 1] / max(smooth_data[:, 1]))
     
-    # with sns.color_palette("flare", n_colors=2):
+    model_data = np.array([simu_waveno, simu_intenisty]).transpose()
 
-    # plt.plot(simu_waveno, simu_intenisty, color='red')
 
-    # for units in wavelngth
+    # for units in wavelength
     # simu_wavelength = (1/simu_waveno)*1e8
     # model_data = np.array([simu_wavelength, simu_intenisty]).transpose()
     # model_data = model_data[::-1]
 
-    model_data = np.array([simu_waveno, simu_intenisty]).transpose()
-    
-    
+    y_model_data = model_data[:,1]
     endg = timeit.default_timer()
-    plt.show()
-    #print('>>>> full takes   ' + str(endg -startg) + '  sec') 
-    
-    
-    return model_data
 
-# Create an instance of the Variables class
-variables = {}
+    print('>>>> Time taken to simulate thi profile  ' + str(endg - startg) + '  sec')
+    print('==========')
+    return y_model_data 
 
-# Open the lmfit report file and read its content
-with open('fitting_12_sightlines.txt', 'r') as file:
-    lines = file.readlines()
-    parsing_variables = False
-    for line in lines:
-        if line.startswith("[[Variables]]"):
-            parsing_variables = True
-        elif parsing_variables and not line.startswith("#") and line.strip() != "":
-            key_value = line.split(":")
-            key = key_value[0].strip()
-            if len(key_value) == 2:
-                value = key_value[1].split("+/-")[0].strip()
-                variables[key] = float(value)
-            else:
-                variables[key] = None
-                
+
+# B = 0.00445875
+# delta_B = -0.11518035
+# zeta = -0.14142679 
+# T = 105.221344
+# sigma = 0.16178154 
+# origin = 0.06567328
+
+#linelist, model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin)
+
+
 def curve_to_fit_wavenos(sightline): 
-        
-        file = 'hd{}_dib6614.txt'.format(sightline)
+        spec_dir = Path("/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/Heather's_data/")
+
+        file = '6614_HD{}.txt'.format(sightline)
         Obs_data = pd.read_csv(spec_dir / file,
-                               delim_whitespace=(True))
+                                sep=',')
         Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8
         Obs_data = Obs_data.iloc[::-1].reset_index(
             drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
@@ -211,90 +260,33 @@ def curve_to_fit_wavenos(sightline):
         min_index = np.argmin(Obs_data['Flux'])
         Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
         Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
-
-        data_to_plot = np.array([Obs_data['Wavelength'], Obs_data['Flux'] ]).transpose()
-        
+        x_obs_data = Obs_data['Wavelength']
         # removing red wing
         # Obs_data_trp = Obs_data [(Obs_data['Wavelength'] >= -1) & (Obs_data['Wavelength']<= 1.2)]
         Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
-        
+
         # making data evenly spaced
         x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 25)
         y_obs_data = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux'])
+
         Obs_data_continuum = Obs_data [(Obs_data['Wavelength'] >= 2) & (Obs_data['Wavelength']<= 5)]
         std_dev = np.std(Obs_data_continuum['Flux'])
         
-        return x_equal_spacing, y_obs_data, std_dev, data_to_plot
+        return x_obs_data, y_obs_data, std_dev
+    
+curve_to_fit_wavenos('166937')
+    
+sightline = '166937'
+def fit_model(B, delta_B, zeta, T, sigma, origin):
+    mod = Model(get_rotational_spectrum) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
+    params = mod.make_params( B =B, delta_B = delta_B, zeta = zeta, T=T,sigma = sigma, origin = origin)
+    
 
+    x_obs_data, y_obs_data, std_dev = curve_to_fit_wavenos(sightline)
+    #print(std_dev)
+    result = mod.fit(y_obs_data, params) #, x_obs_data) #, weights = 1/std_dev)
+    print(result.fit_report())
+    return result
 
-#sightlines = ['23180', '24398', '144470', '147165' , '147683', '149757', '166937', '170740', '184915', '185418', '185859', '203532']
-sightlines = ['144217', '144470', '145502', '147165', '149757', '179406', '184915']
+result = fit_model(B = 0.005,  delta_B = -0.4, zeta = -0.9, T = 32.7, sigma = 0.1, origin =  0.039)
 
-red_chis = []
-for i, sightline in enumerate(sightlines, start=1):
-    
-    #print(sightline)
-    print(i)
-    B = variables.get('B', None)
-    delta_B = variables.get('delta_B', None)
-    zeta = variables.get('zeta', None)
-    T = variables.get('T{}'.format(i), None)
-    sigma = variables.get('sigma{}'.format(i), None)
-    origin = variables.get('origin{}'.format(i), None)
-    
-    x_equal_spacing, y_obs_data, std_dev, data_to_plot = curve_to_fit_wavenos(sightline)
-    
-    model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin)
-    
-    one_sl_y_model_data  = np.interp(x_equal_spacing, model_data[:, 0], model_data[:, 1])
-    
-    
-    num = (one_sl_y_model_data - y_obs_data)**2
-   
-    chi_squared = np.sum((num)/(std_dev)**2)
-    
-    #print(chi_squared)
-    
-    reduced_chi_squared = chi_squared/(len( one_sl_y_model_data)*12 - 39)
-    #reduced_chi_squared = chi_squared/(len( one_sl_y_model_data) - 6)
-
-    print('chi_squared:  ' + str(chi_squared))
-    
-    red_chis.append(reduced_chi_squared)
-
-    # indi_fits = pd.read_excel(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/individual_best_fits.xlsx")
-    # indi_B = indi_fits['B'][i-1]
-    # indi_delta_B = indi_fits['delta_B'][i-1]
-    # indi_zeta = indi_fits['zeta'][i-1]
-    # indi_sigma = indi_fits['sigma'][i-1]
-    # indi_T = indi_fits['T'][i-1]
-    # indi_origin = indi_fits['origin'][i-1]
-    # #print(indi_fits['result_name'])
-    # indi_model_data = get_rotational_spectrum(indi_B, indi_delta_B, indi_zeta, indi_T, indi_sigma, indi_origin)
-    
-    
-    plt.figure(figsize = (15,8))
-    plt.plot(data_to_plot[:,0], data_to_plot[:,1], color = 'black' , label = str('HD') + str(sightline ))
-    # #plt.plot(x_equal_spacing, one_sl_y_model_data)
-    plt.plot(model_data[:,0], model_data[:,1], color = 'red', label = str(r"$\chi^2$ =  ") + str('{:.3f}'.format(reduced_chi_squared)) + str('  (Altogether)') )
-    
-    
-    # plt.plot(indi_model_data[:,0], indi_model_data[:,1], color = 'green', label = str(r"$\chi^2$ =  ") + str('{:.3f}'.format(indi_fits['redchi'][i-1])) + str( '  (Individual)'))
-    # #plt.title( '  ground_B =  ' + str(B) + ' cm-1   Delta_B = ' + str(delta_B) +   '    zeta = ' +  str(zeta) + ' Temperature = ' + str(T) + '  K   $\sigma$ = ' + str(sigma) +    '    origin= ' +  str(origin)+ '\n' + '  ground_B =  ' + str(indi_B) + ' cm-1   Delta_B = ' + str(indi_delta_B) +   '    zeta = ' +  str(indi_zeta) + ' Temperature = ' + str(indi_T) + '  K   $\sigma$ = ' + str(indi_sigma) +    '    origin= ' +  str(indi_origin) ) 
-    # #plt.text(0.25, 1,  ) 
-    plt.title('Altogther (Cami 2004): ground_B = {:.5f} cm-1   Delta_B = {:.5f}    zeta = {:.5f} Temperature = {:.5f} K   $\sigma$ = {:.5f}    origin= {:.5f}\n\n'.format(B, delta_B, zeta, T, sigma, origin)) 
-    #       'Individual: ground_B = {:.5f} cm-1   Delta_B = {:.5f}    zeta = {:.5f} Temperature = {:.5f} K   $\sigma$ = {:.5f}    origin= {:.5f}'.format(indi_B, indi_delta_B, indi_zeta, indi_T, indi_sigma, indi_origin))
-
-    plt.legend(loc = 'lower left')
-      
-    print(sightline)
-
-    # print('--------')
-
-# print('Average reduced chi2:  ', np.sum(red_chis))
-
-
-
-# indi_fits = pd.read_excel(r"/Users/charmibhatt/Library/CloudStorage/OneDrive-TheUniversityofWesternOntario/UWO_onedrive/Local_GitHub/edibles/edibles/utils/simulations/Charmi/fitting methods/individual_best_fits.xlsx")
-
-# print(indi_fits['B'])
