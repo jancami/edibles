@@ -5,7 +5,6 @@ from scipy.signal import find_peaks
 from edibles.models import ContinuumModel, VoigtModel
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
-
 def fit_NaI_Lines(target, date):
     """A function to fit Na I 2S-2P doublet lines - still very basic
 
@@ -76,9 +75,9 @@ def fit_NaI_Lines(target, date):
     print('Ratio: ', result.params['v1_tau_0'] / result.params['v2_tau_0'])
     print(result.fit_report())
 
-    plt.subplot(121)
-    result.plot_fit()
-    plt.title('Na I 3303')
+    f, [ax1, ax2] = plt.subplots(ncols=2)
+    result.plot_fit(ax1)
+    ax1.set_title('Na I 3303')
 
     print()
     print()
@@ -139,9 +138,9 @@ def fit_NaI_Lines(target, date):
     print('Ratio: ', result.params['v3_tau_0'] / result.params['v4_tau_0'])
     print(result.fit_report())
 
-    plt.subplot(122)
-    result.plot_fit()
-    plt.title('Na I 5890')
+    result.plot_fit(ax=ax2)
+    ax2.set_title('Na I 5890')
+    plt.tight_layout()
     plt.show()
 
 

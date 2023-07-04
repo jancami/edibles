@@ -78,7 +78,6 @@ class EdiblesSpectrum:
         if filename.startswith('/'):
             filename = filename[1:]
         self.filename = Path(DATADIR) / filename
-        print(self.filename)
         self.fully_featured = fully_featured
 
         if noDATADIR is True:
