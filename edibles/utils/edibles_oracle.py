@@ -356,7 +356,7 @@ class EdiblesOracle:
 
 
 
-    def getObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
+    def GetObsListByWavelength(self, wave=None, MergedOnly=False, OrdersOnly=False):
         """
         This function filters the list of Observations to return only those
         that include the requested wavelength.

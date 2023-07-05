@@ -9,6 +9,7 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from pathlib import Path
 import pandas as pd
 from scipy.ndimage import gaussian_filter
+from lmfit import Model
 
 
 def voigt_profile(x, sigma, gamma):
@@ -39,7 +40,6 @@ def voigt_profile(x, sigma, gamma):
 
 
 def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad=0.0):
-
     """
     Function to return the value of a Voigt optical depth profile at a given wavelength, for a line
     centered at lambda0.
@@ -80,7 +80,7 @@ def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad
 
 
 def voigt_absorption_line(
-    wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25, debug=False
+        wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25, debug=False
 ):
     """
     Function to return a complete Voigt Absorption Line Model, smoothed to the specified
@@ -207,22 +207,22 @@ def voigt_absorption_line(
         # We use pm 8.5 * FWHM for each line, corresponding to pm 20*b assuming pure Gaussian,
         # and see what wavelength limits to consider.
         bluewaves = lambda0_array * (
-            1.0 + (v_rad_array - 8.5 * Voigt_FWHM) / cst.c.to("km/s").value
+                1.0 + (v_rad_array - 8.5 * Voigt_FWHM) / cst.c.to("km/s").value
         )
         redwaves = lambda0_array * (
-            1.0 + (v_rad_array + 8.5 * Voigt_FWHM) / cst.c.to("km/s").value
+                1.0 + (v_rad_array + 8.5 * Voigt_FWHM) / cst.c.to("km/s").value
         )
-        #print("Bluewaves:", bluewaves)
-        #print("Waves    :", lambda0_array)
-        #print("Redwaves :", redwaves)
-        #print("b_array  :", b_array)
+        # print("Bluewaves:", bluewaves)
+        # print("Waves    :", lambda0_array)
+        # print("Redwaves :", redwaves)
+        # print("b_array  :", b_array)
         minwave = bluewaves.min()
         maxwave = redwaves.max()
         minwave = min(minwave, wavegrid.min())
         maxwave = max(maxwave, wavegrid.max())
 
-        #print(v_rad_array)
-        #print("Wave range: ", minwave, maxwave)
+        # print(v_rad_array)
+        # print("Wave range: ", minwave, maxwave)
         n_v = int(
             np.ceil((maxwave - minwave) / minwave * cst.c.to("km/s").value / v_stepsize)
         )
@@ -251,7 +251,7 @@ def voigt_absorption_line(
             # Shift to the proper wavelength given the radial velocity
             vel = dv + v_rad_array[lineloop]
             thiswavegrid = lambda0_array[lineloop] * (
-                1.0 + vel / cst.c.to("km/s").value
+                    1.0 + vel / cst.c.to("km/s").value
             )
             # Interpolate to reference grid
             interpolationfunction = interp1d(
@@ -260,31 +260,31 @@ def voigt_absorption_line(
             tau_grid = interpolationfunction(refgrid)
             tau_grid[np.where(refgrid > np.max(thiswavegrid))] = 0
             tau_grid[np.where(refgrid < np.min(thiswavegrid))] = 0
-            #plt.plot(thiswavegrid,tau,marker="+")
-            #plt.plot(refgrid,tau_grid, color='red')
-            #plt.show()
-            
+            # plt.plot(thiswavegrid,tau,marker="+")
+            # plt.plot(refgrid,tau_grid, color='red')
+            # plt.show()
+
             allcomponents[:, lineloop] = tau_grid
 
         # Now add up all the optical depth components.
         tau = np.sum(allcomponents, axis=1)
 
-        #plt.plot(refgrid,tau)
-        #plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
-        #plt.show()
+        # plt.plot(refgrid,tau)
+        # plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+        # plt.show()
 
         # Do the radiative transfer
         AbsorptionLine = np.exp(-tau)
-        #plt.plot(refgrid,AbsorptionLine)
-        #plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
-        #plt.show()
+        # plt.plot(refgrid,AbsorptionLine)
+        # plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+        # plt.show()
 
         # Apply a Gaussian instrumental smoothing function!
         # Calculate sigma -- in units of step size!
         smooth_sigma = fwhm2sigma(v_resolution) / v_stepsize
         if debug:
             print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
-        
+
         # One thing to watch out for is that the smoothing width is large compared to 
 
         gauss_smooth = gaussian_filter(AbsorptionLine, sigma=smooth_sigma)
@@ -292,10 +292,10 @@ def voigt_absorption_line(
             refgrid, gauss_smooth, kind="cubic", bounds_error=False, fill_value=(1, 1)
         )
         interpolated_model = interpolationfunction(wavegrid)
-        #plt.plot(refgrid, AbsorptionLine, marker='o')
-        #plt.plot(refgrid, gauss_smooth, color='green', marker='D')
-        #plt.plot(wavegrid,interpolated_model, color='red', marker='1')
-        #plt.show()
+        # plt.plot(refgrid, AbsorptionLine, marker='o')
+        # plt.plot(refgrid, gauss_smooth, color='green', marker='D')
+        # plt.plot(wavegrid,interpolated_model, color='red', marker='1')
+        # plt.show()
     else:
         # Create arrays that hold all the lines for all the components. 
         # We need in total n_components * n_lines array elements. 
@@ -306,8 +306,8 @@ def voigt_absorption_line(
         b_use = np.concatenate(np.repeat([b], n_lines, axis=0), axis=0)
         N_use = np.concatenate(np.repeat([N], n_lines, axis=0), axis=0)
         v_rad_use = np.concatenate(np.repeat([v_rad], n_lines, axis=0), axis=0)
-        #print(lambda0_use)
-        #print(N_use)
+        # print(lambda0_use)
+        # print(N_use)
         interpolated_model = voigt_absorption_line(
             wavegrid,
             lambda0=lambda0_use,
@@ -319,10 +319,53 @@ def voigt_absorption_line(
             v_resolution=v_resolution,
             n_step=n_step
         )
-            #"voigt_absorption_line Panic: This option has not been implemented yet.... "
-        #)
+        # "voigt_absorption_line Panic: This option has not been implemented yet.... "
+        # )
 
     return interpolated_model
+
+
+def fit_voigt_absorption_line(wavegrid, flux, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0,
+                              n_step=25, debug=False):
+    """
+    Fits a complete Voigt Absorption Line Model, smoothed to the specified
+    resolution and resampled to the desired wavelength grid.
+    This can in fact be a set of different absorption lines -- same line, different
+    cloud components or different line for single cloud component.
+
+    Args:
+        wavegrid (np.array): Wavelength grid (in Angstrom) on which the final result is desired.
+        flux (np.array): Flux values to be fitted.
+        lambda0 (float64): Central (rest) wavelength for the absorption line, in Angstrom.
+        b (float64): The b parameter (Gaussian width), in km/s.
+        N (float64): The column density (in cm^{-2})
+        f (float64): The oscillator strength (dimensionless)
+        gamma (float64): Lorentzian gamma (=HWHM) component
+        v_rad (float64): Radial velocity of absorption line (in km/s)
+        v_resolution (float64): Instrument resolution in velocity space (in km/s)
+        n_step (int): no. of point per FWHM length, governing sampling rate and efficiency
+        debug (bool): If True, info on the calculation will be displayed
+
+    Returns:
+        result:
+
+    """
+    model = Model(voigt_absorption_line)
+
+    print(flux)
+    print(wavegrid)
+    print(lambda0)
+    print(f)
+    print(gamma)
+    print(b)
+    print(N)
+    print(v_rad)
+    print(v_resolution)
+
+    result = model.fit(flux, x=wavegrid, lambda0=lambda0, f=f, gamma=gamma, b=b, N=N, v_rad=v_rad,
+                       v_resolution=v_resolution, n_step=n_step, debug=False)
+
+    return result
 
 
 def fwhm2sigma(fwhm):
@@ -331,6 +374,7 @@ def fwhm2sigma(fwhm):
     """
     sigma = fwhm / (2.0 * np.sqrt(2.0 * np.log(2.0)))
     return sigma
+
 
 def VoigtFWHM(lambda0, gamma, b):
     """
@@ -343,15 +387,15 @@ def VoigtFWHM(lambda0, gamma, b):
     :return: Gau_FWHM, Lor_FWHM, V_FWHM, all in km/s
     """
 
-    #gamma_AA = gamma * lambda0**2 / cst.c.to("angstrom/s").value
+    # gamma_AA = gamma * lambda0**2 / cst.c.to("angstrom/s").value
     gamma_kms = gamma * lambda0 * 1e-13
     Lor_FWHM = gamma_kms * 2
 
     # FWHM = 2*sigma*sqrt(2*ln2)
     Gau_FWHM = 2.35482 * b
 
-    #fV = fL/2 + sqrt(fL^2/4 + fG^2)
-    Voigt_FWHM = 0.5 * Lor_FWHM + np.sqrt(Lor_FWHM**2 / 4 + Gau_FWHM ** 2)
+    # fV = fL/2 + sqrt(fL^2/4 + fG^2)
+    Voigt_FWHM = 0.5 * Lor_FWHM + np.sqrt(Lor_FWHM ** 2 / 4 + Gau_FWHM ** 2)
 
     return Voigt_FWHM
 
@@ -368,9 +412,10 @@ def getVGrid(lambda0, gamma, b, v_resolution, n_step):
     FWHM2use = np.max([Voigt_FWHM, v_resolution])
     v_stepsize = FWHM2use / n_step
     dv = np.arange(
-        start=-8.5*FWHM2use, stop=8.5*FWHM2use, step=v_stepsize
+        start=-8.5 * FWHM2use, stop=8.5 * FWHM2use, step=v_stepsize
     )
     return dv
+
 
 #  --------------------------------------------------------------------------------------
 
@@ -385,7 +430,7 @@ if __name__ == "__main__":
     well as for the various forms of the normalized Voigt profiles. One test aims to
     reproduce the high-resolution profile for the K line of omi Per (form Welty et al.)
     """
-    show_example = 2
+    show_example = 3
 
     if show_example == 1:
         #############################################################
@@ -434,7 +479,7 @@ if __name__ == "__main__":
         b = [0.60, 0.44, 0.72, 0.62, 0.60]  # b parameter in km/s
         N = np.array([12.5, 10.0, 44.3, 22.5, 3.9]) * 1e10  # Column density
         v_rad = (
-            np.array([10.50, 11.52, 13.45, 14.74, 15.72]) + 0.1
+                np.array([10.50, 11.52, 13.45, 14.74, 15.72]) + 0.1
         )  # Radial velocity of cloud in km/s
         v_resolution = 0.56  # Instrumental resolution in km / s
 
@@ -506,7 +551,7 @@ if __name__ == "__main__":
         plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
         plt.plot(wave, AbsorptionLine, color="orange", marker="*")
         plt.show()
-    
+
     elif show_example == 4:
         #############################################################
         #

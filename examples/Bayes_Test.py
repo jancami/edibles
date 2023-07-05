@@ -26,6 +26,7 @@ from edibles.utils.ISLineFitter import ISLineModel
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
+
 ####################
 # function posterior_calc
 ####################
@@ -46,7 +47,7 @@ def posterior_calc(result):
     while True:
         if "V_off_Cloud%i" % com_idx in result.params.keys():
             for var in ["V_off", "b", "N"]:
-                range = result.params[var+"_Cloud%i" % com_idx].max - result.params[var+"_Cloud%i" % com_idx].min
+                range = result.params[var + "_Cloud%i" % com_idx].max - result.params[var + "_Cloud%i" % com_idx].min
                 range_term = range_term + np.log(range)
 
             com_idx = com_idx + 1
@@ -75,19 +76,20 @@ def posterior_calc(result):
     a = np.math.factorial(com_idx) * \
         (2 * np.pi) ** ((3 * com_idx + anchor_idx) / 2)
     a = np.log(a)
-    #b = range_term * (np.sqrt(det))
+    # b = range_term * (np.sqrt(det))
     b = range_term + 2 * det
-    #print("range_term", range_term)
-    #print("det", det)
-    #print("b", b)
+    # print("range_term", range_term)
+    # print("det", det)
+    # print("b", b)
     c = -result.chisqr / 2
     posterior = a - b + c
-    #posterior = a / b * c
-    #print("a",a)
-    #print("b",b)
-    #print("c",c)
+    # posterior = a / b * c
+    # print("a",a)
+    # print("b",b)
+    # print("c",c)
 
     return posterior
+
 
 ####################
 # function for F test
@@ -104,7 +106,7 @@ def posterior_calc(result):
 # 4. !! Also, Klay require p > alpha = 0.05, and is strange. A
 #    reasonable amend would be 1 - P < alpha = 0.05 I suppose.
 def f_test(x_Grid, result_old, result_new, alpha=0.05):
-    #print(len(result_new.params), len(result_old.params))
+    # print(len(result_new.params), len(result_old.params))
     df1 = len(result_new.params) - len(result_old.params)
     df2 = len(x_Grid) - len(result_new.params) + 4
 
@@ -113,7 +115,8 @@ def f_test(x_Grid, result_old, result_new, alpha=0.05):
     f = num / denom
 
     p_value = scipy_f.cdf(f, df1, df2)
-    return(p_value)
+    return p_value
+
 
 ####################
 # Update to make for ISLineFitter
@@ -139,6 +142,9 @@ def f_test(x_Grid, result_old, result_new, alpha=0.05):
 pythia = EdiblesOracle()
 List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
 filename = List.values.tolist()[1]
+
+# remove  "/" in front
+filename = filename[1:]
 wrange = [3301.0, 3304.0]
 sp = EdiblesSpectrum(filename)
 wave, flux = sp.bary_wave, sp.flux
@@ -157,29 +163,32 @@ cont_pars = continuum_model.guess(flux2fit, wave2fit)
 model_all, result_all = [], []
 v_off_known = [-11.1, 4.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 aics, bics, klays, chisqrs, fs = [], [], [], [], []
-fig = plt.figure(figsize=[12,6], dpi=180)
+fig = plt.figure(figsize=[12, 6], dpi=180)
 for i in range(6):
     line_model = ISLineModel(i)
     model2fit = continuum_model * line_model
     model_all.append(model2fit)
 
     pars_guess = copy.deepcopy(cont_pars)
+    print(pars_guess)
     if i == 0:
         pars_guess.update(line_model.guess(V_off=[]))
     else:
         pars_guess.update(line_model.guess(V_off=v_off_known[0:i]))
+
+    print(i)
     result = model2fit.fit(data=flux2fit, params=pars_guess, x=wave2fit)
     result_all.append(result)
 
     comps = result.eval_components(x=wave2fit)
     continuum = comps["cont"]
 
-    ax = fig.add_subplot(2,3,i+1)
+    ax = fig.add_subplot(2, 3, i + 1)
     ax.plot(wave2fit, flux2fit / continuum)
     if i >= 1:
         flux_comps = line_model.calcIndividualComponent(result.params, wave2fit)
         for com_idx, flux_single in enumerate(flux_comps):
-            ax.plot(wave2fit, flux_single, label="Comp %i" % (com_idx))
+            ax.plot(wave2fit, flux_single, label="Comp %i" % com_idx)
         ax.legend()
     ax.set_xlabel("n_components = %i" % i)
 
@@ -187,12 +196,11 @@ for i in range(6):
     bics.append(result.bic)
     chisqrs.append(result.chisqr)
     klays.append(posterior_calc(result))
-    if i >=1:
+    if i >= 1:
         fs.append(f_test(wave2fit, result_all[-2], result_all[-1]))
 
-    print("="*40)
+    print("=" * 40)
     print(result.params["x_0"].vary)
-
 
 print("AIC: ", aics)
 print("BIC: ", bics)

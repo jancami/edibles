@@ -225,8 +225,8 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
     if resolution is None:
         resolution = 1500.0
 
-    lambda_start = np.float64(lambda_start)
-    lambda_end = np.float64(lambda_end)
+    lambda_start = float(lambda_start)
+    lambda_end = float(lambda_end)
 
     # produce grid
     R = resolution * oversample
@@ -239,7 +239,7 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
     f = -(1 + 2 * R) / (1 - 2 * R)
     factor = f ** np.arange(n_points)
 
-    wave = np.full(int(n_points), lambda_start, dtype=np.float)
+    wave = np.full(int(n_points), lambda_start, dtype=float)
     grid = wave * factor
 
     return grid

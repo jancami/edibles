@@ -6,6 +6,7 @@ from pprint import pprint
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
+from pathlib import Path
 
 
 class Continuum:
@@ -260,9 +261,8 @@ class Continuum:
         assert isinstance(self.model.n_anchors, int)
         assert isinstance(datetime.now(), datetime)
 
-        csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
-            "/DR4/data/", "/DR4/continuum/"
-        )
+        csv_file = Path(str(self.Spectrum.filename).replace(".fits", ".csv").replace(
+            "/DR4/data/", "/DR4/continuum/"))
 
         x_points = [self.result.params[xname].value for xname in self.model.xnames]
         y_points = [self.result.params[yname].value for yname in self.model.ynames]
