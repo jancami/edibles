@@ -126,6 +126,7 @@ def fit_test(wavegrid=np.array, ydata=np.array, restwave=np.array, f=np.array, g
     # How many transitions do we have? 
     restwave = np.asarray(restwave)
     n_trans = restwave.size
+    print("Fit_test: ", n_trans, " transitions....")
 
     # And how many cloud components? 
     b = np.asarray(b)
@@ -140,11 +141,13 @@ def fit_test(wavegrid=np.array, ydata=np.array, restwave=np.array, f=np.array, g
         params.add('f0', value=f, vary=False)
         params.add('gamma0', value=gamma, vary=False)
     else:
+        print('Multiple transitions found....')
         for i in range(n_trans):
             print(i)
             print(restwave[i])
-        params.add(f'lambda{i}', value=restwave[i])
-
+            params.add(f'lambda{i}', value=restwave[i], vary=False)
+            params.add(f'f{i}', value=f[i], vary=False) 
+            params.add(f'gamma{i}', value=gamma[i], vary=False) 
 
     # Create the parameters for the clouds. 
     if n_components == 1:
@@ -215,5 +218,16 @@ if __name__ == "__main__":
     plt.plot(wave, fitresult.best_fit, color='b')
     plt.show()
 
-    # Now let's try a doublet -- in this case, the Na I lines, again for o Per. 
-
+    # Now let's try to fake a doublet, and use 4 cloud components. 
+    b_fake = [0.60, 0.44, 0.62, 0.60]
+    N_fake = [12.5e10, 10e10, 22.5e10, 3.9e10]
+    v_rad_fake = [10.5+0.15, 11.52+0.15, 14.74+0.15, 15.72+0.15]
+    fitresult = fit_test(wavegrid=wave, ydata=normflux, restwave=[7698.974, 7699.074], f=[3.393e-1, 5e-1], gamma=[3.8e7, 3.8e7], 
+                       b=b_fake, N=N_fake, v_rad=v_rad_fake, v_resolution=0.56, n_step=25)
+    
+    plt.plot(wave, normflux, color='black', marker="s", fillstyle='none')
+    plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
+    plt.xlim(7698.96,7699.65)
+    plt.plot(wave, welty_fit, color='red')
+    plt.plot(wave, fitresult.best_fit, color='b')
+    plt.show()
