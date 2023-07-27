@@ -460,7 +460,7 @@ def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=
         #print('Single Cloud Component:')
         params.add('b0', value=b)
         params.add('N0', value=N)
-        params.add('_vrad0', value=v_rad)
+        params.add('v_rad0', value=v_rad)
     else:
         #print('Multiple Clouds:')
         for i in range(n_components):
