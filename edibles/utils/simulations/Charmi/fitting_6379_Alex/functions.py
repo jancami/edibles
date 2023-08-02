@@ -305,8 +305,8 @@ def allowed_parallel_transitions(Jmax):
     time = end - start
     print('computation took ' + str(time) + 's')
     return combinations
-combinations = allowed_parallel_transitions(300)
-
+# combinations = allowed_parallel_transitions(3)
+# print(combinations)
 #%% Generate Rotational Spectrum
 # 
 def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = 300, bell = True, transition = 'perpendicular'):
@@ -498,18 +498,19 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jm
     print('==========')
     if bell:
         print('\a')
-    return x_model_data, y_model_data 
+    return x_model_data, y_model_data#, linelist
 
 if __name__ == "__main__":
-    B = 0.005
+    Jmax_test = 500
+    B = 0.0016
     delta_B = 0.6
-    zeta = -0.35
-    T = 30
+    zeta = -0.55
+    T = 100
     sigma = 0.1953
     origin = 0.22
-    combinations  = allowed_perperndicular_transitions(300)
+    combinations  = allowed_parallel_transitions(Jmax_test)
 
-    xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = False)
+    xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = False, transition='parallel')
     
     fig, ax = plt.subplots()
     ax.plot(xs, ys, label = 'Model fit')
@@ -517,7 +518,16 @@ if __name__ == "__main__":
     ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
     ax.set_xlabel('Wavenumber / cm$^{-1}$')
     ax.set_ylabel('Flux')
-    ax.legend()
+    ax.legend()    
+
+    # #Testing different Jmax values with just the linelist
+    # plt.figure(figsize=(40,25))
+    # plt.plot(linelist['wavenos'],linelist['intensities'])
+    # # plt.xlim((-0.2,4))
+    # plt.title('Jmax = ' + str(Jmax_test), fontsize = 40)
+    
+    # plt.savefig('Jmax_tests_parallel/Jmax = {}_params2.png'.format(Jmax_test), bbox_inches = 'tight')
+    
 
 
 #%% Function to pass to fitting model
