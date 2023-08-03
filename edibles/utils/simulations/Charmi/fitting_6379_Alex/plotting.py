@@ -37,7 +37,7 @@ ax.legend()
 
 #%% Simulations
 
-Jmax = 300
+Jmax = 600
 
 combinations = functions.allowed_parallel_transitions(Jmax)
 # print(combinations)
@@ -45,20 +45,20 @@ combinations = functions.allowed_parallel_transitions(Jmax)
 B = 0.0016 # cm^-1
 delta_B = 0.6 # %
 zeta = -0.55 # cm^-1
-T = 70 # K
+T = 50 # K
 sigma = 0.1953  
 origin = 0
 xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'parallel')
 
 
-B1 = 0.0016 # cm^-1
-delta_B1 = 0.6 # %
-zeta1 = -0.55 # cm^-1
-T1 = 100 # K
-sigma1 = 0.1953  
-origin1 = 0
+# B1 = 0.0016 # cm^-1
+# delta_B1 = 0.6 # %
+# zeta1 = -0.55 # cm^-1
+# T1 = 100 # K
+# sigma1 = 0.1953  
+# origin1 = 0
 
-xs1, ys1 = functions.get_rotational_spectrum(B1, delta_B1, zeta1, T1, sigma1, origin1, combinations, Jmax = Jmax, transition = 'parallel')
+# xs1, ys1 = functions.get_rotational_spectrum(B1, delta_B1, zeta1, T1, sigma1, origin1, combinations, Jmax = Jmax, transition = 'parallel')
 
 # bp.beep(sound='wilhelm')
 # plt.plot(xs, ys)
@@ -70,9 +70,9 @@ x_obs, y_obs, std, x_label = functions.obs_curve_to_plot(sightline)
 
 fig, ax = plt.subplots()
 ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
-ax.plot(xs, ys, label = 'T = 70K')
-ax.plot(xs1, ys1, label = 'T = 100K')
-ax.set_title('B = {}, $\Delta B =${}, $\zeta = {}$,\n $\sigma$ = {}, origin = {}'.format(str(B), str(delta_B), str(zeta), str(sigma), str(origin)))
+ax.plot(xs, ys, label = 'T = {}K'.format(str(T)))
+# ax.plot(xs1, ys1, label = 'T = 100K')
+ax.set_title('B = {}, $\Delta B =${}, $\zeta = {}$,\n $\sigma$ = {}, origin = {}, Jmax = {}'.format(str(B), str(delta_B), str(zeta), str(sigma), str(origin), str(Jmax)))
 ax.xaxis.set_major_locator(plt.MultipleLocator(1))
 ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
 ax.set_xlabel(x_label)

@@ -6,27 +6,28 @@ Created on Fri Jul 21 11:32:49 2023
 """
 
 from functions import obs_curve_to_plot, obs_curve_to_fit, allowed_perperndicular_transitions,\
-    get_rotational_spectrum, model_curve_to_fit, fit_model, curve_to_fit_wavenos
+    get_rotational_spectrum, model_curve_to_fit, fit_model, curve_to_fit_wavenos, allowed_parallel_transitions
 import matplotlib.pyplot as plt
 import numpy as np
 
-Jmax = 300
+Jmax = 600
 
 # curve_to_fit_wavenos()
 #%%
 sightline = '185859'
 
 
-B = 0.005 # cm^-1
+B = 0.0016 # cm^-1
 delta_B = 0.6 # %
-zeta = -0.35 # cm^-1
-T = 30 # K
+zeta = -0.55 # cm^-1
+T = 50 # K
 sigma = 0.1953  
-origin = 0.22
-combinations  = allowed_perperndicular_transitions(Jmax)
+origin = 0.05
+# combinations  = allowed_perperndicular_transitions(Jmax)
+combinations  = allowed_parallel_transitions(Jmax)
 
 
-result = fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline)
+result = fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition = 'parallel', Jmax = Jmax)
 
 
 #%%
