@@ -105,7 +105,7 @@ def obs_curve_to_fit(sightline):
     # shifting to zero and scaling flux between 0.9 and 1
     Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
     
-    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
+    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.9961)]  # trp = triple peak structure
     # making data evenly spaced
     x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 100)
     y_data_fit = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux'])
@@ -309,7 +309,7 @@ def allowed_parallel_transitions(Jmax):
 # print(combinations)
 #%% Generate Rotational Spectrum
 # 
-def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = 300, bell = True, transition = 'perpendicular'):
+def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition = 'perpendicular', Jmax = 300, bell = True):
     
     '''
     Generates a model of the rotational spectrum of a molecule based on input parameters
@@ -532,11 +532,11 @@ if __name__ == "__main__":
 
 #%% Function to pass to fitting model
 
-def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, combinations, sightline):
+def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition, Jmax):
     ''' 
     Function to pass into fit_model, generates model data with the appropriate dimensions
     '''
-    x_model_data, y_model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = False)   
+    x_model_data, y_model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition, Jmax, bell = False)   
     
     x_obs_data, y_obs_data, std_dev, x_axis = obs_curve_to_fit(sightline)
     
@@ -545,7 +545,7 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     return y_model_data
 
 #%% Model fitting
-def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline):
+def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition, Jmax):
     '''
     lmfit fitting of observational data through attempting to find a best fit. Plots the result and makes a trumpet sound when complete
 
@@ -559,7 +559,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline):
 
     '''
     start = timeit.default_timer()
-    mod = Model(model_curve_to_fit, independent_vars=['sightline','x_equal_spacing', 'combinations'], param_names=['B','delta_B','zeta','T','sigma','origin']) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
+    mod = Model(model_curve_to_fit, independent_vars=['sightline','x_equal_spacing', 'combinations', 'transition', 'Jmax'], param_names=['B','delta_B','zeta','T','sigma','origin']) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
     
     params = mod.make_params( B = B, delta_B = delta_B, zeta = zeta, T=T,sigma = sigma, origin = origin)
     params['B'].min = 0.0005 
@@ -582,8 +582,9 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline):
     print(std_dev)
     print(len(y_data_fit))
     print(len(x_equal_spacing))
+    print(Jmax)
     
-    result = mod.fit(y_data_fit, params, weights = 1/std_dev, x_equal_spacing = x_equal_spacing, sightline=sightline, combinations = combinations)
+    result = mod.fit(y_data_fit, params, weights = 1/std_dev, x_equal_spacing = x_equal_spacing, sightline=sightline, combinations = combinations, transition = transition, Jmax=Jmax)
     print(result.fit_report())
     end = timeit.default_timer()
     print('Time taken to generate model ' + str(end - start))
