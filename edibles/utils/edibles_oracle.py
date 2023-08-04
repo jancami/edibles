@@ -12,11 +12,17 @@ class EdiblesOracle:
     """
     This class will process the EDIBLES obs log and target info files.
     Users can then query the oracle for observations matching specific criteria.
+    Args:
+        verbose (int): what level of output do we want during runtime?
     """
 
-    def __init__(self):
-        print(DATADIR)
+    def __init__(self, verbose=False):
+        #print(DATADIR)
         
+        if verbose is None: 
+            self.verbose=0 
+        else: 
+            self.verbose=verbose
         folder = Path(PYTHONDIR+"/data")
         filename=folder /"DR4_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
@@ -25,11 +31,11 @@ class EdiblesOracle:
         filename=folder /"sightline_data"/"Formatted_SpType.csv"
         self.sptypelog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_LogN(HI).csv"
-        self.nhilog = pd.read_csv(filename)
+        self.NHIlog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_LogN(H2).csv"
-        self.nhiilog = pd.read_csv(filename)
+        self.NH2log = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_f(H2).csv"
-        self.fh2log = pd.read_csv(filename)
+        self.fH2log = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_RV.csv"
         self.rvlog = pd.read_csv(filename)
         filename = folder /"sightline_data"/"Formatted_AV.csv"
@@ -90,9 +96,11 @@ class EdiblesOracle:
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
         ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
-        #print(ind)
-        print("**Filtered File List**")
-        print(self.obslog.iloc[ind].Filename)
+        
+        if self.verbose != 0: 
+            print(ind)
+            print("**Filtered File List**")
+            print(self.obslog.iloc[ind].Filename)
         return self.obslog.iloc[ind].Filename            
 
 
@@ -146,9 +154,11 @@ class EdiblesOracle:
         #matching_objects = log.object.values[ind]
         matching_objects_df = log.loc[bool_combined_matches, ['object','value']]
 
-        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object match(es).')  
-        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
-        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
+        if self.verbose: 
+            print('EdiblesOracle:FilterEngine: Found a total of ', bool_object_matches.sum(), ' object match(es).')  
+            print('EdiblesOracle:FilterEngine: Found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
+            print('EdiblesOracle:FilterEngine: Found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
+    
         
         return matching_objects_df
 
@@ -156,8 +166,8 @@ class EdiblesOracle:
                            EBV=None, EBV_min=None, EBV_max=None, EBV_reference=None, \
                            SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, \
                            WaveMin=None, WaveMax=None, LogNHI=None,LogNHI_min=None,LogNHI_max=None,\
-                           LogNHI_reference=None,LogNHII=None,LogNHII_min=None,LogNHII_max=None, \
-                           LogNHII_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
+                           LogNHI_reference=None,LogNH2=None,LogNH2_min=None,LogNH2_max=None, \
+                           LogNH2_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
                            fH2_reference=None, RV=None,RV_min=None,RV_max=None, \
                            RV_reference=None, AV=None,AV_min=None,AV_max=None, \
                            AV_reference=None):
@@ -185,21 +195,21 @@ class EdiblesOracle:
             
         if (LogNHI or LogNHI_min or LogNHI_max or LogNHI_reference) is not None:
             print("LogN(HI)")
-            matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
+            matching_objects_logNHI = self.FilterEngine(object, self.NHIlog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
         else:
-            matching_objects_lognhi = self.object_log
+            matching_objects_logNHI = self.object_log
         
-        if (LogNHII or LogNHII_min or LogNHII_max or LogNHII_reference) is not None:
-            print("LogN(HII)")
-            matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
+        if (LogNH2 or LogNH2_min or LogNH2_max or LogNH2_reference) is not None:
+            print("LogN(H2)")
+            matching_objects_logNH2 = self.FilterEngine(object, self.NH2log, LogNH2, LogNH2_min, LogNH2_max, LogNH2_reference)
         else:
-            matching_objects_lognhii = self.object_log
+            matching_objects_logNH2 = self.object_log
         
         if (fH2 or fH2_min or fH2_max or fH2_reference) is not None:
             print("fH2")
-            matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
+            matching_objects_fH2 = self.FilterEngine(object, self.fH2log, fH2, fH2_min, fH2_max, fH2_reference)
         else:
-            matching_objects_fh2 = self.object_log
+            matching_objects_fH2 = self.object_log
             
         if (RV or RV_min or RV_max or RV_reference) is not None:
             print("RV")
@@ -218,13 +228,13 @@ class EdiblesOracle:
         # STEP 2: Find the common objects
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
-        lognhi_objects = matching_objects_lognhi['object']
-        lognhii_objects = matching_objects_lognhii['object']
-        fh2_objects = matching_objects_fh2['object']
+        logNHI_objects = matching_objects_logNHI['object']
+        logNH2_objects = matching_objects_logNH2['object']
+        fH2_objects = matching_objects_fH2['object']
         rv_objects = matching_objects_rv['object']
         av_objects = matching_objects_av['object']
         
-        #print(lognhi_objects.tolist())
+        #print(logNHI_objects.tolist())
         #print(ebv_objects.tolist())
         #print(sptype_objects.tolist())
         ##################
@@ -233,15 +243,18 @@ class EdiblesOracle:
         else:
             search_list = object
         
-        common_objects_set = set(search_list).intersection(ebv_objects.to_list(),sptype_objects.to_list(),lognhi_objects.to_list(),lognhii_objects.to_list(),fh2_objects.to_list(),rv_objects.to_list(),av_objects.to_list())
+        common_objects_set = set(search_list).intersection(set(ebv_objects.to_list()), set(sptype_objects.to_list()),
+            set(logNHI_objects.to_list()), set(logNH2_objects.to_list()), set(fH2_objects.to_list()), set(rv_objects.to_list()), 
+            set(av_objects.to_list()))
         
         ###################
         common_objects_list= list(common_objects_set)
-        print("***Common Objects***")
-        if len(common_objects_list) == 0:
-            print("None")
-        else:
-            print(common_objects_list)
+        if self.verbose != 0: 
+            print("EdiblesOracle:GetFilteredObjects:***Common Objects***")
+            if len(common_objects_list) == 0:
+                print("None")
+            else:
+                print(common_objects_list)
 
         return (common_objects_list)
 
@@ -250,8 +263,8 @@ class EdiblesOracle:
                            EBV=None, EBV_min=None, EBV_max=None, EBV_reference=None, \
                            SpType=None, SpType_min=None, SpType_max=None, SpType_reference=None, \
                            WaveMin=None, WaveMax=None, LogNHI=None,LogNHI_min=None,LogNHI_max=None,\
-                           LogNHI_reference=None,LogNHII=None,LogNHII_min=None,LogNHII_max=None, \
-                           LogNHII_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
+                           LogNHI_reference=None,LogNH2=None,LogNH2_min=None,LogNH2_max=None, \
+                           LogNH2_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
                            fH2_reference=None, RV=None,RV_min=None,RV_max=None, \
                            RV_reference=None, AV=None,AV_min=None,AV_max=None, \
                            AV_reference=None):
@@ -269,62 +282,67 @@ class EdiblesOracle:
         #print(getFilteredObslist.__dict__)
 
         # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified!
+
         if (EBV or EBV_min or EBV_max or EBV_reference) is not None:
-            print("EBV")
+            if self.verbose != 0: 
+                print("Filtering on E(B-V)...")
             matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
         else:
             matching_objects_ebv = self.object_log
         
         if (SpType or SpType_min or SpType_max or SpType_reference) is not None:
-            print("SP_TYPE")
+            if self.verbose != 0: 
+                print("Filtering on Spectral Type...")
             matching_objects_sptype = self.FilterEngine(object, self.sptypelog, SpType, SpType_min, SpType_max, SpType_reference)
         else:
             matching_objects_sptype = self.object_log
             
         if (LogNHI or LogNHI_min or LogNHI_max or LogNHI_reference) is not None:
-            print("LogN(HI)")
-            matching_objects_lognhi = self.FilterEngine(object, self.nhilog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
+            if self.verbose != 0: 
+                print("Filtering on N(HI)...")
+            matching_objects_logNHI = self.FilterEngine(object, self.NHIlog, LogNHI, LogNHI_min, LogNHI_max, LogNHI_reference)
         else:
-            matching_objects_lognhi = self.object_log
+            matching_objects_logNHI = self.object_log
         
-        if (LogNHII or LogNHII_min or LogNHII_max or LogNHII_reference) is not None:
-            print("LogN(HII)")
-            matching_objects_lognhii = self.FilterEngine(object, self.nhiilog, LogNHII, LogNHII_min, LogNHII_max, LogNHII_reference)
+        if (LogNH2 or LogNH2_min or LogNH2_max or LogNH2_reference) is not None:
+            if self.verbose != 0: 
+                print("Filtering on N(H2)...")
+            matching_objects_logNH2 = self.FilterEngine(object, self.NH2log, LogNH2, LogNH2_min, LogNH2_max, LogNH2_reference)
         else:
-            matching_objects_lognhii = self.object_log
+            matching_objects_logNH2 = self.object_log
         
         if (fH2 or fH2_min or fH2_max or fH2_reference) is not None:
-            print("fH2")
-            matching_objects_fh2 = self.FilterEngine(object, self.fh2log, fH2, fH2_min, fH2_max, fH2_reference)
+            if self.verbose != 0: 
+                print("Filtering on f(H2)...")
+            matching_objects_fH2 = self.FilterEngine(object, self.fH2log, fH2, fH2_min, fH2_max, fH2_reference)
         else:
-            matching_objects_fh2 = self.object_log
+            matching_objects_fH2 = self.object_log
             
         if (RV or RV_min or RV_max or RV_reference) is not None:
-            print("RV")
+            if self.verbose != 0: 
+                print("Filtering on R(V)...")
             matching_objects_rv = self.FilterEngine(object, self.rvlog, RV, RV_min, RV_max, RV_reference)
         else:
             matching_objects_rv = self.object_log
         
         if (AV or AV_min or AV_max or AV_reference) is not None:
-            print("AV")
+            if self.verbose != 0: 
+                print("Filtering on A_V...")
             matching_objects_av = self.FilterEngine(object, self.avlog, AV, AV_min, AV_max, AV_reference)
         else:
             matching_objects_av = self.object_log
             
-        
      
         # STEP 2: Find the common objects
-        
-        
         ebv_objects = matching_objects_ebv['object']
         sptype_objects = matching_objects_sptype['object']
-        lognhi_objects = matching_objects_lognhi['object']
-        lognhii_objects = matching_objects_lognhii['object']
-        fh2_objects = matching_objects_fh2['object']
+        logNHI_objects = matching_objects_logNHI['object']
+        logNH2_objects = matching_objects_logNH2['object']
+        fH2_objects = matching_objects_fH2['object']
         rv_objects = matching_objects_rv['object']
         av_objects = matching_objects_av['object']
         
-        #print(lognhi_objects.tolist())
+        #print(logNHI_objects.tolist())
         #print(ebv_objects.tolist())
         #print(sptype_objects.tolist())
         ##################
@@ -333,21 +351,28 @@ class EdiblesOracle:
         else:
             search_list = object
         
-        common_objects_set = set(search_list).intersection(ebv_objects.to_list(),sptype_objects.to_list(),lognhi_objects.to_list(),lognhii_objects.to_list(),fh2_objects.to_list(),rv_objects.to_list(),av_objects.to_list())
-        
+        print("EdiblesOracle:GetFilteredObsList:Search List: ", search_list)
+        print("EBV: ", ebv_objects.to_list())
+        common_objects_set = set([search_list]).intersection(set(ebv_objects.to_list()))#,set(sptype_objects.to_list()))
+            #set(logNHI_objects.to_list()), set(logNH2_objects.to_list()), set(fH2_objects.to_list()), set(rv_objects.to_list()),
+            #set(av_objects.to_list()))
+
+        print("Common: ", list(common_objects_set))
+     
         ###################
         common_objects_list= list(common_objects_set)
-        print("***Common Objects***")
-        if len(common_objects_list) == 0:
-            print("None")
-        else:
-            print(common_objects_list)
+        if self.verbose !=0: 
+            print("EdiblesOracle:GetFilteredObsList:Common Objects")
+            if len(common_objects_list) == 0:
+                print("None")
+            else:
+                print(common_objects_list)
         
         # STEP 3
         # Now push this list of objects through for further filtering based on obs log
         FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
 
-        print(len(FilteredObsList))
+        #print(len(FilteredObsList))
 
         return (FilteredObsList)
 
