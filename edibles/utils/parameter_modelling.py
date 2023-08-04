@@ -42,51 +42,7 @@ def file_reader (star_name):
         engine="python",
     )
     return data["Wavelength"], data["Normfluxval"]
-def wavegrid(b_array, N_array,v_rad_array, v_resolution_array, centre_lambda, offset, range, no_points):
-    """
-    Creates an array of wavelengths with predicted normalised flux vals for the parameters entered
-    parameters
-    ----------
-        b_array: 1-d ndarray
-            array containing calculated b values for a given sightline
-        N_array: 1-d ndarray
-            array containing calculated coluum density (N) values for a given sightline
-        v_rad_array: 1-d ndarray
-            array containing calculated radial velocity of the clouds in the given sightline
-        v_resolution_array: 1-d ndarray
-            array containg the resolutin velocity of the equipment used to obtain the data
-        centre_lambda: float
-            expected ideal absorption wavelength of molecule being studied
-        offset: float
-            used to adjust where the wavegrid array starts,
-            allows us to see the model for data where the DIB is not exactly at centre lambda
-        range: float
-            desired range for the points to cover (as multiples of the number of data points from the data being fitted to)
-        no_points: float
-            number of points in the data that is being fitted to, this is done to allow easy data analyse later on.
-             (e.g: reduced chisquared)
 
-    returns
-    ----------
-        wavegrid_array : 1-d numpy ndarray
-            array of wavelengths which an absoption line has been fitted to
-        AbsorptionLine : 1-d numpy array
-            contains the corresponding normalised flux values for the range of wavelengths contained in wavegrid_array
-    """
-    # create array of wavelength to fit an absoption line to
-    wavegrid_array = np.arange(no_points) * range + (centre_lambda - offset)
-    # calculate absoption line for wavelength using given parameters
-    AbsorptionLine = vp.voigt_absorption_line(
-        wavegrid_array,
-        lambda0=centre_lambda,
-        b=b_array,
-        N=N_array,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_array,
-        v_resolution=v_resolution_array,
-    )
-    return wavegrid_array, AbsorptionLine
 
 def reduced_chi_squared(observed_value, observed_error, expected_value):
     """
@@ -108,7 +64,7 @@ def reduced_chi_squared(observed_value, observed_error, expected_value):
     """
     return (np.sum(((observed_value - expected_value) / observed_error) ** 2)) / (len(observed_value) - 2)
 
-def errors(low_lim, high_lim, data):
+def errors(low_lim, high_lim, wavelength, normflux):
     """
     calculates the error (standard dev) of data entered within a certain slice of data defined using upper and lower limits.
     For this to work upper and lower limits must slice a section of the spectrum which is flat, this error will then be used for
@@ -131,43 +87,79 @@ def errors(low_lim, high_lim, data):
     # create an empty array for the errors to be stored in
     error_vals = []
     # compile all data points within the desired flat spectrum range into the error_vals array
-    for i in range(len(data[0])):
-        if (data[0,i] > low_lim and data[0,i] < high_lim):
-            error_vals = np.append(error_vals, data[0, i])
+    for i in range(len(wavelength)):
+        if (wavelength[i] > low_lim and wavelength[i]< high_lim):
+            error_vals = np.append(error_vals, normflux)
     # get the standar dev of the points to use as the error
     error = np.std(error_vals)
     # assign every point this error
-    error_array = np.array([error] * len(data[0]))
+    error_array = np.array([error] * len(wavelength))
     return error_array
 
-def absorption_model(data, wave_array, f, gamma, v_res,b_array, N_array, v_rad_array):
+def absorption_model(data, wave_array, f, gamma, v_res,b_array, N_array, v_rad_array,components):
 
     # -------------------------------------------------------------------
     # obtaining parameters from the raw data using the LMfit Model class
     # ------------------------------------------------------------------
     # first create a model by defineing the function which we wish to model then define the independent variables as well
     # as the parameter names
-    model = Model(vp.voigt_absorption_line, indepedent_vars=['f', 'gamma', 'v_resolution', 'lambda0', 'n_step'],
-                  param_names=['b', 'N', 'v_rad', 'f', 'gamma', 'v_resolution', 'lambda0', 'n_step'])
+
+    # model = Model(vp.fit_multi_voigt_absorptionlines, indepedent_vars=['wavegrid','f', 'gamma', 'v_resolution', 'restwave', 'n_step'],
+    #              param_names=['b', 'N', 'v_rad', 'f', 'gamma', 'v_resolution', 'restwave', 'n_step'])
+    vp.fit_multi_voigt_absorptionlines(wavegrid= wave_array,
+                                       ydata= data,
+                                       restwave= 7698.974,
+                                       f= f,
+                                       gamma= gamma,
+                                       b= b_array,
+                                       N= N_array,
+                                       v_rad= v_rad_array,
+                                       v_resolution= v_res,
+                                       n_step= 25)
+
+    model = Model(vp.multi_voigt_absorption_line, independent_vars=['wavegrid'])
+
     # Define all the variables a parameters in order to work with Lmfit, we only want to model b, N and v_rad so they
     # do not require 'vary': False
     params = model.make_params(f={'value': f, 'vary': False},
                                gamma={'value': gamma, 'vary': False},
                                v_resolution={'value': v_res, 'vary': False},
-                               lambda0={'value': 7698.974, 'vary': False},
+                               restwave={'value': 7698.974, 'vary': False},
                                n_step={'value': 25, 'vary': False},
-                               b={'value': b_array[0], 'min': b_array[1], 'max': b_array[2]}, N={'value': N_array[0], 'min': N_array[1], 'max': N_array[2]},
+                               n_trans={'value': 2, 'vary': False},
+                               n_components={'value': components, 'vary': False},
+                               b={'value': b_array[0], 'min': b_array[1], 'max': b_array[2]},
+                               N={'value': N_array[0], 'min': N_array[1], 'max': N_array[2]},
                                v_rad={'value': v_rad_array[0], 'min': v_rad_array[1], 'max': v_rad_array[2]})
     # use Model.fit in order to use model to create a fit that matches the data entered
+
     fit = model.fit(data, params, wavegrid=wave_array)  # It was being funny about wavegrid but is ok with it when entered in this line
+
     # values makes it easier to input the fitted results into the wavegrid function
     values = fit.values
     # create a model using the parameters returned from LMfit
-    lmfit_model = wavegrid(values['b'], values['N'], values['v_rad'], v_res, 7698.974, 0, 0.002, len(wave_array))
+
+    lmfit_model = vp.voigt_absorption_line(
+        wave_array,
+        lambda0=7698.974,
+        b=values['b'],
+        N=values['N'],
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=values['v_rad'],
+        v_resolution=v_res,
+    )
+
     #wavegird inout order: b_array, N_array,v_rad_array, v_resolution_array, centre_lambda, offset, range, no_points
-    return lmfit_model[1]
+    return lmfit_model
 
+def compare_data(file_name,data, b, N, v_rad):
+    file = open(file_name, 'w+')
 
+    txt = 'welty & hobbs parameteres: \n b: {0}, \n N: {1}, \n v_rad: {2} \n' \
+          'Fit parameters: {3}'.format(b,N,v_rad,data.fit_report())
+    file.write(txt)
+    file.close()
 
 def o_per():
     """
@@ -186,45 +178,94 @@ def o_per():
     v_rad_o_per = [10.5, 11.52, 13.45, 14.74, 15.72]
 
     # read in data and convert it from a tuple into a numpy array
-    o_per_m = np.asarray(file_reader(files[0]))
+    o_per_m_wavelengths, o_per_m_normflux = np.asarray(file_reader(files[0]))
     # fit a voigt profile to data using parameters defined above
-    fit_o_per_m = wavegrid(b_o_per, N_o_per, v_rad_o_per, 0.56, 7698.974, 0, 0.002, len(o_per_m[0]))
+    fit_flux_o_per_m = vp.voigt_absorption_line(
+        o_per_m_wavelengths,
+        lambda0=7698.974,
+        b=b_o_per,
+        N=N_o_per,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_o_per,
+        v_resolution=0.56,
+    )
+
+    multi_fit_flux_m = vp.fit_multi_voigt_absorptionlines(wavegrid= o_per_m_wavelengths,
+                                       ydata= o_per_m_normflux,
+                                       restwave= 7698.974,
+                                       f= 3.393e-1,
+                                       gamma= 3.8e7,
+                                       b= b_o_per,
+                                       N= N_o_per,
+                                       v_rad= v_rad_o_per,
+                                       v_resolution= 0.56,
+                                       n_step= 25)
     # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_o_per_m = errors(7699.5, 7699.8, o_per_m)
+    error_o_per_m = errors(7699.5, 7699.8, o_per_m_wavelengths, o_per_m_normflux)
     # calculate reduced chi squared of fit
-    print('o_per_m reduced \u03C7\u00B2', reduced_chi_squared(o_per_m[1], error_o_per_m, fit_o_per_m[1]))
+    print('o_per_m reduced \u03C7\u00B2', reduced_chi_squared(o_per_m_normflux, error_o_per_m, fit_flux_o_per_m))
     # arrays contain: guess value, min value, max value
     b = np.array([0.6, 0.4, 0.8])
     N = np.array([10e10, 3e10, 45e10])
     v_rad = np.array([14, 10, 16])
-    o_per_m_lmfit= absorption_model(o_per_m[1], o_per_m[0], 3.393e-1, 3.8e7, 0.56, b,N,v_rad)
-    axes[0].plot(o_per_m[0], o_per_m_lmfit, c='r')
+   # o_per_m_lmfit_flux= absorption_model(o_per_m_normflux, o_per_m_wavelengths, 3.393e-1, 3.8e7, 0.56, b, N, v_rad, 5)
+    #axes[0].plot(o_per_m_wavelengths, o_per_m_lmfit_flux, c='r')
 
     # repeat process for same star but with data from another survey
-    o_per_k = np.asarray(file_reader(files[1]))
-    fit_o_per_k = wavegrid(b_o_per, N_o_per, v_rad_o_per, 1.40, 7698.974, 0, 0.002, len(o_per_k[0]))
-    error_o_per_k = errors(7699.5, 7699.8, o_per_k)
-    print('o_per_k reduced \u03C7\u00B2', reduced_chi_squared(o_per_k[1], error_o_per_k, fit_o_per_k[1]))
+    o_per_k_wavelengths, o_per_k_normflux = np.asarray(file_reader(files[1]))
+    fit_flux_o_per_k = vp.voigt_absorption_line(
+        o_per_k_wavelengths,
+        lambda0=7698.974,
+        b=b_o_per,
+        N=N_o_per,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_o_per,
+        v_resolution=1.40,
+    )
 
-    b = np.array([0.6, 0.4, 0.8])
-    N = np.array([10e10, 3e10, 45e10])
-    v_rad = np.array([14, 10, 16])
-    o_per_k_lmfit= absorption_model(o_per_k[1], o_per_k[0], 3.393e-1, 3.8e7, 0.56, b,N,v_rad)
-    axes[1].plot(o_per_m[0], o_per_k_lmfit, c='r')
+
+    multi_fit_flux_k = vp.fit_multi_voigt_absorptionlines(wavegrid= o_per_k_wavelengths,
+                                       ydata= o_per_k_normflux,
+                                       restwave= 7698.974,
+                                       f= 3.393e-1,
+                                       gamma= 3.8e7,
+                                       b= b_o_per,
+                                       N= N_o_per,
+                                       v_rad= v_rad_o_per,
+                                       v_resolution= 1.40,
+                                       n_step= 25)
+
+    error_o_per_k = errors(7699.5, 7699.8, o_per_k_wavelengths, o_per_k_normflux)
+    print('o_per_k reduced \u03C7\u00B2', reduced_chi_squared(o_per_k_normflux, error_o_per_k, fit_flux_o_per_k))
+
+    #o_per_k_lmfit_flux= absorption_model(o_per_k_normflux, o_per_k_wavelengths, 3.393e-1, 3.8e7, 1.40, b,N,v_rad,0,5)
+    #ata, wave_array, f, gamma, v_res,b_array, N_array, v_rad_array
+    #axes[1].plot(o_per_k_wavelengths, o_per_k_lmfit_flux, c='r')
 
     # plot data and corresponding fits on the same graph but on different subplots
-    axes[0].plot(fit_o_per_m[0], fit_o_per_m[1], c='b', marker="1", label='fit')
-    axes[1].plot(fit_o_per_k[0], fit_o_per_k[1], c='b', marker='1', label='fit')
+    axes[0].plot(o_per_m_wavelengths, fit_flux_o_per_m, c='b', marker="1", label='fit')
+    axes[1].plot(o_per_k_wavelengths, fit_flux_o_per_k, c='b', marker='1', label='fit')
     # set x limit to allow for better analyse of data by eye
     for i in range(2):
         axes[i].set_xlim(7699, 7699.75)
         axes[i].set_xlabel('Wavelength \u00C5')
         axes[i].set_ylabel('Normalised Flux')
 
-    axes[0].plot(o_per_m[0], o_per_m[1], color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (m95)')
-    axes[1].plot(o_per_k[0], o_per_k[1], color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (k94)')
+    axes[0].plot(o_per_m_wavelengths, o_per_m_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (m95)')
+    axes[1].plot(o_per_k_wavelengths, o_per_k_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (k94)')
+    axes[0].plot(o_per_m_wavelengths, multi_fit_flux_m.best_fit, c = 'green')
+    axes[1].plot(o_per_k_wavelengths,multi_fit_flux_k.best_fit, c= 'green')
     fig_1.legend()
 
+    #print(multi_fit_flux_m.fit_report())
+
+    compare_data('omiper.m95.fit_data.txt', multi_fit_flux_m, b_o_per, N_o_per, v_rad_o_per)
+    compare_data('ompier.k94.fit_data.txt', multi_fit_flux_k, b_o_per, N_o_per, v_rad_o_per)
+    #store_m = open('omiper.m95.fit_data.txt', 'w+')
+    #store_m.write('ompier.m95 data: {0}'.format(multi_fit_flux_m.fit_report()))
+    #store_m.close()
 
 
 
@@ -279,24 +320,56 @@ def sigsco():
     N_sigsco = np.array([0.4e10, 0.8e10, 8.1e10, 3.8e10, 0.6e10])
     v_rad_sigsco = [-14.23, -8.75, -6.26, -4.62, -3.13]
     # read in data and convert it from a tuple into a numpy array
-    sigsco = np.asarray(file_reader(files[2]))
+    sigsco_wavelengths, sigsco_normflux = np.asarray(file_reader(files[2]))
     # fit a voigt profile to data using parameters defined above
-    fit_sigsco = wavegrid(b_sigsco, N_sigsco, v_rad_sigsco, 1.20, 7698.974, 0.6, 0.002, len(sigsco[0]))
+    fit_flux_sigsco = vp.voigt_absorption_line(
+        sigsco_wavelengths,
+        lambda0=7698.974,
+        b=b_sigsco,
+        N=N_sigsco,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_sigsco,
+        v_resolution=1.20,
+    )
+
+
+    multi_fit_flux_sig= vp.fit_multi_voigt_absorptionlines(wavegrid= sigsco_wavelengths,
+                                       ydata= sigsco_normflux,
+                                       restwave= 7698.974,
+                                       f= 3.393e-1,
+                                       gamma= 3.8e7,
+                                       b= b_sigsco,
+                                       N= N_sigsco,
+                                       v_rad= v_rad_sigsco,
+                                       v_resolution= 1.2,
+                                       n_step= 25)
+
     # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_sigsco = errors(7699.0, 7699.4, sigsco)
+    error_sigsco = errors(7699.0, 7699.4, sigsco_wavelengths, sigsco_normflux)
     # calculate reduced chi squared of fit
-    print('sigsco reduced \u03C7\u00B2', reduced_chi_squared(sigsco[1], error_sigsco, fit_sigsco[1]))
+    print('sigsco reduced \u03C7\u00B2', reduced_chi_squared(sigsco_normflux, error_sigsco, fit_flux_sigsco))
+
+    b = np.array([0.8, 0.5, 1.3])
+    N = np.array([5e10, 0.3e10, 9e10])
+    v_rad = np.array([-10, -15, -2])
+    #sigsco_lmfit_flux = absorption_model(sigsco_normflux, sigsco_wavelengths, 3.393e-1, 3.8e7, 1.20, b, N, v_rad,0.6, 0.002)
+
 
     # plot data and corresponding fits on the same graph but on different subplots
     fig_2 = plt.figure()
     ax = fig_2.add_subplot(111)
-    ax.plot(sigsco[0], sigsco[1], color="k", marker="D", fillstyle='none', markersize=0.5, label='sigsco')
-    ax.plot(fit_sigsco[0], fit_sigsco[1], c='b', label='fit')
+    ax.plot(sigsco_wavelengths, sigsco_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='sigsco')
+    ax.plot(sigsco_wavelengths, fit_flux_sigsco, c='b', label='fit')
+    #ax.plot(sigsco_wavelengths, sigsco_lmfit_flux, c='r')
+    ax.plot(sigsco_wavelengths, multi_fit_flux_sig.best_fit, c= 'green')
     # set x limit to allow for better analyse of data by eye
     ax.set_xlim(7698, 7699.5)
     ax.set_xlabel('Wavelength \u00C5')
     ax.set_ylabel('Normalised Flux')
     fig_2.legend()
+
+    compare_data('sigsco.fit_data.txt', multi_fit_flux_sig, b_sigsco, N_sigsco, v_rad_sigsco)
 
 def zetoph():
     """
@@ -310,46 +383,132 @@ def zetoph():
     N_zetoph = np.array([1e10, 1.2e10, 40.9e10, 27.2e10, 1.1e10])
     v_rad_zetoph = [-19.09, -16.50, -14.98, -13.96, -12.73]
     # read in data and convert it from a tuple into a numpy array
-    zetoph_k = np.asarray(file_reader(files[3]))
+    zetoph_k_wavelengths, zetoph_k_normflux = np.asarray(file_reader(files[3]))
     # fit a voigt profile to data using parameters defined above
-    fit_zetoph_k = wavegrid(b_zetoph, N_zetoph, v_rad_zetoph, 1.40, 7698.974, 0.55, 0.0015, len(zetoph_k[0]))
+
+    fit_flux_zetoph_k = vp.voigt_absorption_line(
+        zetoph_k_wavelengths,
+        lambda0=7698.974,
+        b=b_zetoph,
+        N=N_zetoph,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_zetoph,
+        v_resolution=1.40,
+    )
+
+
+    multi_fit_flux_k = vp.fit_multi_voigt_absorptionlines(wavegrid= zetoph_k_wavelengths,
+                                       ydata= zetoph_k_normflux,
+                                       restwave= 7698.974,
+                                       f= 3.393e-1,
+                                       gamma= 3.8e7,
+                                       b= b_zetoph,
+                                       N= N_zetoph,
+                                       v_rad= v_rad_zetoph,
+                                       v_resolution= 1.40,
+                                       n_step= 25)
+
     # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_zetoph_k = errors(7698.8, 7699, zetoph_k)
+    error_zetoph_k = errors(7698.8, 7699, zetoph_k_wavelengths, zetoph_k_normflux)
     # calculate reduced chi squared of fit
-    print('Zetoph_k reduced \u03C7\u00B2', reduced_chi_squared(zetoph_k[1], error_zetoph_k, fit_zetoph_k[1]))
+    print('Zetoph_k reduced \u03C7\u00B2', reduced_chi_squared(zetoph_k_normflux, error_zetoph_k, fit_flux_zetoph_k))
+
+    b = np.array([0.8, 0.3, 1])
+    N = np.array([5e10, 0.9e10, 45e10])
+    v_rad = np.array([-14, -20, -11])
+    #zetoph_k_lmfit_flux = absorption_model(zetoph_k_normflux, zetoph_k_wavelengths, 3.393e-1, 3.8e7, 1.40, b, N, v_rad, 0.55, 0.0015)
 
     # repeat process for same star but with data from another survey
-    zetoph_lf = np.asarray(file_reader(files[4]))
-    fit_zetoph_lf = wavegrid(b_zetoph, N_zetoph, v_rad_zetoph, 0.40, 7698.974, 0.6, 0.0014, len(zetoph_lf[0]))
-    error_zetoph_lf = errors(7698.8, 7699, zetoph_lf)
-    print('Zetoph_lf reduced \u03C7\u00B2', reduced_chi_squared(zetoph_lf[1], error_zetoph_lf, fit_zetoph_lf[1]))
+    zetoph_lf_wavelengths, zetoph_lf_normflux = np.asarray(file_reader(files[4]))
+    fit_flux_zetoph_lf = vp.voigt_absorption_line(
+        zetoph_lf_wavelengths,
+        lambda0=7698.974,
+        b=b_zetoph,
+        N=N_zetoph,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_zetoph,
+        v_resolution=0.40,
+    )
+
+    multi_fit_flux_lf = vp.fit_multi_voigt_absorptionlines(wavegrid=zetoph_lf_wavelengths,
+                                                          ydata=zetoph_lf_normflux,
+                                                          restwave=7698.974,
+                                                          f=3.393e-1,
+                                                          gamma=3.8e7,
+                                                          b=b_zetoph,
+                                                          N=N_zetoph,
+                                                          v_rad=v_rad_zetoph,
+                                                          v_resolution=0.40,
+                                                          n_step=25)
+
+    error_zetoph_lf = errors(7698.8, 7699, zetoph_lf_wavelengths, zetoph_lf_normflux)
+    print('Zetoph_lf reduced \u03C7\u00B2', reduced_chi_squared(zetoph_lf_normflux, error_zetoph_lf, fit_flux_zetoph_lf))
+
+
+    #zetoph_lf_lmfit_flux = absorption_model(zetoph_lf_normflux, zetoph_lf_wavelengths, 3.393e-1, 3.8e7, 0.40, b, N, v_rad, 0.6, 0.0014)
 
     # repeat process for same star but with data from another survey
-    zetoph_m = np.asarray(file_reader(files[5]))
-    fit_zetoph_m = wavegrid(b_zetoph, N_zetoph, v_rad_zetoph, 0.56, 7698.974, 0.55, 0.0015, len(zetoph_m[0]))
-    error_zetoph_m = errors(7698.8, 7699, zetoph_m)
-    print('Zetoph_m reduced \u03C7\u00B2', reduced_chi_squared(zetoph_m[1], error_zetoph_m, fit_zetoph_m[1]))
+    zetoph_m_wavelengths, zetoph_m_normflux = np.asarray(file_reader(files[5]))
+    fit_flux_zetoph_m = vp.voigt_absorption_line(
+        zetoph_m_wavelengths,
+        lambda0=7698.974,
+        b=b_zetoph,
+        N=N_zetoph,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_zetoph,
+        v_resolution=0.56,
+    )
+
+    multi_fit_flux_m = vp.fit_multi_voigt_absorptionlines(wavegrid=zetoph_m_wavelengths,
+                                                          ydata=zetoph_m_normflux,
+                                                          restwave=7698.974,
+                                                          f=3.393e-1,
+                                                          gamma=3.8e7,
+                                                          b=b_zetoph,
+                                                          N=N_zetoph,
+                                                          v_rad=v_rad_zetoph,
+                                                          v_resolution=0.56,
+                                                          n_step=25)
+
+    error_zetoph_m = errors(7698.8, 7699, zetoph_m_wavelengths, zetoph_m_normflux)
+    print('Zetoph_m reduced \u03C7\u00B2', reduced_chi_squared(zetoph_m_normflux, error_zetoph_m, fit_flux_zetoph_m))
+
+
+    #zetoph_m_lmfit_flux = absorption_model(zetoph_m_normflux, zetoph_m_wavelengths, 3.393e-1, 3.8e7, 0.56, b, N, v_rad, 0.55, 0.0015)
 
     # plot data and corresponding fits on the same graph but on different subplots
     fig_3 = plt.figure()
     axes = fig_3.add_subplot(311), fig_3.add_subplot(312), fig_3.add_subplot(313)
-    axes[0].plot(zetoph_m[0], zetoph_m[1], color="k", marker="D", fillstyle='none', markersize=0.5,
+    axes[0].plot(zetoph_m_wavelengths, zetoph_m_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
                  label='zetoph')
-    axes[0].plot(fit_zetoph_m[0], fit_zetoph_m[1], c='b', label='fit')
+    axes[0].plot(zetoph_m_wavelengths, fit_flux_zetoph_m, c='b', label='fit')
+    #axes[0].plot(zetoph_m_wavelengths, zetoph_m_lmfit_flux, c='r')
+    axes[0].plot(zetoph_m_wavelengths, multi_fit_flux_m.best_fit, c= 'green')
 
-    axes[1].plot(zetoph_lf[0], zetoph_lf[1], color="k", marker="D", fillstyle='none', markersize=0.5,
+    axes[1].plot(zetoph_lf_wavelengths, zetoph_lf_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
                  label='zetoph_2')
-    axes[1].plot(fit_zetoph_lf[0], fit_zetoph_lf[1], c='b', label='fit')
+    #axes[1].plot(zetoph_k_wavelengths, fit_flux_zetoph_lf, c='b', label='fit')
+    #axes[1].plot(zetoph_lf_wavelengths, zetoph_lf_lmfit_flux, c='r')
+    axes[1].plot(zetoph_lf_wavelengths, multi_fit_flux_lf.best_fit, c= 'green')
 
-    axes[2].plot(zetoph_k[0], zetoph_k[1], color="k", marker="D", fillstyle='none', markersize=0.5,
+    axes[2].plot(zetoph_k_wavelengths, zetoph_k_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
                  label='zetoph_3')
-    axes[2].plot(fit_zetoph_k[0], fit_zetoph_k[1], c='b', label='fit')
+    axes[2].plot(zetoph_k_wavelengths, fit_flux_zetoph_k, c='b', label='fit')
+    #axes[2].plot(zetoph_k_wavelengths, zetoph_k_lmfit_flux, c='r')
+    axes[2].plot(zetoph_k_wavelengths, multi_fit_flux_k.best_fit, c= 'green')
     # set x limit to allow for better analyse of data by eye
     for i in range(3):
         axes[i].set_xlim(7698.4, 7699.4)
         axes[i].set_xlabel('Wavelength \u00C5')
         axes[i].set_ylabel('Normalised Flux')
     fig_3.legend()
+
+    compare_data('zetoph.m95.fit_data.txt', multi_fit_flux_m, b_zetoph, N_zetoph, v_rad_zetoph)
+    compare_data('zetoph.k94.fit_data.txt', multi_fit_flux_k, b_zetoph, N_zetoph, v_rad_zetoph)
+    compare_data('zetoph.lf.fit_data.txt', multi_fit_flux_lf, b_zetoph, N_zetoph, v_rad_zetoph)
 
 def zetper():
     """
@@ -363,23 +522,54 @@ def zetper():
     N_zetper = [2.2e10, 26.0e10, 42.7e10, 0.1e10]
     v_rad_zetper = [11.48, 13.25, 14.54, 16.40]
     # read in data and convert it from a tuple into a numpy array
-    zetper = np.asarray(file_reader(files[6]))
+    zetper_wavelengths, zetper_normflux = np.asarray(file_reader(files[6]))
     # fit a voigt profile to data using parameters defined above
-    fit_zetper = wavegrid(b_zetper, N_zetper, v_rad_zetper, 0.56, 7698.974, 0.1, 0.002, len(zetper[0]))
+    fit_flux_zetper = vp.voigt_absorption_line(
+        zetper_wavelengths,
+        lambda0=7698.974,
+        b=b_zetper,
+        N=N_zetper,
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=v_rad_zetper,
+        v_resolution=0.56,
+    )
+
+    multi_fit_flux_zet = vp.fit_multi_voigt_absorptionlines(wavegrid=zetper_wavelengths,
+                                                          ydata=zetper_normflux,
+                                                          restwave=7698.974,
+                                                          f=3.393e-1,
+                                                          gamma=3.8e7,
+                                                          b=b_zetper,
+                                                          N=N_zetper,
+                                                          v_rad=v_rad_zetper,
+                                                          v_resolution=0.56,
+                                                          n_step=25)
+
     # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_zetper = errors(7699.5, 7700, zetper)
+    error_zetper = errors(7699.5, 7700, zetper_wavelengths, zetper_normflux)
     # calculate reduced chi squared of fit
-    print('Zetper reduced \u03C7\u00B2', reduced_chi_squared(zetper[1], error_zetper, fit_zetper[1]))
+    print('Zetper reduced \u03C7\u00B2', reduced_chi_squared(zetper_normflux, error_zetper, fit_flux_zetper))
+
+    b = np.array([0.8, 0.4, 1.2])
+    N = np.array([5e10, 0.09e10, 45e10])
+    v_rad = np.array([14, 10, 17])
+    #zetper_lmfit_flux = absorption_model(zetper_normflux, zetper_wavelengths, 3.393e-1, 3.8e7, 0.56, b, N, v_rad,0.1, 0.002)
     # plot data and corresponding fits on the same graph but on different subplots
     fig_4 = plt.figure()
     ax = fig_4.add_subplot(111)
-    ax.plot(zetper[0], zetper[1], color="k", marker="D", fillstyle='none', markersize=0.5, label='zetper')
-    ax.plot(fit_zetper[0], fit_zetper[1], c='b')
+    ax.plot(zetper_wavelengths, zetper_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='zetper')
+    ax.plot(zetper_wavelengths, fit_flux_zetper, c='b')
+    #ax.plot(zetper_wavelengths, zetper_lmfit_flux, c='r')
+    ax.plot(zetper_wavelengths, multi_fit_flux_zet.best_fit, c= 'green')
     # set x limit to allow for better analyse of data by eye
     ax.set_xlim(7698.5, 7700)
     ax.set_xlabel('Wavelength \u00C5')
     ax.set_ylabel('Normalised Flux')
     fig_4.legend()
+
+
+    compare_data('zetper.fit_data.txt', multi_fit_flux_zet, b_zetper, N_zetper, v_rad_zetper)
 
 
 #############################################################
@@ -390,17 +580,82 @@ def zetper():
 #############################################################
 
 # array of files with the data that will be studied in the example
-files = ["omiper.m95.7698.txt", "omiper.k94.7698.txt", "sigsco.k00a.7698.txt", "zetoph.k94.7698.txt",
-         "zetoph.lf.7698.txt", "zetoph.m95.7698.txt", "zetper.m95.7698.txt"]
+folder = Path(PYTHONDIR + "/data")
+filename = folder / "voigt_benchmarkdata" / 'parameter_modelling_data' / "files_for_parameter_modelling.txt"
+
+# state what headers the desired data is under
+Headers = ["star_name", "file_name", "star_file", "resolution"]
+
+    # read in the data
+file = pd.read_csv(
+    filename,
+     delim_whitespace=True,
+     header=None,
+     names=Headers,
+     engine="python",
+    )
+
+files = file['file_name']
+resolution = file['resolution']
+star_data = file["star_file"]
+star_name = file["star_name"]
+
+for i in range(len(files)):
+
+    wavelengths, normflux = np.asarray(file_reader(files[i]))
+
+    folder = Path(PYTHONDIR + "/data")
+    filename = folder / "voigt_benchmarkdata" / 'parameter_modelling_data' / star_data[i]
+
+
+    Headers = ["b", "N", "v_rad"]
+    star_parameters =pd.read_csv(filename,
+     delim_whitespace = True,
+     header=None,
+     names=Headers,
+     engine="python",
+    )
+
+
+    fit_flux= vp.voigt_absorption_line(
+        wavelengths,
+        lambda0=7698.974,
+        b=star_parameters["b"],
+        N=star_parameters["N"],
+        f=3.393e-1,
+        gamma=3.8e7,
+        v_rad=star_parameters["v_rad"],
+        v_resolution=0.56,
+    )
+    #guess_b = [1,1,1,1,1]
+    #guess_N = [1e10,1e10,1e10,1e10,1e10]
+    #guess_v_rad = [10,15,15,14,14]
+    #fit_flux = vp.fit_multi_voigt_absorptionlines(wavegrid= wavelengths,
+    #                                   ydata= normflux,
+    #                                   restwave= 7698.974,
+    #                                   f= 3.393e-1,
+    #                                   gamma= 3.8e7,
+    #                                   b= guess_b,
+    #                                   N= guess_N,
+    #                                   v_rad= guess_v_rad,
+    #                                   v_resolution= resolution[i],
+    #                                   n_step= 25)
+    #print(fit_flux)
+    #print(i)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label= 'Data')
+    #ax.plot(wavelengths, fit_flux.best_fit, c='r', label= 'fit')
+    fig.suptitle(star_name[i])
+    ax.set_xlabel('Wavelength \u00C5')
+    ax.set_ylabel('Normalised Flux')
+
 
 # run analyse of the 4 stars
 o_per()
-#sigsco()
-#zetoph()
-#zetper()
-
+sigsco()
+zetoph()
+zetper()
 
 plt.show()
-
-
-
