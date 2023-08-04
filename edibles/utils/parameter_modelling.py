@@ -1,16 +1,11 @@
 import numpy as np
-from scipy.special import wofz
-from scipy.interpolate import interp1d
-import astropy.constants as cst
 import matplotlib.pyplot as plt
 from edibles import PYTHONDIR
-from edibles.utils.edibles_oracle import EdiblesOracle
-from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from pathlib import Path
 import pandas as pd
-from scipy.ndimage import gaussian_filter
 from lmfit import Parameters, minimize,Model
 import voigt_profile as vp
+import os.path
 
 def file_reader (star_name):
     """
@@ -154,7 +149,11 @@ def absorption_model(data, wave_array, f, gamma, v_res,b_array, N_array, v_rad_a
     return lmfit_model
 
 def compare_data(file_name,data, b, N, v_rad):
-    file = open(file_name, 'w+')
+
+
+    save_path = 'c:/Users/user/edibles/edibles/data/voigt_benchmarkdata/parameter_modelling_data/'
+    file_path = os.path.join(save_path, file_name)
+    file = open(file_path, 'w+')
 
     txt = 'welty & hobbs parameteres: \n b: {0}, \n N: {1}, \n v_rad: {2} \n' \
           'Fit parameters: {3}'.format(b,N,v_rad,data.fit_report())
@@ -655,7 +654,7 @@ for i in range(len(files)):
 # run analyse of the 4 stars
 o_per()
 sigsco()
-zetoph()
+#zetoph()
 zetper()
 
 plt.show()
