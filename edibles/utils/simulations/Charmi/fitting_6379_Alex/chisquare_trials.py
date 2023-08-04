@@ -63,8 +63,8 @@ def chi_sq(model_ys, obs_ys, std):
 
 print(chi_sq([12,8]*50, y_data, std))
 
-# scipy = sc.chisquare(y_data, y_mod_interp, 94)
-# print(scipy)
+scipy = sc.chisquare(y_data, y_mod_interp, 94)
+print(scipy)
 
 
 

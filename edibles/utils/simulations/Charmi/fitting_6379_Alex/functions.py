@@ -3,6 +3,8 @@
 Created on Thu Jul 13 12:29:44 2023
 
 @author: alexr
+
+All the functions used in the analysis of the 6379 DIB using rovribrational spectroscopy. Modified from original code written by Charmi Bhatt. 
 """
 
 #%% Imports
@@ -198,7 +200,8 @@ def allowed_perperndicular_transitions(Jmax):
     Allowed_Kprimes = pP_Branch_Kprime + rP_Branch_Kprime + pQ_Branch_Kprime + rQ_Branch_Kprime + pR_Branch_Kprime + rR_Branch_Kprime
     
     # Put results into a pandas dataframe
-    columns = {'ground_J': Allowed_Js, 'excited_J': Allowed_Jprimes, 'ground_K': Allowed_Ks, 'excited_K': Allowed_Kprimes}
+    columns = {'ground_J': Allowed_Js, 'excited_J': Allowed_Jprimes, 
+               'ground_K': Allowed_Ks, 'excited_K': Allowed_Kprimes}
     combinations = pd.DataFrame(columns)
   
     
@@ -282,7 +285,8 @@ def allowed_parallel_transitions(Jmax):
     Allowed_Kprimes = qP_Branch_Kprime  + qQ_Branch_Kprime  + qR_Branch_Kprime 
 
     #Putting results in DataFrame
-    columns = {'ground_J' : Allowed_Js,'excited_J': Allowed_Jprimes, 'ground_K' : Allowed_Ks, 'excited_K' : Allowed_Kprimes}
+    columns = {'ground_J' : Allowed_Js,'excited_J': Allowed_Jprimes, 
+               'ground_K' : Allowed_Ks, 'excited_K' : Allowed_Kprimes}
     combinations = pd.DataFrame(columns)
   
     #Calculating delta values
@@ -554,7 +558,8 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
 #%% Model fitting
 def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition, Jmax):
     '''
-    lmfit fitting of observational data through attempting to find a best fit. Plots the result and makes a trumpet sound when complete
+    lmfit fitting of observational data through attempting to find a best fit. 
+    Plots the result and makes a trumpet sound when complete
 
     Parameters
     ----------
@@ -566,7 +571,9 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
 
     '''
     start = timeit.default_timer()
-    mod = Model(model_curve_to_fit, independent_vars=['sightline','x_equal_spacing', 'combinations', 'transition', 'Jmax'], param_names=['B','delta_B','zeta','T','sigma','origin']) #, independent_vars = ['b', 'T']) #make sure independent variable of fitting function (that you made) is labelled as x
+    mod = Model(model_curve_to_fit, 
+                independent_vars=['sightline','x_equal_spacing', 'combinations', 'transition', 'Jmax'], 
+                param_names=['B','delta_B','zeta','T','sigma','origin']) 
     
     params = mod.make_params( B = B, delta_B = delta_B, zeta = zeta, T=T,sigma = sigma, origin = origin)
     params['B'].min = 0.0005 
@@ -591,7 +598,13 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
     print(len(x_equal_spacing))
     print(Jmax)
     
-    result = mod.fit(y_data_fit, params, weights = 1/std_dev, x_equal_spacing = x_equal_spacing, sightline=sightline, combinations = combinations, transition = transition, Jmax=Jmax)
+    result = mod.fit(y_data_fit, params, weights = 1/std_dev, 
+                     x_equal_spacing = x_equal_spacing, 
+                     sightline=sightline, 
+                     combinations = combinations, 
+                     transition = transition, 
+                     Jmax=Jmax
+                     )
     print(result.fit_report())
     end = timeit.default_timer()
     print('Time taken to generate model ' + str(end - start))
