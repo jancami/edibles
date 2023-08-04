@@ -105,7 +105,7 @@ def obs_curve_to_fit(sightline):
     # shifting to zero and scaling flux between 0.9 and 1
     Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
     
-    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.9961)]  # trp = triple peak structure
+    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
     # making data evenly spaced
     x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 100)
     y_data_fit = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux'])
@@ -323,7 +323,7 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
         T (K): Rotational Temperature.
         sigma: std of Gaussian smoothing.
         origin: allows for a shift along the x-axis.
-        Jmax: Default 300, for passing to allowed_perperndicular_transitions function.
+        Jmax: Default 300, for passing to allowed_perperndicular_transitions function. (redundant now this has been removed from the fn)
         
         combinations (pandas Dataframe): Result of allowed transitions function
         bell (bool): default True, sounds a notification bell once the computation is complete.
@@ -331,6 +331,13 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     
     Returns:
         x_model_data, y_model_data (numpy array): calculated wavenumber and flux values for the model
+        
+    Notes: 
+        Error message - TypeError: unsupported operand type(s) for *: 'NoneType' and 'float' in line 449, 
+        
+        >>>> strength = (HL_factors[i] * BD_factors[i])
+        
+        Ensure the transition type matches between the combinations input and the HL values calculation as if they are different, these arrays are different sizes
     '''
     
     start1 = timeit.default_timer()
@@ -623,6 +630,41 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
 
 #     result = fit_model(B = 0.002, T = 22.5, delta_B = -0.45, zeta = -0.01, sigma = 0.17, origin =  0.012, sightline = sightline)
 #     plt.figure(figsize = (15,8))
+
+#%% Chi Squared function
+
+def chi_sq(model_ys, obs_ys, std):
+    '''
+    Function to calcualate redued chi-squared value of model compared to observations. 
+    
+    model_ys and obs_ys must be of the same dimensions, this is checked and will raise an AssertionError if not.
+
+    Parameters
+    ----------
+    model_ys : array-like
+        Generated model fluxes, after having been passed through the np.interp process. 
+    obs_ys : array-like
+        Observed data.
+    std : float
+        Standard deviation of observations.
+
+    Returns
+    -------
+    red_chi_sq : float
+        Reduced chi-square value.
+
+    '''
+    assert len(model_ys) == len(obs_ys), 'Ensure the model and observed data are of the same dimension!'
+    
+    chi_sq = 0
+    for i in range(len(obs_ys)):
+        difference = (model_ys[i] - obs_ys[i])**2
+        chi_sq += difference
+    
+    dof  = len(obs_ys) - 6
+    chi_sq = chi_sq/(std**2)
+    red_chi_sq = chi_sq/dof
+    return red_chi_sq
 
 #%% 
 # print('\a')
