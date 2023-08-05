@@ -179,7 +179,11 @@ class EdiblesOracle:
 
         | 1. Find all targets that match specified target parameters. This is done
            for each parameter using the FilterEngine function. 
-        | 2. Find the objects that match all target specifications. '''
+        | 2. Find the objects that match all target specifications. 
+        Note that this method only returns a list of matching objects. 
+        If the user prefers a pandas dataframe with selected information, the method
+        getFilteredObjectInfo (to be written) should be used. 
+        '''
         # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified!
         if (EBV or EBV_min or EBV_max or EBV_reference) is not None:
             print("EBV")
@@ -374,7 +378,7 @@ class EdiblesOracle:
 
         #print(len(FilteredObsList))
 
-        return (FilteredObsList)
+        return list(FilteredObsList)
 
 
  
