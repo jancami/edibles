@@ -50,7 +50,7 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True):
         x_equal_spacing (numpy array): 
     '''
     
-    spec_dir = Path(r'C:\Users\alexr\OneDrive - Durham University\GRI Mitacs Summer 23\Project\Heathers_data\6379')
+    spec_dir = Path(r"C:\Users\alexr\edibles\edibles\utils\simulations\Charmi\fitting_6379_Alex\Heather_MacIsaac_6379_data")
     file = '6379_HD{}_avg_spectra.csv'.format(sightline)
     Obs_data = pd.read_csv(spec_dir / file,
                                 sep=',')
@@ -93,7 +93,7 @@ def obs_curve_to_fit(sightline):
         std_dev (float): standard deviation of the continuum
     '''
     
-    spec_dir = Path(r'C:\Users\alexr\OneDrive - Durham University\GRI Mitacs Summer 23\Project\Heathers_data\6379')
+    spec_dir = Path(r"C:\Users\alexr\edibles\edibles\utils\simulations\Charmi\fitting_6379_Alex\Heather_MacIsaac_6379_data")
     file = '6379_HD{}_avg_spectra.csv'.format(sightline)
     Obs_data = pd.read_csv(spec_dir / file,
                                 sep=',')
@@ -118,7 +118,7 @@ def obs_curve_to_fit(sightline):
     return Obs_data, x_equal_spacing, y_data_fit, std_dev
 
 if __name__ == "__main__":
-    sightline = '185859'
+    sightline = '147165'
 
     x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline)
 
