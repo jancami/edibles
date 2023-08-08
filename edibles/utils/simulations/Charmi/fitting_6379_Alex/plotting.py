@@ -102,3 +102,30 @@ plt.figure(1).add_axes((0,0,0.6,0.2)) #residual plot
 plt.legend()
 plt.show()
 plt.xlabel('x')
+
+
+
+#%% Checking interpolations
+
+sightline ='166937'
+
+x_obs, y_obs, std1, x_label = functions.obs_curve_to_plot(sightline)
+Obs_data, x_equal_spacing, y_interp, std2 = functions.obs_curve_to_fit(sightline)
+
+assert std1 == std2
+
+# print(len(x_obs))
+l = 65
+u = 82
+x_obs_cut = x_obs[l:u]
+y_obs_cut = y_obs[l:u]
+
+# plt.plot(x_obs, y_obs, label = 'Non interpolated')
+plt.plot(x_obs_cut, y_obs_cut, label = 'Non interpolated')
+plt.plot(x_equal_spacing, y_interp, label = 'Interpolated')
+
+plt.xlabel(x_label)
+plt.ylabel('Flux')
+plt.legend()
+
+plt.show()
