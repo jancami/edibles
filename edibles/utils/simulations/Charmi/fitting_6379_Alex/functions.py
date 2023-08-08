@@ -39,15 +39,19 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True):
     
     Args: 
         sightline (str): star identifier to fill in file name '6379_HD{}_avg_spectra.csv'
+        
         wavenos (bool): if true (default) returns the data in units of wavenumber (cm^-1) centred around zero, else in Angstroms at true value
+        
         scaled (bool): if true (default) scales the flux between 0.9 and 1
         
     Returns:
         x_obs_data (pandas series): Wavenumber or wavelength values
+        
         y_obs_data (pandas series): Flux values
+        
         std_dev (float): Standard deviation of the continuum
-        x_axis (str): appropriate x-axis label for a plot of the data (waveno or wavelength)
-        x_equal_spacing (numpy array): 
+        
+        x_axis (str): appropriate x-axis label for a plot of the data (waveno or wavelength) 
     '''
     
     spec_dir = Path(r"C:\Users\alexr\edibles\edibles\utils\simulations\Charmi\fitting_6379_Alex\Heather_MacIsaac_6379_data")
@@ -88,8 +92,11 @@ def obs_curve_to_fit(sightline):
         
     Returns:
         Obs_data (pandas DataFrame): Data frame of the observational data from the file
+        
         x_equal_spacing (numpy array): 100 equal spaced wavenumber values in the region of the spectrum with the absorption feature
+        
         y_data_fit (numpy array): Corresponding flux values to x_equal_spacing, found through interpolation of the spectrum
+        
         std_dev (float): standard deviation of the continuum
     '''
     
@@ -317,27 +324,37 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     
     '''
     Generates a model of the rotational spectrum of a molecule based on input parameters
+    
     - Requires allowed_perperndicular_transitions to be defined.
+    
     - Prints the time taken to compute the model
     
     Args (floats): 
         B (cm^-1): Ground rotational constant of the molecule. Assume 3D oblate symmetric top A = B = 2C.
+        
         delta_B (%): Change in B to excited state. Assume delta_B = delta_C.
+        
         zeta (cm^-1): Coriolis constant.
+        
         T (K): Rotational Temperature.
+        
         sigma: std of Gaussian smoothing.
+        
         origin: allows for a shift along the x-axis.
+        
         Jmax: Default 300, for passing to allowed_perperndicular_transitions function. (redundant now this has been removed from the fn)
         
         combinations (pandas Dataframe): Result of allowed transitions function
+        
         bell (bool): default True, sounds a notification bell once the computation is complete.
+        
         transition (string): Type of transition, allowed types are 'perpendicular' (default) and 'parallel'
     
     Returns:
         x_model_data, y_model_data (numpy array): calculated wavenumber and flux values for the model
         
     Notes: 
-        Error message - TypeError: unsupported operand type(s) for *: 'NoneType' and 'float' in line 449, 
+        Error message - TypeError: unsupported operand type(s) for *: 'NoneType' and 'float' in line 470, 
         
         >>>> strength = (HL_factors[i] * BD_factors[i])
         
