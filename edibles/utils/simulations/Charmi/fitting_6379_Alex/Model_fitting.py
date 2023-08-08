@@ -14,15 +14,15 @@ Jmax = 600
 
 # curve_to_fit_wavenos()
 #%%
-sightline = '185859'
+sightline = '166937'
 
 
-B = 0.0016 # cm^-1
-delta_B = 0.6 # %
-zeta = -0.55 # cm^-1
-T = 50 # K
-sigma = 0.1953  
-origin = 0.05
+B = 0.00129
+delta_B = 0.594
+zeta = -0.969
+T = 49.7
+sigma = 0.198
+origin = -0.0793
 # combinations  = allowed_perperndicular_transitions(Jmax)
 combinations  = allowed_parallel_transitions(Jmax)
 
