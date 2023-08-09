@@ -129,3 +129,18 @@ plt.ylabel('Flux')
 plt.legend()
 
 plt.show()
+
+#%%
+
+sightline = '166937'
+
+x_obs, y_obs, std1, x_label = functions.obs_curve_to_plot(sightline, wavenos = False, scaled = False)
+
+plt.plot(x_obs, y_obs)
+
+
+plt.xlabel(x_label)
+plt.ylabel('Flux')
+# plt.legend()
+
+plt.show()
