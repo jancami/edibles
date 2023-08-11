@@ -5,8 +5,7 @@ Created on Fri Jul 21 11:32:49 2023
 @author: alexr
 """
 
-from functions import obs_curve_to_plot, obs_curve_to_fit, allowed_perperndicular_transitions,\
-    get_rotational_spectrum, model_curve_to_fit, fit_model, curve_to_fit_wavenos, allowed_parallel_transitions
+import functions as fn
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,24 +13,27 @@ Jmax = 600
 
 # curve_to_fit_wavenos()
 #%%
-sightline = '166937'
+sightline = '185859'
 
 
-B = 0.00129
-delta_B = 0.594
-zeta = -0.969
-T = 49.7
-sigma = 0.198
-origin = -0.0793
+B = 0.0016
+delta_B = 0.6
+zeta = -0.55
+T = 50
+sigma = 0.1953
+origin = 0
 # combinations  = allowed_perperndicular_transitions(Jmax)
-combinations  = allowed_parallel_transitions(Jmax)
+combinations  = fn.allowed_parallel_transitions(Jmax)
 
 
-result = fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition = 'parallel', Jmax = Jmax)
-
+result = fn.fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition = 'parallel', Jmax = Jmax)
 
 #%%
-Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+result = [result]
+fn.write_results_to_csv(result, 'first_csv_test.csv')
+
+#%%
+Obs_data, x_equal_spacing, y_data_fit, std_dev = fn.obs_curve_to_fit(sightline)
 
 def residual(y_obs_data, y_model_data, sigma):
     y_obs_data = np.array(y_obs_data)
@@ -49,7 +51,7 @@ print(type(r))
 
 
 
-combinations  = allowed_perperndicular_transitions(300)
+combinations  = fn.allowed_perperndicular_transitions(300)
 
 plt.figure(1).add_axes((0,0.2,0.6,0.5))
 plt.scatter(x_equal_spacing, y_data_fit, label='Observations')
