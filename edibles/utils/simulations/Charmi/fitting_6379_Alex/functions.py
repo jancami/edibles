@@ -5,6 +5,13 @@ Created on Thu Jul 13 12:29:44 2023
 @author: alexr
 
 All the functions used in the analysis of the 6379 DIB using rovribrational spectroscopy. Modified from original code written by Charmi Bhatt. 
+
+WARNING: Some functions make use of the 'beepy module'. This is a module that has a number of pre-loaded sound effects, that
+I use to alert me at times when, for example, the code has finished running. It relies on having the module simpleaudio installed, 
+so if they are not found many of these functions will produce a related error message! These are not essential so can be commented out 
+or deleted, however if you want to use them they are easily installed through pip! 
+
+Fun note: bp.beep(sound = 7) or bp.beep(sound = 'wilhelm') is a sound effect of man screaming. 
 """
 
 #%% Imports
@@ -18,8 +25,43 @@ import astropy.constants as const
 import numba as nb
 from lmfit import Model
 import beepy as bp
+import csv
 # import cProfile
 
+#%%
+
+def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
+
+    # check keywords
+    if oversample is None:
+        oversample = 40.0
+    if resolution is None:
+        resolution = 1500.0
+
+    lambda_start = np.float64(lambda_start)
+    lambda_end = np.float64(lambda_end)
+
+    # produce grid
+    R = resolution * oversample
+    
+    # print('R = ' , R)
+    n_points = (
+        round(
+            (np.log(lambda_end / lambda_start)) / (np.log(-(1 + 2 * R) / (1 - 2 * R)))
+        )
+        + 1
+    )
+    # print('n_points = ' , n_points)
+    f = -(1 + 2 * R) / (1 - 2 * R)
+    
+    # print('f = ', f)
+    factor = f ** np.arange(n_points)
+    # print('factor = ' , factor)
+    wave = np.full(int(n_points), lambda_start, dtype=np.float64)
+    # print('wave = ' , wave)
+    grid = wave * factor
+    # print('grid = ', grid)
+    return grid
 
 #%% Extracting observational data
 
@@ -66,6 +108,8 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True):
             drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
         x_axis = 'Wavenumber / cm$^{-1}$'
         min_index = np.argmin(Obs_data['Flux'])
+        # min_index = 50
+        # min_index = np.argmax(Obs_data['Flux'][np.argmin(Obs_data['Flux']):np.argmin(Obs_data['Flux'])+20])
         Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
     
     if scaled == True:  
@@ -85,7 +129,8 @@ def obs_curve_to_fit(sightline):
     '''
     Takes in observations of a 6379 dib from Heather MacIsaac's data and returns data in a form that can be passed to fit_model in order to give a best fit model. 
     Not to be confused with obs_curve_to_plot which returns data in a different form which can be plotted! 
-    This function focusses on the peak structure and interpolates 100 data points to which a model can be compared. 
+    This function focusses on the peak structure and interpolates according to the resolution of the data to create a basis for modelling. 
+    The zero point of the resulting data set is at 6379 Angstroms (15676.4 cm^-1)
     
     Args: 
         sightline (str): star identifier to fill in file name '6379_HD{}_avg_spectra.csv'
@@ -93,7 +138,7 @@ def obs_curve_to_fit(sightline):
     Returns:
         Obs_data (pandas DataFrame): Data frame of the observational data from the file
         
-        x_equal_spacing (numpy array): 100 equal spaced wavenumber values in the region of the spectrum with the absorption feature
+        x_equal_spacing (numpy array): equal spaced wavenumber values (according to the data's resolution) in the region of the spectrum with the absorption feature
         
         y_data_fit (numpy array): Corresponding flux values to x_equal_spacing, found through interpolation of the spectrum
         
@@ -105,57 +150,63 @@ def obs_curve_to_fit(sightline):
     Obs_data = pd.read_csv(spec_dir / file,
                                 sep=',')
 
-    Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8
-    Obs_data = Obs_data.iloc[::-1].reset_index(
-        drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
-    min_index = np.argmin(Obs_data['Flux'])
-    Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
-    
     # shifting to zero and scaling flux between 0.9 and 1
     Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
+    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure, focussing on the peak structure
     
-    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure
+    lambda_start = min(Obs_data_trp['Wavelength']) # Start and end of the section of the spectra we are focussing on
+    lambda_end = max(Obs_data_trp['Wavelength'])
+
+    Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8 # Converting to waveno.
+    Obs_data = Obs_data.iloc[::-1].reset_index(
+        drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
+    # min_index = np.argmin(Obs_data['Flux'])  ## In case the zero point needs to be changed to the minimum of the peak
+    Obs_data['Wavelength'] = Obs_data['Wavelength'] - (1/6379)*1e8  #Obs_data['Wavelength'][min_index] ## Zero point at 6379A in cm^-1
+    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)] # Redefine the triple peak section, now in cm^-1
+    
     # making data evenly spaced
-    x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 100)
-    y_data_fit = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux'])
+    common_grid_for_all = make_grid(lambda_start, lambda_end, resolution=107000, oversample=2)
+    common_grid_for_all = (1 / common_grid_for_all) * 1e8
+    common_grid_for_all = common_grid_for_all - (1/6379)*1e8 # Zero point is at 6379A in cm^-1
+    common_grid_for_all = common_grid_for_all[::-1] # Reverse direction
+    x_equal_spacing = common_grid_for_all
+    # x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 100) ## Old interpolation was 100 points between max and min
+    y_data_fit = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux']) # Interpolation of flux values
 
     Obs_data_continuum = Obs_data [(Obs_data['Wavelength'] >= 2) & (Obs_data['Wavelength']<= 5)]
-    std_dev = np.std(Obs_data_continuum['Flux'])
+    std_dev = np.std(Obs_data_continuum['Flux']) #Standard deviation of the continuum
         
     return Obs_data, x_equal_spacing, y_data_fit, std_dev
 
 if __name__ == "__main__":
     sightline = '147165'
 
-    x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline)
+    # # obs_curve_to_plot test:
+
+    # x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline)
+    # print(len(x_obs))
 
     # fig, ax = plt.subplots()
-    # ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
+    # ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline), marker = 'o')
     # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
     # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
     # ax.set_xlabel(x_label)
     # ax.set_ylabel('Flux')
     # ax.legend()
     # plt.show()
+    
+    # # obs_curve_to_fit test:
+    
     Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
-    print(Obs_data)
-    # print(type(std_dev))
-    # print(len(std_dev))
-    
+
     fig, ax = plt.subplots()
-
-    # ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
-    
-    ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline))
-
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
+    # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
     ax.set_xlabel('Waveno')
     ax.set_ylabel('Flux')
     ax.legend()
     plt.show()
-    
-
 
 #%% Allowed Perp Transitions Calculation
 
@@ -558,6 +609,8 @@ if __name__ == "__main__":
     
 
 
+
+
 #%% Function to pass to fitting model
 
 def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition, Jmax):
@@ -661,6 +714,131 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
 #     result = fit_model(B = 0.002, T = 22.5, delta_B = -0.45, zeta = -0.01, sigma = 0.17, origin =  0.012, sightline = sightline)
 #     plt.figure(figsize = (15,8))
 
+#%% Generate multiple spectra
+
+def get_multi_spectra( **params_list):
+    """
+    Calculating a model for each sight line using 'get_rotational_spectrum'.
+   
+    Always using the same molecular parameters, but different T.
+    Args:
+        xx:
+        B:
+        T1:
+        T2:
+        delta_B:
+        zeta:
+        sigma:
+        origin:
+
+    Returns:
+    np.array
+        Model flux array. Fluxes for both sight lines are appended to one 1D array.
+    """
+    
+   
+    print('---------')
+    
+    B = params_list['B']
+    delta_B = params_list['delta_B']
+    zeta = params_list['zeta']
+    
+   
+    first_T_index = 3
+    last_T_index = first_T_index + len(sightlines) 
+ 
+    first_sigma_index = last_T_index  
+    last_sigma_index = first_sigma_index + len(sightlines) 
+ 
+    first_origin_index = last_sigma_index  
+    last_origin_index = first_origin_index +len(sightlines) 
+ 
+    # T_values = params_list[first_T_index:last_T_index]
+    # sigma_values = params_list[first_sigma_index:last_sigma_index]
+    # origin_values = params_list[first_origin_index:last_origin_index]
+    
+    T_values = [params_list[f'T{i+1}'] for i in range(len(sightlines))]
+    sigma_values = [params_list[f'sigma{i+1}'] for i in range(len(sightlines))]
+    origin_values = [params_list[f'origin{i+1}'] for i in range(len(sightlines))]
+
+    all_y_model_data = np.array([])
+    
+    for T, sigma, origin, sightline in zip(T_values, sigma_values, origin_values, sightlines):
+        
+        linelist, model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition, bell = False)
+        
+        one_sl_y_model_data  = np.interp(common_grid_for_all, model_data[:, 0], model_data[:, 1])
+        
+        all_y_model_data = np.concatenate((all_y_model_data, one_sl_y_model_data))
+        
+    
+    # plt.plot(common_grid_for_all, all_y_model_data)
+    # plt.show()
+    return all_y_model_data
+
+
+#%% Fit multiple spectra to a model
+
+def fit_model_multi(B, delta_B, zeta, T, sigma, origin):
+    mod = Model(get_multi_spectra) 
+    
+    
+    
+    params_list = [B, delta_B, zeta]
+    
+    T_list = [T] * len(sightlines)
+    sigma_list = [sigma] * len(sightlines)
+    origin_list = [origin] * len(sightlines)
+
+    params_list.extend(T_list)
+    params_list.extend(sigma_list)
+    params_list.extend(origin_list)
+    
+    
+    print(params_list)
+    
+    
+    
+    first_T_index = 3
+    last_T_index = first_T_index + len(sightlines) 
+ 
+    first_sigma_index = last_T_index  
+    last_sigma_index = first_sigma_index + len(sightlines) 
+ 
+    first_origin_index = last_sigma_index  
+    last_origin_index = first_origin_index +len(sightlines) 
+ 
+    params = Parameters()
+    params.add('B', value = B, min = 0.0005, max = 0.05)
+    params.add('delta_B', value = delta_B, min = -1, max =0)
+    params.add('zeta', value = zeta, min = -1, max = 1)
+    
+    for i, param_value in enumerate(params_list[first_T_index:last_T_index]):
+        params.add(f'T{i+1}', value=param_value, min = 2.7, max = 500)
+        
+    for i, param_value in enumerate(params_list[first_sigma_index:last_sigma_index]):
+        params.add(f'sigma{i+1}', value=param_value, min = 0.05, max = 0.3)
+        
+    for i, param_value in enumerate(params_list[first_origin_index:last_origin_index]):
+        params.add(f'origin{i+1}', value=param_value, min = -1, max = 1)
+        
+   
+    result = mod.fit(flux_list, params, xx=wave_list, weights = 1/stddev_array , method = method) #, fit_kws={'ftol': 1e-2, 'xtol': 1e-2} )
+    print(result.fit_report())
+    
+    # def plot_best_fit(result, x_equal_spacing, y_obs_data):
+    #     plt.figure()
+    #     plt.scatter(x_equal_spacing, y_obs_data, label='Observations')
+    #     plt.plot(x_equal_spacing, result.best_fit, 'r-', label='Best Fit')
+    #     plt.xlabel('x')
+    #     plt.ylabel('y')
+    #     plt.legend()
+    #     plt.show()
+            
+    #plot_best_fit(result, x_equal_spacing, y_obs_data)
+    
+    return result
+
 #%% Chi Squared function
 
 def chi_sq(model_ys, obs_ys, std):
@@ -696,5 +874,48 @@ def chi_sq(model_ys, obs_ys, std):
     red_chi_sq = chi_sq/dof
     return red_chi_sq
 
+
+#%% 
+
+def write_results_to_csv(results_list, filename):
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['result_name', 
+                      'B_init', 'delta_B_init', 'zeta_init' , 'T1_init', 'sigma1_init' ,'origin1_init' , 
+                      'B',   'delta_B', 'zeta', 'T1','sigma1', 'origin1', 'chi2', 'redchi', 'func_evals', 
+                      'B_unc', 'delta_B_unc', 'zeta_unc', 'T1_unc',  'sigma1_unc', 'origin1_unc']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for i, result in enumerate(results_list):
+            result_name = f'result{i+1}'
+            params = result.params
+            row = {
+                'result_name': result_name,
+                'B_init': params['B'].init_value,
+                'delta_B_init': params['delta_B'].init_value,
+                'zeta_init': params['zeta'].init_value,
+                'T1_init': params['T1'].init_value,
+                'sigma1_init': params['sigma1'].init_value,
+                'origin1_init': params['origin1'].init_value,
+                'B': params['B'].value,
+                'delta_B': params['delta_B'].value,
+                'zeta': params['zeta'].value,
+                'T1': params['T1'].value,
+                'sigma1': params['sigma1'].value,
+                'origin1': params['origin1'].value,
+                'chi2': result.chisqr,
+                'redchi': result.redchi,
+                'func_evals': result.nfev,
+                'B_unc': params['B'].stderr,
+                'delta_B_unc': params['delta_B'].stderr,
+                'zeta_unc': params['zeta'].stderr,
+                'T1_unc': params['T1'].stderr,
+                'sigma1_unc': params['sigma1'].stderr,
+                'origin1_unc': params['origin1'].stderr,
+
+            }
+            writer.writerow(row)
+
 #%% 
 # print('\a')
+
