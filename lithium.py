@@ -6,33 +6,17 @@ from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.utils.voigt_profile import voigt_absorption_line
 
-pythia = EdiblesOracle()
 objectlist=["HD 63804", "HD 147084","HD 147933", "HD 147889","HD 148184","HD 154368","HD 161056","HD 169454","HD 185859","HD 186745","HD 186841"]
-List = pythia.getFilteredObsList(Wave=6700, OrdersOnly=True, object=["HD 147889"])
+filename = "HD 147889"
+  	 
+pythia = EdiblesOracle()
+List_series = pythia.getFilteredObsList(Wave=6700, OrdersOnly=True, object=[filename])
+List = List_series.tolist()
 
 print("Number of objects = ", len(List))
-    
-    
-#changing from pandas series to python list as index of observations in pandas is incorrect
-files = []
-for filename in List:
-      files.append(filename)
 
-"""
-targetlist=[]
-filenamelist=[]
-
-for filename in files:
-    sp = EdiblesSpectrum('/' + filename)
-    sp.getSpectrum(xmin=6707, xmax=6710)
-    targetlist.append(sp.target)
-    filenamelist.append(filename)
-
-print(targetlist)
-"""
-
-sp = EdiblesSpectrum(filename)
-sp.getSpectrum(xmin=6707, xmax=6710)
+sp = EdiblesSpectrum(List[0])
+sp.getSpectrum(xmin=6706.5, xmax=6709.5)
 sp.flux = sp.flux / np.median(sp.flux)
 plt.plot(sp.wave, sp.flux)
 
@@ -42,25 +26,19 @@ plt.ylabel('Flux')
 
 
 ############################################################################################################################################
-
+#manual fitting
 
 lambda0 = [6707.761, 6707.912]
-f = [8.5e-03,5.2e-03]   
+f = [8.6e-03,5.2e-03]   
 gamma = [5e8,5e8]
 b = [0.4]
 N = [1e12]
-v_rad = 19                  #check samuel's report for this parameter
+v_rad = 19            #check samuel's report for this parameter
 v_resolution = 4
 
 
-wrange = [6705, 6710]
 wave = sp.wave
 flux = sp.flux
-idx = np.where((wave > wrange[0]) & (wave < wrange[1]))
-wave = wave[idx]
-flux = flux[idx]
-flux = flux / np.median(flux)
-       
         
 AbsorptionLine = voigt_absorption_line(
             wave,
@@ -74,13 +52,14 @@ AbsorptionLine = voigt_absorption_line(
 
 plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
 plt.plot(wave, AbsorptionLine, color="orange", marker="*")
+plt.xlim(6707.5,6709) 
 
 
 ############################################################################################################################
+#calculating chi square
 
-
-x1=6708.95
-x2=6709.39
+x1=6707.86
+x2=6708.52
 
 plt.axvline(x=x1, color = 'g', linestyle = '-')
 plt.axvline(x=x2, color = 'g', linestyle = '-')
@@ -97,6 +76,7 @@ sigma=abs(yvalues-line_yvalue)
 print("sigma = ", sigma)
 
 avsigma=np.average(sigma)
+
 print("avsigma = ", avsigma)
 m=line_yvalue+avsigma
 n=line_yvalue-avsigma
@@ -104,9 +84,9 @@ plt.axhline(y=m, color = 'g', linestyle = '-')
 plt.axhline(y=n, color = 'g', linestyle = '-') 
 
 Od=flux[idx]             #observed data
-Md=AbsorptionLine[idx]   #model data - but this is the straight line part so how does that work?
-#print(Od) 
-#print(Md)    
+Md=AbsorptionLine[idx]   #model data 
+print(Od) 
+print(Md)    
 
 subtracted_array = np.subtract(Od,Md)
 subtracted = np.square(subtracted_array)
