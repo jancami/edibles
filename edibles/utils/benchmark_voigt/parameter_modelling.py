@@ -58,387 +58,16 @@ def reduced_chi_squared(observed_value, observed_error, expected_value):
     """
     return (np.sum(((observed_value - expected_value) / observed_error) ** 2)) / (len(observed_value) - 2)
 
-def errors(low_lim, high_lim, wavelength, normflux):
-    """
-    calculates the error (standard dev) of data entered within a certain slice of data defined using upper and lower limits.
-    For this to work upper and lower limits must slice a section of the spectrum which is flat, this error will then be used for
-    all data points. Whilst this is likely not the most accurate to calculate the error on the data it will suffice for our
-    analyses of the data.
-
-    parameters
-    ----------
-        low_lim: float
-            lower limit of flat section of spectrum
-        high_lim: float
-            upper limit of flat section of spectrum
-        data: 2-d numpy array
-            contains the wavelength and flux data for the spectrum
-    returns
-    ----------
-        error_array : 1-d numpy ndarray
-            array of errors which will be used in the calculation of the reduced chi squared
-    """
-    # create an empty array for the errors to be stored in
-    error_vals = []
-    # compile all data points within the desired flat spectrum range into the error_vals array
-    for i in range(len(wavelength)):
-        if (wavelength[i] > low_lim and wavelength[i]< high_lim):
-            error_vals = np.append(error_vals, normflux)
-    # get the standar dev of the points to use as the error
-    error = np.std(error_vals)
-    # assign every point this error
-    error_array = np.array([error] * len(wavelength))
-    return error_array
-
-def compare_data(file_name,data, b, N, v_rad):
 
 
-    save_path = 'c:/Users/user/edibles/edibles/data/voigt_benchmarkdata/parameter_modelling_data/'
-    file_path = os.path.join(save_path, file_name)
-    file = open(file_path, 'w+')
-
-
-    txt = 'welty & hobbs parameteres: \n b: {0}, \n N: {1}, \n v_rad: {2} \n' \
-          'Fit parameters: {3}'.format(b,N,v_rad,data.fit_report())
-    file.write(txt)
-    file.close()
-
-def o_per():
-    """
-    This function will use the parameters given in welty & hobbs, 2001, apjs 133, 345 to fit a voigt profile to data for
-    the o per star as given in file in voigt_benchmarkdata. This model and the actual data are ploted on the same graph.
-    reduced chi squared is then calculated for both of the models.
-    currently attempting to create code which will gte accurate parameters from the data in the voigt_benchmarkdata
-    """
-    # Create figure early on to allow for plotting throughout the function, allows for a nicer set out
-    fig_1 = plt.figure(figsize=(7, 8))
-    axes = fig_1.add_subplot(211), fig_1.add_subplot(212)
-    # arrays containing the Broadening parameters, coluum densities and radial velocitys, respectively for the different
-    # components responsible for the spectrum
-    b_o_per = [0.60, 0.44, 0.72, 0.62, 0.60]
-    N_o_per = [12.5e10, 10e10, 44.3e10, 22.5e10, 3.9e10]
-    v_rad_o_per = [10.5, 11.52, 13.45, 14.74, 15.72]
-
-    # read in data and convert it from a tuple into a numpy array
-    o_per_m_wavelengths, o_per_m_normflux = np.asarray(file_reader(files[0]))
-    # fit a voigt profile to data using parameters defined above
-    fit_flux_o_per_m = vp.voigt_absorption_line(
-        o_per_m_wavelengths,
-        lambda0=7698.974,
-        b=b_o_per,
-        N=N_o_per,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_o_per,
-        v_resolution=0.56,
-    )
-
-    multi_fit_flux_m = vp.fit_multi_voigt_absorptionlines(wavegrid= o_per_m_wavelengths,
-                                       ydata= o_per_m_normflux,
-                                       restwave= 7698.974,
-                                       f= 3.393e-1,
-                                       gamma= 3.8e7,
-                                       b= b_o_per,
-                                       N= N_o_per,
-                                       v_rad= v_rad_o_per,
-                                       v_resolution= 0.56,
-                                       n_step= 25)
-    # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_o_per_m = errors(7699.5, 7699.8, o_per_m_wavelengths, o_per_m_normflux)
-    # calculate reduced chi squared of fit
-    print('o_per_m reduced \u03C7\u00B2', reduced_chi_squared(o_per_m_normflux, error_o_per_m, fit_flux_o_per_m))
-
-    # repeat process for same star but with data from another survey
-    o_per_k_wavelengths, o_per_k_normflux = np.asarray(file_reader(files[1]))
-    fit_flux_o_per_k = vp.voigt_absorption_line(
-        o_per_k_wavelengths,
-        lambda0=7698.974,
-        b=b_o_per,
-        N=N_o_per,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_o_per,
-        v_resolution=1.40,
-    )
-
-
-    multi_fit_flux_k = vp.fit_multi_voigt_absorptionlines(wavegrid= o_per_k_wavelengths,
-                                       ydata= o_per_k_normflux,
-                                       restwave= 7698.974,
-                                       f= 3.393e-1,
-                                       gamma= 3.8e7,
-                                       b= b_o_per,
-                                       N= N_o_per,
-                                       v_rad= v_rad_o_per,
-                                       v_resolution= 1.40,
-                                       n_step= 25)
-
-    error_o_per_k = errors(7699.5, 7699.8, o_per_k_wavelengths, o_per_k_normflux)
-    print('o_per_k reduced \u03C7\u00B2', reduced_chi_squared(o_per_k_normflux, error_o_per_k, fit_flux_o_per_k))
-
-    # plot data and corresponding fits on the same graph but on different subplots
-    axes[0].plot(o_per_m_wavelengths, fit_flux_o_per_m, c='b', marker="1", label='fit')
-    axes[1].plot(o_per_k_wavelengths, fit_flux_o_per_k, c='b', marker='1', label='fit')
-    # set x limit to allow for better analyse of data by eye
-    for i in range(2):
-        axes[i].set_xlim(7699, 7699.75)
-        axes[i].set_xlabel('Wavelength \u00C5')
-        axes[i].set_ylabel('Normalised Flux')
-
-    axes[0].plot(o_per_m_wavelengths, o_per_m_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (m95)')
-    axes[1].plot(o_per_k_wavelengths, o_per_k_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='o per (k94)')
-    axes[0].plot(o_per_m_wavelengths, multi_fit_flux_m.best_fit, c = 'green')
-    axes[1].plot(o_per_k_wavelengths,multi_fit_flux_k.best_fit, c= 'green')
-    fig_1.legend()
-
-    compare_data('omiper.m95.fit_data.txt', multi_fit_flux_m, b_o_per, N_o_per, v_rad_o_per)
-    compare_data('ompier.k94.fit_data.txt', multi_fit_flux_k, b_o_per, N_o_per, v_rad_o_per)
-
-def sigsco():
-    """
-    This function will use the parameters given in welty & hobbs, 2001, apjs 133, 345 to fit a voigt profile to data for
-    the sigma sco star as given in file in voigt_benchmarkdata. This model and the actual data are ploted on the same graph.
-    reduced chi squared is then calculated for both of the models.
-    """
-    # arrays containing the Broadening parameters, coluum densities and radial velocitys, respectively for the different
-    # components responsible for the spectrum
-    b_sigsco = [0.70, 1.23, 0.75, 0.54, 0.60]
-    N_sigsco = np.array([0.4e10, 0.8e10, 8.1e10, 3.8e10, 0.6e10])
-    v_rad_sigsco = [-14.23, -8.75, -6.26, -4.62, -3.13]
-    # read in data and convert it from a tuple into a numpy array
-    sigsco_wavelengths, sigsco_normflux = np.asarray(file_reader(files[2]))
-    # fit a voigt profile to data using parameters defined above
-    fit_flux_sigsco = vp.voigt_absorption_line(
-        sigsco_wavelengths,
-        lambda0=7698.974,
-        b=b_sigsco,
-        N=N_sigsco,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_sigsco,
-        v_resolution=1.20,
-    )
-
-
-    multi_fit_flux_sig= vp.fit_multi_voigt_absorptionlines(wavegrid= sigsco_wavelengths,
-                                       ydata= sigsco_normflux,
-                                       restwave= 7698.974,
-                                       f= 3.393e-1,
-                                       gamma= 3.8e7,
-                                       b= b_sigsco,
-                                       N= N_sigsco,
-                                       v_rad= v_rad_sigsco,
-                                       v_resolution= 1.2,
-                                       n_step= 25)
-
-    # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_sigsco = errors(7699.0, 7699.4, sigsco_wavelengths, sigsco_normflux)
-    # calculate reduced chi squared of fit
-    print('sigsco reduced \u03C7\u00B2', reduced_chi_squared(sigsco_normflux, error_sigsco, fit_flux_sigsco))
-
-    # plot data and corresponding fits on the same graph but on different subplots
-    fig_2 = plt.figure()
-    ax = fig_2.add_subplot(111)
-    ax.plot(sigsco_wavelengths, sigsco_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='sigsco')
-    ax.plot(sigsco_wavelengths, fit_flux_sigsco, c='b', label='fit')
-    ax.plot(sigsco_wavelengths, multi_fit_flux_sig.best_fit, c= 'green')
-    # set x limit to allow for better analyse of data by eye
-    ax.set_xlim(7698, 7699.5)
-    ax.set_xlabel('Wavelength \u00C5')
-    ax.set_ylabel('Normalised Flux')
-    fig_2.legend()
-
-    compare_data('sigsco.fit_data.txt', multi_fit_flux_sig, b_sigsco, N_sigsco, v_rad_sigsco)
-
-def zetoph():
-    """
-    This function will use the parameters given in welty & hobbs, 2001, apjs 133, 345 to fit a voigt profile to data for
-    the zeta oph star as given in file in voigt_benchmarkdata. This model and the actual data are ploted on the same graph.
-    reduced chi squared is then calculated for both of the models.
-    """
-    # arrays containing the Broadening parameters, coluum densities and radial velocitys, respectively for the different
-    # components responsible for the spectrum
-    b_zetoph = [0.96, 0.80, 0.57, 0.43, 0.58]
-    N_zetoph = np.array([1e10, 1.2e10, 40.9e10, 27.2e10, 1.1e10])
-    v_rad_zetoph = [-19.09, -16.50, -14.98, -13.96, -12.73]
-    # read in data and convert it from a tuple into a numpy array
-    zetoph_k_wavelengths, zetoph_k_normflux = np.asarray(file_reader(files[3]))
-    # fit a voigt profile to data using parameters defined above
-
-    fit_flux_zetoph_k = vp.voigt_absorption_line(
-        zetoph_k_wavelengths,
-        lambda0=7698.974,
-        b=b_zetoph,
-        N=N_zetoph,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_zetoph,
-        v_resolution=1.40,
-    )
-
-
-    multi_fit_flux_k = vp.fit_multi_voigt_absorptionlines(wavegrid= zetoph_k_wavelengths,
-                                       ydata= zetoph_k_normflux,
-                                       restwave= 7698.974,
-                                       f= 3.393e-1,
-                                       gamma= 3.8e7,
-                                       b= b_zetoph,
-                                       N= N_zetoph,
-                                       v_rad= v_rad_zetoph,
-                                       v_resolution= 1.40,
-                                       n_step= 25)
-
-    # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_zetoph_k = errors(7698.8, 7699, zetoph_k_wavelengths, zetoph_k_normflux)
-    # calculate reduced chi squared of fit
-    print('Zetoph_k reduced \u03C7\u00B2', reduced_chi_squared(zetoph_k_normflux, error_zetoph_k, fit_flux_zetoph_k))
-
-    # repeat process for same star but with data from another survey
-    zetoph_lf_wavelengths, zetoph_lf_normflux = np.asarray(file_reader(files[4]))
-    fit_flux_zetoph_lf = vp.voigt_absorption_line(
-        zetoph_lf_wavelengths,
-        lambda0=7698.974,
-        b=b_zetoph,
-        N=N_zetoph,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_zetoph,
-        v_resolution=0.40,
-    )
-
-    multi_fit_flux_lf = vp.fit_multi_voigt_absorptionlines(wavegrid=zetoph_lf_wavelengths,
-                                                          ydata=zetoph_lf_normflux,
-                                                          restwave=7698.974,
-                                                          f=3.393e-1,
-                                                          gamma=3.8e7,
-                                                          b=b_zetoph,
-                                                          N=N_zetoph,
-                                                          v_rad=v_rad_zetoph,
-                                                          v_resolution=0.40,
-                                                          n_step=25)
-
-    error_zetoph_lf = errors(7698.8, 7699, zetoph_lf_wavelengths, zetoph_lf_normflux)
-    print('Zetoph_lf reduced \u03C7\u00B2', reduced_chi_squared(zetoph_lf_normflux, error_zetoph_lf, fit_flux_zetoph_lf))
-
-    # repeat process for same star but with data from another survey
-    zetoph_m_wavelengths, zetoph_m_normflux = np.asarray(file_reader(files[5]))
-    fit_flux_zetoph_m = vp.voigt_absorption_line(
-        zetoph_m_wavelengths,
-        lambda0=7698.974,
-        b=b_zetoph,
-        N=N_zetoph,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_zetoph,
-        v_resolution=0.56,
-    )
-
-    multi_fit_flux_m = vp.fit_multi_voigt_absorptionlines(wavegrid=zetoph_m_wavelengths,
-                                                          ydata=zetoph_m_normflux,
-                                                          restwave=7698.974,
-                                                          f=3.393e-1,
-                                                          gamma=3.8e7,
-                                                          b=b_zetoph,
-                                                          N=N_zetoph,
-                                                          v_rad=v_rad_zetoph,
-                                                          v_resolution=0.56,
-                                                          n_step=25)
-
-    error_zetoph_m = errors(7698.8, 7699, zetoph_m_wavelengths, zetoph_m_normflux)
-    print('Zetoph_m reduced \u03C7\u00B2', reduced_chi_squared(zetoph_m_normflux, error_zetoph_m, fit_flux_zetoph_m))
-
-    # plot data and corresponding fits on the same graph but on different subplots
-    fig_3 = plt.figure()
-    axes = fig_3.add_subplot(311), fig_3.add_subplot(312), fig_3.add_subplot(313)
-    axes[0].plot(zetoph_m_wavelengths, zetoph_m_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
-                 label='zetoph')
-    axes[0].plot(zetoph_m_wavelengths, fit_flux_zetoph_m, c='b', label='fit')
-    axes[0].plot(zetoph_m_wavelengths, multi_fit_flux_m.best_fit, c= 'green')
-
-    axes[1].plot(zetoph_lf_wavelengths, zetoph_lf_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
-                 label='zetoph_2')
-    axes[1].plot(zetoph_lf_wavelengths, fit_flux_zetoph_lf, c='b', label='fit')
-    axes[1].plot(zetoph_lf_wavelengths, multi_fit_flux_lf.best_fit, c= 'green')
-
-    axes[2].plot(zetoph_k_wavelengths, zetoph_k_normflux, color="k", marker="D", fillstyle='none', markersize=0.5,
-                 label='zetoph_3')
-    axes[2].plot(zetoph_k_wavelengths, fit_flux_zetoph_k, c='b', label='fit')
-    axes[2].plot(zetoph_k_wavelengths, multi_fit_flux_k.best_fit, c= 'green')
-    # set x limit to allow for better analyse of data by eye
-    for i in range(3):
-        axes[i].set_xlim(7698.4, 7699.4)
-        axes[i].set_xlabel('Wavelength \u00C5')
-        axes[i].set_ylabel('Normalised Flux')
-    fig_3.legend()
-
-    compare_data('zetoph.m95.fit_data.txt', multi_fit_flux_m, b_zetoph, N_zetoph, v_rad_zetoph)
-    compare_data('zetoph.k94.fit_data.txt', multi_fit_flux_k, b_zetoph, N_zetoph, v_rad_zetoph)
-    compare_data('zetoph.lf.fit_data.txt', multi_fit_flux_lf, b_zetoph, N_zetoph, v_rad_zetoph)
-
-def zetper():
-    """
-    This function will use the parameters given in welty & hobbs, 2001, apjs 133, 345 to fit a voigt profile to data for
-    the zeta per star as given in file in voigt_benchmarkdata. This model and the actual data are ploted on the same graph.
-    reduced chi squared is then calculated for both of the models.
-    """
-    # arrays containing the Broadening parameters, coluum densities and radial velocitys, respectively for the different
-    # components responsible for the spectrum
-    b_zetper = [1, 0.68, 0.8, 0.5]
-    N_zetper = [2.2e10, 26.0e10, 42.7e10, 0.1e10]
-    v_rad_zetper = [11.48, 13.25, 14.54, 16.40]
-    # read in data and convert it from a tuple into a numpy array
-    zetper_wavelengths, zetper_normflux = np.asarray(file_reader(files[6]))
-    # fit a voigt profile to data using parameters defined above
-    fit_flux_zetper = vp.voigt_absorption_line(
-        zetper_wavelengths,
-        lambda0=7698.974,
-        b=b_zetper,
-        N=N_zetper,
-        f=3.393e-1,
-        gamma=3.8e7,
-        v_rad=v_rad_zetper,
-        v_resolution=0.56,
-    )
-
-    multi_fit_flux_zet = vp.fit_multi_voigt_absorptionlines(wavegrid=zetper_wavelengths,
-                                                          ydata=zetper_normflux,
-                                                          restwave=7698.974,
-                                                          f=3.393e-1,
-                                                          gamma=3.8e7,
-                                                          b=b_zetper,
-                                                          N=N_zetper,
-                                                          v_rad=v_rad_zetper,
-                                                          v_resolution=0.56,
-                                                          n_step=25)
-
-    # calculate error between these wavelength which have been identified as the flat part of the spectrum by eye
-    error_zetper = errors(7699.5, 7700, zetper_wavelengths, zetper_normflux)
-    # calculate reduced chi squared of fit
-    print('Zetper reduced \u03C7\u00B2', reduced_chi_squared(zetper_normflux, error_zetper, fit_flux_zetper))
-
-    # plot data and corresponding fits on the same graph but on different subplots
-    fig_4 = plt.figure()
-    ax = fig_4.add_subplot(111)
-    ax.plot(zetper_wavelengths, zetper_normflux, color="k", marker="D", fillstyle='none', markersize=0.5, label='zetper')
-    ax.plot(zetper_wavelengths, fit_flux_zetper, c='b')
-    #ax.plot(zetper_wavelengths, zetper_lmfit_flux, c='r')
-    ax.plot(zetper_wavelengths, multi_fit_flux_zet.best_fit, c= 'green')
-    # set x limit to allow for better analyse of data by eye
-    ax.set_xlim(7698.5, 7700)
-    ax.set_xlabel('Wavelength \u00C5')
-    ax.set_ylabel('Normalised Flux')
-    fig_4.legend()
-
-
-    compare_data('zetper.fit_data.txt', multi_fit_flux_zet, b_zetper, N_zetper, v_rad_zetper)
-
+#define path to file which contains the names of each star and the resolution of intraments used in survey
 folder = Path(PYTHONDIR + "/data")
 filename = folder / "voigt_benchmarkdata" / 'parameter_modelling_data' / "files_for_parameter_modelling.txt"
 
-    # state what headers the desired data is under
+# state what headers the desired data is under
 Headers = ["star_name", "file_name", "star_file", "resolution"]
 
-        # read in the data
+# read in the data
 file = pd.read_csv(
     filename,
      delim_whitespace=True,
@@ -447,24 +76,19 @@ file = pd.read_csv(
      engine="python",
     )
 
+# collect the data from each header in easy to iterate form
 files = file['file_name']
 resolution = file['resolution']
 star_data = file["star_file"]
 star_name = file["star_name"]
 
-loop = True
-if not(loop):
-    # run analyse of the 4 stars
-    o_per()
-    sigsco()
-    zetoph()
-    zetper()
 
-else:
+if __name__ == '__main__' :
 
-    #for i in range(len(files)):
-    for i in 0:
+    for i in range(len(files)):
+    #for i in range(1):
 
+        # use file names from files_for_parameter_modelling.txt to read in flux and wavelength data
         wavelengths, normflux = np.asarray(file_reader(files[i]))
 
         folder = Path(PYTHONDIR + "/data")
@@ -479,27 +103,84 @@ else:
          engine="python",
         )
 
+        # collect the data from each header in easy to iterate form
         b = np.asarray(star_parameters["b"])
         N = np.asarray(star_parameters["N"])
         v_rad = np.asarray(star_parameters["v_rad"])
 
+        #calculating the normflux of pottasium as predicted using the parameters in the Welty & Hobbs 2001 paper
         WH_flux= vp.voigt_absorption_line(
             wavelengths,
             lambda0=7698.974,
-            b=star_parameters["b"],
-            N=star_parameters["N"],
+            b=b,
+            N=N,
             f=3.393e-1,
             gamma=3.8e7,
-            v_rad=star_parameters["v_rad"],
-            v_resolution=0.56,
+            v_rad=v_rad,
+            v_resolution=resolution[i],
         )
+        # calculating the flux contribution of each component (mostly used for bug checking)
+        WH_flux_1= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b[0],
+            N=N[0],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad[0],
+            v_resolution=resolution[i],
+        )
+        WH_flux_2= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b[1],
+            N=N[1],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad[1],
+            v_resolution=resolution[i],
+        )
+        WH_flux_3= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b[2],
+            N=N[2],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad[2],
+            v_resolution=resolution[i],
+        )
+        WH_flux_4= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b[3],
+            N=N[3],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad[3],
+            v_resolution=resolution[i],
+        )
+        #WH_flux_5= vp.voigt_absorption_line(
+        #    wavelengths,
+        #    lambda0=7698.974,
+        #    b=b[4],
+        #    N=N[4],
+        #    f=3.393e-1,
+        #    gamma=3.8e7,
+        #    v_rad=v_rad[4],
+        #    v_resolution=resolution[i],
+        #)
 
+        # defining continuum as all points where normflux is less than 0.98
+        # this is then used to calculate errors to use for chi squared
         continuum = np.array([])
         for j in range(len(normflux)):
             if normflux[j] > 0.98:
                 continuum = np.append(continuum,normflux[j])
         error = np.array([np.std(continuum)] * len(normflux))
-        print('reduced chi squared for {0} from the WH model is {1}'.format(star_name[i],(reduced_chi_squared(normflux, error, WH_flux))))
+        #print('reduced chi squared for {0} from the WH model is {1}'.format(star_name[i],(reduced_chi_squared(normflux, error, WH_flux))))
+
+        # calculating best fit parameters by using the Welty & Hobbs parameters as initial guesses
         fit_flux = vp.fit_multi_voigt_absorptionlines(wavegrid= wavelengths,
                                            ydata= normflux,
                                            restwave= 7698.974,
@@ -511,17 +192,24 @@ else:
                                            v_resolution= resolution[i],
                                            n_step= 25)
 
-
+        # plot all of the calculated data from above for analysis
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label= 'Data')
         ax.plot(wavelengths, fit_flux.best_fit, c='r', marker = '*', label= 'best-fit')
-        ax.plot(wavelengths, WH_flux, c='g', label='Wetly & Hobbs')
+        ax.plot(wavelengths, WH_flux_1, c='b', label='WH 1st component')
+        ax.plot(wavelengths, WH_flux_2, label='WH 2nd component')
+        ax.plot(wavelengths, WH_flux_3, label='WH 3rd component')
+        ax.plot(wavelengths, WH_flux_4, label='WH 4th component')
+        #ax.plot(wavelengths, WH_flux_5, label='WH 5th component')
+
+        ax.plot(wavelengths, WH_flux,c = 'b', label='Welty & Hobbs')
         fig.suptitle(star_name[i])
         ax.set_xlabel('Wavelength \u00C5')
         ax.set_ylabel('Normalised Flux')
         plt.legend()
 
+        # saving Wlety & Hobbs parameters alongside best fit parameters for easy comparison (saved in parameter_modelling_data)
         save_path = 'c:/Users/user/edibles/edibles/data/voigt_benchmarkdata/parameter_modelling_data/'
         file_name = star_name[i] + '.fit_data.txt'
         file_path = os.path.join(save_path, file_name)
@@ -532,5 +220,182 @@ else:
         file.write(txt)
         file.close()
 
+
+        # attempting to build code which will find out the number of components in a sightline
+        # as well as find the best-fitting parameters for each component
+        # currently assigns initial guesses for 1 parameter using parameters from Welty & Hobbs
+        # and will then build of this for the rest of the components
+
+        b_components = np.array([b[0]])
+        N_components = np.array([N[0]])
+        v_rad_components = np.array([v_rad[0]])
+        components = 1
+        new_fit_flux = vp.fit_multi_voigt_absorptionlines(wavegrid=wavelengths,
+                                                          ydata=normflux,
+                                                          restwave=7698.974,
+                                                          f=3.393e-1,
+                                                          gamma=3.8e7,
+                                                          b=b_components,
+                                                          N=N_components,
+                                                          v_rad=v_rad_components,
+                                                         v_resolution=resolution[i],
+                                                         n_step=25)
+        b_components[0] = new_fit_flux.values['b0']
+        N_components[0] = new_fit_flux.values['N0']
+        v_rad_components[0] = new_fit_flux.values['v_rad0']
+        fig_2 = plt.figure()
+        ax = fig_2.add_subplot(111)
+        ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
+        ax.plot(wavelengths, new_fit_flux.best_fit, c='orange', marker='*', label='best-fit')
+        fig_2.suptitle(star_name[i])
+        ax.set_xlabel('Wavelength \u00C5')
+        ax.set_ylabel('Normalised Flux')
+        plt.legend()
+        plt.show()
+
+        print('b is ', b_components)
+        print('N is ', N_components)
+        print('v_rad is ', v_rad_components)
+
+        # entering a while loop which will be adapted to use a fitting parameter instead of len(b)
+        # which keeps adding components through every run in an attempt to find the best fit parameters
+        answer = 'YES'
+        #while answer.upper() == 'YES':
+        count = 1
+        while count < len(b) :
+            print('entered while loop')
+            for k in range(components):
+                b_components[k] = new_fit_flux.values[f'b{k}']
+                N_components[k] = new_fit_flux.values[f'N{k}']
+                v_rad_components[k] = new_fit_flux.values[f'v_rad{k}']
+
+            components += 1
+            print('components',components)
+            # use values which are 2 std's higher than the paramter from the first component to create a new component
+            new_b = new_fit_flux.params['b0'].stderr * 2 + b_components[0]
+            multiplier = 2
+            print('calculating new_b')
+            # issue with std being too small leading to values which are too close together breaking code so this loop
+            # will increase the number of std's away until the new component is suitably different from the first one
+            while (new_b - b_components[0])< 0.1 :
+                multiplier += 1
+                new_b = new_fit_flux.params['b0'].stderr * multiplier + b_components[0]
+            print('b multiplier is:', multiplier)
+            print('calculated new_b')
+            b_components = np.append(b_components, new_b)
+
+            # use values which are 2 std's higher than the paramter from the first component to create a new component
+            new_N = new_fit_flux.params['N0'].stderr * 2 + N_components[0]
+            N_components = np.append(N_components, new_N)
+
+            multiplier = 2
+            # use values which are 2 std's higher than the paramter from the first component to create a new component
+            new_v_rad = new_fit_flux.params['v_rad0'].stderr * 2 + v_rad_components[0]
+            # issue with std being too small leading to values which are too close together breaking code so this loop
+            # will increase the number of std's away until the new component is suitably different from the first one
+            while (new_v_rad- v_rad_components[0])< 0.1 :
+                multiplier += 1
+                new_v_rad = new_fit_flux.params['v_rad0'].stderr * multiplier + v_rad_components[0]
+            print('v_rad multiplier is:', multiplier)
+            v_rad_components = np.append(v_rad_components, new_v_rad)
+
+            # noticed that some of the b and N values where becoming negative this is not possible so this is my tempary
+            # solution to try and push these values back to being postive
+            for l in range(len(b_components)):
+                if b_components[l] < 0 :
+                    b_components[l] = b[0]
+                    print(f'reset b{l}')
+
+            for l in range(len(N_components)):
+                if N_components[l] < 0 :
+                    N_components[l] = N[0]
+                    print(f'reset N{l}')
+
+            print('fitting...')
+            # use the guess parameters to find best fits
+            new_fit_flux = vp.fit_multi_voigt_absorptionlines(wavegrid=wavelengths,
+                                                              ydata=normflux,
+                                                              restwave=7698.974,
+                                                              f=3.393e-1,
+                                                              gamma=3.8e7,
+                                                              b=b_components,
+                                                              N=N_components,
+                                                              v_rad=v_rad_components,
+                                                              v_resolution=resolution[i],
+                                                              n_step=25)
+            print('calculated new parameters')
+            print('b is now', b_components)
+            print('N is now', N_components)
+            print('v_rad is now', v_rad_components)
+            print('fitted')
+            #fig_2 = plt.figure()
+            #ax = fig_2.add_subplot(111)
+            #ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
+            #ax.plot(wavelengths, new_fit_flux.best_fit, c='r', marker='*', label='best-fit')
+            #fig_2.suptitle(star_name[i])
+            #ax.set_xlabel('Wavelength \u00C5')
+            #ax.set_ylabel('Normalised Flux')
+            #plt.legend()
+            #plt.show()
+            #answer = input('Add another component?')
+            count += 1
+        #plot final result in order to inspect by eye how good of a fit the parametrs are
+        fig_2 = plt.figure()
+        ax = fig_2.add_subplot(111)
+        ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
+        ax.plot(wavelengths, new_fit_flux.best_fit, c='orange', marker='*', label='best-fit')
+        fig_2.suptitle(star_name[i])
+        ax.set_xlabel('Wavelength \u00C5')
+        ax.set_ylabel('Normalised Flux')
+        plt.legend()
+        plt.show()
+
+
+
+
+
+
+
+        #table_data = np.empty((15,3), dtype = np.string_)
+        #print(table_data[0,:])
+        # store all parameters in table for easy analysis
+        table_data = np.asarray([['                                           ' for x in range(3)] for y in range(len(b)*3)])
+        row_labels = np.array(['           ' for x in range(len(b)*3)])
+        col_labels = ['Welty & Hobbs', 'Fitting with W&H', 'Fitting components']
+        fit_flux_array = [fit_flux, new_fit_flux]
+        for x in range(3):
+            if x == 0:
+                for y in range(len(b)):
+                    table_data[y][x] = f'{b[y]:#.3f}'
+                    table_data[y+len(b)][x] = f'{N[y]:#.3g}'
+                    table_data[y+len(b)*2][x] = f'{v_rad[y]:#.3f}'
+                    row_labels[y] = f'b{y}'
+                    row_labels[y+len(b)] = f'N{y+5}'
+                    row_labels[y+len(b)*2]= f'v_rad{y+10}'
+            else:
+                for y in range(len(b)):
+                    table_data[y][x] = '{0:#.3f} \u00B1 {1:#.3f}'.format(fit_flux_array[x-1].values[f'b{y}'], fit_flux_array[x-1].params[f'b{y}'].stderr)
+                    table_data[y+len(b)][x] = '{0:#.3g} \u00B1 {1:#.3g}'.format(fit_flux_array[x-1].values[f'N{y}'],fit_flux_array[x-1].params[f'N{y}'].stderr)
+                    table_data[y+len(b)*2][x] = '{0:#.3f} \u00B1 {1:#.3f}'.format(fit_flux_array[x-1].values[f'v_rad{y}'], fit_flux_array[x-1].params[f'v_rad{y}'].stderr)
+
+        #print(fit_b)
+        #print('b=',b)
+        #print(table_data)
+        # 'potting' the table so that the data can be viewed
+        fig_3 = plt.figure()
+        ax = fig_3.add_subplot(111)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        table = ax.table(table_data, rowLabels = row_labels, colLabels = col_labels, loc = 'center')
+        plt.box(on=False)
+        table.scale(1,1)
+        fig_3.suptitle(star_name[i])
+        plt.show()
+
+
+#print(new_fit_flux.fit_report())
 print('done')
-plt.show()
+
+#save all data in tables to make for easy comparison
+# attempt to start parameter guessing with variable components, use uncertainties to help when adding multiple components
+# one outside of while loop then always split last point
