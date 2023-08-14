@@ -6,7 +6,7 @@ Created on Thu Jul 13 12:29:44 2023
 
 All the functions used in the analysis of the 6379 DIB using rovribrational spectroscopy. Modified from original code written by Charmi Bhatt. 
 
-WARNING: Some functions make use of the 'beepy module'. This is a module that has a number of pre-loaded sound effects, that
+WARNING: Some functions make use of the 'beepy' module. This is a module that has a number of pre-loaded sound effects, that
 I use to alert me at times when, for example, the code has finished running. It relies on having the module simpleaudio installed, 
 so if they are not found many of these functions will produce a related error message! These are not essential so can be commented out 
 or deleted, however if you want to use them they are easily installed through pip! 
@@ -28,10 +28,12 @@ import beepy as bp
 import csv
 # import cProfile
 
-#%%
+#%% Making equal spaced grid of wavenumbers according to edibles resolution
 
 def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
-
+    ''' 
+    Makes a grid of equal spaced wavenumbers to fit to the interpolation of observational data, which can then be matched to the fitting of a model. 
+    '''
     # check keywords
     if oversample is None:
         oversample = 40.0
@@ -72,7 +74,7 @@ def curve_to_fit_wavenos(sightline):
     print('Replace curve_to_fit_wavenos function with obs_curve_to_plot!')
     bp.beep(sound = 'robot_error')
 
-def obs_curve_to_plot(sightline, wavenos = True, scaled = True): 
+def obs_curve_to_plot(sightline, wavenos = True, scaled = True, zero = None): 
     
     '''
     RENAMED from curve_to_fit_wavenos 
@@ -85,6 +87,11 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True):
         wavenos (bool): if true (default) returns the data in units of wavenumber (cm^-1) centred around zero, else in Angstroms at true value
         
         scaled (bool): if true (default) scales the flux between 0.9 and 1
+        
+        zero (string): Sets the point to which the plot is aligned to. Allowed values: 
+            None (default): Returns the original unshifted data
+            min: data is shifted so 0 cm^-1 (or 0 A - not appropriate!) is at the minimum flux value of the plot
+            6379: Minimum flux value is at 6379
         
     Returns:
         x_obs_data (pandas series): Wavenumber or wavelength values
@@ -107,10 +114,17 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True):
         Obs_data = Obs_data.iloc[::-1].reset_index(
             drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
         x_axis = 'Wavenumber / cm$^{-1}$'
+        
+    if zero == 'min':
         min_index = np.argmin(Obs_data['Flux'])
         # min_index = 50
         # min_index = np.argmax(Obs_data['Flux'][np.argmin(Obs_data['Flux']):np.argmin(Obs_data['Flux'])+20])
         Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
+    elif zero == '6379':
+        min_index = np.argmin(Obs_data['Flux'])
+        Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] +6379
+    elif zero == None:
+        Obs_data['Wavelength'] = Obs_data['Wavelength']
     
     if scaled == True:  
         # shifting to zero and scaling flux between 0.9 and 1
@@ -183,30 +197,30 @@ if __name__ == "__main__":
 
     # # obs_curve_to_plot test:
 
-    # x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline)
+    x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline, wavenos = False, zero = None)
     # print(len(x_obs))
 
-    # fig, ax = plt.subplots()
-    # ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline), marker = 'o')
-    # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
-    # ax.set_xlabel(x_label)
-    # ax.set_ylabel('Flux')
-    # ax.legend()
-    # plt.show()
-    
-    # # obs_curve_to_fit test:
-    
-    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
-
     fig, ax = plt.subplots()
-    ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
-    # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
-    ax.set_xlabel('Waveno')
+    ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    ax.set_xlabel(x_label)
     ax.set_ylabel('Flux')
     ax.legend()
     plt.show()
+    
+    # # obs_curve_to_fit test:
+    
+    # Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+
+    # fig, ax = plt.subplots()
+    # ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
+    # # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    # # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    # ax.set_xlabel('Waveno')
+    # ax.set_ylabel('Flux')
+    # ax.legend()
+    # plt.show()
 
 #%% Allowed Perp Transitions Calculation
 
@@ -432,12 +446,12 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     delta_J = linelist['excited_J'] - linelist['ground_J']
     delta_K = linelist['excited_K'] - linelist['ground_K']
     
-    #end1 = timeit.default_timer()
-    #print('Time to import parameters ' + str(end1-start1))
+    end1 = timeit.default_timer()
+    print('Time to import parameters ' + str(end1-start1))
     
     # Calculating Linelist
 
-    #start2 = timeit.default_timer()
+    start2 = timeit.default_timer()
     
     # ground_Es = []
     # excited_Es = []
@@ -460,11 +474,11 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
     ground_Es = linelist['ground_Es'] 
 
-    #end2 = timeit.default_timer()
-    # print('Time to make linelist '+str(end2 - start2_3))
+    end2 = timeit.default_timer()
+    print('Time to make linelist '+str(end2 - start2))
     #print('Overall time to calculate linelist ' + str(end2-start2))
 
-    #start3 = timeit.default_timer()
+    start3 = timeit.default_timer()
     
     #Calculating Honl-London factors to determine relative intensities
 
@@ -487,11 +501,11 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
                       None for J, K, delta_J, delta_K in zip(ground_Js, ground_Ks, delta_J, delta_K)]
     linelist['HL_factors'] = HL_factors
 
-    #end3 = timeit.default_timer()
-    #print('Time to calculate HL Factors ' + str(end3-start3))
+    end3 = timeit.default_timer()
+    print('Time to calculate HL Factors ' + str(end3-start3))
 
     # Calculate populations of each level with Boltzmann eqn
-    #start4 = timeit.default_timer()
+    start4 = timeit.default_timer()
     BD_factors = []
 
     h = const.h.cgs.value
@@ -523,12 +537,12 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
     linelist['intensities'] = intensities
     
-    #end4 = timeit.default_timer()
-    #print('Time to calculate BD Factors ' + str(end4-start4))
+    end4 = timeit.default_timer()
+    print('Time to calculate BD Factors ' + str(end4-start4))
 
     # Smoothening the linelist using a Gaussian smoothing with std sigma and the numba decorator
     
-    #start5 = timeit.default_timer()    
+    start5 = timeit.default_timer()    
     smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1, np.max(linelist['wavenos']) + 1, 1000)  # grid_size
 
     Wavenos_arr = np.array(linelist['wavenos'])
@@ -545,13 +559,13 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
         return smooth_intensities
     smooth_intensities = calculate_smooth_intensities(Wavenos_arr, Intenisty_arr, smooth_wavenos, sigma)
-    #end5 = timeit.default_timer()
-    #print('Time for numba ' + str(end5-start5))
+    end5 = timeit.default_timer()
+    print('Time for numba ' + str(end5-start5))
     
 
     # call the numba function with input data
 
-    #start6 = timeit.default_timer()
+    start6 = timeit.default_timer()
     smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()
     smooth_data = np.delete(smooth_data, np.where(smooth_data[:, 1] <= 0.001 * (max(smooth_data[:, 1]))), axis=0)
 
@@ -560,8 +574,8 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     
     model_data = np.array([simu_waveno, simu_intenisty]).transpose()
 
-    #end6 = timeit.default_timer()
-    #print('Time to for convolution ' + str(end6-start6))
+    end6 = timeit.default_timer()
+    print('Time to for convolution ' + str(end6-start6))
 
     # for units in wavelength
     # simu_wavelength = (1/simu_waveno)*1e8
@@ -571,7 +585,7 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     y_model_data = model_data[:,1]
     x_model_data = model_data[:,0]
     endg = timeit.default_timer()
-
+    
     # print('>>>> Time taken to smooth profile  ' + str(endg - linelist_time) + '  sec')
     print('>>>> Time taken to simulate this profile  ' + str(endg - start1) + '  sec')
     print('==========')
@@ -580,16 +594,17 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     return x_model_data, y_model_data#, linelist
 
 if __name__ == "__main__":
-    Jmax_test = 500
+    Jmax_test = 300
     B = 0.0016
     delta_B = 0.6
     zeta = -0.55
     T = 100
     sigma = 0.1953
     origin = 0.22
-    combinations  = allowed_parallel_transitions(Jmax_test)
+    # combinations  = allowed_parallel_transitions(Jmax_test)
+    combinations  = allowed_perperndicular_transitions(Jmax_test)
 
-    xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = False, transition='parallel')
+    xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = 1, transition='perpendicular')
     
     fig, ax = plt.subplots()
     ax.plot(xs, ys, label = 'Model fit')
@@ -622,6 +637,9 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     x_obs_data, y_obs_data, std_dev, x_axis = obs_curve_to_fit(sightline)
     
     y_model_data = np.interp(x_equal_spacing, x_model_data, y_model_data)
+    
+    # plt.plot(x_equal_spacing, y_model_data)
+    # plt.figsize = (1,1.5)
     
     return y_model_data
 

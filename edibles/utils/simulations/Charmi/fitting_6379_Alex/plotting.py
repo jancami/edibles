@@ -17,38 +17,47 @@ sightlines = ['24398','144470','147165','147683','149757','166937',
 # print(len(sightlines))
 
 
+
 #%% Plotting observational data of DIBs
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize = (15,10))#, facecolor = 'lavender')
 xs, ys = [], []
 std = 0
-for star in sightlines: 
-    xs, ys, std, x_axis = functions.obs_curve_to_plot(star, wavenos = 1, scaled = False)
-    ax.plot(xs, ys, label = 'HD{}'.format(star))
 
-ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+l = 35
+h = 85
+for star in sightlines: 
+    xs, ys, std, x_axis = functions.obs_curve_to_plot(star, wavenos = 0, scaled = 1, zero = '6379')
+    ax.plot(xs[l:h], ys[l:h], label = 'HD{}'.format(star), linewidth = 1.5)
+
+ax.xaxis.set_major_locator(plt.MultipleLocator(0.5))
+ax.xaxis.set_minor_locator(plt.MultipleLocator(0.1))
 ax.set_xlabel(x_axis)
 ax.set_ylabel('Flux')
-ax.legend()
-# plt.savefig('6379_obs_waveno.png')
+ax.set_facecolor('gainsboro')
+# ax.legend()
 
+# plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Presentation\\background.png", bbox_inches = 'tight')
+# plt.savefig('fig.png')
+
+plt.show()
 # plot_colortable(mcolors.TABLEAU_COLORS, ncols=2, sort_colors=False)
 
 #%% Simulations
 
-Jmax = 600
+Jmax = 300
 
-combinations = functions.allowed_parallel_transitions(Jmax)
+# combinations = functions.allowed_parallel_transitions(Jmax)
+combinations = functions.allowed_perperndicular_transitions(Jmax)
 # print(combinations)
 
-B = 0.0016 # cm^-1
-delta_B = 0.6 # %
-zeta = -0.55 # cm^-1
-T = 50 # K
-sigma = 0.1953  
-origin = 0
-xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'parallel')
+B = 0.0010 # cm^-1
+delta_B = 0.72 # %
+zeta = -1.1 # cm^-1
+T = 160 # K
+sigma = 0.2 
+origin = 0.08
+xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'perpendicular')
 
 
 # B1 = 0.0016 # cm^-1
@@ -66,7 +75,7 @@ xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, c
 
 sightline = '185859'
 
-x_obs, y_obs, std, x_label = functions.obs_curve_to_plot(sightline)
+x_obs, y_obs, std, x_label = functions.obs_curve_to_plot(sightline, wavenos=True)
 
 fig, ax = plt.subplots()
 ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
