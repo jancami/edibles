@@ -23,21 +23,21 @@ combinations = fn.allowed_parallel_transitions(Jmax)
 
 # Set 1:
 
-# B = 0.0016
-# delta_B = 0.6
-# zeta = -0.55
-# T = 70
-# sigma = 0.1953
-# origin = 0
+B = 0.0016
+delta_B = 0.6
+zeta = -0.55
+T = 70
+sigma = 0.1953
+origin = 0
 
 # Set 2:
     
-B = 0.0013
-delta_B = 0.59
-zeta = -0.97
-T = 50
-sigma = 0.2
-origin = -0.08
+# B = 0.0013
+# delta_B = 0.59
+# zeta = -0.97
+# T = 50
+# sigma = 0.2
+# origin = -0.08
 
 # # Set 3:
     

@@ -551,7 +551,6 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     @nb.njit(parallel=True)
     def calculate_smooth_intensities(wavenos, intensities, smooth_wavenos, sigma):
         smooth_intensities = np.zeros(smooth_wavenos.shape)
-
         for i in nb.prange(len(smooth_wavenos)):
             wavepoint = smooth_wavenos[i]
             w_int = np.exp(-(wavenos - wavepoint) ** 2 / (2 * sigma ** 2)) * intensities
@@ -594,11 +593,11 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     return x_model_data, y_model_data#, linelist
 
 if __name__ == "__main__":
-    Jmax_test = 300
+    Jmax_test = 320
     B = 0.0016
-    delta_B = 0.6
-    zeta = -0.55
-    T = 100
+    delta_B = 0.2
+    zeta = -0.35
+    T = 70
     sigma = 0.1953
     origin = 0.22
     # combinations  = allowed_parallel_transitions(Jmax_test)
@@ -606,23 +605,34 @@ if __name__ == "__main__":
 
     xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, bell = 1, transition='perpendicular')
     
-    fig, ax = plt.subplots()
-    ax.plot(xs, ys, label = 'Model fit')
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
-    ax.set_xlabel('Wavenumber / cm$^{-1}$')
-    ax.set_ylabel('Flux')
-    ax.legend()    
-
+    # fig, ax = plt.subplots()
+    # ax.plot(xs, ys, label = 'Model fit')
+    # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    # ax.set_xlabel('Wavenumber / cm$^{-1}$')
+    # ax.set_ylabel('Flux')
+    # ax.legend()    
+    
+    
     # #Testing different Jmax values with just the linelist
-    # plt.figure(figsize=(40,25))
-    # plt.plot(linelist['wavenos'],linelist['intensities'])
+    # fig, ax = plt.subplots(figsize=(32,20), facecolor = 'none')
+    
+    # for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+    # 	label.set_fontsize(32)
+    
+    # ax.plot(linelist['wavenos'],linelist['intensities'], color = 'forestgreen')
+    # ax.set_xlabel('Wavenumber/$cm^{-1}$', fontsize = 32)
+    # ax.set_ylabel('Intensity (Arbitrary Units)', fontsize = 32)
     # # plt.xlim((-0.2,4))
-    # plt.title('Jmax = ' + str(Jmax_test), fontsize = 40)
+    # # plt.title('Jmax = ' + str(Jmax_test), fontsize = 40)
+    # ax.annotate('P\n$\Delta J = -1$', (-0.6,190), xycoords='data', fontsize = 50)
+    # ax.annotate('Q\n$\Delta J = 0$', (0.1,160), xycoords='data', fontsize = 50)
+    # ax.annotate('R\n$\Delta J = +1$', (0.85,190), xycoords='data', fontsize = 50)
     
-    # plt.savefig('Jmax_tests_parallel/Jmax = {}_params2.png'.format(Jmax_test), bbox_inches = 'tight')
+    # # plt.savefig('Jmax_tests_parallel/Jmax = {}_params2.png'.format(Jmax_test), bbox_inches = 'tight')
+    # # plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Presentation\\Figures\\PQR.png", bbox_inches = 'tight')
     
-
+    # plt.show()
 
 
 
