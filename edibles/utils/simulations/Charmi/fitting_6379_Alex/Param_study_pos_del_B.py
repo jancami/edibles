@@ -5,7 +5,7 @@ Created on Mon Jul 17 15:49:04 2023
 @author: alexr
 """
 
-from functions import allowed_parallel_transitions,get_rotational_spectrum
+from functions import allowed_parallel_transitions,get_rotational_spectrum, allowed_perperndicular_transitions
     
 import matplotlib.pyplot as plt
 
@@ -14,12 +14,12 @@ import beepy as bp
 #%%
 Jmax = 300
 
-combinations = allowed_parallel_transitions(Jmax)
+combinations = allowed_perperndicular_transitions(Jmax)
 # print(combinations)
 
-delta_B = 0.8
+delta_B = 0.2
 delta_C = delta_B
-zeta = -0.55
+zeta = -0.35
 sigma = 0.1953
 origin = 0
 
@@ -29,7 +29,7 @@ Bs = (0.000501, 0.001584, 0.005011, 0.0158489, 0.0501187)
 B_label = ('5.0 x 10$^{-4}$', '1.6 x 10$^{-3}$', '5.0 x 10$^{-3}$', '1.6 x 10$^{-2}$', '5.0 x 10$^{-2}$' )
 
 #Create figure
-fig, axes = plt.subplots(5, 5, figsize=(19,10), sharex=(True), sharey=(True))
+fig, axes = plt.subplots(5, 5, figsize=(19,10), sharex=(True), sharey=(True), facecolor = 'none')
 fig.suptitle(' 'r'$\Delta B =$ ' + str(delta_B) + '% ,  'r'$\Delta C =$ ' + str(delta_C) + '% , 'r'$\zeta^{\prime}  = $' + str(zeta) + ', 'r'$\sigma = $'+ str(sigma) + 'cm$^{-1}$ \n' , size ='xx-large')
 
 #Labelling T and B values for rows and columns
@@ -58,7 +58,7 @@ n = 0
 for B in Bs:
     m = 0
     for T in Ts:
-        xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, bell = False, transition = 'parallel')
+        xs, ys = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, bell = False, transition = 'perpendicular')
         
         axes[m,n].plot(xs, ys, linewidth = 1)
         axes[m,n].xaxis.set_major_locator(plt.MultipleLocator(5))
@@ -73,7 +73,8 @@ for B in Bs:
     n = n + 1
     
 # winsound.Beep(440,500)
-plt.savefig('Parallel_transition_param_study/del_B={}_zeta={}.png'.format(delta_B,zeta), bbox_inches = 'tight')
+# plt.savefig('Parallel_transition_param_study/del_B={}_zeta={}.png'.format(delta_B,zeta), bbox_inches = 'tight')
+# plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Presentation\\Figures\\perp_param_study.png", bbox_inches = 'tight')
 
 bp.beep(sound='ready')
 
