@@ -1,0 +1,11 @@
+omiper.k94	omiper.k94.7698.txt	omiper.k94.txt	1.40
+omiper.m95	omiper.m95.7698.txt	omiper.m95.txt  0.56
+sigsco	sigsco.k00a.7698.txt	sigsco.txt	1.20
+zetoph.lf	zetoph.lf.7698.txt	zetoph.lf.txt	0.40
+zetoph.m95	zetoph.m95.7698.txt	zetoph.m95.txt	0.56
+zetoph.k94	zetoph.k94.7698.txt	zetoph.k94.txt	1.40
+zetper	zetper.m95.7698.txt	zetper.txt	0.56
+
+
+
+
