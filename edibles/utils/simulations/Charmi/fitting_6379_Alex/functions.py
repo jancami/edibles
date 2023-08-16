@@ -644,13 +644,25 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     '''
     x_model_data, y_model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition, Jmax, bell = False)   
     
-    x_obs_data, y_obs_data, std_dev, x_axis = obs_curve_to_fit(sightline)
-    
+    # x_obs_data, y_obs_data, std_dev, x_axis = obs_curve_to_fit(sightline)
+    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+    plt.plot(x_model_data, y_model_data, label = 'Model')
+    Obs_data = Obs_data[Obs_data['Flux']<=0.95]
+    plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Raw obs')
+    plt.plot(x_equal_spacing, y_data_fit, label = 'Interpolated obs')
+    plt.legend()
+    plt.figsize = (1,1.5)
+    plt.show()
     y_model_data = np.interp(x_equal_spacing, x_model_data, y_model_data)
+    print(B)
+    print(delta_B)
+    print(zeta)
+    print(T)
+    print(sigma)
+    print(origin)
+    # m = m+1
     
-    # plt.plot(x_equal_spacing, y_model_data)
-    # plt.figsize = (1,1.5)
-    
+
     return y_model_data
 
 #%% Model fitting
@@ -694,7 +706,13 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
     print(std_dev)
     print(len(y_data_fit))
     print(len(x_equal_spacing))
+    print(x_equal_spacing)
+    print(y_data_fit)
+    plt.plot(x_equal_spacing, y_data_fit, label = 'Observational fit data')
+    plt.legend()    
+    plt.show()
     print(Jmax)
+    m = 0
     
     result = mod.fit(y_data_fit, params, weights = 1/std_dev, 
                      x_equal_spacing = x_equal_spacing, 
