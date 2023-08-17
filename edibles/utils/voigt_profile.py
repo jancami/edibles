@@ -458,8 +458,8 @@ def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=
     # Create the parameters for the clouds. 
     if n_components == 1:
         #print('Single Cloud Component:')
-        params.add('b0', value=b)
-        params.add('N0', value=N)
+        params.add('b0', value=b,min=0)
+        params.add('N0', value=N,min=0)
         params.add('v_rad0', value=v_rad)
     else:
         #print('Multiple Clouds:')
@@ -467,8 +467,8 @@ def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=
             #print(i)
             #print(b[i])
             # Same idea as above -- will create b0, b1, ... and N0, N1, ... and v_rad0, v_rad1, .... 
-            params.add(f'b{i}', value=b[i])
-            params.add(f'N{i}', value=N[i])
+            params.add(f'b{i}', value=b[i],min=0)
+            params.add(f'N{i}', value=N[i],min=0)
             params.add(f'v_rad{i}', value=v_rad[i])
     #print(params)
 

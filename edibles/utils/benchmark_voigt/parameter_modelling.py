@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from edibles import PYTHONDIR
 from pathlib import Path
 import pandas as pd
-import voigt_profile as vp
+from edibles.utils import voigt_profile as vp
 import os.path
 
 def file_reader (star_name):
@@ -219,6 +219,14 @@ if __name__ == '__main__' :
               'Fit parameters: {3}'.format(b, N, v_rad, fit_flux.fit_report())
         file.write(txt)
         file.close()
+        b_fit_flux = np.zeros(len(b))
+        N_fit_flux = np.zeros(len(N))
+        v_rad_fit_flux = np.zeros(len(v_rad))
+        for j in range(len(b)):
+            b_fit_flux[j] = fit_flux.params[f'b{j}']
+            N_fit_flux[j] = fit_flux.params[f'N{j}']
+            v_rad_fit_flux[j] = fit_flux.params[f'v_rad{j}']
+
 
 
         # attempting to build code which will find out the number of components in a sightline
@@ -252,7 +260,6 @@ if __name__ == '__main__' :
         ax.set_ylabel('Normalised Flux')
         plt.legend()
         plt.show()
-
         print('b is ', b_components)
         print('N is ', N_components)
         print('v_rad is ', v_rad_components)
@@ -264,14 +271,17 @@ if __name__ == '__main__' :
         count = 1
         while count < len(b) :
             print('entered while loop')
+
             for k in range(components):
                 b_components[k] = new_fit_flux.values[f'b{k}']
                 N_components[k] = new_fit_flux.values[f'N{k}']
                 v_rad_components[k] = new_fit_flux.values[f'v_rad{k}']
 
+
             components += 1
             print('components',components)
             # use values which are 2 std's higher than the paramter from the first component to create a new component
+            print('new_fit_flux.params[b0].stderr = ', new_fit_flux.params['b0'])
             new_b = new_fit_flux.params['b0'].stderr * 2 + b_components[0]
             multiplier = 2
             print('calculating new_b')
@@ -311,6 +321,10 @@ if __name__ == '__main__' :
                     N_components[l] = N[0]
                     print(f'reset N{l}')
 
+            b_components.sort()
+            N_components.sort()
+            v_rad_components.sort()
+
             print('fitting...')
             # use the guess parameters to find best fits
             new_fit_flux = vp.fit_multi_voigt_absorptionlines(wavegrid=wavelengths,
@@ -328,22 +342,82 @@ if __name__ == '__main__' :
             print('N is now', N_components)
             print('v_rad is now', v_rad_components)
             print('fitted')
-            #fig_2 = plt.figure()
-            #ax = fig_2.add_subplot(111)
-            #ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
-            #ax.plot(wavelengths, new_fit_flux.best_fit, c='r', marker='*', label='best-fit')
-            #fig_2.suptitle(star_name[i])
-            #ax.set_xlabel('Wavelength \u00C5')
-            #ax.set_ylabel('Normalised Flux')
-            #plt.legend()
-            #plt.show()
+
+            fig_2 = plt.figure()
+            ax = fig_2.add_subplot(111)
+            ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
+            ax.plot(wavelengths, new_fit_flux.best_fit, c='r', marker='*', label='best-fit')
+            fig_2.suptitle(star_name[i])
+            ax.set_xlabel('Wavelength \u00C5')
+            ax.set_ylabel('Normalised Flux')
+            plt.legend()
+            plt.show()
             #answer = input('Add another component?')
             count += 1
         #plot final result in order to inspect by eye how good of a fit the parametrs are
+        for k in range(components):
+            b_components[k] = new_fit_flux.values[f'b{k}']
+            N_components[k] = new_fit_flux.values[f'N{k}']
+            v_rad_components[k] = new_fit_flux.values[f'v_rad{k}']
+        fit_flux_1= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b_components[0],
+            N=N_components[0],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad_components[0],
+            v_resolution=resolution[i],
+        )
+        fit_flux_2= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b_components[1],
+            N=N_components[1],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad_components[1],
+            v_resolution=resolution[i],
+        )
+        fit_flux_3= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b_components[2],
+            N=N_components[2],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad_components[2],
+            v_resolution=resolution[i],
+        )
+        fit_flux_4= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b_components[3],
+            N=N_components[3],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad_components[3],
+            v_resolution=resolution[i],
+        )
+        fit_flux_5= vp.voigt_absorption_line(
+            wavelengths,
+            lambda0=7698.974,
+            b=b_components[4],
+            N=N_components[4],
+            f=3.393e-1,
+            gamma=3.8e7,
+            v_rad=v_rad_components[4],
+            v_resolution=resolution[i],
+        )
         fig_2 = plt.figure()
         ax = fig_2.add_subplot(111)
         ax.plot(wavelengths, normflux, color="k", marker="D", fillstyle='none', label='Data')
         ax.plot(wavelengths, new_fit_flux.best_fit, c='orange', marker='*', label='best-fit')
+        #ax.plot(wavelengths, fit_flux_1, label = 'best fit 1st comp')
+        #ax.plot(wavelengths, fit_flux_2, label = 'best fit 2nd comp')
+        #ax.plot(wavelengths, fit_flux_3, label = 'best fit 3rd comp')
+        #ax.plot(wavelengths, fit_flux_4, label = 'best fit 4th comp')
+        #ax.plot(wavelengths, fit_flux_5, label = 'best fit 5th comp')
         fig_2.suptitle(star_name[i])
         ax.set_xlabel('Wavelength \u00C5')
         ax.set_ylabel('Normalised Flux')
@@ -370,8 +444,8 @@ if __name__ == '__main__' :
                     table_data[y+len(b)][x] = f'{N[y]:#.3g}'
                     table_data[y+len(b)*2][x] = f'{v_rad[y]:#.3f}'
                     row_labels[y] = f'b{y}'
-                    row_labels[y+len(b)] = f'N{y+5}'
-                    row_labels[y+len(b)*2]= f'v_rad{y+10}'
+                    row_labels[y+len(b)] = f'N{y}'
+                    row_labels[y+len(b)*2]= f'v_rad{y}'
             else:
                 for y in range(len(b)):
                     table_data[y][x] = '{0:#.3f} \u00B1 {1:#.3f}'.format(fit_flux_array[x-1].values[f'b{y}'], fit_flux_array[x-1].params[f'b{y}'].stderr)
@@ -390,12 +464,47 @@ if __name__ == '__main__' :
         plt.box(on=False)
         table.scale(1,1)
         fig_3.suptitle(star_name[i])
+
+        b_fit_flux.sort()
+        N_fit_flux.sort()
+        v_rad_fit_flux.sort()
+        b_components.sort()
+        N_components.sort()
+        v_rad_components.sort()
+        print('b fit flux', b_fit_flux)
+
+        fig_4 = plt.figure()
+        ax = fig_4.add_subplot(111)
+        ax.plot(b, b_components, c = 'r', marker = 'o',linestyle = 'None', label = 'component fitting')
+        ax.plot(b, b_fit_flux, c = 'b', marker= 'o',linestyle = 'None', label = 'fitting from W&H')
+        fig_4.suptitle(star_name[i])
+        ax.set_xlabel('W&H b')
+        ax.set_ylabel('fitted b')
+        plt.legend()
+
+        fig_5 = plt.figure()
+        ax = fig_5.add_subplot(111)
+        ax.plot(N, N_components, c='r',marker ='o',linestyle = 'None',  label='component fitting')
+        ax.plot(N, N_fit_flux, c='b',marker ='o',linestyle = 'None', label='fitting from W&H')
+        fig_5.suptitle(star_name[i])
+        ax.set_xlabel('W&H N')
+        ax.set_ylabel('fitted N')
+        plt.legend()
+
+        fig_6 = plt.figure()
+        ax = fig_6.add_subplot(111)
+        ax.plot(v_rad, v_rad_components, c='r',marker = 'o',linestyle = 'None', label='component fitting')
+        ax.plot(v_rad, v_rad_fit_flux, c='b',marker = 'o', linestyle = 'None',label='fitting from W&H')
+        ax.set_xlabel('W&H v_rad')
+        ax.set_ylabel('fitted v_rad')
+        fig_6.suptitle(star_name[i])
+        plt.legend()
         plt.show()
+
 
 
 #print(new_fit_flux.fit_report())
 print('done')
-
 #save all data in tables to make for easy comparison
 # attempt to start parameter guessing with variable components, use uncertainties to help when adding multiple components
 # one outside of while loop then always split last point
