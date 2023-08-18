@@ -25,7 +25,7 @@ import astropy.constants as const
 import numba as nb
 from lmfit import Model
 import beepy as bp
-import csv
+
 # import cProfile
 
 #%% Making equal spaced grid of wavenumbers according to edibles resolution
@@ -445,13 +445,13 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
     delta_J = linelist['excited_J'] - linelist['ground_J']
     delta_K = linelist['excited_K'] - linelist['ground_K']
-    
-    end1 = timeit.default_timer()
-    print('Time to import parameters ' + str(end1-start1))
+    # 
+    # end1 = timeit.default_timer()
+    # print('Time to import parameters ' + str(end1-start1))
     
     # Calculating Linelist
 
-    start2 = timeit.default_timer()
+    # start2 = timeit.default_timer()
     
     # ground_Es = []
     # excited_Es = []
@@ -474,11 +474,11 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
     ground_Es = linelist['ground_Es'] 
 
-    end2 = timeit.default_timer()
-    print('Time to make linelist '+str(end2 - start2))
+    # end2 = timeit.default_timer()
+    # print('Time to make linelist '+str(end2 - start2))
     #print('Overall time to calculate linelist ' + str(end2-start2))
 
-    start3 = timeit.default_timer()
+    # start3 = timeit.default_timer()
     
     #Calculating Honl-London factors to determine relative intensities
 
@@ -501,11 +501,11 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
                       None for J, K, delta_J, delta_K in zip(ground_Js, ground_Ks, delta_J, delta_K)]
     linelist['HL_factors'] = HL_factors
 
-    end3 = timeit.default_timer()
-    print('Time to calculate HL Factors ' + str(end3-start3))
+    # end3 = timeit.default_timer()
+    # print('Time to calculate HL Factors ' + str(end3-start3))
 
     # Calculate populations of each level with Boltzmann eqn
-    start4 = timeit.default_timer()
+    # start4 = timeit.default_timer()
     BD_factors = []
 
     h = const.h.cgs.value
@@ -537,12 +537,12 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
     linelist['intensities'] = intensities
     
-    end4 = timeit.default_timer()
-    print('Time to calculate BD Factors ' + str(end4-start4))
+    # end4 = timeit.default_timer()
+    # print('Time to calculate BD Factors ' + str(end4-start4))
 
     # Smoothening the linelist using a Gaussian smoothing with std sigma and the numba decorator
     
-    start5 = timeit.default_timer()    
+    # start5 = timeit.default_timer()    
     smooth_wavenos = np.linspace(np.min(linelist['wavenos']) - 1, np.max(linelist['wavenos']) + 1, 1000)  # grid_size
 
     Wavenos_arr = np.array(linelist['wavenos'])
@@ -558,13 +558,13 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
 
         return smooth_intensities
     smooth_intensities = calculate_smooth_intensities(Wavenos_arr, Intenisty_arr, smooth_wavenos, sigma)
-    end5 = timeit.default_timer()
-    print('Time for numba ' + str(end5-start5))
+    # end5 = timeit.default_timer()
+    # print('Time for numba ' + str(end5-start5))
     
 
     # call the numba function with input data
 
-    start6 = timeit.default_timer()
+    # start6 = timeit.default_timer()
     smooth_data = np.array([smooth_wavenos, smooth_intensities]).transpose()
     smooth_data = np.delete(smooth_data, np.where(smooth_data[:, 1] <= 0.001 * (max(smooth_data[:, 1]))), axis=0)
 
@@ -573,8 +573,8 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
     
     model_data = np.array([simu_waveno, simu_intenisty]).transpose()
 
-    end6 = timeit.default_timer()
-    print('Time to for convolution ' + str(end6-start6))
+    # end6 = timeit.default_timer()
+    # print('Time to for convolution ' + str(end6-start6))
 
     # for units in wavelength
     # simu_wavelength = (1/simu_waveno)*1e8
@@ -660,7 +660,6 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     print(T)
     print(sigma)
     print(origin)
-    # m = m+1
     
 
     return y_model_data
@@ -712,7 +711,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
     plt.legend()    
     plt.show()
     print(Jmax)
-    m = 0
+
     
     result = mod.fit(y_data_fit, params, weights = 1/std_dev, 
                      x_equal_spacing = x_equal_spacing, 
@@ -760,130 +759,6 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
 #     result = fit_model(B = 0.002, T = 22.5, delta_B = -0.45, zeta = -0.01, sigma = 0.17, origin =  0.012, sightline = sightline)
 #     plt.figure(figsize = (15,8))
 
-#%% Generate multiple spectra
-
-def get_multi_spectra( **params_list):
-    """
-    Calculating a model for each sight line using 'get_rotational_spectrum'.
-   
-    Always using the same molecular parameters, but different T.
-    Args:
-        xx:
-        B:
-        T1:
-        T2:
-        delta_B:
-        zeta:
-        sigma:
-        origin:
-
-    Returns:
-    np.array
-        Model flux array. Fluxes for both sight lines are appended to one 1D array.
-    """
-    
-   
-    print('---------')
-    
-    B = params_list['B']
-    delta_B = params_list['delta_B']
-    zeta = params_list['zeta']
-    
-   
-    first_T_index = 3
-    last_T_index = first_T_index + len(sightlines) 
- 
-    first_sigma_index = last_T_index  
-    last_sigma_index = first_sigma_index + len(sightlines) 
- 
-    first_origin_index = last_sigma_index  
-    last_origin_index = first_origin_index +len(sightlines) 
- 
-    # T_values = params_list[first_T_index:last_T_index]
-    # sigma_values = params_list[first_sigma_index:last_sigma_index]
-    # origin_values = params_list[first_origin_index:last_origin_index]
-    
-    T_values = [params_list[f'T{i+1}'] for i in range(len(sightlines))]
-    sigma_values = [params_list[f'sigma{i+1}'] for i in range(len(sightlines))]
-    origin_values = [params_list[f'origin{i+1}'] for i in range(len(sightlines))]
-
-    all_y_model_data = np.array([])
-    
-    for T, sigma, origin, sightline in zip(T_values, sigma_values, origin_values, sightlines):
-        
-        linelist, model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition, bell = False)
-        
-        one_sl_y_model_data  = np.interp(common_grid_for_all, model_data[:, 0], model_data[:, 1])
-        
-        all_y_model_data = np.concatenate((all_y_model_data, one_sl_y_model_data))
-        
-    
-    # plt.plot(common_grid_for_all, all_y_model_data)
-    # plt.show()
-    return all_y_model_data
-
-
-#%% Fit multiple spectra to a model
-
-def fit_model_multi(B, delta_B, zeta, T, sigma, origin):
-    mod = Model(get_multi_spectra) 
-    
-    
-    
-    params_list = [B, delta_B, zeta]
-    
-    T_list = [T] * len(sightlines)
-    sigma_list = [sigma] * len(sightlines)
-    origin_list = [origin] * len(sightlines)
-
-    params_list.extend(T_list)
-    params_list.extend(sigma_list)
-    params_list.extend(origin_list)
-    
-    
-    print(params_list)
-    
-    
-    
-    first_T_index = 3
-    last_T_index = first_T_index + len(sightlines) 
- 
-    first_sigma_index = last_T_index  
-    last_sigma_index = first_sigma_index + len(sightlines) 
- 
-    first_origin_index = last_sigma_index  
-    last_origin_index = first_origin_index +len(sightlines) 
- 
-    params = Parameters()
-    params.add('B', value = B, min = 0.0005, max = 0.05)
-    params.add('delta_B', value = delta_B, min = -1, max =0)
-    params.add('zeta', value = zeta, min = -1, max = 1)
-    
-    for i, param_value in enumerate(params_list[first_T_index:last_T_index]):
-        params.add(f'T{i+1}', value=param_value, min = 2.7, max = 500)
-        
-    for i, param_value in enumerate(params_list[first_sigma_index:last_sigma_index]):
-        params.add(f'sigma{i+1}', value=param_value, min = 0.05, max = 0.3)
-        
-    for i, param_value in enumerate(params_list[first_origin_index:last_origin_index]):
-        params.add(f'origin{i+1}', value=param_value, min = -1, max = 1)
-        
-   
-    result = mod.fit(flux_list, params, xx=wave_list, weights = 1/stddev_array , method = method) #, fit_kws={'ftol': 1e-2, 'xtol': 1e-2} )
-    print(result.fit_report())
-    
-    # def plot_best_fit(result, x_equal_spacing, y_obs_data):
-    #     plt.figure()
-    #     plt.scatter(x_equal_spacing, y_obs_data, label='Observations')
-    #     plt.plot(x_equal_spacing, result.best_fit, 'r-', label='Best Fit')
-    #     plt.xlabel('x')
-    #     plt.ylabel('y')
-    #     plt.legend()
-    #     plt.show()
-            
-    #plot_best_fit(result, x_equal_spacing, y_obs_data)
-    
-    return result
 
 #%% Chi Squared function
 
@@ -921,46 +796,6 @@ def chi_sq(model_ys, obs_ys, std):
     return red_chi_sq
 
 
-#%% 
-
-def write_results_to_csv(results_list, filename):
-    with open(filename, 'w', newline='') as csvfile:
-        fieldnames = ['result_name', 
-                      'B_init', 'delta_B_init', 'zeta_init' , 'T1_init', 'sigma1_init' ,'origin1_init' , 
-                      'B',   'delta_B', 'zeta', 'T1','sigma1', 'origin1', 'chi2', 'redchi', 'func_evals', 
-                      'B_unc', 'delta_B_unc', 'zeta_unc', 'T1_unc',  'sigma1_unc', 'origin1_unc']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for i, result in enumerate(results_list):
-            result_name = f'result{i+1}'
-            params = result.params
-            row = {
-                'result_name': result_name,
-                'B_init': params['B'].init_value,
-                'delta_B_init': params['delta_B'].init_value,
-                'zeta_init': params['zeta'].init_value,
-                'T1_init': params['T1'].init_value,
-                'sigma1_init': params['sigma1'].init_value,
-                'origin1_init': params['origin1'].init_value,
-                'B': params['B'].value,
-                'delta_B': params['delta_B'].value,
-                'zeta': params['zeta'].value,
-                'T1': params['T1'].value,
-                'sigma1': params['sigma1'].value,
-                'origin1': params['origin1'].value,
-                'chi2': result.chisqr,
-                'redchi': result.redchi,
-                'func_evals': result.nfev,
-                'B_unc': params['B'].stderr,
-                'delta_B_unc': params['delta_B'].stderr,
-                'zeta_unc': params['zeta'].stderr,
-                'T1_unc': params['T1'].stderr,
-                'sigma1_unc': params['sigma1'].stderr,
-                'origin1_unc': params['origin1'].stderr,
-
-            }
-            writer.writerow(row)
 
 #%% 
 # print('\a')
