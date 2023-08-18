@@ -12,7 +12,7 @@ import numpy as np
 
 sightlines = ['24398','144470','147165','147683','149757','166937',
               '170740','184915','185418','203532','185859']
-sightline = sightlines[0]
+sightline = sightlines[4]
 print(sightline)
 
 #%% Perpendicular best fit parameters
@@ -65,7 +65,7 @@ zeta = 0.188564
 T = 299.91933
 sigma = 0.1934417
 # origin = -0.258784
-origin = -1.4
+origin = 0.3
 
 #%% Getting data
 
