@@ -12,12 +12,12 @@ import numpy as np
 
 sightlines = ['24398','144470','147165','147683','149757','166937',
               '170740','184915','185418','203532','185859']
-sightline = sightlines[4]
+sightline = sightlines[2]
 print(sightline)
 
 #%% Perpendicular best fit parameters
 
-Jmax = 300
+Jmax = 800
 
 combinations = fn.allowed_perperndicular_transitions(Jmax)
 
@@ -62,10 +62,11 @@ combinations = fn.allowed_perperndicular_transitions(Jmax)
 B = 0.0014747
 delta_B = 0.1460773
 zeta = 0.188564
-T = 299.91933
+# T = 299.91933
+T = 80
 sigma = 0.1934417
 # origin = -0.258784
-origin = 0.3
+origin = -0.4
 
 #%% Getting data
 
