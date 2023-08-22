@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from lmfit import Parameters
 import timeit
 
-sightlines = ['24398','144470']#,'147165','147683','149757','166937',
-           #   '170740','184915','185418','203532','185859']
+sightlines = ['24398','144470','147165','147683','149757','166937',
+              '170740','184915','185418','203532','185859']
 
 method = 'leastsq'
 flux_list = np.array([])
@@ -165,7 +165,7 @@ def fit_model_multi(B, delta_B, zeta, T, sigma, origin, combinations, transition
    
     result = mod.fit(flux_list,
                      params, 
-                     x=wave_list, 
+                     xx=wave_list, 
                      weights = 1/stddev_array, 
                      method = method,  
                      combinations = combinations, 

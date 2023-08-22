@@ -53,12 +53,12 @@ Jmax = 300
 combinations = functions.allowed_perperndicular_transitions(Jmax)
 # print(combinations)
 
-B = 0.0016 # cm^-1
-delta_B = -0.3 # %
-zeta = -0.35 # cm^-1
-T = 70 # K
-sigma = 0.1953 
-origin = 0.1
+B = 0.00147465 # cm^-1
+delta_B = 0.14611062 # %
+zeta = 0.18855113 # cm^-1
+T = 300 # K
+sigma = 0.19345059
+origin = -0.25880134
 xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'perpendicular')
 
 
@@ -77,10 +77,17 @@ xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, c
 
 sightline = '185859'
 
-x_obs, y_obs, std, x_label = functions.obs_curve_to_plot(sightline, wavenos=True, zero = 'min')
+x_obs, y_obs, std, x_label = functions.obs_curve_to_plot(sightline, wavenos=True, zero = None)
+Obs_data, x_equal_spacing, y_data_fit, std_dev = functions.obs_curve_to_fit(sightline)
+
+l = 57
+u = 93
+x_obs_cut = x_obs[l:u]
+y_obs_cut = y_obs[l:u]
 
 fig, ax = plt.subplots()#facecolor = 'none')
-ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
+ax.plot(x_obs_cut, y_obs_cut, label = 'HD{}'.format(sightline))
+# ax.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Curve_to_fit, HD{}'.format(sightline))
 ax.plot(xs, ys, label = 'Model')
 # ax.plot(xs1, ys1, label = 'T = 100K')
 ax.set_title('B = {}, $\Delta B =${}, $\zeta = {}$,\n $\sigma$ = {}, T = {}, origin = {}'.format(str(B), str(delta_B), str(zeta), str(sigma), str(T), str(origin)))

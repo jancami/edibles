@@ -65,7 +65,7 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
     # print('grid = ', grid)
     return grid
 
-#%% Extracting observational data
+#%% Extracting observational data to plot
 
 def curve_to_fit_wavenos(sightline):
     '''
@@ -89,9 +89,14 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True, zero = None):
         scaled (bool): if true (default) scales the flux between 0.9 and 1
         
         zero (string): Sets the point to which the plot is aligned to. Allowed values: 
-            None (default): Returns the original unshifted data
-            min: data is shifted so 0 cm^-1 (or 0 A - not appropriate!) is at the minimum flux value of the plot
-            6379: Minimum flux value is at 6379
+            
+            None (default): Returns the original unshifted data.
+            
+            min: if wavenos is true, data is shifted so 0 cm^-1 is at the minimum flux value of the plot.
+            
+            6379: If wavenos is false, minimum flux value is at 6379.
+            
+            Any other value will give the original data
         
     Returns:
         x_obs_data (pandas series): Wavenumber or wavelength values
@@ -114,18 +119,21 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True, zero = None):
         Obs_data = Obs_data.iloc[::-1].reset_index(
             drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
         x_axis = 'Wavenumber / cm$^{-1}$'
-        
-    if zero == 'min':
-        min_index = np.argmin(Obs_data['Flux'])
-        # min_index = 50
-        # min_index = np.argmax(Obs_data['Flux'][np.argmin(Obs_data['Flux']):np.argmin(Obs_data['Flux'])+20])
-        Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
-    elif zero == '6379':
-        min_index = np.argmin(Obs_data['Flux'])
-        Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] +6379
-    elif zero == None:
-        Obs_data['Wavelength'] = Obs_data['Wavelength']
     
+        
+    if wavenos == True: 
+        if zero == 'min':
+            min_index = np.argmin(Obs_data['Flux'])
+            Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] 
+        else:
+            Obs_data['Wavelength'] = Obs_data['Wavelength'] - (1/6379)*1e8
+    else:
+        if zero == '6379':
+            min_index = np.argmin(Obs_data['Flux'])
+            Obs_data['Wavelength'] = Obs_data['Wavelength'] - Obs_data['Wavelength'][min_index] +6379
+        else:
+            Obs_data['Wavelength'] = Obs_data['Wavelength']
+   
     if scaled == True:  
         # shifting to zero and scaling flux between 0.9 and 1
         Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
@@ -136,8 +144,28 @@ def obs_curve_to_plot(sightline, wavenos = True, scaled = True, zero = None):
     std_dev = np.std(Obs_data_continuum['Flux'])
         
     return x_obs_data, y_obs_data, std_dev, x_axis
-   
+
     
+# # obs_curve_to_plot test:
+
+if __name__ == "__main__":
+    sightline = '185859'
+
+    x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline, wavenos= False, zero ='6379')
+    # print(len(x_obs))
+
+    fig, ax = plt.subplots()
+    ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
+    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    ax.set_xlabel(x_label)
+    ax.set_ylabel('Flux')
+    ax.legend()
+    plt.show()
+
+    
+#%% Extracting observational data to fit
+
 def obs_curve_to_fit(sightline): 
     
     '''
@@ -150,7 +178,7 @@ def obs_curve_to_fit(sightline):
         sightline (str): star identifier to fill in file name '6379_HD{}_avg_spectra.csv'
         
     Returns:
-        Obs_data (pandas DataFrame): Data frame of the observational data from the file
+        Obs_data (pandas DataFrame): Data frame of the observational data from the file, columns 'Wavelength' and 'Flux'.
         
         x_equal_spacing (numpy array): equal spaced wavenumber values (according to the data's resolution) in the region of the spectrum with the absorption feature
         
@@ -192,35 +220,22 @@ def obs_curve_to_fit(sightline):
         
     return Obs_data, x_equal_spacing, y_data_fit, std_dev
 
+
+# # obs_curve_to_fit test:
 if __name__ == "__main__":
-    sightline = '147165'
-
-    # # obs_curve_to_plot test:
-
-    x_obs, y_obs, std, x_label = obs_curve_to_plot(sightline, wavenos = False, zero = None)
-    # print(len(x_obs))
-
+    sightline = '185859'
+    
+    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+    print(Obs_data)
     fig, ax = plt.subplots()
-    ax.plot(x_obs, y_obs, label = 'HD{}'.format(sightline))
-    ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
-    ax.set_xlabel(x_label)
+    # ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
+    ax.plot(Obs_data['Wavelength'], Obs_data['Flux'])
+    # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
+    # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    ax.set_xlabel('Waveno')
     ax.set_ylabel('Flux')
     ax.legend()
     plt.show()
-    
-    # # obs_curve_to_fit test:
-    
-    # Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
-
-    # fig, ax = plt.subplots()
-    # ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
-    # # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
-    # # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
-    # ax.set_xlabel('Waveno')
-    # ax.set_ylabel('Flux')
-    # ax.legend()
-    # plt.show()
 
 #%% Allowed Perp Transitions Calculation
 
@@ -648,7 +663,7 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
     plt.plot(x_model_data, y_model_data, label = 'Model')
     Obs_data = Obs_data[Obs_data['Flux']<=0.95]
-    plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Raw obs')
+    plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Raw obs, HD{}'.format(sightline))
     plt.plot(x_equal_spacing, y_data_fit, label = 'Interpolated obs')
     plt.legend()
     plt.figsize = (1,1.5)
