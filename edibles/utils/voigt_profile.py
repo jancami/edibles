@@ -407,7 +407,7 @@ def multi_voigt_absorption_line( **params_list):
 
 
 def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=np.array, f=np.array, gamma=np.array, 
-             b=np.array, N=np.array, v_rad=np.array, v_resolution=0., n_step=0):
+             b=np.array, N=np.array, v_rad=np.array, v_resolution=0., n_step=0, std_dev = 1):
     """
     This function will take an observed spectrum contained in (wavegrid, ydata) and fit a set of Voigt profiles to
     it. The transitions to consider are specified by restwave, f, and gamma, and can be single floats or numpy arrays 
@@ -477,7 +477,7 @@ def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=
     #print("Resolution: ", v_resolution)
 
     # and do the fitting with the parameters we have created. 
-    result=voigtmod.fit(ydata, params, wavegrid=wavegrid)
+    result=voigtmod.fit(ydata, params, wavegrid=wavegrid, weights= 1/std_dev)
 
     return result
 
