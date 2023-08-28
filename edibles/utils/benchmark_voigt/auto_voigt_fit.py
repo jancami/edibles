@@ -51,6 +51,7 @@ for i in range(len(star_name)):
 
     # extract the raw data from the star file
     wavelengths, normflux = np.asarray(file_reader(star_name[i]+'.7698.txt'))
+    print(star_name[i])
 
     # asign guesses to b and N values, value does not matter as the fitting routine should fix this
     # so we are more worried about getting an accurate v_rad value
@@ -206,17 +207,20 @@ for i in range(len(star_name)):
 
     # stating the number of components, this seemed like the easiest way to calculate it
     components = (len(b) - 1)
+    b = np.zeros(components)
     b_err = np.zeros(components)
+    N = np.zeros(components)
     N_err = np.zeros(components)
+    v_rad = np.zeros(components)
     v_rad_err = np.zeros(components)
 
-    for i in range(components):
-        b[i] = fit.params[f'b{i}'].value
-        b_err[i] = fit.params[f'b{i}'].stderr
-        N[i] = fit.params[f'N{i}'].value
-        N_err[i] = fit.params[f'N{i}'].stderr
-        v_rad[i] = fit.params[f'v_rad{i}'].value
-        v_rad_err[i] = fit.params[f'v_rad{i}'].stderr
+    for j in range(components):
+        b[j] = fit.params[f'b{j}'].value
+        b_err[j] = fit.params[f'b{j}'].stderr
+        N[j] = fit.params[f'N{j}'].value
+        N_err[j] = fit.params[f'N{j}'].stderr
+        v_rad[j] = fit.params[f'v_rad{j}'].value
+        v_rad_err[j] = fit.params[f'v_rad{j}'].stderr
 
     # print results to see if we are satisfied
     print('final no components:', components)
@@ -273,14 +277,13 @@ for i in range(len(star_name)):
     N_order = N
     N_err_order = N_err
     v_rad.sort()
-
     # reorder the arrays
-    for i in range(components):
-        b[np.argwhere(v_rad == v_rad_order[i])[0,0]] = b_order[i]
-        b_err[np.argwhere(v_rad == v_rad_order[i])[0, 0]] = b_err_order[i]
-        N[np.argwhere(v_rad == v_rad_order[i])[0,0]] = N_order[i]
-        N_err[np.argwhere(v_rad == v_rad_order[i])[0, 0]] = N_err_order[i]
-        v_rad_err[np.argwhere(v_rad == v_rad_order[i])[0, 0]] = v_rad_err_order[i]
+    for j in range(components):
+        b[np.argwhere(v_rad == v_rad_order[j])[0,0]] = b_order[j]
+        b_err[np.argwhere(v_rad == v_rad_order[j])[0, 0]] = b_err_order[j]
+        N[np.argwhere(v_rad == v_rad_order[j])[0,0]] = N_order[j]
+        N_err[np.argwhere(v_rad == v_rad_order[j])[0, 0]] = N_err_order[j]
+        v_rad_err[np.argwhere(v_rad == v_rad_order[j])[0, 0]] = v_rad_err_order[j]
 
 
     # create and empty array of the right shape for our table that allows strings as an input
