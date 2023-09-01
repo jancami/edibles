@@ -24,6 +24,29 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
+def find_FWHM (x_data, y_data):
+    """
+    Will calculate the full width half maximum from data entered
+    parametres:
+        x_data: numpy array
+        y_data: numpy array
+    return:
+        fwhm: float
+            value of the fwhm in x_data units
+        peak: interger
+            position of peak value within y_data
+    """
+    # determine the index of the peak in y_data
+    peak = np.argwhere(y_data == np.min(y_data))[0,0]
+    # Find half of the peak value
+    half_peak = y_data[peak] + (1 - y_data[peak])*0.5
+    #find nearst data points to half_peak on both sides of the peak
+    left_side = find_nearest(y_data[:peak], half_peak)
+    right_side = find_nearest(y_data[peak:], half_peak) + len(y_data[:peak])
+    # calculae the full width half maximum (fwhm)
+    fwhm = x_data[right_side] - x_data[left_side]
+    return fwhm, peak
+
 
 #define path to file which contains the names of each star and the resolution of intraments used in survey
 folder = Path(PYTHONDIR + "/data")
@@ -61,11 +84,11 @@ for i in range(len(star_name)):
     # need good initial guess for v_rad
     # calc flux weighted wavelength and convert to v_rad
     wave_weight = sum((1 - normflux) * wavelengths / sum(1-normflux))
-    #print(wave_weight)
+    print('wave weight',wave_weight)
 
     # convert the guess wave position into velocity using eq below
     v_rad_guess = (wave_weight - central_wavelength)/central_wavelength * cst.c.to("km/s").value
-    #print(v_rad_guess)
+    print('v_rad',v_rad_guess)
     v_rad = np.array([v_rad_guess])
 
     # assuming that the first 50 values in the normflux array are part of the continuum
@@ -84,15 +107,56 @@ for i in range(len(star_name)):
                                         v_resolution= resolution[i],
                                         n_step=25,
                                         std_dev= errors)
+
+    #min_continuum, max_contiumm = np.argwhere()
+    residual_array = normflux / fit.best_fit
+
+    # find the peak position of the residuals plot
+    peak_position = wavelengths[np.argwhere(residual_array == np.max(residual_array))[0, 0]]
+
+    # create an array of all minima in the residuals plot
+    mins = wavelengths[ss.argrelextrema(residual_array, np.less)]
+
+    # print('peak ', peak_position)
+    # print('mins', find_nearest(mins[np.argwhere(mins > peak_position)], peak_position))
+
+    # find where the 2 nearest local minimum to the peak is
+    lower_near_lambda = mins[find_nearest(mins[np.argwhere(mins < peak_position)], peak_position)]
+    upper_near_lambda = mins[
+        find_nearest(mins[np.argwhere(mins > peak_position)], peak_position) + np.argwhere(mins > peak_position)[0, 0]]
+
+
+
+    # find the fwhm and peak positon of the 1 component fit
+    fwhm, peak_position = find_FWHM(wavelengths, fit.best_fit)
+    # limit the data being analysed to within 3 fwhm of the central peak
+    right_continuum = find_nearest(wavelengths, wavelengths[peak_position] + (3 * fwhm))
+    left_continuum = find_nearest(wavelengths, wavelengths[peak_position] - (3 * fwhm))
+    wavelengths = wavelengths[left_continuum:right_continuum]
+    normflux = normflux[left_continuum:right_continuum]
+    fit.best_fit = fit.best_fit[left_continuum:right_continuum]
+
     # plotting results
 
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111)
-    #ax.plot(wavelengths, normflux, c = 'k', label = 'data')
-    #ax.plot(wavelengths, fit.best_fit, 'b', label = '1 component')
-    #ax.plot(wavelengths[:50], normflux[:50], c= 'orange', marker= '*', markersize = 5)
-    #ax.plot(wavelengths, normflux/fit.best_fit, c='r', label = 'flux/best fit')
-    #plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(wavelengths, normflux, c = 'k', label = 'data')
+    ax.plot(wavelengths, fit.best_fit, 'b', label = '1 component')
+    ax.plot(wavelengths, normflux/fit.best_fit, c='r', label = 'residuals')
+    ax.plot([lower_near_lambda]*50, np.linspace(0,2.2,50), c= 'orange', linestyle= 'dashed', label = 'local minimas')
+    ax.plot([upper_near_lambda]*50, np.linspace(0,2.2,50), c= 'orange', linestyle= 'dashed')
+    ax.plot([peak_position]*50, np.linspace(0,2.2,50), c= 'maroon', linestyle= 'dashed', label = 'peak residual')
+    #ax.plot(wavelengths[left_continuum:right_continuum], normflux[left_continuum:right_continuum], c = 'orange')
+    fig.suptitle(star_name[i])
+    plt.legend()
+
+    # saveing for use in project report
+    if star_name[i] == 'omiper.m95':
+        plt.savefig(
+            'c:/Users/user/edibles/edibles/data/voigt_benchmarkdata/parameter_modelling_data/one_componet_fitting_for_document.png')
+    plt.show()
+
+
 
     # assigning 'previous_bic' (bic = bayesian info criterium) this may be used in
     # component fitting in order to tell our program when we have a good fit
@@ -114,6 +178,8 @@ for i in range(len(star_name)):
         # retrieve the previous reduced chi squared
         previous_red_chi = fit.summary()['redchi']
 
+        # redifine previous fit before adding component to fit, previous fit will then be used outside of the while loop
+        # and will be redifined as the best fit
         previous_fit = fit
 
         # array of residuals obtained by dividing the normflux by the flux from the last fit
@@ -148,7 +214,7 @@ for i in range(len(star_name)):
         v_rad = (min_lambdas - central_wavelength)/central_wavelength * cst.c.to("km/s").value
 
         # make sure the b and N arrays are the right length
-        b = np.array([1]* len(v_rad))
+        b = np.array([0.5]* len(v_rad))
         N = np.array([1e12]* len(v_rad))
 
         # check that we are adding the right amount of components
@@ -193,12 +259,15 @@ for i in range(len(star_name)):
 
         #print(fit.fit_report())
 
+        # plotting data for each component, makes it easier to check the fitting process
+
         #fig = plt.figure()
         #ax = fig.add_subplot(111)
-        #ax.plot(wavelengths, normflux, mfc = 'none',  c= 'k', marker = 'D', label = 'Data')
+        #ax.errorbar(wavelengths, normflux,yerr = np.array([errors] *len(wavelengths)), mfc = 'none',  c= 'k', marker = 'D', label = 'Data')
         #ax.plot(wavelengths, fit.best_fit, c = 'b', label = 'Fit')
         #ax.plot(wavelengths, normflux/fit.best_fit, label = 'residuals')
         #ax.plot(np.array([wavelengths[np.argwhere(residual_array == np.max(residual_array))[0, 0]]] * 50), np.linspace(0, 2, 50), linestyle= 'dashed')
+        #fig.suptitle(star_name[i])
         #plt.legend()
         #plt.show()
 
@@ -232,7 +301,7 @@ for i in range(len(star_name)):
     # plot final fit alongside the raw data
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(wavelengths, normflux, mfc = 'none',  c= 'k', marker = 'D', label = 'Data')
+    ax.errorbar(wavelengths, normflux,yerr = np.array([errors] *len(wavelengths)), mfc = 'none',  c= 'k', marker = 'D', label = 'Data')
     ax.plot(wavelengths, fit.best_fit, c = 'b', label = 'Fit')
     ax.plot(wavelengths, normflux/fit.best_fit, label = 'residuals')
     fig.suptitle(star_name[i])
@@ -277,6 +346,7 @@ for i in range(len(star_name)):
     N_order = N
     N_err_order = N_err
     v_rad.sort()
+
     # reorder the arrays
     for j in range(components):
         b[np.argwhere(v_rad == v_rad_order[j])[0,0]] = b_order[j]
@@ -316,6 +386,8 @@ for i in range(len(star_name)):
     plt.box(on=False)
     table.scale(1,1)
     fig_3.suptitle(star_name[i])
+    # save table data as an image so that data can be viewed without running the code everytime
+    plt.savefig('c:/Users/user/edibles/edibles/data/voigt_benchmarkdata/parameter_modelling_data/'+star_name[i]+'_table_data.png')
     plt.show()
 
 
