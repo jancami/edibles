@@ -166,7 +166,7 @@ if __name__ == "__main__":
     
 #%% Extracting observational data to fit
 
-def obs_curve_to_fit(sightline): 
+def obs_curve_to_fit(sightline, fitrange = '0.95'): 
     
     '''
     Takes in observations of a 6379 dib from Heather MacIsaac's data and returns data in a form that can be passed to fit_model in order to give a best fit model. 
@@ -190,21 +190,38 @@ def obs_curve_to_fit(sightline):
     spec_dir = Path(r"C:\Users\alexr\edibles\edibles\utils\simulations\Charmi\fitting_6379_Alex\Heather_MacIsaac_6379_data")
     file = '6379_HD{}_avg_spectra.csv'.format(sightline)
     Obs_data = pd.read_csv(spec_dir / file,
-                                sep=',')
+                                sep=',', )
+    Obs_data.columns.values[0] = 'Initial index'
 
     # shifting to zero and scaling flux between 0.9 and 1
     Obs_data['Flux'] = (Obs_data['Flux'] - min(Obs_data['Flux'])) / (1 - min(Obs_data['Flux'])) * 0.1 + 0.9
-    Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure, focussing on the peak structure
     
-    lambda_start = min(Obs_data_trp['Wavelength']) # Start and end of the section of the spectra we are focussing on
-    lambda_end = max(Obs_data_trp['Wavelength'])
-
+    if fitrange == '0.95':
+        # Old lambda start and end for fitting only flux <= 0.95
+        Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)]  # trp = triple peak structure, focussing on the peak structure
+        lambda_start = min(Obs_data_trp['Wavelength']) # Start and end of the section of the spectra we are focussing on
+        lambda_end = max(Obs_data_trp['Wavelength'])
+    
     Obs_data['Wavelength'] = (1 / Obs_data['Wavelength']) * 1e8 # Converting to waveno.
     Obs_data = Obs_data.iloc[::-1].reset_index(
         drop=True)  # making it ascending order as we transformed wavelength into wavenumbers
     # min_index = np.argmin(Obs_data['Flux'])  ## In case the zero point needs to be changed to the minimum of the peak
     Obs_data['Wavelength'] = Obs_data['Wavelength'] - (1/6379)*1e8  #Obs_data['Wavelength'][min_index] ## Zero point at 6379A in cm^-1
     Obs_data_trp = Obs_data[(Obs_data['Flux'] <= 0.95)] # Redefine the triple peak section, now in cm^-1
+    
+    if fitrange == '0.95':
+        Obs_data_for_fit = Obs_data_trp
+    
+    elif fitrange == 'bluewing':
+        # Defining wavenumber range for fitting flux <= 0.95 and blue wing
+        fit_index_zero = Obs_data_trp.iloc[0].name
+        fit_index_end = fit_index_zero + 20
+        Obs_data_for_fit = Obs_data.iloc[fit_index_zero:fit_index_end]
+        # print(len(Obs_data_for_fit))
+        lambda_end = 1/(Obs_data.iloc[fit_index_zero]['Wavelength'] + (1/6379)*1e8) * 1e8 # min(Obs_data_trp['Wavelength']) # Start and end of the section of the spectra we are focussing on
+        lambda_start = 1/(Obs_data.iloc[fit_index_end]['Wavelength'] +(1/6379)*1e8) * 1e8 #max(Obs_data_trp['Wavelength'])
+        # print(lambda_start), print(lambda_end)
+        # print(Obs_data_for_fit), print(Obs_data_trp)
     
     # making data evenly spaced
     common_grid_for_all = make_grid(lambda_start, lambda_end, resolution=107000, oversample=2)
@@ -213,7 +230,7 @@ def obs_curve_to_fit(sightline):
     common_grid_for_all = common_grid_for_all[::-1] # Reverse direction
     x_equal_spacing = common_grid_for_all
     # x_equal_spacing = np.linspace(min(Obs_data_trp['Wavelength']), max(Obs_data_trp['Wavelength']), 100) ## Old interpolation was 100 points between max and min
-    y_data_fit = np.interp(x_equal_spacing, Obs_data_trp['Wavelength'], Obs_data_trp['Flux']) # Interpolation of flux values
+    y_data_fit = np.interp(x_equal_spacing, Obs_data_for_fit['Wavelength'], Obs_data_for_fit['Flux']) # Interpolation of flux values
 
     Obs_data_continuum = Obs_data [(Obs_data['Wavelength'] >= 2) & (Obs_data['Wavelength']<= 5)]
     std_dev = np.std(Obs_data_continuum['Flux']) #Standard deviation of the continuum
@@ -225,11 +242,12 @@ def obs_curve_to_fit(sightline):
 if __name__ == "__main__":
     sightline = '185859'
     
-    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
-    print(Obs_data)
+    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline, fitrange='yuu')
+
     fig, ax = plt.subplots()
     # ax.plot(x_equal_spacing, y_data_fit, label = 'HD{}'.format(sightline), marker = 'o')
-    ax.plot(Obs_data['Wavelength'], Obs_data['Flux'])
+    ax.plot(Obs_data['Wavelength'], Obs_data['Flux'], color = 'r', label = 'Full, HD{}'.format(sightline),  linewidth = '2.5')
+    ax.plot(x_equal_spacing, y_data_fit, color = 'cyan', label = 'Trp', linestyle = '-.')
     # ax.xaxis.set_major_locator(plt.MultipleLocator(1))
     # ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
     ax.set_xlabel('Waveno')
@@ -434,7 +452,7 @@ def get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, tr
         x_model_data, y_model_data (numpy array): calculated wavenumber and flux values for the model
         
     Notes: 
-        Error message - TypeError: unsupported operand type(s) for *: 'NoneType' and 'float' in line 470, 
+        Error message - TypeError: unsupported operand type(s) for *: 'NoneType' and 'float' in line 568, 
         
         >>>> strength = (HL_factors[i] * BD_factors[i])
         
@@ -660,11 +678,11 @@ def model_curve_to_fit(x_equal_spacing, B, delta_B, zeta, T, sigma, origin, comb
     x_model_data, y_model_data = get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, transition, Jmax, bell = False)   
     
     # x_obs_data, y_obs_data, std_dev, x_axis = obs_curve_to_fit(sightline)
-    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline,fitrange='bluewing')
     plt.plot(x_model_data, y_model_data, label = 'Model')
-    Obs_data = Obs_data[Obs_data['Flux']<=0.95]
-    plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Raw obs, HD{}'.format(sightline))
-    plt.plot(x_equal_spacing, y_data_fit, label = 'Interpolated obs')
+    # Obs_data = Obs_data[Obs_data['Flux']<=0.95]
+    # plt.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Raw obs, HD{}'.format(sightline))
+    plt.plot(x_equal_spacing, y_data_fit, label = 'Interpolated obs, HD{}'.format(sightline))
     plt.legend()
     plt.figsize = (1,1.5)
     plt.show()
@@ -716,7 +734,7 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
     
     print(sightline)
     print(params)
-    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline)
+    Obs_data, x_equal_spacing, y_data_fit, std_dev = obs_curve_to_fit(sightline, fitrange='bluewing')
     print(std_dev)
     print(len(y_data_fit))
     print(len(x_equal_spacing))
@@ -740,6 +758,9 @@ def fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, trans
     print('Time taken to generate model ' + str(end - start))
     
     bp.beep(sound = 6) #Trumpet fanfare sound to say that it has finished!
+    
+    print('Sightline is HD{}'.format(sightline))
+    print('Jmax = {}'.format(Jmax))
     
     # Calculate residuals between best fit model and observation
     def residual(y_obs_data, y_model_data, sigma):

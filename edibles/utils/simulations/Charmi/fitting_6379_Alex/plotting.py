@@ -22,7 +22,7 @@ sightlines = ['24398','144470','147165','147683','149757','166937',
 
 #%% Plotting observational data of DIBs
 
-fig, ax = plt.subplots(figsize = (9,6), facecolor = 'none')
+fig, ax = plt.subplots(figsize = (9,6))#, facecolor = 'none')
 xs, ys = [], []
 std = 0
 
@@ -34,12 +34,12 @@ for star in sightlines:
 
 ax.xaxis.set_major_locator(plt.MultipleLocator(0.5))
 ax.xaxis.set_minor_locator(plt.MultipleLocator(0.1))
-ax.set_xlabel(x_axis)
-ax.set_ylabel('Flux')
+ax.set_xlabel('Wavelength / $\AA$', fontsize='x-large')
+ax.set_ylabel('Flux', fontsize='x-large')
 # ax.set_facecolor('none')
-ax.legend()
+ax.legend(fontsize='large')
 
-# plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Presentation\\wavelength_plot_partial_transparent.png", bbox_inches = 'tight')
+# plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Report\\Figure\\all_sightlines.png", bbox_inches = 'tight')
 # plt.savefig('fig.png')
 
 plt.show()
@@ -47,29 +47,30 @@ plt.show()
 
 #%% Simulations
 
-Jmax = 300
+Jmax = 800
 
 # combinations = functions.allowed_parallel_transitions(Jmax)
 combinations = functions.allowed_perperndicular_transitions(Jmax)
 # print(combinations)
 
-B = 0.00147465 # cm^-1
-delta_B = 0.14611062 # %
-zeta = 0.18855113 # cm^-1
-T = 300 # K
-sigma = 0.19345059
-origin = -0.25880134
+B = 0.00166255 # cm^-1
+delta_B = 0.05007588 # %
+zeta = 0.14366518 # cm^-1
+T = 54.9238581 # K
+sigma = 0.18320933
+origin = -0.21166683
+
 xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'perpendicular')
 
 
 # B1 = 0.0016 # cm^-1
-# delta_B1 = 0.6 # %
-# zeta1 = -0.55 # cm^-1
-# T1 = 100 # K
+# delta_B1 = 0.35 # %
+# zeta1 = -0.4 # cm^-1
+# T1 = 70 # K
 # sigma1 = 0.1953  
-# origin1 = 0
+# origin1 = -0.22
 
-# xs1, ys1 = functions.get_rotational_spectrum(B1, delta_B1, zeta1, T1, sigma1, origin1, combinations, Jmax = Jmax, transition = 'parallel')
+# xs1, ys1 = functions.get_rotational_spectrum(B1, delta_B1, zeta1, T1, sigma1, origin1, combinations, Jmax = Jmax, transition = 'perpendicular')
 
 # bp.beep(sound='wilhelm')
 # plt.plot(xs, ys)
@@ -87,10 +88,11 @@ y_obs_cut = y_obs[l:u]
 
 fig, ax = plt.subplots()#facecolor = 'none')
 ax.plot(x_obs_cut, y_obs_cut, label = 'HD{}'.format(sightline))
-# ax.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'Curve_to_fit, HD{}'.format(sightline))
+# ax.plot(Obs_data['Wavelength'], Obs_data['Flux'], label = 'HD{}'.format(sightline))
+# ax.plot(x_equal_spacing, y_data_fit, label = 'Curve_to_fit, HD{}'.format(sightline))
 ax.plot(xs, ys, label = 'Model')
-# ax.plot(xs1, ys1, label = 'T = 100K')
-ax.set_title('B = {}, $\Delta B =${}, $\zeta = {}$,\n $\sigma$ = {}, T = {}, origin = {}'.format(str(B), str(delta_B), str(zeta), str(sigma), str(T), str(origin)))
+# ax.plot(xs1, ys1, label = 'Model')
+# ax.set_title('B = {}, $\Delta B =${}, $\zeta = {}$,\n $\sigma$ = {}, T = {}, origin = {}'.format(str(B1), str(delta_B1), str(zeta1), str(sigma1), str(T1), str(origin1)))
 ax.xaxis.set_major_locator(plt.MultipleLocator(1))
 ax.xaxis.set_minor_locator(plt.MultipleLocator(0.5))
 ax.set_xlabel(x_label)
@@ -98,7 +100,7 @@ ax.set_ylabel('Flux')
 ax.legend()
 
 # plt.savefig('B={}_DeltaB={}_zeta={}_T={}_sigma={}origin={}_HD{}.png'.format(str(B), str(delta_B), str(zeta), str(T), str(sigma), str(origin),sightline), bbox_inches = 'tight', format = 'png')
-# plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Presentation\\Figures\\bluewing_demo.png", bbox_inches = 'tight')
+plt.savefig("C:\\Users\\alexr\\OneDrive - Durham University\\GRI Mitacs Summer 23\\Project\\Report\\Figure\\wings_not_fitted.png", bbox_inches = 'tight')
 
 plt.show()
 #%% lmfit model plot creation function
@@ -173,6 +175,7 @@ sigma = 0.19344172
 origin = -0.25878401
 Jmax = 300
 
+combinations = functions.allowed_parallel_transitions(300)
 combinations = functions.allowed_perperndicular_transitions(300)
 xs, ys = functions.get_rotational_spectrum(B, delta_B, zeta, T, sigma, origin, combinations, Jmax = Jmax, transition = 'perpendicular')
 

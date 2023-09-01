@@ -20,7 +20,7 @@ print(sightline)
 Jmax = 800
 
 combinations = fn.allowed_perperndicular_transitions(Jmax)
-
+print(combinations)
 # Set 1:
 
 # B = 0.0016
@@ -59,20 +59,31 @@ combinations = fn.allowed_perperndicular_transitions(Jmax)
 
 # # Set 5 - best fit from set 2 on HD185859
 
-B = 0.0014747
-delta_B = 0.1460773
-zeta = 0.188564
-# T = 299.91933
-T = 80
-sigma = 0.1934417
-# origin = -0.258784
-origin = -0.4
+# B = 0.0014747
+# delta_B = 0.1460773
+# zeta = 0.188564
+# # T = 299.91933
+# T = 80 # set 6 with T = 80
+# sigma = 0.1934417
+# # origin = -0.258784
+# origin = 0.07
+
+
+
+B = 0.00344452
+delta_B = 0.07345939
+zeta = 0.63462038
+T = 79.8794028
+sigma = 0.18354568
+origin = -0.35637218
+
 
 #%% Getting data
 
 #Observational data:
-Obs_data, xs, y_data, std = fn.obs_curve_to_fit(sightline)
+Obs_data, xs, y_data, std = fn.obs_curve_to_fit(sightline)#, fitrange='bluewing')
 
 #Computing model:
 result = fn.fit_model(B, delta_B, zeta, T, sigma, origin, combinations, sightline, transition = 'perpendicular', Jmax = Jmax)
 
+# # # TO FIT TO BLUEWING - change fitrange kwarg in obs_curve_to_fit function in model_curve_to_fit and fit_model
