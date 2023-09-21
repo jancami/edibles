@@ -10,11 +10,11 @@ import astropy.constants as cst
 from io import BytesIO
 
 
-workdir = '/data/python/devel/Labplots/'
-#workdir = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/'
+#workdir = '/data/python/devel/Labplots/'
+
+workdir = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/'
 labfilename = workdir + '141_REMPI_472-438.txt'
 
-#labfilename = "/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/141_REMPI_472-438.txt"
 # The file contains wavenumbers (in vacuum) and intensities. Read those in as pandas dataframe. 
 labspec = pd.read_csv(labfilename, delimiter=',')
 # Add a column to contain the (air) wavelength in AA. 
@@ -23,7 +23,7 @@ normint = labspec.int - np.median(labspec.int)
 labspec['norm'] = np.exp(-0.02 * normint / np.max(normint))
 
 
-# no observattions found: 27778, 54239
+# no observattions found: HD 27778, HD 54239
 
 objects = ["HD 22951", "HD 23016", "HD 23180", "HD 24398", "HD 41117", "HD 45314", "HD 61827", "HD 63804", "HD 73882", "HD 80558", "HD 112272", "HD 147084", "HD 147683", "HD 147888", "HD 147889", "HD 147933", "HD 148184", "HD 148937", "HD 149404", "HD 149757", "HD 152248", "HD 154043", "HD 154368", "HD 161056", "HD 165319", "HD 167971", "HD 169454", "HD 170740", "HD 170938", "HD 171957", "HD 179406", "HD 183143", "HD 185418", "HD 185859", "HD 186745", "HD 186841", "HD 203532", "HD 210121"]
 
