@@ -239,7 +239,7 @@ def make_grid(lambda_start, lambda_end, resolution=None, oversample=None):
     f = -(1 + 2 * R) / (1 - 2 * R)
     factor = f ** np.arange(n_points)
 
-    wave = np.full(int(n_points), lambda_start, dtype=np.float)
+    wave = np.full(int(n_points), lambda_start, dtype=np.float64)
     grid = wave * factor
 
     return grid
