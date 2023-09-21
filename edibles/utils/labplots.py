@@ -10,13 +10,15 @@ import astropy.constants as cst
 from io import BytesIO
 
 
-# labfilename = '/data/python/devel/141_REMPI_472-438.txt'
+workdir = '/data/python/devel/Labplots/'
+#workdir = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/'
+labfilename = workdir + '141_REMPI_472-438.txt'
 
-labfilename = "/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/141_REMPI_472-438.txt"
+#labfilename = "/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/141_REMPI_472-438.txt"
 # The file contains wavenumbers (in vacuum) and intensities. Read those in as pandas dataframe. 
 labspec = pd.read_csv(labfilename, delimiter=',')
 # Add a column to contain the (air) wavelength in AA. 
-labspec['wavelength'] = pyasl.vactoair2(1e1 * labspec['wave'],mode='ciddor')
+labspec['wavelength'] = pyasl.vactoair2(1e1 * labspec['wave'],mode='ciddor') # Note: not sure we have to do this. Tim wasn't sure about air/vacuum. 
 normint = labspec.int - np.median(labspec.int)
 labspec['norm'] = np.exp(-0.02 * normint / np.max(normint))
 
@@ -25,7 +27,9 @@ labspec['norm'] = np.exp(-0.02 * normint / np.max(normint))
 
 objects = ["HD 22951", "HD 23016", "HD 23180", "HD 24398", "HD 41117", "HD 45314", "HD 61827", "HD 63804", "HD 73882", "HD 80558", "HD 112272", "HD 147084", "HD 147683", "HD 147888", "HD 147889", "HD 147933", "HD 148184", "HD 148937", "HD 149404", "HD 149757", "HD 152248", "HD 154043", "HD 154368", "HD 161056", "HD 165319", "HD 167971", "HD 169454", "HD 170740", "HD 170938", "HD 171957", "HD 179406", "HD 183143", "HD 185418", "HD 185859", "HD 186745", "HD 186841", "HD 203532", "HD 210121"]
 
-V_rad_data = pd.read_csv('/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/V_rad_from_Haoyu_readable.csv')
+vrad_filename = PYTHONDIR + '/data/sightline_data/V_rad_from_Haoyu_readable.csv'
+#vrad_filename = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/V_rad_from_Haoyu_readable.csv'
+V_rad_data = pd.read_csv(vrad_filename)
 
 # Entire wavelength range is roughly 4350-4720AA, but strongest band near 4689 DIB. 
 # Match from Tim is in HD 147889, so let's try to reproduce that first.... 
@@ -56,8 +60,12 @@ for object in objects:
         plotwave = wave_rest[bool_keep]
         plotflux = flux[bool_keep]
 
-        #normalization
-        normflux = plotflux / np.median(plotflux)
+        # Let's do a quick zeroth-order normalization
+        coef = np.polyfit(plotwave,plotflux,1)
+        poly1d_fn = np.poly1d(coef) 
+        linefit = poly1d_fn(plotwave)
+        #normflux = plotflux / np.median(plotflux)
+        normflux = plotflux / linefit
         plt.figure()
         plt.xlim(4680, 4695)
         ylim = [np.min(normflux), np.max(normflux)]
@@ -66,10 +74,11 @@ for object in objects:
         plt.title(filename)
 
         plt.plot(labspec.wavelength, labspec.norm)
+        #plt.plot(labspec.wave*10, labspec.norm)
         #plt.show()
 
         
-        save_plot_as = f'labplot_v_rad_{v_rad}_{sp.target}_{sp.datetime}_{i}.png'
+        save_plot_as = workdir + f'labplot_v_rad_{v_rad}_{sp.target}_{sp.datetime}_{i}.png'
         plt.savefig(save_plot_as, format='png')
         
         
