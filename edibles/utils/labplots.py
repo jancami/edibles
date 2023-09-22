@@ -9,7 +9,6 @@ from PyAstronomy import pyasl
 import astropy.constants as cst
 from io import BytesIO
 
-
 #workdir = '/data/python/devel/Labplots/'
 
 workdir = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/'
@@ -22,71 +21,80 @@ labspec['wavelength'] = pyasl.vactoair2(1e1 * labspec['wave'],mode='ciddor') # N
 normint = labspec.int - np.median(labspec.int)
 labspec['norm'] = np.exp(-0.02 * normint / np.max(normint))
 
+# no observattions found: HD27778, 54239
 
-# no observattions found: HD 27778, HD 54239
-
-objects = ["HD 22951", "HD 23016", "HD 23180", "HD 24398", "HD 41117", "HD 45314", "HD 61827", "HD 63804", "HD 73882", "HD 80558", "HD 112272", "HD 147084", "HD 147683", "HD 147888", "HD 147889", "HD 147933", "HD 148184", "HD 148937", "HD 149404", "HD 149757", "HD 152248", "HD 154043", "HD 154368", "HD 161056", "HD 165319", "HD 167971", "HD 169454", "HD 170740", "HD 170938", "HD 171957", "HD 179406", "HD 183143", "HD 185418", "HD 185859", "HD 186745", "HD 186841", "HD 203532", "HD 210121"]
+#objects = ["HD 22951", "HD 23016", "HD 23180", "HD 24398", "HD 41117", "HD 45314", "HD 61827", "HD 63804", "HD 73882", "HD 80558", "HD 112272", "HD 147084", "HD 147683", "HD 147888", "HD 147889", "HD 147933", "HD 148184", "HD 148937", "HD 149404", "HD 149757", "HD 152248", "HD 154043", "HD 154368", "HD 161056", "HD 165319", "HD 167971", "HD 169454", "HD 170740", "HD 170938", "HD 171957", "HD 179406", "HD 183143", "HD 185418", "HD 185859", "HD 186745", "HD 186841", "HD 203532", "HD 210121"]
 
 vrad_filename = PYTHONDIR + '/data/sightline_data/V_rad_from_Haoyu_readable.csv'
-#vrad_filename = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/V_rad_from_Haoyu_readable.csv'
 V_rad_data = pd.read_csv(vrad_filename)
 
 # Entire wavelength range is roughly 4350-4720AA, but strongest band near 4689 DIB. 
 # Match from Tim is in HD 147889, so let's try to reproduce that first.... 
-image_data_list = []
-plotrange = [4670,4700]
+plotrange = [4660,4695]
 pythia = EdiblesOracle()
 
-for object in objects: 
+
+def make_labplot(object, datafilename =None):
+
     List = pythia.getFilteredObsList(object=[object], OrdersOnly=True, Wave=4689)
-
-    for i, filename in zip(range(len(List)), List): 
-        sp = EdiblesSpectrum(filename)
-        sp.getSpectrum(np.min(sp.raw_wave)+1,np.max(sp.raw_wave)-1)
-
-        wave = sp.bary_wave
-        #search for V_rad from the csv file provided
-        row = V_rad_data.loc[V_rad_data['object'] == object]
-        print(object)
-        v_rad = row['V_rad'].values[0]
-        print(v_rad)
-        #radial velocity correction
-        wave_rest = wave / (1+v_rad/cst.c.to("km/s").value)
-
-
-        flux = np.clip(sp.bary_flux, 0, None) 
-
-        bool_keep = (wave_rest > plotrange[0]) & (wave < plotrange[1])
-        plotwave = wave_rest[bool_keep]
-        plotflux = flux[bool_keep]
-
-        # Let's do a quick zeroth-order normalization
-        coef = np.polyfit(plotwave,plotflux,1)
-        poly1d_fn = np.poly1d(coef) 
-        linefit = poly1d_fn(plotwave)
-        #normflux = plotflux / np.median(plotflux)
-        normflux = plotflux / linefit
-        plt.figure()
-        plt.xlim(4680, 4695)
-        ylim = [np.min(normflux), np.max(normflux)]
-        plt.ylim(ylim)
-        plt.plot(plotwave, normflux)
-        plt.title(filename)
-
-        plt.plot(labspec.wavelength, labspec.norm)
-        #plt.plot(labspec.wave*10, labspec.norm)
-        #plt.show()
-
-        
-        save_plot_as = workdir + f'labplot_v_rad_{v_rad}_{sp.target}_{sp.datetime}_{i}.png'
-        plt.savefig(save_plot_as, format='png')
-        
-        
-        #Rescale lab spectrum to plot range
-        #dynrange = ylim[1]-ylim[0]
     
 
-#plt.plot(labspec.wavelength,labspec.int)
-#plt.show()
+    for i, filename in enumerate(List):
+        
+        if  datafilename is not None:
+            if filename == datafilename: 
+                print('=======================================')
+                sp = EdiblesSpectrum(filename)
+                sp.getSpectrum(np.min(sp.raw_wave)+1,np.max(sp.raw_wave)-1)
+
+                wave = sp.bary_wave
+                #search for V_rad from the csv file provided
+                row = V_rad_data.loc[V_rad_data['object'] == object]
+                print(object)
+                v_rad = row['V_rad'].values[0]
+                print(v_rad)
+                #radial velocity correction
+                wave_rest = wave / (1+v_rad/cst.c.to("km/s").value)
 
 
+                flux = np.clip(sp.bary_flux, 0, None) 
+
+                bool_keep = (wave_rest > plotrange[0]) & (wave < plotrange[1])
+                plotwave = wave_rest[bool_keep]
+                plotflux = flux[bool_keep]
+
+                # Let's do a quick zeroth-order normalization
+                coef = np.polyfit(plotwave,plotflux,1)
+                poly1d_fn = np.poly1d(coef) 
+                linefit = poly1d_fn(plotwave)
+                #normflux = plotflux / np.median(plotflux)
+                normflux = plotflux / linefit
+                plt.figure()
+                plt.xlim(4660, 4695)
+                ylim = [np.min(normflux), np.max(normflux)]
+                plt.ylim(ylim)
+                plt.plot(plotwave, normflux)
+                plt.title(filename)
+
+                plt.plot(labspec.wavelength, labspec.norm)
+                #plt.plot(labspec.wave*10, labspec.norm)
+                
+                #plt.show()
+                
+                save_plot_as = workdir + 'Best_10/' + f'Best_10_{sp.target}_{sp.datetime}_{i}.png'
+                plt.savefig(save_plot_as, format='png')
+            
+        
+
+
+
+
+targets_filename = workdir + "Best_10/Shortlisted_targets.csv"
+shortlisted_targets = pd.read_csv(targets_filename)
+datafilename = shortlisted_targets['Data file name']
+object = shortlisted_targets['Objects']
+
+for i in range(len(object)):
+    make_labplot(object[i], datafilename[i])
+
+#make_labplot('HD 24398')
