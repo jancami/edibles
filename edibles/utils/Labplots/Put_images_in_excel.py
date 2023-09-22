@@ -9,8 +9,8 @@ workbook = Workbook()
 worksheet = workbook.active
 
 # Directory where your images are stored
-image_dir = '/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/Haoyus_sightlines_plots'
 
+image_dir = "/Users/charmibhatt/Desktop/Edibles_All/Edibles_Scripts/edibles/utils/Labplots/Best_10"
 
 # Loop through the files and add them to the Excel file
 files = os.listdir(image_dir)
@@ -34,4 +34,4 @@ for index, file in enumerate(files):
         worksheet.row_dimensions[index + 1].height = img.height
 
 # Save the workbook
-workbook.save('labplots_haoyus_sightlines_poly1d_normalization.xlsx')
+workbook.save('labplots_Best_13_all_features.xlsx')
