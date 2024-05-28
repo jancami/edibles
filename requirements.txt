@@ -14,4 +14,4 @@ scipy==1.10.0
 lmfit==1.0
 six==1.12.0
 specutils==1.0
-
+PyQt5

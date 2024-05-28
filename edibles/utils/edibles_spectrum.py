@@ -75,7 +75,9 @@ class EdiblesSpectrum:
         """Filename is relative to the EDIBLES_DATADIR environment variable
 
         """
-        self.filename = DATADIR + filename
+        if filename.startswith('/'):
+            filename = filename[1:]
+        self.filename = Path(DATADIR) / filename
         self.fully_featured = fully_featured
 
         if noDATADIR is True:
@@ -113,9 +115,8 @@ class EdiblesSpectrum:
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
-            csv_file = self.filename.replace(".fits", ".csv").replace(
-                "/DR4/data/", "/DR4/continuum/"
-            )
+            csv_file = str(self.filename).replace(".fits", ".csv").replace(
+                "/DR4/data/", "/DR4/continuum/").replace(r"\DR4\data", r"\DR4\continuum")
 
             if os.path.isfile(csv_file):
                 self.continuum_filename = csv_file
