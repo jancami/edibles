@@ -52,7 +52,6 @@ class Sightline:
         self.add_source("Telluric", similar={'b': 2})
         self.add_source("Nontelluric", similar=None)
 
-
     def add_source(self, name, similar=None):
         '''Adds a new source of absorption to the sightline.
 
@@ -68,8 +67,6 @@ class Sightline:
 
         self.source_names.append(name)
 
-
-
         if name == "Telluric" and similar is not None:
 
             par = Parameters()
@@ -78,7 +75,6 @@ class Sightline:
 
             self.telluric_pars = par
             self.all_pars = self.all_pars + par
-
 
     def add_line(self, name, source=None, pars=None, guess_data=None):
         '''Adds a new line to a given absorption source.
@@ -159,14 +155,12 @@ class Sightline:
                 self.old_nontelluric_pars = new_pars
                 self.nontelluric_pars = new_pars
 
-
         lambda_name = source + '_' + name + '_lam_0'
         index = bisect.bisect(self.peaks, new_pars[lambda_name])
         self.peaks.insert(index, new_pars[lambda_name])
 
         self.most_recent = source + '_' + name
         self.n_lines += 1
-
 
     def fit(self, data=None, old=False, x=None, report=False,
             plot=False, weights=None, method='leastsq', **kwargs):
@@ -207,7 +201,6 @@ class Sightline:
             self.result.plot_fit()
             plt.show()
 
-
         # Update parameter values after fit - for use in model separation
         self.all_pars = self.result.params
 
@@ -241,7 +234,6 @@ class Sightline:
                 self.cont_model_pars = cont_pars
             except AttributeError:
                 pass
-
 
     def freeze(self, pars=None, prefix=None, freeze_cont=True, unfreeze=False):
         '''Freezes the current params, so you can still add to the
@@ -284,8 +276,6 @@ class Sightline:
 
                 if ('Nontelluric' in par) and (par[-2:] != '_d'):
                     pars[par].set(vary=True)
-
-
 
     def separate(self, data, x, old=False, plot=True):
         '''Separate the sources that were added to Sightline.
@@ -344,7 +334,6 @@ class Sightline:
             )
 
             if plot:
-
                 plt.plot(x, data, label='Data', color='k')
                 plt.plot(x, complete_out, label='Final model', color='r')
                 plt.plot(x, data - complete_out, label='Residual', color='g')
@@ -360,8 +349,6 @@ class Sightline:
 
 
 if __name__ == "__main__":
-
-
     FILE1 = "/HD170740/RED_860/HD170740_w860_redl_20140915_O12.fits"
     xmin = 7661.75
     xmax = 7669
@@ -371,14 +358,12 @@ if __name__ == "__main__":
 
     sightline = Sightline(sp1, n_anchors=5)
 
-
     # Add line with auto-guessed params
     sightline.add_line(name='line1', source='Telluric')
 
     # Add line with user defined params
     pars = {'d': 0.01, 'tau_0': 0.6, 'lam_0': 7664.8}
     sightline.add_line(name='line2', pars=pars, source='Telluric')
-
 
     # # ###############################################################
     # # Fit and plot
@@ -387,15 +372,12 @@ if __name__ == "__main__":
     out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     resid = sp1.flux - out
 
-
-
     # Add line with different source
 
     lam_0 = 7665.25
 
     K_Gamma = 3.820e7
-    K_d = K_Gamma * lam_0**2 / (4 * np.pi * (cst.c.to("cm/s").value * 1e8))
-
+    K_d = K_Gamma * lam_0 ** 2 / (4 * np.pi * (cst.c.to("cm/s").value * 1e8))
 
     pars = {'d': K_d, 'tau_0': 0.07, 'lam_0': lam_0}
     sightline.add_line(name='line3', source='Nontelluric', pars=pars)
@@ -405,13 +387,11 @@ if __name__ == "__main__":
     # out = sightline.complete_model.eval(data=sp1.flux, params=sightline.result.params, x=sp1.wave)
     # resid = sp1.flux - out
 
-
     lam_0 = 7665.33
     pars = {'d': K_d, 'tau_0': 0.01, 'b': 1, 'lam_0': lam_0}
     sightline.add_line(name='line4', source='Nontelluric', pars=pars)
     sightline.all_pars['Nontelluric_line4_d'].set(vary=False)
     # sightline.fit(report=True, plot=False, method='leastsq')
-
 
     lam_0 = 7665.15
     pars = {'d': K_d, 'tau_0': 0.001, 'b': 1, 'lam_0': lam_0}
@@ -419,39 +399,25 @@ if __name__ == "__main__":
     sightline.all_pars['Nontelluric_line5_d'].set(vary=False)
     sightline.fit(report=True, plot=False, method='leastsq')
 
-
-
-
-
     pars = {'d': 0.01, 'tau_0': 0.01, 'b': 1, 'lam_0': 7662}
     sightline.add_line(name='line6', source='Telluric', pars=pars)
     sightline.fit(report=True, plot=False, method='leastsq')
-
-
 
     pars = {'d': 0.01, 'tau_0': 0.01, 'b': 1, 'lam_0': 7663.7}
     sightline.add_line(name='line7', source='Telluric', pars=pars)
     sightline.fit(report=True, plot=False, method='leastsq')
 
-
     pars = {'d': 0.01, 'tau_0': 0.01, 'b': 1, 'lam_0': 7666.5}
     sightline.add_line(name='line8', source='Telluric', pars=pars)
     sightline.fit(report=True, plot=False, method='leastsq')
-
 
     pars = {'d': 0.01, 'tau_0': 0.01, 'b': 1, 'lam_0': 7667.5}
     sightline.add_line(name='line9', source='Telluric', pars=pars)
     sightline.fit(report=True, plot=False, method='leastsq')
 
-
-
-
-
-
     out = sightline.complete_model.eval(data=sp1.interp_flux, params=sightline.result.params,
                                         x=sp1.grid)
     resid = sp1.interp_flux - out
-
 
     plt.plot(sp1.grid, sp1.interp_flux)
     plt.plot(sp1.grid, out)
