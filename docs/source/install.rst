@@ -104,7 +104,7 @@ To add an environment variable permanently in Windows:
    - Choose "New"
    - Enter the variable "Name" and "Value"
    - for EDIBLES_PYTHONDIR add e.g. C:\\Users\\Username\\Home\\Python\\EDIBLES\\
-   - for EDIBLES_PYTHONPATH add e.g. C:\\Users\\Username\\Anaconda3\\lib\\site-packages\\
+   - for PYTHONPATH add e.g. C:\\Users\\Username\\Anaconda3\\lib\\site-packages\\
    - for EDIBLES_DATADIR add C:\\Users\\Username\\Edibles\\DR4\\
    - for EDIBLES_DATARELEASE add DR4
 
