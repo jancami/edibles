@@ -86,7 +86,7 @@ sightline.fit(plot=True)
 
 
 # evaluate the model with a set of input parameters (result of fit here)
-out = sightline.model.eval(data=sp.flux, params=sightline.result.params, x=sp.wave)
+out = sightline.complete_model.eval(data=sp.flux, params=sightline.result.params, x=sp.wave)
 resid = sp.flux - out
 
 

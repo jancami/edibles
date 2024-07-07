@@ -96,12 +96,15 @@ class EdiblesOracle:
         return self.obslog.iloc[ind].Filename            
 
 
-    def FilterEngine(self, object, log, value, unc_lower, unc_upper, reference_id):
+    def FilterEngine(self, object, log, value, unc_lower, unc_upper, reference_id, filtername=None):
         # Generic function to filter through the list of objects. 
         # Note: object should be a list or a numpy array type!
 
         # First, find all the objects in our log that match the specified objects.
         
+        if filtername is None: 
+            filtername='Unspecified Filter'
+
         bool_object_matches = np.zeros(len(log.index),dtype=bool)
         if object is None:
              bool_object_matches = np.ones(len(log.index),dtype=bool)
@@ -127,11 +130,14 @@ class EdiblesOracle:
             print(value)
             print(unc_upper)
             bool_value_matches = (log.value < unc_upper) & bool_value_matches
-        
+        #print(bool_value_matches)
+        #print(bool_value_matches.sum())
+
         # Now process the references or "preferred" values. 
         # If reference is "All", we should not apply an additional filter. 
         # If reference is specified, filter on that reference. 
         # If no reference is specified, use the preferred value. 
+        #print(reference_id)
         if reference_id is None:
             bool_value_matches = (log.preferred_flag == 1) & bool_value_matches
         elif reference_id=='All':
@@ -139,16 +145,18 @@ class EdiblesOracle:
         else:
             #check if proper ref. is given [1,2] for EBV, [3,4] fpr SpT.
             bool_value_matches = (log.reference_id == reference_id) & bool_value_matches
-        
+        #print(bool_value_matches)
+        #print(bool_value_matches.sum())
+
         
         bool_combined_matches = bool_object_matches & bool_value_matches
         #ind = np.where(bool_combined_matches)
         #matching_objects = log.object.values[ind]
         matching_objects_df = log.loc[bool_combined_matches, ['object','value']]
 
-        print('getFilteredObslist: Found a total of ', bool_object_matches.sum(), ' object match(es).')  
-        print('getFilteredObslist: Found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
-        print('getFilteredObslist: Found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
+        print('getFilteredObslist: Filter=',filtername,'; found a total of ', bool_object_matches.sum(), ' object match(es).')  
+        print('getFilteredObslist: Filter=',filtername,'; found a total of ', bool_value_matches.sum(), ' parameter match(es).')  
+        print('getFilteredObslist: Filter=',filtername,'; found a total of ', bool_combined_matches.sum(), ' combined match(es).')  
         
         return matching_objects_df
 
@@ -270,8 +278,8 @@ class EdiblesOracle:
 
         # STEP 1: Filter objects for each of the parameters -- but only if parameters are specified!
         if (EBV or EBV_min or EBV_max or EBV_reference) is not None:
-            print("EBV")
-            matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference)
+            print(EBV, EBV_min, EBV_max)
+            matching_objects_ebv = self.FilterEngine(object, self.ebvlog, EBV, EBV_min, EBV_max, EBV_reference, filtername='EBV')
         else:
             matching_objects_ebv = self.object_log
         
@@ -436,11 +444,22 @@ if __name__ == "__main__":
     # print("Main")
     pythia = EdiblesOracle()
 
+    
+    # EXAMPLE 0: Get all objects that match a set of filter specifications. 
+    # Should we perhaps rename the methods to be consistent? 
+    ObjectList = pythia.getObjects(EBV_min=0.2,EBV_max=0.8)
+
+
+
     # EXAMPLE 1: Get all observations for a single object. 
     List=pythia.getFilteredObsList(object=["HD 183143"], MergedOnly=True, Wave=3302.0)
     print("1. Results from getFilteredObsList: ")
     print(List)
 
+    # EXAMPLE 2: Get all observations matching EBV specs, using SIMBAD values. 
+    List=pythia.getFilteredObsList(EBV_min=0.2,EBV_max=0.8,EBV_reference=4)
+    print("Example 2. Results from getFilteredObsList: ")
+    print(List)
 
     # EXAMPLE 2: Find all objects that match certain criteria. 
     List=pythia.getFilteredObjects(object=["HD 145502"], EBV_min=0.5, fH2_max=.3)

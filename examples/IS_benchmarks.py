@@ -44,6 +44,7 @@ singe_component = ISLineModel(1, lam_0=fitter.air_wavelength,
                               gamma=fitter.gamma,
                               v_res=fitter.v_res)
 for i in range(known_n_components):
+    print(fit_result.params)
     pars = singe_component.make_params(b_Cloud0=fit_result.params["b_Cloud%i" % (i)].value,
                                        N_Cloud0=fit_result.params["N_Cloud%i" % (i)].value,
                                        V_off_Cloud0=fit_result.params["V_off_Cloud%i" % (i)].value)
