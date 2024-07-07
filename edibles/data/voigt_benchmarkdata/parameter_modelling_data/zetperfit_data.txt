@@ -1,0 +1,114 @@
+Welty & Hobbs parameteres: 
+ b: 0    1.00
+1    0.68
+2    0.80
+3    0.50
+Name: b, dtype: float64, 
+ N: 0    2.200000e+10
+1    2.600000e+11
+2    4.270000e+11
+3    1.000000e+09
+Name: N, dtype: float64, 
+ v_rad: 0    11.48
+1    13.25
+2    14.54
+3    16.40
+Name: v_rad, dtype: float64 
+Fit parameters: [[Model]]
+    Model(multi_voigt_absorption_line)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 116
+    # data points      = 499
+    # variables        = 12
+    chi-square         = 0.05526822
+    reduced chi-square = 1.1349e-04
+    Akaike info crit   = -4520.97353
+    Bayesian info crit = -4470.42226
+    R-squared          = 0.99365351
+[[Variables]]
+    lambda0:       7698.974 (fixed)
+    f0:            0.3393 (fixed)
+    gamma0:        3.8e+07 (fixed)
+    v_resolution:  0.56 (fixed)
+    n_step:        25 (fixed)
+    n_trans:       1 (fixed)
+    n_components:  4 (fixed)
+    b0:            1.67397188 +/- 0.58753568 (35.10%) (init = 1)
+    N0:            4.6369e+10 +/- 3.3275e+10 (71.76%) (init = 2.2e+10)
+    v_rad0:        12.3730947 +/- 0.92634350 (7.49%) (init = 11.48)
+    b1:            0.63679656 +/- 0.05337301 (8.38%) (init = 0.68)
+    N1:            2.0566e+11 +/- 3.4737e+10 (16.89%) (init = 2.6e+11)
+    v_rad1:        13.2964155 +/- 0.04597730 (0.35%) (init = 13.25)
+    b2:            0.86368704 +/- 0.02981983 (3.45%) (init = 0.8)
+    N2:            4.5921e+11 +/- 2.4143e+10 (5.26%) (init = 4.27e+11)
+    v_rad2:        14.5710575 +/- 0.03778466 (0.26%) (init = 14.54)
+    b3:           -1.50048452 +/- 1.90666165 (127.07%) (init = 0.5)
+    N3:           -2.4066e+09 +/- 2.4750e+09 (102.84%) (init = 1e+09)
+    v_rad3:        17.5391183 +/- 1.24691413 (7.11%) (init = 16.4)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(N0, v_rad0)     = +0.9961
+    C(b0, v_rad0)     = +0.9740
+    C(b0, N0)         = +0.9724
+    C(b1, N1)         = +0.9436
+    C(v_rad1, v_rad2) = +0.9354
+    C(b2, v_rad2)     = -0.9080
+    C(N2, v_rad2)     = -0.8740
+    C(v_rad1, N2)     = -0.8343
+    C(v_rad1, b2)     = -0.8246
+    C(b2, N2)         = +0.8184
+    C(b3, N3)         = +0.8125
+    C(N1, v_rad1)     = +0.7906
+    C(N0, N1)         = -0.7778
+    C(b1, v_rad1)     = +0.7659
+    C(v_rad0, N1)     = -0.7650
+    C(N1, v_rad2)     = +0.7592
+    C(N0, b1)         = -0.7439
+    C(v_rad0, b1)     = -0.7240
+    C(b0, N1)         = -0.7039
+    C(b1, v_rad2)     = +0.6886
+    C(N1, b2)         = -0.6489
+    C(b0, b1)         = -0.6424
+    C(N3, v_rad3)     = +0.5469
+    C(b1, b2)         = -0.5448
+    C(b3, v_rad3)     = +0.5445
+    C(b2, v_rad3)     = +0.5185
+    C(b2, N3)         = +0.5104
+    C(b2, b3)         = +0.4653
+    C(N1, N2)         = -0.4397
+    C(b1, N2)         = -0.4093
+    C(N1, v_rad3)     = -0.3630
+    C(N1, N3)         = -0.3537
+    C(v_rad2, v_rad3) = -0.3384
+    C(v_rad1, v_rad3) = -0.3341
+    C(v_rad2, N3)     = -0.3261
+    C(v_rad1, N3)     = -0.3250
+    C(N2, v_rad3)     = +0.2994
+    C(N2, N3)         = +0.2959
+    C(N1, b3)         = -0.2939
+    C(b1, v_rad3)     = -0.2898
+    C(b1, N3)         = -0.2818
+    C(v_rad1, b3)     = -0.2800
+    C(N2, b3)         = +0.2770
+    C(v_rad2, b3)     = -0.2754
+    C(b0, N2)         = -0.2686
+    C(N0, v_rad1)     = -0.2667
+    C(v_rad0, v_rad1) = -0.2506
+    C(b1, b3)         = -0.2293
+    C(v_rad0, N2)     = -0.2147
+    C(N0, v_rad2)     = -0.2147
+    C(b0, v_rad1)     = -0.2041
+    C(N0, v_rad3)     = +0.1982
+    C(v_rad0, v_rad2) = -0.1982
+    C(N0, N2)         = -0.1967
+    C(v_rad0, v_rad3) = +0.1946
+    C(N0, N3)         = +0.1932
+    C(v_rad0, N3)     = +0.1898
+    C(b0, v_rad3)     = +0.1825
+    C(b0, N3)         = +0.1781
+    C(N0, b3)         = +0.1451
+    C(b0, v_rad2)     = -0.1446
+    C(v_rad0, b3)     = +0.1421
+    C(b0, b3)         = +0.1319
+    C(N0, b2)         = +0.1208
+    C(v_rad0, b2)     = +0.1075

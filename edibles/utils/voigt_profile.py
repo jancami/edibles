@@ -9,7 +9,8 @@ from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from pathlib import Path
 import pandas as pd
 from scipy.ndimage import gaussian_filter
-from lmfit import Model
+from lmfit import Parameters, minimize,Model
+from scipy.optimize import fmin
 
 
 def voigt_profile(x, sigma, gamma):
@@ -37,7 +38,6 @@ def voigt_profile(x, sigma, gamma):
     z = (x + 1j * gamma) / sigma / np.sqrt(2)
 
     return np.real(wofz(z)) / sigma / np.sqrt(2 * np.pi)
-
 
 def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad=0.0):
     """
@@ -78,6 +78,8 @@ def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad
 
     return tau
 
+# Use this method to reproduce data from overleaf documents
+
 
 def voigt_absorption_line(
         wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25, debug=False
@@ -94,7 +96,7 @@ def voigt_absorption_line(
         b (float64): The b parameter (Gaussian width), in km/s.
         N (float64): The column density (in cm^{-2})
         f (float64): The oscillator strength (dimensionless)
-        gamma (float64): Lorentzian gamma (=HWHM) component
+        gamma (float64): Lorentzian gamma (=HWFM) component
         v_rad (float64): Radial velocity of absorption line (in km/s)
         v_resolution (float64): Instrument resolution in velocity space (in km/s)
         n_step (int): no. of point per FWHM length, governing sampling rate and efficiency
@@ -194,7 +196,8 @@ def voigt_absorption_line(
         Voigt_FWHM = VoigtFWHM(lambda0_array, gamma_array, b_array)
         FWHM2use = np.min(np.append(Voigt_FWHM, v_resolution))
         xgrid_test = np.asarray(wavegrid)
-        dv_xgrid = np.median(xgrid_test[1:] - xgrid_test[0:-1]) / np.mean(xgrid_test) * cst.c.to("km/s").value
+        dv_xgrid = np.median(xgrid_test[1:] - xgrid_test[0:-1]) / \
+            np.mean(xgrid_test) * cst.c.to("km/s").value
         n_step_dv = np.ceil(FWHM2use / dv_xgrid)
 
         if n_step < np.max([7, n_step_dv]):
@@ -223,12 +226,12 @@ def voigt_absorption_line(
 
         # print(v_rad_array)
         # print("Wave range: ", minwave, maxwave)
+
         n_v = int(
             np.ceil((maxwave - minwave) / minwave * cst.c.to("km/s").value / v_stepsize)
         )
         refgrid = minwave * (1.0 + np.arange(n_v) * v_stepsize / cst.c.to("km/s").value)
         allcomponents = np.zeros(shape=(n_v, n_lines))
-
         for lineloop in range(n_lines):
             dv = getVGrid(
                 lambda0_array[lineloop],
@@ -286,23 +289,22 @@ def voigt_absorption_line(
             print("Smoothing sigma is: " + "{:e}".format(smooth_sigma))
 
         # One thing to watch out for is that the smoothing width is large compared to 
-
         gauss_smooth = gaussian_filter(AbsorptionLine, sigma=smooth_sigma)
         interpolationfunction = interp1d(
             refgrid, gauss_smooth, kind="cubic", bounds_error=False, fill_value=(1, 1)
         )
         interpolated_model = interpolationfunction(wavegrid)
-        # plt.plot(refgrid, AbsorptionLine, marker='o')
-        # plt.plot(refgrid, gauss_smooth, color='green', marker='D')
-        # plt.plot(wavegrid,interpolated_model, color='red', marker='1')
+        #plt.plot(refgrid, AbsorptionLine, marker='o')
+        #plt.plot(refgrid, gauss_smooth, color='green', marker='D')
+        #plt.plot(wavegrid,interpolated_model, color='red', marker='1')
         # plt.show()
     else:
-        # Create arrays that hold all the lines for all the components. 
-        # We need in total n_components * n_lines array elements. 
+        # Create arrays that hold all the lines for all the components.
+        # We need in total n_components * n_lines array elements.
         lambda0_use = np.repeat(lambda0, n_components)
         f_use = np.repeat(f, n_components)
         gamma_use = np.repeat(gamma, n_components)
-        # For the eomponents, do some dimensional juggling.... 
+        # For the eomponents, do some dimensional juggling....
         b_use = np.concatenate(np.repeat([b], n_lines, axis=0), axis=0)
         N_use = np.concatenate(np.repeat([N], n_lines, axis=0), axis=0)
         v_rad_use = np.concatenate(np.repeat([v_rad], n_lines, axis=0), axis=0)
@@ -319,12 +321,164 @@ def voigt_absorption_line(
             v_resolution=v_resolution,
             n_step=n_step
         )
-        # "voigt_absorption_line Panic: This option has not been implemented yet.... "
+        #"voigt_absorption_line Panic: This option has not been implemented yet.... "
         # )
 
     return interpolated_model
 
 
+
+def multi_voigt_absorption_line( **params_list):
+    """
+    This function is essentially a wrapper around voigt_absorption_line in voigt_profile.py, that exists
+    to allow it to create an instance of the Model class and create models with multiple Voigt commponents
+    (both transitions and clouds). 
+    This function will parse the list of parameters, and reformat them to call the voigt_absorption_line function. 
+    It will then call that function, and return the resulting model. 
+
+    Args:
+        wavegrid: the wavelength grid on which to calculate the models. 
+        n_trans: the number of unique transitions to calculate. 
+                 If n_trans == 1, just one rest wavelength, f and gamma value is passed on. 
+                 If n_trans == 2, we have a doublet and so on. 
+        lambda0, lambda1, ...: rest wavelengths for each transition. 
+        f0, f1, ...:           oscillator strengths for each transition. 
+        gamma0, gamma1, ...:   Lorentz broadening parameter for each transition. 
+        n_components: the number of different cloud components for which to calculate the profiles. 
+        b0, b1, ....:  Doppler b-values for each cloud component. 
+        N0, N1, ....:  column densities for each cloud component. 
+        v_rad0, v_rad1, ...:  radial velocities for each cloud component/transition. 
+        v_resolution: the velocity resolution (in km/s) of the desired final result. 
+        n_step: the number of steps to sample the Voigt profile (default: 25). 
+        debug:   Boolean: print debug info while running or not. 
+    Returns:
+    np.array
+        Model array with normalized Voigt profiles corresponding to the specified parameters. 
+    """
+
+    # We should probably do parameter checking and set some defaults when parameters are missing, or 
+    # issue an error or warning message. 
+    #print('Entering multi_voigt_absorption_line....')
+    n_trans = params_list['n_trans']
+    wavegrid = params_list['wavegrid']
+    n_components = params_list['n_components']
+    v_resolution = params_list['v_resolution']
+    n_step = params_list['n_step']
+    
+    # Initialize the lambda,f,gamma arrays for voigt_absorption_line
+    all_lambda = np.empty(n_trans)
+    all_f = np.empty(n_trans)
+    all_gamma = np.empty(n_trans)
+    #print(all_lambdas)
+    #print(all_f)
+    #print(all_gamma)
+    #print('----')
+    for i in range(n_trans):
+        all_lambda[i] = params_list[f'lambda{i}']
+        all_f[i] = params_list[f'f{i}']
+        all_gamma[i] = params_list[f'gamma{i}']
+    #print("Lambdas: ",all_lambda)
+    #print("f:       ",all_f)
+    #print("Gamma :  ",all_gamma)    
+    # Initialize the b,N,v_rad arrays for voigt_absorption_line
+    all_b = np.empty(n_components)
+    all_N = np.empty(n_components)
+    all_v_rad = np.empty(n_components)
+    #print(all_b)
+    #print(all_N)
+    #print(all_v_rad)
+    #print('----')
+    for i in range(n_components):
+        all_b[i] = params_list[f'b{i}']
+        all_N[i] = params_list[f'N{i}']
+        all_v_rad[i] = params_list[f'v_rad{i}']
+    #print('After: ')
+    #print("b:     ",all_b)
+    #print("N:     ",all_N)
+    #print("v_rad: ",all_v_rad)
+    #print('----')
+
+    # Now call voigt_absorption_line with these parameters.... 
+
+    model = voigt_absorption_line(wavegrid, lambda0=all_lambda, f=all_f, gamma=all_gamma, b=all_b, N=all_N, v_rad=all_v_rad, 
+                                  v_resolution=v_resolution, n_step=n_step, debug=False)
+    
+    return model
+
+
+def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=np.array, f=np.array, gamma=np.array, 
+             b=np.array, N=np.array, v_rad=np.array, v_resolution=0., n_step=0, std_dev = 1):
+    """
+    This function will take an observed spectrum contained in (wavegrid, ydata) and fit a set of Voigt profiles to
+    it. The transitions to consider are specified by restwave, f, and gamma, and can be single floats or numpy arrays 
+    containing the information for all transitions that we want to consider. 
+    There can then be 1 or more clound components to consider in the sightline. The components are specified by b, N and v_rad
+    that can be again floats or numpy arrays. 
+
+    This function essentially creates a Model instance from the multi_voigt_absorption_line function, and most of the work done
+    here is to "translate" the parameters from arrays to unique parameters (using the Parameters class) that will then be parsed 
+    by multi_voigt_absorption_line.
+    """
+    
+    # We should probably do lots of parameter checking first!!! To be done later.... 
+
+
+    # How many transitions do we have? 
+    restwave = np.asarray(restwave)
+    n_trans = restwave.size
+    #print("Fit_test: ", n_trans, " transitions....")
+
+    # And how many cloud components? 
+    b = np.asarray(b)
+    n_components = b.size
+
+    # Now create the Parameters class. 
+    params = Parameters()
+    # Create the parameters for the transitions. Those should *not* be free parameters for lmfit. 
+    if n_trans == 1:
+        params.add('lambda0', value=restwave, vary=False)
+        params.add('f0', value=f, vary=False)
+        params.add('gamma0', value=gamma, vary=False)
+    else:
+        #print('Multiple transitions found....')
+        for i in range(n_trans):
+            #print(i)
+            #print(restwave[i])
+            # The statement below creates variables lambda0, lambda1, lambda2, .... and similarly f0, f1, .. and gamma0, gamma1, ... 
+            params.add(f'lambda{i}', value=restwave[i], vary=False)
+            params.add(f'f{i}', value=f[i], vary=False) 
+            params.add(f'gamma{i}', value=gamma[i], vary=False) 
+
+    # Also create parameters for the other keywords -- these too should *not* be free parameters. 
+    params.add('v_resolution', value=v_resolution, vary=False)
+    params.add('n_step', value=n_step, vary=False)
+    params.add('n_trans', value=n_trans, vary=False)
+    params.add('n_components', value=n_components, vary=False)
+   
+    # Create the parameters for the clouds. 
+    if n_components == 1:
+        #print('Single Cloud Component:')
+        params.add('b0', value=b,min=0)
+        params.add('N0', value=N,min=0)
+        params.add('v_rad0', value=v_rad)
+    else:
+        #print('Multiple Clouds:')
+        for i in range(n_components):
+            #print(i)
+            #print(b[i])
+            # Same idea as above -- will create b0, b1, ... and N0, N1, ... and v_rad0, v_rad1, .... 
+            params.add(f'b{i}', value=b[i],min=0)
+            params.add(f'N{i}', value=N[i],min=0)
+            params.add(f'v_rad{i}', value=v_rad[i])
+    #print(params)
+
+    # Now create the Model instance. 
+    voigtmod = Model(multi_voigt_absorption_line, independent_vars=['wavegrid'])
+    #print("Resolution: ", v_resolution)
+
+    # and do the fitting with the parameters we have created. 
+    result=voigtmod.fit(ydata, params, wavegrid=wavegrid, weights= 1/std_dev)
+    
 def fit_voigt_absorption_line(wavegrid, flux, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0,
                               n_step=25, debug=False):
     """
@@ -415,8 +569,6 @@ def getVGrid(lambda0, gamma, b, v_resolution, n_step):
         start=-8.5 * FWHM2use, stop=8.5 * FWHM2use, step=v_stepsize
     )
     return dv
-
-
 #  --------------------------------------------------------------------------------------
 
 
@@ -430,7 +582,7 @@ if __name__ == "__main__":
     well as for the various forms of the normalized Voigt profiles. One test aims to
     reproduce the high-resolution profile for the K line of omi Per (form Welty et al.)
     """
-    show_example = 3
+    show_example = 5
 
     if show_example == 1:
         #############################################################
@@ -506,7 +658,7 @@ if __name__ == "__main__":
         plt.plot(omiper_data["Wavelength"], AbsorptionLine, color="orange", marker="+")
         plt.show()
 
-    elif show_example == 3:
+    elif show_example == 1:
         #############################################################
         #
         # EXAMPLE 3: Na doublet: multiple lines, single cloud.
