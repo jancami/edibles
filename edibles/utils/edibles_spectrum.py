@@ -10,6 +10,7 @@ from scipy.interpolate import interp1d
 from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
+from pathlib import Path
 from edibles import PYTHONDIR
 from edibles import DATADIR
 
@@ -74,7 +75,9 @@ class EdiblesSpectrum:
         """Filename is relative to the EDIBLES_DATADIR environment variable
 
         """
-        self.filename = DATADIR + filename
+        if filename.startswith('/'):
+            filename = filename[1:]
+        self.filename = Path(DATADIR) / filename
         self.fully_featured = fully_featured
 
         if noDATADIR is True:
@@ -112,9 +115,8 @@ class EdiblesSpectrum:
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
-            csv_file = self.filename.replace(".fits", ".csv").replace(
-                "/DR4/data/", "/DR4/continuum/"
-            )
+            csv_file = str(self.filename).replace(".fits", ".csv").replace(
+                "/DR4/data/", "/DR4/continuum/").replace(r"\DR4\data", r"\DR4\continuum")
 
             if os.path.isfile(csv_file):
                 self.continuum_filename = csv_file
@@ -130,7 +132,8 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = PYTHONDIR + "/data/auxiliary_data/sky_transmission/transmission.dat"
+        filename = Path(PYTHONDIR + '/data/auxiliary_data/sky_transmission/transmission.dat')
+        #print(filename)
         sky_transmission = np.loadtxt(filename)
 
         vac_wave = sky_transmission[:, 0] * 10
@@ -145,14 +148,20 @@ class EdiblesSpectrum:
         '''A function that adds the telluric corrected spectrum data to the EdiblesSpectrum model.
 
         '''
-        print(self.datetime.date())
+        #print(self.datetime.date())
 
         stripped_date = str(self.datetime.date()).replace('-', '')
 
-        filename = glob.glob(
-            PYTHONDIR + "/data/telluric_corrected_data/" +
-            self.target + "*" + stripped_date + "*.ascii"
-        )
+        search_path = Path(PYTHONDIR + '/data/telluric_corrected_data')        
+        search_string = self.target + "*" + stripped_date + "*.ascii"
+        #print(search_path)
+        #print(search_string)
+        filename = list(search_path.glob(search_string))
+        #print(filename)
+        #filename = glob.glob(
+        #    PYTHONDIR + "/data/telluric_corrected_data/" +
+        #    self.target + "*" + stripped_date + "*.ascii"
+        #)
 
         if len(filename) != 0:
             filename = filename[0]
@@ -302,6 +311,39 @@ class EdiblesSpectrum:
         self._corrected_spectrum()
         self.fully_featured = True
 
+
+def measure_snr(wave, flux, block_size=1.0, do_plot=False):
+    """
+    Estimate SNR of given spectral data
+    :param wave: wavelength grid
+    :type wave: ndarray
+    :param flux: flux
+    :type flux: ndarray
+    :param do_plot: if set, make SNR plot
+    :type  do_plot: bool
+
+    :return: SNR, LAM, SNR and median flux of each of the 1A block
+    :rtype: list
+    """
+    # split in blocks of given size
+    xmin = wave[0]
+    xmax = xmin + block_size
+    SNR, LAM = [], []
+    while xmin < wave[-1]:
+        flux_block = flux[np.where((wave > xmin) & (wave < xmax))]
+        if len(flux_block) == 1:
+            break
+        if (np.nanmean(flux_block) > 0.0):
+            sigma_block = np.nanmean(flux_block) / np.nanstd(flux_block)
+            SNR.append(sigma_block)
+            LAM.append(xmin + (xmax - xmin) / 2.0)
+        xmin = xmax.copy()
+        xmax = xmin + block_size
+    if (do_plot == True):
+        plt.plot(LAM, SNR)
+        plt.plot(LAM, np.convolve(SNR, np.ones(10) / 10, mode='same'))
+        plt.show()
+    return SNR, LAM
 
 if __name__ == "__main__":
     # filename = "/HD170740/RED_860/HD170740_w860_redl_20140915_U.fits"

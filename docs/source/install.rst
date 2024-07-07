@@ -7,17 +7,17 @@ Requirements
 
 EDIBLES has the following strict requirements:
 
-* `Python <https://www.python.org/>`_ 
+* `Python <https://www.python.org/>`_
 
-* `Numpy <https://numpy.org/>`_ 
+* `Numpy <https://numpy.org/>`_
 
 * `Astropy <https://www.astropy.org>`_ 4.0 or later
 
 * `Matplotlib <https://matplotlib.org/>`_
 
-* `Pandas <https://pandas.pydata.org/>`_ 
+* `Pandas <https://pandas.pydata.org/>`_
 
-* `lmfit <https://pypi.org/project/lmfit/>`_ 
+* `lmfit <https://pypi.org/project/lmfit/>`_
 
 * `specutils <https://pypi.org/project/specutils/>`_
 
@@ -47,14 +47,14 @@ the documentation.
 Installation
 ============
 
-Note: The following assumes a Linux system, and a bash shell. 
+Note: The following assumes a Linux system, and a bash shell.
 
 
 Basic Python Directory Setup
 ----------------------------
 
 
-The first step should be to create a folder somewhere on your computer that all of your python scripts will be kept (not just this project). As an example, you could choose /home/python. 
+The first step should be to create a folder somewhere on your computer that all of your python scripts will be kept (not just this project). As an example, you could choose /home/python.
 
 The next step is to add some environment variables to your system. This can be done by modifying the hidden file .bashrc in your home directory.
 
@@ -89,12 +89,31 @@ once completed, your .bashrc file should look something like this::
     export EDIBLES_PYTHONDIR
 
 After saving, open a new terminal and type ``echo $PYTHONPATH`` to print the PYTHONPATH to the screen (you can also do this with the others if you like).
- 
+
+Windows
+^^^^^^^
+
+To add an environment variable permanently in Windows:
+
+1. Launch "Control Panel"
+2. Select "System and Security > System"
+3. Open "Advanced system settings"
+4. Choose "System Variables"
+5. To add environmental variables:
+
+   - Choose "New"
+   - Enter the variable "Name" and "Value"
+   - for EDIBLES_PYTHONDIR add e.g. C:\\Users\\Username\\Home\\Python\\EDIBLES\\
+   - for PYTHONPATH add e.g. C:\\Users\\Username\\Anaconda3\\lib\\site-packages\\
+   - for EDIBLES_DATADIR add C:\\Users\\Username\\Edibles\\DR4\\
+   - for EDIBLES_DATARELEASE add DR4
+
+6. Click "Edit" to modify an existing environment variable
 
 Installation of the EDIBLES Package
 -----------------------------------
 
-There are two methods to actually install the package, and the one you choose should depend on how you will use this package. 
+There are two methods to actually install the package, and the one you choose should depend on how you will use this package.
 
 For people that want to install and use the EDIBLES package code, you can install the package as you normally would using pip::
 

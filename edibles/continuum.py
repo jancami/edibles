@@ -6,6 +6,7 @@ from pprint import pprint
 
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.models import ContinuumModel
+from pathlib import Path
 
 
 class Continuum:
@@ -30,7 +31,8 @@ class Continuum:
                         if "######" in row:
                             self.num_saved_continua += 1
         except AttributeError:
-            print("No previously saved data")
+            if verbose > 0:
+                print("No previously saved data")
 
         self.method = method
         self.Spectrum = Spectrum
@@ -259,9 +261,8 @@ class Continuum:
         assert isinstance(self.model.n_anchors, int)
         assert isinstance(datetime.now(), datetime)
 
-        csv_file = self.Spectrum.filename.replace(".fits", ".csv").replace(
-            "/DR4/data/", "/DR4/continuum/"
-        )
+        csv_file = Path(str(self.Spectrum.filename).replace(".fits", ".csv").replace(
+            "/DR4/data/", "/DR4/continuum/"))
 
         x_points = [self.result.params[xname].value for xname in self.model.xnames]
         y_points = [self.result.params[yname].value for yname in self.model.ynames]
@@ -284,8 +285,8 @@ class Continuum:
 
 if __name__ == "__main__":
 
-    sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
-    sp.getSpectrum(xmin=3270, xmax=3305)
+    sp = EdiblesSpectrum("//HD164073/RED_564/HD164073_w564_redl_20180830_O22.fits")
+    # sp.getSpectrum(xmin=3270, xmax=3305)
 
     # build a 4 anchor points spline
     cont = Continuum(sp, method="spline", n_anchors=4, plot=False, verbose=2)
@@ -306,24 +307,24 @@ if __name__ == "__main__":
     )
 
 
-    # build a 8 anchor points spline
-    cont = Continuum(sp, method="spline", n_anchors=8, plot=False, verbose=2)
-    # Guess the model parameters
-    params = cont.model.guess(sp.flux, x=sp.wave)
-    # Fit the model
-    result = cont.model.fit(data=sp.flux, params=params, x=sp.wave)
-    # Get the output of the fit model
-    out = result.eval(params=result.params, x=sp.wave)
-    # Plot
-    plt.plot(sp.wave, sp.flux)
-    plt.plot(sp.wave, out)
-    plt.show()
-    cont.add_to_csv(
-        user="Luigi", comments="Test of 8 anchor points spline"
-    )
+    # # build a 8 anchor points spline
+    # cont = Continuum(sp, method="spline", n_anchors=8, plot=False, verbose=2)
+    # # Guess the model parameters
+    # params = cont.model.guess(sp.flux, x=sp.wave)
+    # # Fit the model
+    # result = cont.model.fit(data=sp.flux, params=params, x=sp.wave)
+    # # Get the output of the fit model
+    # out = result.eval(params=result.params, x=sp.wave)
+    # # Plot
+    # plt.plot(sp.wave, sp.flux)
+    # plt.plot(sp.wave, out)
+    # plt.show()
+    # cont.add_to_csv(
+    #     user="Luigi", comments="Test of 8 anchor points spline"
+    # )
 
-    # reinitialize the edibles spectrum class, to get the continuum_filename in it
+    # # reinitialize the edibles spectrum class, to get the continuum_filename in it
     # sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
     # sp.getSpectrum(xmin=3270, xmax=3305)
-    cont2 = Continuum(sp)
-    cont2.prebuilt_model(chosen_save_num=None, plot=True, verbose=1)
+    # cont2 = Continuum(sp)
+    # cont2.prebuilt_model(chosen_save_num=None, plot=True, verbose=1)
