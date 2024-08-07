@@ -478,6 +478,7 @@ def fit_multi_voigt_absorptionlines(wavegrid=np.array, ydata=np.array, restwave=
 
     # and do the fitting with the parameters we have created. 
     result=voigtmod.fit(ydata, params, wavegrid=wavegrid, weights= 1/std_dev)
+    return result
     
 def fit_voigt_absorption_line(wavegrid, flux, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0,
                               n_step=25, debug=False):
