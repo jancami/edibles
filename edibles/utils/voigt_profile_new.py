@@ -16,23 +16,30 @@ from scipy.optimize import fmin
 
 
 def voigt_absorption_line_new(
-        wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25, debug=False
+        wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0, N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25, composition=composition, map=map, debug=False
 ):
     """
     Function to return a complete Voigt Absorption Line Model, smoothed to the specified
     resolution and resampled to the desired wavelength grid.
-    This can in fact be a set of different absorption lines -- same line, different
-    cloud components or different line for single cloud component.
+    This function considers only a *single* cloud, but multiple lines are possible that can be originating
+    from different species, each with their own column density and b value. 
+    We will assume that there are n species present, and they can optionally be named in the "composition"
+    argument, e.g. composition=['7Li', '6Li']. 
+    We will consider that there are p lines, and p>=n. Each line has its own lambda, f, gamma value. 
+    To figure out which lines correspond to which species, we have the "map" argument that for each line
+    contains an index to the species it originates from.  
 
     Args:
         wavegrid (float64): Wavelength grid (in Angstrom) on which the final result is desired.
-        lambda0 (float64): Central (rest) wavelength for the absorption line, in Angstrom.
-        b (float64): The b parameter (Gaussian width), in km/s.
-        N (float64): The column density (in cm^{-2})
-        f (float64): The oscillator strength (dimensionless)
-        gamma (float64): Lorentzian gamma (=HWFM) component
-        v_rad (float64): Radial velocity of absorption line (in km/s)
+        lambda0 (float64): Central (rest) wavelength(s) for the absorption lines, in Angstrom (numpy array, p elements)
+        f (float64): The oscillator strength (dimensionless) for the absorption lines (numpy array, p elements)
+        gamma (float64): Lorentzian gamma (=HWFM) component for the absorption lines (numpy array, p elements)
+        b (float64): The b parameter (Gaussian width), in km/s (numpy array, n elements)
+        N (float64): The column density (in cm^{-2}) (numpy array, n elements)
+        v_rad (float64): Radial velocity of cloud (in km/s) -- single value!! 
         v_resolution (float64): Instrument resolution in velocity space (in km/s)
+        composition (string): n element string array, listing the n species corresponding to N (n elements, optional)
+        map (int): p-element numpy array that for each line points to what species it corresponds to (index into composition)
         n_step (int): no. of point per FWHM length, governing sampling rate and efficiency
         debug (bool): If True, info on the calculation will be displayed
 
