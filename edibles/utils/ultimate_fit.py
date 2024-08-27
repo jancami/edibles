@@ -3,7 +3,7 @@
 #################################################################
 
 
-from edibles.utils.Ultimate_voigt_profile import *   #importing the ultimate Voigt profile model with map 
+from edibles.utils.ultimate_voigt_profile import *   #importing the ultimate Voigt profile model with map 
 
 # useful packages to import
 import numpy as np
