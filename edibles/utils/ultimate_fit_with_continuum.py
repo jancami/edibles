@@ -3,7 +3,7 @@
 #################################################################
 
 
-from edibles.utils.voigt_profile_new_A import *
+from edibles.utils.ultimate_voigt_profile import *
 
 # useful packages to import
 import numpy as np
