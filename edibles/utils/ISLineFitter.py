@@ -18,7 +18,7 @@ from edibles.models import ContinuumModel
 
 from pathlib import Path
 from edibles import DATADIR
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 
 #######################
 # Known Issues:
@@ -46,7 +46,7 @@ class ISLineFitter():
         self.v_off = []         # a list for V_off from n-component model
 
         # read in atomic line data frame
-        folder = Path(PYTHONDIR+"/data")
+        folder = EDIBLES_PYTHONDIR/"data"
         filename = folder / "auxiliary_data" / "line_catalogs" / "edibles_linelist_atoms.csv"
         self.species_df=pd.read_csv(filename)
 

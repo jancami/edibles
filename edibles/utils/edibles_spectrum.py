@@ -11,7 +11,7 @@ from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
 from pathlib import Path
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 from edibles import DATADIR
 
 
@@ -132,7 +132,7 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = Path(PYTHONDIR + '/data/auxiliary_data/sky_transmission/transmission.dat')
+        filename = EDIBLES_PYTHONDIR / 'data/auxiliary_data/sky_transmission/transmission.dat'
         #print(filename)
         sky_transmission = np.loadtxt(filename)
 
@@ -152,7 +152,7 @@ class EdiblesSpectrum:
 
         stripped_date = str(self.datetime.date()).replace('-', '')
 
-        search_path = Path(PYTHONDIR + '/data/telluric_corrected_data')        
+        search_path = EDIBLES_PYTHONDIR / 'data/telluric_corrected_data'      
         search_string = self.target + "*" + stripped_date + "*.ascii"
         #print(search_path)
         #print(search_string)

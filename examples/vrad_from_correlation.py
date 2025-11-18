@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from edibles import PYTHONDIR
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from edibles.utils.voigt_profile import *

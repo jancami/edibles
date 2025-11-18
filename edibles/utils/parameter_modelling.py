@@ -3,7 +3,7 @@ from scipy.special import wofz
 from scipy.interpolate import interp1d
 import astropy.constants as cst
 import matplotlib.pyplot as plt
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from pathlib import Path
@@ -26,7 +26,7 @@ def file_reader (star_name):
             Contains normailised flux values corresponding to each wavelength reading
     """
     # define where the desired file is
-    folder = Path(PYTHONDIR + "/data")
+    folder = EDIBLES_PYTHONDIR / "data"
     filename = folder / "voigt_benchmarkdata" / star_name
 
     # state what headers the desired data is under

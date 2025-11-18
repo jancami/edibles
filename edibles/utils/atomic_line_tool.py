@@ -1,10 +1,10 @@
 import numpy as np
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 
 
 class AtomicLines:
     def __init__(self):
-        self.filename = PYTHONDIR + "/edibles/data/atomic_lines.txt"
+        self.filename = EDIBLES_PYTHONDIR / "edibles/data/atomic_lines.txt"
         with open(self.filename) as f:
 
             first_line = f.readline()
