@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "EDIBLES"
+dynamic = ["version"]
+description = "Software for EDIBLES data analysis and plotting"
+readme = "README.rst"
+license = "MIT"
+authors = [
+    { name = "Jan Cami", email = "jcami@uwo.ca" },
+]
+dependencies = [
+    "astropy",
+    "lmfit",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "scipy",
+    "specutils",
+]
+
+[tool.hatch.version]
+path = "docs/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/docs",
+]

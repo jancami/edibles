@@ -19,7 +19,6 @@ def createObsList(dryrun=True):
 
 
     """
-
     print("Data Release in " + DATADIR)
     allfitsfiles = []
     for path, dirs, files in os.walk(DATADIR):
