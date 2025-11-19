@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from pathlib import Path
 from edibles import DATADIR
-from edibles import EDIBLES_PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR, DATARELEASE
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
@@ -16,7 +16,7 @@ class EdiblesOracle:
 
     def __init__(self):        
         folder = EDIBLES_PYTHONDIR/"data"
-        filename=folder /"DR4_ObsLog.csv"
+        filename=folder / f"{DATARELEASE}_ObsLog.csv"
         self.obslog = pd.read_csv(filename)
         filename=folder /"sightline_data"/"Formatted_EBV.csv"
         self.ebvlog = pd.read_csv(filename)
