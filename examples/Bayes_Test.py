@@ -73,7 +73,7 @@ def posterior_calc(result):
             print("It's None?")
     # Do we really need this part of debugging?
 
-    a = np.math.factorial(com_idx) * \
+    a = math.factorial(com_idx) * \
         (2 * np.pi) ** ((3 * com_idx + anchor_idx) / 2)
     a = np.log(a)
     # b = range_term * (np.sqrt(det))
@@ -143,9 +143,8 @@ pythia = EdiblesOracle()
 List = pythia.getFilteredObsList(object=["HD 183143"], OrdersOnly=True, Wave=3302.0)
 filename = List.values.tolist()[1]
 
-# remove  "/" in front
-filename = filename[1:]
 wrange = [3301.0, 3304.0]
+print(filename)
 sp = EdiblesSpectrum(filename)
 wave, flux = sp.bary_wave, sp.flux
 idx = np.where((wave > wrange[0]) & (wave < wrange[1]))

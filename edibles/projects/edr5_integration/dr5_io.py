@@ -46,6 +46,7 @@ def get_wave_path(hdr):
         wave = hdr['ESO INS GRAT2 WLEN']
 
     setting = hdr['ESO INS PATH'].lower()
+    wave = int(wave)
 
     return wave, setting
 

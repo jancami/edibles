@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 from edibles.models import ContinuumModel
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
+from edibles.utils.edibles_oracle import EdiblesOracle
 
 # #################################################################################
 # Example 1
@@ -71,9 +72,13 @@ plt.show()
 # #################################################################################
 # Example 2
 # #################################################################################
-
-sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
-
+pythia = EdiblesOracle()
+List = pythia.getFilteredObsList(object=["HD 23466"], OrdersOnly=True, Wave=3290)
+filename = List.values.tolist()[0]
+print(filename)
+sp = EdiblesSpectrum(filename)
+# sp = EdiblesSpectrum("/HD23466/BLUE_346/HD23466_w346_blue_20180731_O11.fits")
+print(sp.wave)
 xmin = 3270
 xmax = 3305
 
