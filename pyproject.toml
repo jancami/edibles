@@ -19,6 +19,7 @@ dependencies = [
     "pandas",
     "scipy",
     "specutils",
+    "PyQt5",
 ]
 
 [tool.hatch.version]
