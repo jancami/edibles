@@ -196,8 +196,8 @@ class EdiblesSpectrum:
 
         """
         assert xmin < xmax, "xmin must be less than xmax"
-        assert xmin > np.min(self.raw_wave), "xmin outside bounds"
-        assert xmax < np.max(self.raw_wave), "xmax outside bounds"
+        assert xmin > np.nanmin(self.raw_wave), "xmin outside bounds"
+        assert xmax < np.nanmax(self.raw_wave), "xmax outside bounds"
 
         self.xmin = xmin
         self.xmax = xmax
