@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import csv
 from astropy.io import fits
-from edibles import DATADIR, PYTHONDIR, DATARELEASE
+from edibles import DATADIR, EDIBLES_PYTHONDIR, DATARELEASE
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 
 
@@ -19,7 +19,6 @@ def createObsList(dryrun=True):
 
 
     """
-
     print("Data Release in " + DATADIR)
     allfitsfiles = []
     for path, dirs, files in os.walk(DATADIR):
@@ -124,7 +123,7 @@ def createObsList(dryrun=True):
         )
 
     # Time to print things out! Let's use csv format to do that.
-    outfile = PYTHONDIR + "/data/" + DATARELEASE + "_ObsLog.csv"
+    outfile = EDIBLES_PYTHONDIR / 'data' / f'{DATARELEASE}_ObsLog.csv'
     # length_checker = np.vectorize(len)
     # all_lengths = length_checker(allfitsfiles)
     # print(np.max(all_lengths))

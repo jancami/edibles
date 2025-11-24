@@ -3,7 +3,7 @@ from scipy.special import wofz
 from scipy.interpolate import interp1d
 import astropy.constants as cst
 import matplotlib.pyplot as plt
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 from pathlib import Path
@@ -614,7 +614,7 @@ if __name__ == "__main__":
         #############################################################
         # This, in fact, is reproducing Dan Welty's high-resolution
         # observations of the K line of o Per.
-        folder = Path(PYTHONDIR + "/data")
+        folder = EDIBLES_PYTHONDIR / "data"
         filename = folder / "voigt_benchmarkdata" / "omiper.m95.7698.txt"
         Headers = ["Wavelength", "Normfluxval"]
         omiper_data = pd.read_csv(

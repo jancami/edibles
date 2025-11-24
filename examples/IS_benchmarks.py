@@ -3,13 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 
 from edibles.utils.ISLineFitter import ISLineFitter, ISLineModel
 
 # Load the benchmark data and run it through ISLineFitter. Then compare results. 
 
-this_datadir = Path(PYTHONDIR) / "data" / "voigt_benchmarkdata"
+this_datadir = EDIBLES_PYTHONDIR / "data" / "voigt_benchmarkdata"
 filename = this_datadir / "omiper.m95.7698.txt"
 v_resolution = 0.56 # km/s
 #print(filename)

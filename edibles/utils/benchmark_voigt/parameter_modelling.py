@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from edibles import PYTHONDIR
+from edibles import EDIBLES_PYTHONDIR
 from pathlib import Path
 import pandas as pd
 from edibles.utils import voigt_profile as vp
@@ -20,7 +20,7 @@ def file_reader (star_name):
             Contains normailised flux values corresponding to each wavelength reading
     """
     # define where the desired file is
-    folder = Path(PYTHONDIR + "/data")
+    folder = EDIBLES_PYTHONDIR / "data"
     filename = folder / "voigt_benchmarkdata" / star_name
 
     # state what headers the desired data is under
@@ -61,7 +61,7 @@ def reduced_chi_squared(observed_value, observed_error, expected_value):
 
 
 #define path to file which contains the names of each star and the resolution of intraments used in survey
-folder = Path(PYTHONDIR + "/data")
+folder = EDIBLES_PYTHONDIR / "data"
 filename = folder / "voigt_benchmarkdata" / 'parameter_modelling_data' / "files_for_parameter_modelling.txt"
 
 # state what headers the desired data is under
@@ -91,7 +91,7 @@ if __name__ == '__main__' :
         # use file names from files_for_parameter_modelling.txt to read in flux and wavelength data
         wavelengths, normflux = np.asarray(file_reader(files[i]))
 
-        folder = Path(PYTHONDIR + "/data")
+        folder = EDIBLES_PYTHONDIR / "data"
         filename = folder / "voigt_benchmarkdata" / 'parameter_modelling_data' / star_data[i]
 
 

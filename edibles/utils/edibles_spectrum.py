@@ -11,8 +11,8 @@ from datetime import datetime
 from specutils.utils.wcs_utils import vac_to_air
 
 from pathlib import Path
-from edibles import PYTHONDIR
-from edibles import DATADIR
+from edibles import EDIBLES_PYTHONDIR
+from edibles import DATADIR, DATARELEASE
 
 
 from edibles.utils.functions import make_grid
@@ -97,21 +97,27 @@ class EdiblesSpectrum:
             self.datetime = datetime.strptime(self.header["DATE-OBS"], '%Y-%m-%dT%H:%M:%S.%f')
             self.v_bary = self.header["HIERARCH ESO QC VRAD BARYCOR"]
 
-            self.flux = hdulist[0].data
-            crval1 = self.header["CRVAL1"]
-            cdelt1 = self.header["CDELT1"]
-            lenwave = len(self.flux)
-            grid = np.arange(0, lenwave, 1)
-            self.wave = (grid) * cdelt1 + crval1
-            self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
+            if DATARELEASE == 'DR5':
+                self.wave = hdulist[1].data['WAVE']
+                self.flux = hdulist[1].data['FLUX']
+                self.raw_wave = np.copy(self.wave)
+                self.raw_flux = np.copy(self.flux)
 
-            self.raw_wave = (grid) * cdelt1 + crval1
+            else:
+                self.flux = hdulist[0].data
+                crval1 = self.header["CRVAL1"]
+                cdelt1 = self.header["CDELT1"]
+                lenwave = len(self.flux)
+                grid = np.arange(0, lenwave, 1)
+                self.wave = (grid) * cdelt1 + crval1
+                self.raw_wave = (grid) * cdelt1 + crval1
+                self.raw_flux = hdulist[0].data
+                
             self.raw_bary_wave = self.raw_wave + \
                 (self.v_bary / cst.c.to("km/s").value) * \
                 self.raw_wave
 
-            self.raw_flux = hdulist[0].data
-
+            self.bary_wave = self.wave + (self.v_bary / cst.c.to("km/s").value) * self.wave
             self.wave_units = "AA"
             self.flux_units = "arbitrary"
 
@@ -132,7 +138,7 @@ class EdiblesSpectrum:
         '''A function that adds the telluric transmission data to the EdiblesSpectrum model.
 
         '''
-        filename = Path(PYTHONDIR + '/data/auxiliary_data/sky_transmission/transmission.dat')
+        filename = EDIBLES_PYTHONDIR / 'data/auxiliary_data/sky_transmission/transmission.dat'
         #print(filename)
         sky_transmission = np.loadtxt(filename)
 
@@ -152,7 +158,7 @@ class EdiblesSpectrum:
 
         stripped_date = str(self.datetime.date()).replace('-', '')
 
-        search_path = Path(PYTHONDIR + '/data/telluric_corrected_data')        
+        search_path = EDIBLES_PYTHONDIR / 'data/telluric_corrected_data'      
         search_string = self.target + "*" + stripped_date + "*.ascii"
         #print(search_path)
         #print(search_string)
@@ -190,8 +196,8 @@ class EdiblesSpectrum:
 
         """
         assert xmin < xmax, "xmin must be less than xmax"
-        assert xmin > np.min(self.raw_wave), "xmin outside bounds"
-        assert xmax < np.max(self.raw_wave), "xmax outside bounds"
+        assert xmin > np.nanmin(self.raw_wave), "xmin outside bounds"
+        assert xmax < np.nanmax(self.raw_wave), "xmax outside bounds"
 
         self.xmin = xmin
         self.xmax = xmax

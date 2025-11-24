@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, qApp, QFileDialog
 from edibles.gui.gui import Ui_MainWindow
 from edibles.utils.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.gui.models import PandasModel, SelectionModel
-from edibles import PYTHONDIR, DATADIR, DATARELEASE
+from edibles import EDIBLES_PYTHONDIR, DATADIR, DATARELEASE
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_overview(self):
         # Load obslist overview into pandas frame
         self.overview = pd.read_csv(
-            PYTHONDIR + "/data/" + DATARELEASE + "_ObsLog.csv"
+            EDIBLES_PYTHONDIR / 'data' / f'{DATARELEASE}_ObsLog.csv'
         )
 
     def add_mpl(self):
