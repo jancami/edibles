@@ -9,9 +9,10 @@ from edibles.projects.edr5_integration import dr5_io
 import numpy as np
 import pandas as pd
 from importlib.resources import files
+from edibles import DATADIR
 
-edr5_dir = Path('/home/Alex/spectra/EDR5')
-spec_dir = Path('/home/Alex/spectra/EDR5/orders')
+edr5_dir = DATADIR
+spec_dir = DATADIR / 'orders'
 file_list = list(spec_dir.glob('*.fits'))
 obs_log_path = files('edibles') / 'data/DR5_ObsLog.csv'
 
@@ -22,7 +23,7 @@ for file in file_list:
         data = hdul[1].data
     
     object_name = hdr['OBJECT']
-    object_name = object_name.replace('HD', 'HD ')
+    object_name = object_name.replace(' ', '').replace('HD', 'HD ')
     ra = hdr['RA']
     dec = hdr['DEC']
     date_obs = hdr['DATE-OBS']
