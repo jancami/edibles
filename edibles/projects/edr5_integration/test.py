@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 pythia = EdiblesOracle()
-filelist = pythia.getFilteredObsList(object=['HD 147889'], MergedOnly=False, Wave=6707)
+filelist = pythia.getFilteredObsList(object=['HD 186841'], MergedOnly=False, Wave=6707)
 
 print(filelist)
 
