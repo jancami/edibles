@@ -6,10 +6,12 @@ Before merging, the orders are cropped.
 from importlib.resources import files
 import pandas as pd
 from edibles import DATADIR
+from edibles.projects.edr5_integration import transformations
 import numpy as np
 from astropy.io import fits
 from util_functions import setting_dependent_crop, crop_spectrum
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 obs_file = files('edibles') / 'data/DR5_ObsLog.csv'
 obs_list = pd.read_csv(obs_file)
@@ -20,27 +22,80 @@ obs_times = obs_list['DateObs'].unique()
 
 print(obs_times)
 
+ins_paths = ['blue', 'redl', 'redu']
 
 for obs_time in obs_times:
     sub_df = obs_list[obs_list['DateObs'] == obs_time]
     sub_df = sub_df.sort_values(by=['Order'])
+
+    setting = sub_df['Setting'].iloc[0]
+
+    if setting in [346, 437]:
+        out_shape = (5, 0)
+    elif setting in [564, 860]:
+        out_shape = (8, 0)
     
-    for i, row in sub_df.iterrows():
-        file = DATADIR / row['Filename']
-        with fits.open(file) as hdul:
-            # pprint(hdul[0].header)
-            # pprint(hdul[1].header)
-            # pprint(hdul[1].data)
-            data = hdul[1].data
+
+    for ins_path in ins_paths:
+        out_spec = np.array([]).reshape(*out_shape)
+        subsub_df = sub_df.loc[sub_df['Filename'].str.contains(ins_path), :]
+
+        print(subsub_df)
+        if subsub_df.empty:
+            continue
+        for i, row in subsub_df.iterrows():
+            file = DATADIR / row['Filename']
+            with fits.open(file) as hdul:
+
+                hdu_0 = hdul[0]
+                data = hdul[1].data
 
             wave = data['WAVE']
             flux = data['FLUX']
             error = data['ERROR']
             flat = data['FLAT']
+            order = np.full(len(wave), row['Order'])
 
-        tell_file = DATADIR / 'tell_corr' / file.name
+            iter_spec = np.array([wave, flux, error, flat, order])
 
-        if tell_file.is_file():
-            with fits.open(tell_file) as hdul:
-                
+            tell_file = DATADIR / 'tell_corr' / file.name
+
+            if tell_file.is_file():
+                with fits.open(tell_file) as hdul:
+                    hdr_0 = hdul[0].header
+                    data = hdul[1].data
+
+                m_wave = data['mlambda'] * 1e4
+                m_wave = transformations.angstrom_vac_to_air(m_wave)
+                cflux = data['cflux']
+                m_trans = data['mtrans']
+
+                tell_spec = np.array([m_wave, cflux, m_trans])
+
+            else:
+                tell_spec = np.full((3, len(wave)), np.nan)
+
+            if setting in [564, 860]:
+                iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
+
+            cl_ang = setting_dependent_crop(iter_spec, setting)
+            iter_spec = crop_spectrum(iter_spec, cl_ang[0], cl_ang[1])
+
+            out_spec = np.concatenate((out_spec, iter_spec), axis=1)
+
+        print(out_spec.shape)
+        plt.plot(out_spec[0], out_spec[1])
+
+        if setting in [564, 860]:
+            plt.plot(out_spec[0], out_spec[6])
+            plt.plot(out_spec[0], out_spec[7])
+
+        plt.show()
+
+        
+        
+
+
+
+
 

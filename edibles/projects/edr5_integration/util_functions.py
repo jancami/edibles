@@ -1,8 +1,8 @@
 import numpy as np
 
-def setting_dependent_crop(spec, wave):
+def setting_dependent_crop(spec, setting):
     crop_lim_dict = {346: [10, 10], 437: [13, 7], 564: [19, 4], 860: [20, 0]}
-    crop_limits = np.array(crop_lim_dict[wave])
+    crop_limits = np.array(crop_lim_dict[setting])
     cl_ang = [np.nanmin(spec[0]) + crop_limits[0], np.nanmax(spec[0]) - crop_limits[1]]
 
     return cl_ang
