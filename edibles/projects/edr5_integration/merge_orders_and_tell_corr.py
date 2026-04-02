@@ -1,5 +1,5 @@
 """
-Merging telluric corrections and uncorrected orders to single files, using the foormat of CRIRES+.
+Merging telluric corrections and uncorrected orders to single files, using the format of CRIRES+.
 Before merging, the orders are cropped.
 """
 
@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 obs_file = files('edibles') / 'data/DR5_ObsLog.csv'
 obs_list = pd.read_csv(obs_file)
 print(obs_list)
+
+out_dir = DATADIR / 'combined'
 
 
 obs_times = obs_list['DateObs'].unique()
@@ -40,7 +42,7 @@ for obs_time in obs_times:
         out_spec = np.array([]).reshape(*out_shape)
         subsub_df = sub_df.loc[sub_df['Filename'].str.contains(ins_path), :]
 
-        print(subsub_df)
+        # print(subsub_df)
         if subsub_df.empty:
             continue
         for i, row in subsub_df.iterrows():
@@ -61,16 +63,22 @@ for obs_time in obs_times:
             tell_file = DATADIR / 'tell_corr' / file.name
 
             if tell_file.is_file():
-                with fits.open(tell_file) as hdul:
-                    hdr_0 = hdul[0].header
-                    data = hdul[1].data
+                try:
+                    with fits.open(tell_file) as hdul:
+                        hdr_0 = hdul[0].header
+                        data = hdul[1].data
 
-                m_wave = data['mlambda'] * 1e4
-                m_wave = transformations.angstrom_vac_to_air(m_wave)
-                cflux = data['cflux']
-                m_trans = data['mtrans']
+                except OSError:
+                    print(f'Telluric file corrupted: {tell_file}')
+                    tell_spec = np.full((3, len(wave)), np.nan)
 
-                tell_spec = np.array([m_wave, cflux, m_trans])
+                else:
+                    m_wave = data['mlambda'] * 1e4
+                    m_wave = transformations.angstrom_vac_to_air(m_wave)
+                    cflux = data['cflux']
+                    m_trans = data['mtrans']
+                    tell_spec = np.array([m_wave, cflux, m_trans])
+
 
             else:
                 tell_spec = np.full((3, len(wave)), np.nan)
@@ -83,14 +91,48 @@ for obs_time in obs_times:
 
             out_spec = np.concatenate((out_spec, iter_spec), axis=1)
 
-        print(out_spec.shape)
-        plt.plot(out_spec[0], out_spec[1])
+        # print(out_spec.shape)
+        # plt.plot(out_spec[0], out_spec[1])
+
+        # if setting in [564, 860]:
+        #     plt.plot(out_spec[0], out_spec[6])
+        #     plt.plot(out_spec[0], out_spec[7])
+
+        # plt.show()
+
+        # Make fits file
+        col1 = fits.Column(name='WAVE', format='D', array=out_spec[0])
+        col2 = fits.Column(name='FLUX', format='D', array=out_spec[1])
+        col3 = fits.Column(name='FLUX_ERROR', format='D', array=out_spec[2])
+        col4 = fits.Column(name='FLAT', format='D', array=out_spec[3])
+        col5 = fits.Column(name='ORDER', format='J', array=out_spec[4])
 
         if setting in [564, 860]:
-            plt.plot(out_spec[0], out_spec[6])
-            plt.plot(out_spec[0], out_spec[7])
+            col6 = fits.Column(name='M_WAVE', format='D', array=out_spec[5])
+            col7 = fits.Column(name='CFLUX', format='D', array=out_spec[6])
+            col8 = fits.Column(name='MTRANS', format='D', array=out_spec[7])
 
-        plt.show()
+            coldefs = fits.ColDefs([col1, col2, col3, col4, col5, col6, col7, col8])
+
+        else:
+            coldefs = fits.ColDefs([col1, col2, col3, col4, col5])
+
+        hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
+
+        file = DATADIR / row['Filename']
+
+        with fits.open(file) as hdul:
+            hdu_0 = hdul[0]
+
+            out_file = file.name.replace(f'_O{row["Order"]}', '')
+
+            out_hdul = fits.HDUList([hdu_0, hdu])
+            out_hdul.writeto(out_dir / out_file, overwrite=True)
+
+
+
+
+
 
         
         
