@@ -11,6 +11,7 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter
 from lmfit import Parameters, minimize,Model
 from scipy.optimize import fmin
+from edibles.utils import transformations
 
 
 def voigt_profile(x, sigma, gamma):
@@ -60,6 +61,9 @@ def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad
 
     # All we have to do is proper conversions so that we feed the right numbers into the call
     # to the VoigtProfile -- see documentation for details.
+    lambda0 = transformations.doppler_shift_wl(lambda0, v_rad)
+    wave = transformations.angstrom_air_to_vac(wave)
+    lambda0 = transformations.angstrom_air_to_vac(lambda0)
     nu = cst.c.to("angstrom/s").value / wave
     nu0 = cst.c.to("angstrom/s").value / lambda0
     sigma = (b * 1e13) / lambda0 / np.sqrt(2)
