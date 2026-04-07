@@ -16,6 +16,7 @@ atomic_line_list = pd.read_csv(atomic_line_file)
 print(atomic_line_list)
 
 
+
 print(file_list)
 
 elem_ind = 15
@@ -45,6 +46,7 @@ params['n'].value = 1e13
 params['b'].value = 0.1
 params['slope'].value = 0
 params['v_rad'].value = 0
+
 
 
 for file in file_list:
