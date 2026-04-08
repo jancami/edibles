@@ -22,9 +22,9 @@ order1 = 10
 order2 = 13
 
 # NaI
-elem_inds = [20, 21, 22, 23]
-elem_row = atomic_line_list.loc[elem_inds]
-orders = [12, 12, 5, 5]
+# elem_inds = [20, 21, 22, 23]
+# elem_row = atomic_line_list.loc[elem_inds]
+# orders = [12, 12, 5, 5]
 
 print(elem_row)
 
@@ -40,78 +40,6 @@ def voigt_slope(x, cont, slope, lambda0, b, n, f, gamma, v_rad):
 
 
 wave_ranges = [[4043, 4045], [7697, 7701]]
-
-def make_multi_comp_voigt(n_components: int, wave_ranges: list) -> Callable:
-    """
-    Generate a multi-component Voigt profile fitting function.
-    
-    Parameters
-    ----------
-    n_components : int
-        Number of spectral components/windows.
-    wave_ranges : list of tuples
-        List of (min, max) wavelength ranges for each component window.
-        E.g. [(wave_min1, wave_max1), (wave_min2, wave_max2), ...]
-    
-    Returns
-    -------
-    Callable
-        A function with signature:
-        f(x, b, n, v_rad, cont1, slope1, lambda01, f1, gamma1, cont2, ...)
-    """
-    if len(wave_ranges) != n_components:
-        raise ValueError(f"wave_ranges must have {n_components} entries, got {len(wave_ranges)}")
-
-    # Build the per-component parameter names
-    comp_param_names = []
-    for i in range(1, n_components + 1):
-        comp_param_names += [f"cont{i}", f"slope{i}", f"lambda0{i}", f"f{i}", f"gamma{i}"]
-
-    def multi_comp_voigt(x, b, n, v_rad, *args):
-        if len(args) != len(comp_param_names):
-            raise ValueError(
-                f"Expected {len(comp_param_names)} component params "
-                f"({', '.join(comp_param_names)}), got {len(args)}"
-            )
-
-        # Unpack per-component parameters
-        params_per_comp = 5  # cont, slope, lambda0, f, gamma
-        segments = []
-
-        for i in range(n_components):
-            offset = i * params_per_comp
-            cont_i   = args[offset + 0]
-            slope_i  = args[offset + 1]
-            lambda0_i = args[offset + 2]
-            f_i      = args[offset + 3]
-            gamma_i  = args[offset + 4]
-
-            lo, hi = wave_ranges[i]
-
-            # First component: take everything up to hi
-            # Last component: take everything from lo
-            # Middle components: take the window [lo, hi]
-            if i == 0:
-                xi = x[x <= hi]
-            elif i == n_components - 1:
-                xi = x[x >= lo]
-            else:
-                xi = x[(x >= lo) & (x <= hi)]
-
-            yi = voigt_slope(xi, cont_i, slope_i, lambda0_i, b, n, f_i, gamma_i, v_rad)
-            segments.append(yi)
-
-        return np.concatenate(segments)
-
-    # Give the function a readable signature and docstring
-    all_params = ["x", "b", "n", "v_rad"] + comp_param_names
-    multi_comp_voigt.__name__ = f"{n_components}_comp_voigt"
-    multi_comp_voigt.__doc__ = (
-        f"Auto-generated {n_components}-component Voigt profile function.\n\n"
-        f"Parameters: {', '.join(all_params)}"
-    )
-
-    return multi_comp_voigt
 
 
 def two_comp_voigt(x, b, n, v_rad, cont1, slope1, lambda01, f1, gamma1, cont2, slope2, lambda02, f2, gamma2):
@@ -181,6 +109,7 @@ for star_name in scl_old:
 
         fit_wave = np.concatenate((spec1[0], spec2[0]))
         fit_flux = np.concatenate((spec1[1], spec2[6]))
+        fit_weights = 1/np.concatenate((spec1[2], spec2[2]))**2
 
         fit_spec = np.array([fit_wave, fit_flux])
 
@@ -190,7 +119,7 @@ for star_name in scl_old:
 
         params['cont1'].value = np.nanmedian(spec1[1])
         params['cont2'].value = np.nanmedian(spec2[6])
-        result = vmodel.fit(fit_flux, params, x=fit_spec[0])
+        result = vmodel.fit(fit_flux, params, x=fit_spec[0], weights=fit_weights)
 
         # print(fit_spec)
         # plt.plot(fit_spec[0], fit_flux)
