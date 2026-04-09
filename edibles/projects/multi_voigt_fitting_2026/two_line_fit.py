@@ -88,6 +88,9 @@ params['v_rad'].max = 20
 scl_old = ['HD 23180', 'HD 24398', 'HD 144470', 'HD 147165', 'HD 147683', 'HD 149757', 'HD 166937', 'HD 170740',
            'HD 184915', 'HD 185418', 'HD 185859', 'HD 203532']
 
+scl_rv = {'HD 23180': 13.3, 'HD 24398': 13.8, 'HD 144470': -10.1, 'HD 147165': -6.4, 'HD 147683': -0.8, 'HD 149757': -13.9,
+          'HD 166937': -6.4, 'HD 170740': -10.1, 'HD 184915': -12.0, 'HD 185418': -10.1, 'HD 185859': -8.2, 'HD 203532': 14.2}
+
 for star_name in scl_old:
     file_lists = []
     for wave_range in wave_ranges:
@@ -119,7 +122,10 @@ for star_name in scl_old:
 
         params['cont1'].value = np.nanmedian(spec1[1])
         params['cont2'].value = np.nanmedian(spec2[6])
-        result = vmodel.fit(fit_flux, params, x=fit_spec[0], weights=fit_weights)
+
+        params['v_rad'].value = scl_rv[star_name]
+        print(scl_rv[star_name])
+        result = vmodel.fit(fit_flux, params, x=fit_spec[0])
 
         # print(fit_spec)
         # plt.plot(fit_spec[0], fit_flux)

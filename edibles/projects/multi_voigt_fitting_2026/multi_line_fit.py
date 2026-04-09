@@ -41,8 +41,8 @@ def voigt_slope(x, cont, slope, lambda0, b, n, f, gamma, v_rad):
 
 wave_ranges = [[4043, 4045], [7697, 7701]]
 
-# def make_multi_comp_voigt(n_components: int, wave_ranges: list) -> Callable:
-#     for comp, wave_range in zip(n_components, wave_ranges):
+def make_multi_comp_voigt(n_components: int, wave_ranges: list) -> Callable:
+    for comp, wave_range in zip(n_components, wave_ranges):
 
 
 def two_comp_voigt(x, b, n, v_rad, cont1, slope1, lambda01, f1, gamma1, cont2, slope2, lambda02, f2, gamma2):
