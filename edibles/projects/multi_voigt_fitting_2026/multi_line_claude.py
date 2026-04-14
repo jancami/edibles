@@ -82,6 +82,7 @@ def make_multi_comp_voigt(n_components: int, wave_ranges: list) -> Callable:
     body_lines.append("    return np.concatenate(segments)")
 
     namespace = {"np": np, "voigt_slope": voigt_slope}
+    print("\n".join(body_lines))
     exec("\n".join(body_lines), namespace)
     func = namespace[func_name]
     func.__doc__ = f"Auto-generated {n_components}-component Voigt profile.\nParameters: {signature_str}"
