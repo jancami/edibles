@@ -8,6 +8,7 @@ import numpy as np
 from importlib.resources import files
 import pandas as pd
 from typing import Callable
+from pprint import pprint
 
 atomic_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv'
 atomic_line_list = pd.read_csv(atomic_line_file)
@@ -15,13 +16,13 @@ print(atomic_line_list)
 
 obs_log = pd.read_csv(files('edibles') / 'data/DR5_ObsLog.csv')
 
-# NaI
-elem_inds = [20, 21, 22, 23]
+# NaI + KI
+elem_inds = [12, 15, 20, 21, 22, 23]
 elem_df = atomic_line_list.loc[elem_inds]
 
 print(elem_df)
 
-range_list = [[3301, 3304], [5888, 5900]]
+range_list = [[3301, 3304], [4043, 4045], [5888, 5900], [7697, 7701]]
 
 n_comp = 3
 
@@ -42,10 +43,11 @@ for i, row in fit_df.iterrows():
 
 
 print(fit_df)
-
+one_cloud=False
 
 def cont_slope(x, cont, slope):
     return (cont + slope * x)
+
 
 def add_voigt(x, y, lambda0, b, n, f, gamma, v_rad):
     return y * np.exp(-voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad))
@@ -56,14 +58,25 @@ def voigt_slope(x, cont, slope, lambda0, b, n, f, gamma, v_rad):
 
 
 def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
-    range_df = df_list[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True)
-    c_comps = df_list['c_comp'].drop_duplicates().reset_index(drop=True)
+    range_df = df_list[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+    c_comps = df_list[['c_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+    print(range_df)
 
     comp_param_names = []
     for i, w_range in range_df.iterrows():
         comp_param_names += [f'cont_{i}', f'slope_{i}']
-    for c in c_comps:
-        comp_param_names += [f'b_{c}', f'n_{c}', f'v_rad_{c}']
+    incl_comps = []
+    for _, row in c_comps.iterrows():
+        c = row['c_comp']
+        sp = row['Species']
+        if one_cloud:
+            if c in incl_comps:
+                comp_param_names += [f'n_{c}_{sp}']
+            else:
+                comp_param_names += [f'b_{c}', f'n_{c}_{sp}', f'v_rad_{c}']
+                incl_comps.append(c)
+        else:
+            comp_param_names += [f'b_{c}_{sp}', f'n_{c}_{sp}', f'v_rad_{c}_{sp}']
     for j, row in df_list.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
@@ -80,7 +93,11 @@ def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
         sub_df = df_list.loc[(df_list['w_min'] == w_range["w_min"]) & (df_list['w_max'] == w_range["w_max"])]
         for j, row in sub_df.iterrows():
             c = row['c_comp']
-            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}, n_{c}, f_{j}, gamma_{j}, v_rad_{c})')
+            sp = row['Species']
+            if one_cloud:
+                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c})')
+            else:
+                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}_{sp}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c}_{sp})')
         
         body_lines.append(f'    segments.append(y{i})')
     body_lines.append("    return np.concatenate(segments)")
@@ -107,25 +124,23 @@ for i, row in fit_df.iterrows():
     params[f'f_{i}'].set(value=row['OscillatorStrength'], vary=False)
     params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
-c_comps = fit_df['c_comp'].drop_duplicates().reset_index(drop=True)
+c_comps = fit_df[['c_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
-for c in c_comps:
-    # Shared parameters
-    params[f'b_{c}'].set(    value=0.1,  min=0)
-    params[f'n_{c}'].set(    value=1e11, min=0)
-    params[f'v_rad_{c}'].set(value=0,    min=-20, max=20)
 
 
 # old single cloud sight lines
 scl_old = ['HD 23180', 'HD 24398', 'HD 144470', 'HD 147165', 'HD 147683', 'HD 149757', 'HD 166937', 'HD 170740',
            'HD 184915', 'HD 185418', 'HD 185859', 'HD 203532']
 
+scl_rv = {'HD 23180': 13.3, 'HD 24398': 13.8, 'HD 144470': -10.1, 'HD 147165': -6.4, 'HD 147683': -0.8, 'HD 149757': -13.9,
+          'HD 166937': -6.4, 'HD 170740': -10.1, 'HD 184915': -12.0, 'HD 185418': -10.1, 'HD 185859': -8.2, 'HD 203532': 14.2}
+
 for star_name in scl_old[4:]:
     file_lists = []
     for wave_range in range_list:
         pythia = EdiblesOracle()
         file_list = pythia.getFilteredObsList(object=[star_name], MergedOnly=True, Wave=np.mean(wave_range))
-        file_lists.append(file_list)
+        file_lists.append(file_list[:2])
 
     file_lists = np.array(file_lists).T
 
@@ -137,7 +152,6 @@ for star_name in scl_old[4:]:
             spec = util_functions.crop_spectrum(spec, *wave_range)
             my_order = np.nanmedian(spec[4])
             spec = spec[:, spec[4]==my_order]
-            print(spec.shape)
             if len(spec) > 5:
                 spec[1] = spec[6]
             spectra.append(spec[:5])
@@ -146,11 +160,29 @@ for star_name in scl_old[4:]:
 
         fit_spec = np.concatenate(spectra, axis=1)
 
+        # plt.figure(figsize=(20, 10))
         # plt.plot(fit_spec[0], fit_spec[1])
         # plt.show()
 
-        result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
+        # pprint(params)
+        for k, row in c_comps.iterrows():
+            c = row['c_comp']
+            sp = row['Species']
+            # Shared parameters
+            if one_cloud:
+                params[f'b_{c}'].set(    value=0.1,  min=0, max=20)
+                params[f'v_rad_{c}'].set(value=scl_rv[star_name],    min=-20, max=20)
+            else:
+                params[f'b_{c}_{sp}'].set(    value=0.1,  min=0)
+                params[f'v_rad_{c}_{sp}'].set(value=scl_rv[star_name],    min=-20, max=20)
 
+            params[f'n_{c}_{sp}'].set(    value=1e11, min=0)
+
+
+        result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
+        pprint(result.best_values)
+
+        plt.figure(figsize=(20, 10))
         plt.plot(fit_spec[1])
         plt.plot(result.best_fit)
         plt.show()
