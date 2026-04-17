@@ -9,6 +9,8 @@ from importlib.resources import files
 import pandas as pd
 from typing import Callable
 from pprint import pprint
+from PyAstronomy import pyasl
+
 
 atomic_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv'
 atomic_line_list = pd.read_csv(atomic_line_file)
@@ -19,12 +21,19 @@ obs_log = pd.read_csv(files('edibles') / 'data/DR5_ObsLog.csv')
 # NaI + KI
 elem_inds = [12, 15, 20, 21, 22, 23]
 elem_df = atomic_line_list.loc[elem_inds]
-
-print(elem_df)
-
 range_list = [[3301, 3304], [4043, 4045], [5888, 5900], [7697, 7701]]
 
-n_comp = 3
+# # NaI
+elem_inds = [20, 21, 22, 23]
+elem_df = atomic_line_list.loc[elem_inds]
+range_list = [[3301, 3304], [5888, 5900]]
+
+# LiI
+# elem_inds = [16, 17, 18, 19]
+# elem_df = atomic_line_list.loc[elem_inds]
+# range_list = [[6706, 6709.5]]
+
+n_comp = 1
 
 comp_list = []
 fit_df = pd.DataFrame()
@@ -43,7 +52,7 @@ for i, row in fit_df.iterrows():
 
 
 print(fit_df)
-one_cloud=False
+one_cloud=True
 
 def cont_slope(x, cont, slope):
     return (cont + slope * x)
@@ -60,7 +69,6 @@ def voigt_slope(x, cont, slope, lambda0, b, n, f, gamma, v_rad):
 def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
     range_df = df_list[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
     c_comps = df_list[['c_comp', 'Species']].drop_duplicates().reset_index(drop=True)
-    print(range_df)
 
     comp_param_names = []
     for i, w_range in range_df.iterrows():
@@ -88,6 +96,12 @@ def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
     body_lines.append("    segments = []")
 
     for i, w_range in range_df.iterrows():
+        mean_wl = np.mean(w_range)
+        if mean_wl < 5000:
+            inst_res = 80000
+        else:
+            inst_res = 100000
+
         body_lines.append(f'    x{i} = x[(x >= {w_range["w_min"]}) & (x <= {w_range["w_max"]})]')
         body_lines.append(f'    y{i} = cont_slope(x{i}, cont_{i}, slope_{i})')
         sub_df = df_list.loc[(df_list['w_min'] == w_range["w_min"]) & (df_list['w_max'] == w_range["w_max"])]
@@ -98,13 +112,14 @@ def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
                 body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c})')
             else:
                 body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}_{sp}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c}_{sp})')
+        body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, equid=False, edgeHandling="firstlast")')
         
         body_lines.append(f'    segments.append(y{i})')
     body_lines.append("    return np.concatenate(segments)")
 
     
     print("\n".join(body_lines))
-    namespace = {"np": np, "cont_slope": cont_slope, "add_voigt": add_voigt}
+    namespace = {"np": np, "cont_slope": cont_slope, "add_voigt": add_voigt, "pyasl": pyasl}
     exec("\n".join(body_lines), namespace)
     func = namespace[func_name]
     func.__doc__ = f"Auto-generated n-component Voigt profile.\nParameters: {signature_str}"
@@ -154,7 +169,9 @@ for star_name in scl_old[4:]:
             spec = spec[:, spec[4]==my_order]
             if len(spec) > 5:
                 spec[1] = spec[6]
-            spectra.append(spec[:5])
+
+            x, y = pyasl.equidistantInterpolation(spec[0], spec[1], '2x')
+            spectra.append(np.array([x, y]))
 
             params[f'cont_{i}'].value = np.nanmedian(spec[1])
 
