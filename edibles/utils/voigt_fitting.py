@@ -23,15 +23,15 @@ elem_inds = [12, 15, 20, 21, 22, 23]
 elem_df = atomic_line_list.loc[elem_inds]
 range_list = [[3301, 3304], [4043, 4045], [5888, 5900], [7697, 7701]]
 
-# # NaI
+# NaI
 elem_inds = [20, 21, 22, 23]
 elem_df = atomic_line_list.loc[elem_inds]
 range_list = [[3301, 3304], [5888, 5900]]
 
 # LiI
-# elem_inds = [16, 17, 18, 19]
-# elem_df = atomic_line_list.loc[elem_inds]
-# range_list = [[6706, 6709.5]]
+elem_inds = [16, 17, 18, 19]
+elem_df = atomic_line_list.loc[elem_inds]
+range_list = [[6706, 6709.5]]
 
 n_comp = 1
 
@@ -168,7 +168,8 @@ for star_name in scl_old[4:]:
             my_order = np.nanmedian(spec[4])
             spec = spec[:, spec[4]==my_order]
             if len(spec) > 5:
-                spec[1] = spec[6]
+                if not np.isnan(spec[6]).all():
+                    spec[1] = spec[6]
 
             x, y = pyasl.equidistantInterpolation(spec[0], spec[1], '2x')
             spectra.append(np.array([x, y]))
@@ -177,9 +178,9 @@ for star_name in scl_old[4:]:
 
         fit_spec = np.concatenate(spectra, axis=1)
 
-        # plt.figure(figsize=(20, 10))
-        # plt.plot(fit_spec[0], fit_spec[1])
-        # plt.show()
+        plt.figure(figsize=(20, 10))
+        plt.plot(fit_spec[0], fit_spec[1])
+        plt.show()
 
         # pprint(params)
         for k, row in c_comps.iterrows():
