@@ -23,25 +23,26 @@ elem_inds = [12, 15, 20, 21, 22, 23]
 elem_df = atomic_line_list.loc[elem_inds]
 range_list = [[3301, 3304], [4043, 4045], [5888, 5900], [7697, 7701]]
 
-# NaI
-elem_inds = [20, 21, 22, 23]
-elem_df = atomic_line_list.loc[elem_inds]
-range_list = [[3301, 3304], [5888, 5900]]
+# # NaI
+# elem_inds = [20, 21, 22, 23]
+# elem_df = atomic_line_list.loc[elem_inds]
+# range_list = [[3301, 3304], [5888, 5900]]
 
-# LiI
-elem_inds = [16, 17, 18, 19]
-elem_df = atomic_line_list.loc[elem_inds]
-range_list = [[6706, 6709.5]]
+# # LiI
+# elem_inds = [16, 17, 18, 19]
+# elem_df = atomic_line_list.loc[elem_inds]
+# range_list = [[6706, 6709.5]]
 
-n_comp = 1
+n_comp = 2
 
 comp_list = []
 fit_df = pd.DataFrame()
 
 # Define cloud components
-for c_comp in range(n_comp):
+for v_comp in range(n_comp):
     i_df = elem_df.copy()
-    i_df.loc[:, 'c_comp'] = c_comp
+    i_df.loc[:, 'v_comp'] = v_comp
+    i_df.loc[:, 'b_comp'] = v_comp
     fit_df = pd.concat((fit_df, i_df), ignore_index=True)
 
 # Define wave range for each line
@@ -68,23 +69,26 @@ def voigt_slope(x, cont, slope, lambda0, b, n, f, gamma, v_rad):
 
 def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
     range_df = df_list[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
-    c_comps = df_list[['c_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+    c_comps = df_list[['v_comp', 'b_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
     comp_param_names = []
     for i, w_range in range_df.iterrows():
         comp_param_names += [f'cont_{i}', f'slope_{i}']
-    incl_comps = []
+    incl_vrad = []
+    incl_b = []
     for _, row in c_comps.iterrows():
-        c = row['c_comp']
+        v_rad = row['v_comp']
+        b = row['b_comp']
         sp = row['Species']
-        if one_cloud:
-            if c in incl_comps:
-                comp_param_names += [f'n_{c}_{sp}']
-            else:
-                comp_param_names += [f'b_{c}', f'n_{c}_{sp}', f'v_rad_{c}']
-                incl_comps.append(c)
-        else:
-            comp_param_names += [f'b_{c}_{sp}', f'n_{c}_{sp}', f'v_rad_{c}_{sp}']
+        comp_param_names += [f'n_{v_rad}_{sp}']
+        if v_rad not in incl_vrad:
+            comp_param_names += [f'v_rad_{v_rad}']
+        if b not in incl_b:
+            comp_param_names += [f'b_{b}']
+
+            incl_vrad.append(v_rad)
+            incl_b.append(b)
+
     for j, row in df_list.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
@@ -106,12 +110,10 @@ def make_multi_comp_voigt(df_list: pd.DataFrame) -> Callable:
         body_lines.append(f'    y{i} = cont_slope(x{i}, cont_{i}, slope_{i})')
         sub_df = df_list.loc[(df_list['w_min'] == w_range["w_min"]) & (df_list['w_max'] == w_range["w_max"])]
         for j, row in sub_df.iterrows():
-            c = row['c_comp']
+            v_rad = row['v_comp']
+            b = row['b_comp']
             sp = row['Species']
-            if one_cloud:
-                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c})')
-            else:
-                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{c}_{sp}, n_{c}_{sp}, f_{j}, gamma_{j}, v_rad_{c}_{sp})')
+            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b}, n_{v_rad}_{sp}, f_{j}, gamma_{j}, v_rad_{v_rad})')
         body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, equid=False, edgeHandling="firstlast")')
         
         body_lines.append(f'    segments.append(y{i})')
@@ -139,7 +141,7 @@ for i, row in fit_df.iterrows():
     params[f'f_{i}'].set(value=row['OscillatorStrength'], vary=False)
     params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
-c_comps = fit_df[['c_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+c_comps = fit_df[['v_comp', 'b_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
 
 
@@ -184,17 +186,14 @@ for star_name in scl_old[4:]:
 
         # pprint(params)
         for k, row in c_comps.iterrows():
-            c = row['c_comp']
+            v_rad = row['v_comp']
+            b = row['b_comp']
             sp = row['Species']
             # Shared parameters
-            if one_cloud:
-                params[f'b_{c}'].set(    value=0.1,  min=0, max=20)
-                params[f'v_rad_{c}'].set(value=scl_rv[star_name],    min=-20, max=20)
-            else:
-                params[f'b_{c}_{sp}'].set(    value=0.1,  min=0)
-                params[f'v_rad_{c}_{sp}'].set(value=scl_rv[star_name],    min=-20, max=20)
+            params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
+            params[f'v_rad_{v_rad}'].set(value=scl_rv[star_name],    min=-20, max=20)
 
-            params[f'n_{c}_{sp}'].set(    value=1e11, min=0)
+            params[f'n_{v_rad}_{sp}'].set(    value=1e11, min=0)
 
 
         result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
