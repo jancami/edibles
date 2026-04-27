@@ -81,7 +81,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     return func
 
 
-def voigt_fit_wrapper(fit_df: pd.DataFrame, ):
+def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
     # generate fitting function
     generated_fit_function = make_multi_comp_voigt(fit_df)
     # Make lmfit model
@@ -92,8 +92,10 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, ):
     range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
     # set continuum slopes to 0 for each fitting range
-    for i, _ in range_df.iterrows():
+    for i, row in range_df.iterrows():
         params[f'slope_{i}'].set(value=0)
+        spec_cut = fit_spec[(fit_spec >= row['w_min']) & (fit_spec <= row['w_max'])][1]
+        params[f'cont_{i}'].set(value=np.nanmedian(spec_cut))
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
@@ -102,7 +104,23 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, ):
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_comp_init']].drop_duplicates().reset_index(drop=True)
+
+    # set initial values and bounds of b values and v_rad
+    for k, row in c_comps.iterrows():
+        v_rad = row['v_comp']
+        b = row['b_comp']
+        sp = row['Species']
+        # Shared parameters
+        params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
+        params[f'v_rad_{v_rad}'].set(value=row['v_comp_init'],    min=-20, max=20)
+
+        params[f'n_{v_rad}_{sp}'].set(    value=1e11, min=0)
+
+    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
+
+    return result
+
 
 
 def main():
@@ -139,13 +157,13 @@ def main():
 
     for star_name in scl_old[0:]:
         fit_df = pd.DataFrame()
-        # Define cloud components
+        # Define cloud components and initial values, limits
         for v_comp in range(n_comp):
             i_df = elem_df.copy()
             i_df.loc[:, 'v_comp'] = v_comp
             i_df.loc[:, 'b_comp'] = v_comp
-            i_df.loc[:, 'v_comp_init'] = v_comp
-            i_df.loc[:, 'b_comp_init'] = v_comp
+            i_df.loc[:, 'v_comp_init'] = scl_rv[star_name]
+            i_df.loc[:, 'b_comp_init'] = 10
             i_df.loc[:, 'v_comp_min'] = -20
             i_df.loc[:, 'b_comp_min'] = 0
             i_df.loc[:, 'v_comp_max'] = 20
@@ -186,28 +204,15 @@ def main():
 
                 x, y = pyasl.equidistantInterpolation(spec[0], spec[1], '2x')
                 spectra.append(np.array([x, y]))
-
-                params[f'cont_{i}'].value = np.nanmedian(spec[1])
-
             fit_spec = np.concatenate(spectra, axis=1)
 
             plt.figure(figsize=(20, 10))
             plt.plot(fit_spec[0], fit_spec[1])
             plt.show()
 
-            # set initial values and bounds of b values and v_rad
-            for k, row in c_comps.iterrows():
-                v_rad = row['v_comp']
-                b = row['b_comp']
-                sp = row['Species']
-                # Shared parameters
-                params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
-                params[f'v_rad_{v_rad}'].set(value=scl_rv[star_name],    min=-20, max=20)
+            result = voigt_fit_wrapper(fit_df, fit_spec)
 
-                params[f'n_{v_rad}_{sp}'].set(    value=1e11, min=0)
-
-
-            result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
+            
             pprint(result.best_values)
 
             plt.figure(figsize=(20, 10))
