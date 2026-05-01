@@ -104,18 +104,18 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_comp_init']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_rad_init']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
     for k, row in c_comps.iterrows():
-        v_rad = row['v_comp']
+        v_comp = row['v_comp']
         b = row['b_comp']
         sp = row['Species']
         # Shared parameters
         params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
-        params[f'v_rad_{v_rad}'].set(value=row['v_comp_init'],    min=-20, max=20)
+        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=-20, max=20)
 
-        params[f'n_{v_rad}_{sp}'].set(    value=1e11, min=0)
+        params[f'n_{v_comp}_{sp}'].set(    value=1e11, min=0)
 
     result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
 
@@ -161,13 +161,13 @@ def main():
         for v_comp in range(n_comp):
             i_df = elem_df.copy()
             i_df.loc[:, 'v_comp'] = v_comp
+            i_df.loc[:, f'v_rad_init'] = scl_rv[star_name]
+            i_df.loc[:, f'v_rad_min'] = -20
+            i_df.loc[:, f'v_rad_max'] = 20
             i_df.loc[:, 'b_comp'] = v_comp
-            i_df.loc[:, 'v_comp_init'] = scl_rv[star_name]
-            i_df.loc[:, 'b_comp_init'] = 10
-            i_df.loc[:, 'v_comp_min'] = -20
-            i_df.loc[:, 'b_comp_min'] = 0
-            i_df.loc[:, 'v_comp_max'] = 20
-            i_df.loc[:, 'b_comp_max'] = 20
+            i_df.loc[:, f'b_init'] = 10
+            i_df.loc[:, f'b_min'] = 0
+            i_df.loc[:, f'b_max'] = 20
             fit_df = pd.concat((fit_df, i_df), ignore_index=True)
 
         # Define wave range for each line
