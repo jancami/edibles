@@ -175,16 +175,13 @@ def main():
     # Button for elements
     elem_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: clicked("KI"))
     elem_btn.grid(column=0, row=1)
-    # btn.pack()
 
     # Text box for star name
     star_lbl = tk.Label(root, text="Enter star name:")
     star_lbl.grid(column=0, row=2)
-    # star_lbl.pack()
 
     star_entry = tk.Entry(root, width=10)
     star_entry.grid(column=0, row=3)
-    # star_entry.pack()
 
     # the figure that will contain the plot
     nrows = 1
@@ -198,7 +195,6 @@ def main():
 
     # placing the canvas on the Tkinter window
     canvas.get_tk_widget().grid(column=1, row=1, rowspan=20)
-    # canvas.get_tk_widget().pack()
 
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
@@ -269,11 +265,9 @@ def main():
 
     load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
     load_btn.grid(column=0, row=4)
-    # load_btn.pack()
 
     # set starting values for fit using plotted spectrum
     # for each component v_comp
-    # v_rad_init
     v_rad_comp_entry = tk.Entry(root)
     v_rad_comp_entry.grid(column=0, row=7)
 
@@ -303,8 +297,6 @@ def main():
             for i, row in root.fit_df.iterrows():
                 if row['v_comp'] == int(v_comp):
                     root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
-            # root.fit_df.loc[v_comp_sub_df.index, f'v_rad_init'] = v_rad_init
-            # print(root.fit_df.loc[v_comp_sub_df.index, f'v_rad_init'])
 
             print(root.fit_df)
 
@@ -312,12 +304,10 @@ def main():
 
         canvas.draw()
 
-        # for i in range(len(fit_df)):
-        #     fit_df.loc[i, 'v_rad_init'] = float(input(f"Enter initial radial velocity for component {i} (km/s): ")) 
     v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
     v_rad_btn.grid(column=0, row=6)
 
-
+    root.span = []
     # change wavelength range
     def range_function():
         if root.cid is not None:
@@ -335,8 +325,8 @@ def main():
                     root.fit_df.loc[i, 'w_max'] = xmax
             print(root.fit_df)    
 
-        # for ax in axs.flatten():
-        root.span = SpanSelector(axs[0], onselect, 'horizontal', useblit=True, interactive= True, props=dict(alpha=0.5, facecolor='red'))
+        for i, ax in enumerate(axs.flatten()):
+            SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
 
         canvas.draw()
 
@@ -367,7 +357,7 @@ def main():
             plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
             plot1.plot(plot_spec[0], plot_spec[1], label = 'Data', alpha=0.5)
             plot1.plot(plot_spec[0], result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='k')
-            plt.legend()
+            plot1.legend()
             canvas.draw()
 
         print(result.best_values)
