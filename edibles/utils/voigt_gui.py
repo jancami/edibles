@@ -222,6 +222,7 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
+        # plot_fit_info()
 
     # Button for elements
     elem_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
@@ -414,10 +415,12 @@ def main():
             print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
             print(root.fit_df)    
 
-        for i, ax in enumerate(root.axs.flatten()):
-            SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+        root.span.clear()
+        for _, ax in enumerate(root.axs.flatten()):
+            selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+            root.span.append(selector)
 
-        root.canvas.draw()
+        root.canvas.draw_idle()
 
     range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
     range_btn.grid(column=0, row=8)
@@ -479,11 +482,19 @@ def main():
             fit_df['b_init'] = fit_df['b_fit']
             fit_df['n_init'] = fit_df['n_fit']
             root.fit_df = fit_df
+            # plot_fit_info()
         except FileNotFoundError:
             print(f"No fit results found for {star_name}.")
 
     load_res_btn = tk.Button(root, text="Load fit results", command=load_fit_result)
     load_res_btn.grid(column=0, row=10)
+
+    def clear_df_func():
+        root.fit_df = pd.DataFrame()
+        print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
+    
+    clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
+    clear_df_btn.grid(column=0, row=11)
 
     root.mainloop()
 
