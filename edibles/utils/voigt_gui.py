@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 from pathlib import Path
 from scipy.interpolate import interp1d
 from matplotlib.widgets import SpanSelector
+from edibles.utils import transformations
 
 
 atomic_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv'
@@ -23,7 +24,23 @@ atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].betwe
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
-def make_default_df(in_df: pd.DataFrame, v_comp: int):
+def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
+    """
+    Create a default DataFrame for Voigt fitting.
+
+    Parameters
+    ----------
+    in_df : pd.DataFrame
+        DataFrame loaded from a line list.
+    v_comp : int
+        velocity component number (used to link lines that belong to the same component and set the same initial v_rad and b values)
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with default values for fitting parameters and wavelength ranges for fitting.
+    """
+
     i_df = in_df.copy()
     i_df.loc[:, 'v_comp'] = v_comp
     i_df.loc[:, f'v_rad_init'] = 0
@@ -82,9 +99,25 @@ def resample(spectrum: np.array, wave_new: np.array, assume_sorted=True) -> np.a
     return np.array([wave_new, *new_cols])
 
 
-def coadd_spectra(spectra, ref_spec_num=0):
+def coadd_spectra(spectra: list, ref_spec_num=0) -> np.array:
+    """
+    Coadds a list of spectra.
+    Before coadding, the spectra get resampled to the same wavelength points using the spectrum with index ref_spec_num as reference.
+
+    Parameters
+    ----------
+    spectra : list
+        List of spectra to coadd.
+    ref_spec_num : int, optional
+        Index of the reference spectrum, by default 0
+
+    Returns
+    -------
+    np.array
+        Coadded spectrum
+    """
     ref_spec = spectra[ref_spec_num]
-    x, y = pyasl.equidistantInterpolation(ref_spec[0], ref_spec[1], '2x')
+    x, _ = pyasl.equidistantInterpolation(ref_spec[0], ref_spec[1], '2x')
 
     flux_list = []
     weight_list = []
@@ -106,12 +139,25 @@ def coadd_spectra(spectra, ref_spec_num=0):
 
 
 def results_to_df(result, fit_df):
-    params = result.params
+    """
+    Merges the fitting DataFrame and the results to one DataFrame containing all the information.
+
+    Parameters
+    ----------
+    result : lmfit.result
+        lmfit result object containing the best fit values for all parameters and the best fit model.
+    fit_df : pd.DataFrame
+        DataFrame with default values for fitting parameters and wavelength ranges for fitting.
+
+    Returns
+    -------
+    pd.DataFrame
+        Merged DataFrame containing all fitting information.
+    """
     best_values = result.best_values
 
     print('results to file')
-    print(best_values)
-    print(fit_df)
+
     range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
     c_comps = fit_df[['v_comp', 'Species']].drop_duplicates().reset_index(drop=True)
@@ -139,28 +185,35 @@ def results_to_df(result, fit_df):
 
 def main():
     root = tk.Tk()
-    # root.state('iconic')
 
+    # defining global variables for the GUI
     root.fit_df = pd.DataFrame()
     root.fit_spec = None
     root.cid = None
+    root.vlines = {}
 
     # Setting some window properties
     root.title("Voigt fitter")
     root.geometry("1600x1000")
-    # root.geometry("700x500")
 
+    # make label for important messages
+    msg_lbl = tk.Label(root, text="")
+    msg_lbl.grid(column=1, row=0)
+
+    def print_msg(msg: str):
+        msg_lbl.config(text=msg)
+        print(msg)
+
+    # Button for selecting element to fit. Only KI for now, but can be easily extended to include more elements.
     elem_lbl = tk.Label(root, text="Select a species.")
     elem_lbl.grid(column=0, row=0)
-    # elem_lbl.pack()
 
     # function to display text when
     # button is clicked
-    def clicked(elem):
+    def add_elem(elem):
         elem_lbl.configure(text = f"{elem} selected")
         elem_inds = atomic_line_list[atomic_line_list['Species'] == elem].index
         elem_df = atomic_line_list.loc[elem_inds]
-        print(elem_df)
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
 
@@ -169,11 +222,9 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
-        print(root.fit_df)
-        print(root.fit_df[['w_min', 'w_max']])
 
     # Button for elements
-    elem_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: clicked("KI"))
+    elem_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
     elem_btn.grid(column=0, row=1)
 
     # Text box for star name
@@ -183,39 +234,59 @@ def main():
     star_entry = tk.Entry(root, width=10)
     star_entry.grid(column=0, row=3)
 
-    # the figure that will contain the plot
+    # the figure that will contain the plot ==============================================================
     nrows = 1
     ncols = 2
-    fig, axs = plt.subplots(figsize = (15, 10), dpi = 100, nrows=nrows, ncols=ncols)
-
+    fig, axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
     # creating the Tkinter canvas
     canvas = FigureCanvasTkAgg(fig, master = root)  
     # containing the Matplotlib figure
     canvas.draw()
-
     # placing the canvas on the Tkinter window
     canvas.get_tk_widget().grid(column=1, row=1, rowspan=20)
-
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
-    toolbar_frame.grid(column=1, row=0)
-    # toolbar = NavigationToolbar2TkAgg(canvas, toolbar_frame)
+    toolbar_frame.grid(column=1, row=1)
     toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
     toolbar.update()
 
-    # placing the toolbar on the Tkinter window
-    # canvas.get_tk_widget().grid(column=2, row=2)
-    # canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+    def plot_fit_info():
+        """
+        Plotting relevant fitting info in the spectrum plots.
+        """
+        c_comps = root.fit_df['v_comp'].drop_duplicates().reset_index(drop=True)
 
+        # iterate through plot windows
+        range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        for i, wave_range in range_df.iterrows():
+            # adding the subplot
+            j = i // ncols
+            if nrows == 1:
+                plot1 = axs[i]
+            else:
+                plot1 = axs[j, i % ncols]
+
+            for k, row in root.fit_df.iterrows():
+                if wave_range[0] < row['WavelengthAir'] < wave_range[1]:
+                    x = transformations(row['WavelengthAir'], row['v_rad_fit'])
+                    root.vlines[int(row['vcomp'])], = plot1.axvline(x)
+                    plt.draw()
 
 
 
     # make button to get star name and load spectrum
+    # TODO: add option to exclude a spectrum from coaddidtion if it is bad (e.g. by plotting the spectra and letting the user click on the bad spectra)
     def load_spectrum():
         root.star_name = star_entry.get()
+        msg_lbl.config(text=f"Loading spectrum for {root.star_name}...")
         print(f"Loading spectrum for {root.star_name}...")
         # load spectrum for star_name
         # extract fitting ranges
+        if root.fit_df.empty:
+            print_msg("No element selected. Spectra cannot be loaded as no fitting ranges are defined.")
+            return
+        
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
         file_lists = []
@@ -233,6 +304,8 @@ def main():
                 plot1 = axs[j, i % ncols]
             plot1.clear()
             spectra = []
+            if len(file_list) == 0:
+                print_msg(f"No spectra found for {root.star_name} in wavelength range {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}.")
 
             for file in file_list:
                 file = Path(file)
@@ -246,7 +319,6 @@ def main():
                         spec[1] = spec[6]
 
                 # plot the spectrum in the GUI using matplotlib
-
                 # plotting the graph
                 plot1.plot(spec[0], spec[1], label = file.name, alpha=0.5)
 
@@ -277,10 +349,10 @@ def main():
         def onclick(event):
             v_comp = v_rad_comp_entry.get()
             v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
-            print(v_comp_sub_df)
-            print(int(v_comp))
+
             ix= event.xdata
             print(f'Clicked at x = {ix}')
+
 
             # find correspinding wavelength in df
             line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
@@ -312,7 +384,7 @@ def main():
     def range_function():
         if root.cid is not None:
             canvas.mpl_disconnect(root.cid)
-        print("Select wavelength range by clicking and dragging on the plot.")
+        print_msg("Select wavelength range by clicking and dragging on the plot.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
@@ -323,6 +395,7 @@ def main():
                 if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
                     root.fit_df.loc[i, 'w_min'] = xmin
                     root.fit_df.loc[i, 'w_max'] = xmax
+            print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
             print(root.fit_df)    
 
         for i, ax in enumerate(axs.flatten()):
@@ -336,8 +409,12 @@ def main():
 
     # fitting
     def fit_spectrum():
+        """
+        Fitting the spectrum with the voigt model.
+        Assigns result to root.result and prints best fit values to console.
+        """
         if root.fit_spec is None:
-            print("No spectrum loaded.")
+            print_msg("No spectrum loaded.")
             return
         
         result = voigt_fit_wrapper(root.fit_df, root.fit_spec)
@@ -370,8 +447,12 @@ def main():
     save_btn.grid(column=0, row=9)
 
     def load_fit_result():
+        """
+        Loads saved fit results from csv file and assigns it to root.fit_df. 
+        The fit results can then be plotted by clicking the "Fit Spectrum" button after loading a spectrum.
+        """
         star_name = star_entry.get()
-        print(f'Loading fit results: {fitting_dir / f"{star_name}_KI.csv"}')
+        print_msg(f'Loading fit results: {fitting_dir / f"{star_name}_KI.csv"}')
         if star_name is None:
             print("No star name entered.")
             return
