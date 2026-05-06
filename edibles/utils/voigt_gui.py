@@ -239,47 +239,54 @@ def main():
     ncols = 2
     root.fig, root.axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
     # creating the Tkinter canvas
-    canvas = FigureCanvasTkAgg(root.fig, master = root)  
+    root.canvas = FigureCanvasTkAgg(root.fig, master = root)  
     # containing the Matplotlib figure
-    canvas.draw()
+    root.canvas.draw()
     # placing the canvas on the Tkinter window
-    canvas.get_tk_widget().grid(column=1, row=1, rowspan=20)
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=20)
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
-    toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
+    toolbar = NavigationToolbar2Tk(root.canvas, toolbar_frame)
     toolbar.update()
 
     def plot_fit_info():
         """
         Plotting relevant fitting info in the spectrum plots.
         """
+        print('Plotting fit infooooooooooooooooooooooooooooooooooooooo')
         # c_comps = root.fit_df['v_comp'].drop_duplicates().reset_index(drop=True)
 
         # iterate through plot windows
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
-        for i, wave_range in range_df.iterrows():
-            # adding the subplot
-            j = i // ncols
-            if nrows == 1:
-                plot1 = root.axs[i]
-            else:
-                plot1 = root.axs[j, i % ncols]
 
-            for k, row in root.fit_df.iterrows():
+        for k, row in root.fit_df.iterrows():
+            for i, wave_range in range_df.iterrows():
+                # getting the subplot axis
+                j = i // ncols
+                if nrows == 1:
+                    plot1 = root.axs[i]
+                else:
+                    plot1 = root.axs[j, i % ncols]
+
+                print('wave range: ',i)
+
                 if wave_range['w_min'] < row['WavelengthAir'] < wave_range['w_max']:
                     x = transformations.doppler_shift_wl(row['WavelengthAir'], row['v_rad_init'])
                     print(x)
+                    key = (i, int(row['v_comp']))
                     print(root.vlines)
-                    if root.vlines.get(int(row['v_comp'])) is None:
-                        root.vlines[int(row['v_comp'])] = plot1.axvline(x, color='red', linestyle='--')
+                    print(root.vlines.get(key))
+                    if root.vlines.get(key) is None:
+                        root.vlines[key] = plot1.axvline(x, color='red', linestyle='--')
                         print('xdataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-                        print(root.vlines[int(row['v_comp'])].get_xdata())
+                        print(root.vlines[key].get_xdata())
                     else:
-                        root.vlines[int(row['v_comp'])].set_xdata([x, x])
+                        line = root.vlines[key]
+                        line.set_xdata([x, x])
         
-        canvas.draw()
+                    root.canvas.draw()
 
 
 
@@ -338,7 +345,7 @@ def main():
             coadded_spectra.append(coadded_spec)
             plt.legend()
 
-        canvas.draw()
+        root.canvas.draw()
         print('file lists:', file_lists)
         root.fit_spec = np.concatenate(coadded_spectra, axis=1)
 
@@ -381,9 +388,9 @@ def main():
             plot_fit_info()
 
 
-        root.cid = canvas.mpl_connect('button_press_event', onclick)
+        root.cid = root.canvas.mpl_connect('button_press_event', onclick)
 
-        canvas.draw()
+        root.canvas.draw()
 
     v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
     v_rad_btn.grid(column=0, row=6)
@@ -392,7 +399,7 @@ def main():
     # change wavelength range
     def range_function():
         if root.cid is not None:
-            canvas.mpl_disconnect(root.cid)
+            root.canvas.mpl_disconnect(root.cid)
         print_msg("Select wavelength range by clicking and dragging on the plot.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
@@ -410,7 +417,7 @@ def main():
         for i, ax in enumerate(root.axs.flatten()):
             SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
 
-        canvas.draw()
+        root.canvas.draw()
 
     range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
     range_btn.grid(column=0, row=8)
@@ -444,7 +451,7 @@ def main():
             plot1.plot(plot_spec[0], plot_spec[1], label = 'Data', alpha=0.5)
             plot1.plot(plot_spec[0], result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='k')
             plot1.legend()
-            canvas.draw()
+            root.canvas.draw()
 
         print(result.best_values)
         root.result = result
