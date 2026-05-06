@@ -237,9 +237,9 @@ def main():
     # the figure that will contain the plot ==============================================================
     nrows = 1
     ncols = 2
-    fig, axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
+    root.fig, root.axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
     # creating the Tkinter canvas
-    canvas = FigureCanvasTkAgg(fig, master = root)  
+    canvas = FigureCanvasTkAgg(root.fig, master = root)  
     # containing the Matplotlib figure
     canvas.draw()
     # placing the canvas on the Tkinter window
@@ -254,7 +254,7 @@ def main():
         """
         Plotting relevant fitting info in the spectrum plots.
         """
-        c_comps = root.fit_df['v_comp'].drop_duplicates().reset_index(drop=True)
+        # c_comps = root.fit_df['v_comp'].drop_duplicates().reset_index(drop=True)
 
         # iterate through plot windows
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
@@ -263,15 +263,23 @@ def main():
             # adding the subplot
             j = i // ncols
             if nrows == 1:
-                plot1 = axs[i]
+                plot1 = root.axs[i]
             else:
-                plot1 = axs[j, i % ncols]
+                plot1 = root.axs[j, i % ncols]
 
             for k, row in root.fit_df.iterrows():
-                if wave_range[0] < row['WavelengthAir'] < wave_range[1]:
-                    x = transformations(row['WavelengthAir'], row['v_rad_fit'])
-                    root.vlines[int(row['vcomp'])], = plot1.axvline(x)
-                    plt.draw()
+                if wave_range['w_min'] < row['WavelengthAir'] < wave_range['w_max']:
+                    x = transformations.doppler_shift_wl(row['WavelengthAir'], row['v_rad_init'])
+                    print(x)
+                    print(root.vlines)
+                    if root.vlines.get(int(row['v_comp'])) is None:
+                        root.vlines[int(row['v_comp'])] = plot1.axvline(x, color='red', linestyle='--')
+                        print('xdataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                        print(root.vlines[int(row['v_comp'])].get_xdata())
+                    else:
+                        root.vlines[int(row['v_comp'])].set_xdata([x, x])
+        
+        canvas.draw()
 
 
 
@@ -299,9 +307,9 @@ def main():
             # getting the subplot
             j = i // ncols
             if nrows == 1:
-                plot1 = axs[i]
+                plot1 = root.axs[i]
             else:
-                plot1 = axs[j, i % ncols]
+                plot1 = root.axs[j, i % ncols]
             plot1.clear()
             spectra = []
             if len(file_list) == 0:
@@ -353,7 +361,6 @@ def main():
             ix= event.xdata
             print(f'Clicked at x = {ix}')
 
-
             # find correspinding wavelength in df
             line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
             print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
@@ -371,6 +378,8 @@ def main():
                     root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
 
             print(root.fit_df)
+            plot_fit_info()
+
 
         root.cid = canvas.mpl_connect('button_press_event', onclick)
 
@@ -398,7 +407,7 @@ def main():
             print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
             print(root.fit_df)    
 
-        for i, ax in enumerate(axs.flatten()):
+        for i, ax in enumerate(root.axs.flatten()):
             SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
 
         canvas.draw()
@@ -425,9 +434,9 @@ def main():
             # adding the subplot
             j = i // ncols
             if nrows == 1:
-                plot1 = axs[i]
+                plot1 = root.axs[i]
             else:
-                plot1 = axs[j, i % ncols]
+                plot1 = root.axs[j, i % ncols]
 
             plot1.clear()
 
