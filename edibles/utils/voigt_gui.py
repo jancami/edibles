@@ -43,34 +43,29 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
 
     i_df = in_df.copy()
     i_df.loc[:, 'v_comp'] = v_comp
-    i_df.loc[:, f'v_rad_init'] = 0
-    i_df.loc[:, f'v_rad_min'] = -100
-    i_df.loc[:, f'v_rad_max'] = 100
+    i_df.loc[:, f'v_rad_init'] = 0.0
+    i_df.loc[:, f'v_rad_min'] = -100.0
+    i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, f'b_init'] = 0.001
-    i_df.loc[:, f'b_min'] = 0
+    i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 20
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
-    i_df.loc[:, 'w_min'] = i_df['WavelengthAir'] * (1 - 150/c)
-    i_df.loc[:, 'w_max'] = i_df['WavelengthAir'] * (1 + 150/c)
+    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 150/c)
+    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 150/c)
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
-    merged_ranges = []
-    current_range = [i_df.loc[0, 'w_min'], i_df.loc[0, 'w_max']]
-    for i in range(1, len(i_df)):
-        w_min = i_df.loc[i, 'w_min']
-        w_max = i_df.loc[i, 'w_max']
-        if w_min <= current_range[1]: # if ranges overlap
-            current_range[1] = max(current_range[1], w_max) # merge ranges
-        else:
-            merged_ranges.append(current_range)
-            current_range = [w_min, w_max]
-    merged_ranges.append(current_range) # add last range        
+    for i, row in i_df.iterrows():
+        w_min = row['w_min']
+        w_max = row['w_max']
+        if i + 1 < len(i_df):
+            if i_df.loc[i+1, 'w_min'] < w_max:
+                i_df.loc[i+1, 'w_min'] = w_min
+                i_df.loc[i, 'w_max'] = i_df.loc[i+1, 'w_max']
     
-
     return i_df
 
 def resample(spectrum: np.array, wave_new: np.array, assume_sorted=True) -> np.array:
@@ -191,6 +186,8 @@ def main():
     root.fit_spec = None
     root.cid = None
     root.vlines = {}
+    root.v_rad_active = False
+    root.w_range_active = False
 
     # Setting some window properties
     root.title("Voigt fitter")
@@ -219,25 +216,51 @@ def main():
 
         # Make initial dataframe (include wavelength range)
         ext_df = make_default_df(elem_df, v_comp)
+        print(ext_df)
+
+        # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
+        if not root.fit_df.empty:
+            for i, i_row in ext_df.iterrows():
+                for _, k_row in root.fit_df.iterrows():
+                    if i_row['Species'] == k_row['Species'] and i_row['WavelengthAir'] == k_row['WavelengthAir']:
+                        ext_df.loc[i, 'w_min'] = k_row['w_min']
+                        ext_df.loc[i, 'w_max'] = k_row['w_max']
+            
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
+        print_msg(f'Adding a species {elem} to fit_df.')
+        print(root.fit_df)
         # plot_fit_info()
 
     # Button for elements
-    elem_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
-    elem_btn.grid(column=0, row=1)
+    ki_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
+    ki_btn.grid(column=0, row=1)
+
+    nai_btn = tk.Button(root, text = "NaI", fg = "green", command=lambda: add_elem("NaI"))
+    nai_btn.grid(column=0, row=2)
+
+    caI_btn = tk.Button(root, text = "CaI", fg = "blue", command=lambda: add_elem("CaI"))
+    caI_btn.grid(column=0, row=3)
+
+    fei_btn = tk.Button(root, text = "FeI", fg = "blue", command=lambda: add_elem("FeI"))
+    fei_btn.grid(column=0, row=4)
+
+    tiii_btn = tk.Button(root, text = "TiII", fg = "blue", command=lambda: add_elem("TiII"))
+    tiii_btn.grid(column=0, row=5)
+
+    elnum = 5
 
     # Text box for star name
     star_lbl = tk.Label(root, text="Enter star name:")
-    star_lbl.grid(column=0, row=2)
+    star_lbl.grid(column=0, row=elnum+1)
 
     star_entry = tk.Entry(root, width=10)
-    star_entry.grid(column=0, row=3)
+    star_entry.grid(column=0, row=elnum+2)
 
     # the figure that will contain the plot ==============================================================
-    nrows = 1
-    ncols = 2
+    nrows = 2
+    ncols = 3
     root.fig, root.axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
     # creating the Tkinter canvas
     root.canvas = FigureCanvasTkAgg(root.fig, master = root)  
@@ -260,7 +283,6 @@ def main():
 
         # iterate through plot windows
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
-
 
         for k, row in root.fit_df.iterrows():
             for i, wave_range in range_df.iterrows():
@@ -319,6 +341,7 @@ def main():
             else:
                 plot1 = root.axs[j, i % ncols]
             plot1.clear()
+            root.vlines = {}
             spectra = []
             if len(file_list) == 0:
                 print_msg(f"No spectra found for {root.star_name} in wavelength range {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}.")
@@ -344,7 +367,7 @@ def main():
             coadded_spec = coadd_spectra(spectra)
             plot1.plot(coadded_spec[0], coadded_spec[1], label='Coadd', color='k')
             coadded_spectra.append(coadded_spec)
-            plt.legend()
+            plot1.legend()
 
         root.canvas.draw()
         print('file lists:', file_lists)
@@ -352,41 +375,50 @@ def main():
 
 
     load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
-    load_btn.grid(column=0, row=4)
+    load_btn.grid(column=0, row=elnum+3)
 
     # set starting values for fit using plotted spectrum
     # for each component v_comp
     v_rad_comp_entry = tk.Entry(root)
-    v_rad_comp_entry.grid(column=0, row=7)
+    v_rad_comp_entry.grid(column=0, row=elnum+6)
 
+    root.span = []
 
     def set_v_rad_init():
+        for i, _ in enumerate(root.span):
+            root.span[i].set_visible(False)
+
+
+        root.v_rad_active = True
         # select initial wavelength from plot
         def onclick(event):
-            v_comp = v_rad_comp_entry.get()
-            v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
+            if root.v_rad_active:
+                v_comp = v_rad_comp_entry.get()
+                v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
 
-            ix= event.xdata
-            print(f'Clicked at x = {ix}')
+                ix= event.xdata
+                print(f'Clicked at x = {ix}')
 
-            # find correspinding wavelength in df
-            line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
-            print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
+                # find correspinding wavelength in df
+                line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
+                print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
 
-            # calculate doppler shift between selected wavelength and line center
-            c = 299792.458 # speed of light in km/s
-            line_center = root.fit_df.loc[line_idx, 'WavelengthAir']
-            v_rad_init = (ix - line_center) / line_center * c
-            print(f'Calculated radial velocity: {v_rad_init:.2f} km/s')
+                # calculate doppler shift between selected wavelength and line center
+                c = 299792.458 # speed of light in km/s
+                line_center = root.fit_df.loc[line_idx, 'WavelengthAir']
+                v_rad_init = (ix - line_center) / line_center * c
+                print(f'Calculated radial velocity: {v_rad_init:.2f} km/s')
 
-            # update fit_df with new v_rad_init for selected component
-            print(v_comp_sub_df.index)
-            for i, row in root.fit_df.iterrows():
-                if row['v_comp'] == int(v_comp):
-                    root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
+                # update fit_df with new v_rad_init for selected component
+                print('v_comp_sub_df.index', v_comp_sub_df.index)
+                print(root.fit_df)
+                for i, row in root.fit_df.iterrows():
+                    if row['v_comp'] == int(v_comp):
+                        root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
 
-            print(root.fit_df)
-            plot_fit_info()
+                print(root.fit_df)
+                plot_fit_info()
+                root.v_rad_active = False
 
 
         root.cid = root.canvas.mpl_connect('button_press_event', onclick)
@@ -394,26 +426,29 @@ def main():
         root.canvas.draw()
 
     v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
-    v_rad_btn.grid(column=0, row=6)
+    v_rad_btn.grid(column=0, row=elnum+5)
 
-    root.span = []
     # change wavelength range
     def range_function():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
+        root.w_range_active = True
         print_msg("Select wavelength range by clicking and dragging on the plot.")
+        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
-            print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
-            # update fit_df with new wavelength range for all lines
-            for i in range(len(root.fit_df)):
-                # change wavelength range to selected range if the prior range overlaps with the selected range
-                if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
-                    root.fit_df.loc[i, 'w_min'] = xmin
-                    root.fit_df.loc[i, 'w_max'] = xmax
-            print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
-            print(root.fit_df)    
+            if root.w_range_active:
+                print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
+                # update fit_df with new wavelength range for all lines
+                for i in range(len(root.fit_df)):
+                    # change wavelength range to selected range if the prior range overlaps with the selected range
+                    if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
+                        root.fit_df.loc[i, 'w_min'] = xmin
+                        root.fit_df.loc[i, 'w_max'] = xmax
+                print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
+                print(root.fit_df)    
+                root.w_range_active = False
 
         root.span.clear()
         for _, ax in enumerate(root.axs.flatten()):
@@ -423,7 +458,7 @@ def main():
         root.canvas.draw_idle()
 
     range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
-    range_btn.grid(column=0, row=8)
+    range_btn.grid(column=0, row=elnum+7)
 
 
     # fitting
@@ -435,6 +470,8 @@ def main():
         if root.fit_spec is None:
             print_msg("No spectrum loaded.")
             return
+        
+        print_msg('Fitting voigt model.')
         
         result = voigt_fit_wrapper(root.fit_df, root.fit_spec)
 
@@ -449,10 +486,11 @@ def main():
                 plot1 = root.axs[j, i % ncols]
 
             plot1.clear()
+            root.vlines = {}
 
             plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
-            plot1.plot(plot_spec[0], plot_spec[1], label = 'Data', alpha=0.5)
-            plot1.plot(plot_spec[0], result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='k')
+            plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
+            plot1.plot(plot_spec[0], result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
             plot1.legend()
             root.canvas.draw()
 
@@ -460,10 +498,18 @@ def main():
         root.result = result
 
     fit_btn = tk.Button(root, text="Fit Spectrum", command=fit_spectrum)
-    fit_btn.grid(column=0, row=5)
+    fit_btn.grid(column=0, row=elnum+4)
 
-    save_btn = tk.Button(root, text="Save fit results", command=lambda: results_to_df(root.result, root.fit_df).to_csv(fitting_dir / f'{root.star_name}_KI.csv', index=False))
-    save_btn.grid(column=0, row=9)
+    def save_function():
+        res_df = results_to_df(root.result, root.fit_df)
+        elem_list = root.fit_df.loc[:, 'Species'].unique()
+        elem_str = '_'.join(elem_list)
+        print(elem_str)
+        res_df.to_csv(fitting_dir / f'{root.star_name}_{elem_str}.csv', index=False)
+
+
+    save_btn = tk.Button(root, text="Save fit results", command=save_function)
+    save_btn.grid(column=0, row=elnum+8)
 
     def load_fit_result():
         """
@@ -471,12 +517,15 @@ def main():
         The fit results can then be plotted by clicking the "Fit Spectrum" button after loading a spectrum.
         """
         star_name = star_entry.get()
-        print_msg(f'Loading fit results: {fitting_dir / f"{star_name}_KI.csv"}')
+        elem_list = root.fit_df.loc[:, 'Species'].unique()
+        elem_str = '_'.join(elem_list)
+        print_msg(f'Loading fit results: {fitting_dir / f"{star_name}_{elem_str}.csv"}')
         if star_name is None:
             print("No star name entered.")
             return
         try:
-            fit_df = pd.read_csv(fitting_dir / f'{star_name}_KI.csv')
+
+            fit_df = pd.read_csv(fitting_dir / f'{star_name}_{elem_str}.csv')
             print(fit_df)
             fit_df['v_rad_init'] = fit_df['v_rad_fit']
             fit_df['b_init'] = fit_df['b_fit']
@@ -487,14 +536,14 @@ def main():
             print(f"No fit results found for {star_name}.")
 
     load_res_btn = tk.Button(root, text="Load fit results", command=load_fit_result)
-    load_res_btn.grid(column=0, row=10)
+    load_res_btn.grid(column=0, row=elnum+9)
 
     def clear_df_func():
         root.fit_df = pd.DataFrame()
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
     
     clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
-    clear_df_btn.grid(column=0, row=11)
+    clear_df_btn.grid(column=0, row=elnum+10)
 
     root.mainloop()
 

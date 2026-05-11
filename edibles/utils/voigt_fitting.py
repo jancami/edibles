@@ -113,7 +113,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         sp = row['Species']
         # Shared parameters
         params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
-        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=-20, max=20)
+        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-10, max=row[f'v_rad_init']+10)
 
         params[f'n_{v_comp}_{sp}'].set(    value=1e11, min=0)
 
@@ -176,11 +176,7 @@ def main():
             fit_df.loc[i, 'w_min'] = w_min
             fit_df.loc[i, 'w_max'] = w_max
 
-
         print(fit_df)
-
-
-
 
         file_lists = []
         for wave_range in range_list:
