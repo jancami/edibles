@@ -112,10 +112,10 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         b = row['b_comp']
         sp = row['Species']
         # Shared parameters
-        params[f'b_{b}'].set(    value=0.1,  min=0, max=20)
-        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-10, max=row[f'v_rad_init']+10)
+        params[f'b_{b}'].set(    value=0.1,  min=0, max=4)
+        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-2, max=row[f'v_rad_init']+2)
 
-        params[f'n_{v_comp}_{sp}'].set(    value=1e11, min=0)
+        params[f'n_{v_comp}_{sp}'].set(    value=1e10, min=0)
 
     result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
 

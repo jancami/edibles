@@ -267,7 +267,7 @@ def main():
     # containing the Matplotlib figure
     root.canvas.draw()
     # placing the canvas on the Tkinter window
-    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=20)
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=20, sticky='nesw')
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
@@ -544,6 +544,9 @@ def main():
     
     clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
     clear_df_btn.grid(column=0, row=elnum+10)
+
+    root.grid_columnconfigure(1, weight=1)
+    root.grid_rowconfigure(elnum+10, weight=1)
 
     root.mainloop()
 
