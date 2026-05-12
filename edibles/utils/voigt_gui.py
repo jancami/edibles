@@ -261,7 +261,7 @@ def main():
     # the figure that will contain the plot ==============================================================
     nrows = 2
     ncols = 3
-    root.fig, root.axs = plt.subplots(figsize = (15, 8), dpi = 100, nrows=nrows, ncols=ncols)
+    root.fig, root.axs = plt.subplots(nrows=nrows, ncols=ncols)
     # creating the Tkinter canvas
     root.canvas = FigureCanvasTkAgg(root.fig, master = root)  
     # containing the Matplotlib figure
