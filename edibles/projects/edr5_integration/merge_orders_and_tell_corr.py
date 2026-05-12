@@ -52,40 +52,44 @@ for obs_time in obs_times:
                 hdu_0 = hdul[0]
                 data = hdul[1].data
 
-            wave = data['WAVE']
-            flux = data['FLUX']
-            error = data['ERROR']
-            flat = data['FLAT']
-            order = np.full(len(wave), row['Order'])
+                wave = data['WAVE']
+                flux = data['FLUX']
+                error = data['ERROR']
+                flat = data['FLAT']
+                order = np.full(len(wave), row['Order'])
 
-            iter_spec = np.array([wave, flux, error, flat, order])
+                iter_spec = np.array([wave, flux, error, flat, order])
 
-            tell_file = DATADIR / 'tell_corr' / file.name
+                tell_file = DATADIR / 'tell_corr' / file.name
 
-            if tell_file.is_file():
-                try:
-                    with fits.open(tell_file) as hdul:
-                        hdr_0 = hdul[0].header
-                        data = hdul[1].data
+                if tell_file.is_file():
+                    try:
+                        with fits.open(tell_file) as hdul_tell:
+                            data_tell = hdul_tell[1].data
 
-                except OSError:
-                    print(f'Telluric file corrupted: {tell_file}')
-                    tell_spec = np.full((3, len(wave)), np.nan)
+                    except OSError:
+                        print(f'Telluric file corrupted: {tell_file}')
+                        tell_spec = np.full((3, len(wave)), np.nan)
+
+                    else:
+                        m_wave = data_tell['mlambda'] * 1e4
+                        m_wave = transformations.angstrom_vac_to_air(m_wave)
+                        cflux = data_tell['cflux']
+                        m_trans = data_tell['mtrans']
+                        tell_spec = np.array([m_wave, cflux, m_trans])
+                        hdul[1]['M_WAVE'] = m_wave
+                        hdul[1]['CFLUX'] = cflux
+                        hdul[1]['MTRANS'] = m_trans
+                        hdul.writeto(file)
 
                 else:
-                    m_wave = data['mlambda'] * 1e4
-                    m_wave = transformations.angstrom_vac_to_air(m_wave)
-                    cflux = data['cflux']
-                    m_trans = data['mtrans']
-                    tell_spec = np.array([m_wave, cflux, m_trans])
-
-
-            else:
-                tell_spec = np.full((3, len(wave)), np.nan)
+                    tell_spec = np.full((3, len(wave)), np.nan)
 
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
 
+            print('iter spec', iter_spec)
+            
             cl_ang = setting_dependent_crop(iter_spec, setting)
             iter_spec = crop_spectrum(iter_spec, cl_ang[0], cl_ang[1])
 
