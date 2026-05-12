@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 obs_file = files('edibles') / 'data/DR5_ObsLog.csv'
 obs_list = pd.read_csv(obs_file)
+obs_list = obs_list.loc[obs_list['Order'] != 'ALL']
 print(obs_list)
 
 out_dir = DATADIR / 'combined'
@@ -48,7 +49,7 @@ for obs_time in obs_times:
         for i, row in subsub_df.iterrows():
             file = DATADIR / row['Filename']
             with fits.open(file) as hdul:
-
+                print(file)
                 hdu_0 = hdul[0]
                 data = hdul[1].data
 
@@ -58,7 +59,7 @@ for obs_time in obs_times:
                 flat = data['FLAT']
                 order = np.full(len(wave), row['Order'])
 
-                iter_spec = np.array([wave, flux, error, flat, order])
+                iter_spec = np.array([wave, flux, error, flat, order], dtype=float)
 
                 tell_file = DATADIR / 'tell_corr' / file.name
 
@@ -76,7 +77,7 @@ for obs_time in obs_times:
                         m_wave = transformations.angstrom_vac_to_air(m_wave)
                         cflux = data_tell['cflux']
                         m_trans = data_tell['mtrans']
-                        tell_spec = np.array([m_wave, cflux, m_trans])
+                        tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
                         hdul[1]['M_WAVE'] = m_wave
                         hdul[1]['CFLUX'] = cflux
                         hdul[1]['MTRANS'] = m_trans
@@ -87,8 +88,6 @@ for obs_time in obs_times:
 
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
-
-            print('iter spec', iter_spec)
             
             cl_ang = setting_dependent_crop(iter_spec, setting)
             iter_spec = crop_spectrum(iter_spec, cl_ang[0], cl_ang[1])
