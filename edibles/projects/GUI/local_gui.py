@@ -29,6 +29,7 @@ from main_run import get_species_data, astrovoigtfit_run
 from edibles.utils.edibles_oracle import EdiblesOracle
 from flux_wave_find import wave_flux_data
 from main import master_function
+from importlib.resources import files
 
 # Speed of light in km/s
 c_light = 299792.458
@@ -830,7 +831,7 @@ class AnalysisTab(ctk.CTkFrame):
             if self.molecule_entries:
                 mol_name = self.molecule_entries[0]['name'].get()
                 if mol_name:
-                    all_species = get_species_data('species.txt')
+                    all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')
                     if mol_name in all_species:
                         # 'line' is the rest wavelength (string or float in dict)
                         try:
@@ -1117,7 +1118,7 @@ class AnalysisTab(ctk.CTkFrame):
             knots_x_str = self.knots_x_entry.get()
             knots_x_array = [float(x.strip()) for x in knots_x_str.split(',')] if knots_x_str.strip() else None
             
-            species_file = 'species.txt'
+            species_file = files('edibles') / 'projects/GUI/species.txt'
             
             # Get Spline Order
             order_map = {"Linear": 1, "Quadratic": 2, "Cubic": 3}
@@ -1137,7 +1138,7 @@ class AnalysisTab(ctk.CTkFrame):
             
             lambda_0 = None
             if molecules:
-                all_species = get_species_data('species.txt')
+                all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')
                 if molecules[0] in all_species:
                     try:
                         lambda_0 = float(all_species[molecules[0]]['line'])

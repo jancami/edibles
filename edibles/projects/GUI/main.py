@@ -23,7 +23,6 @@ from scipy.special import wofz
 from edibles.utils.voigt_profile import voigt_profile, fwhm2sigma, VoigtFWHM, getVGrid
 from scipy.ndimage import gaussian_filter
 
-
 # mother_function is used to model the spectrum
 def mother_function(wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0,
                     N=0.0, v_rad=0.0, v_resolution=0.0, n_step=25):
