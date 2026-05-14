@@ -429,7 +429,7 @@ def main():
     v_rad_btn.grid(column=0, row=elnum+5)
 
     # change wavelength range
-    def cont_range_function():
+    def range_function():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
@@ -457,7 +457,7 @@ def main():
 
         root.canvas.draw_idle()
 
-    range_btn = tk.Button(root, text='Set wavelength range', command=cont_range_function)
+    range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
     range_btn.grid(column=0, row=elnum+7)
 
 
@@ -613,14 +613,40 @@ def main():
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
-            if range_counter < 2:
+            range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+            if range_counter == 0:
+                range_list.append([xmin, xmax])
+                range_counter += 1
+            elif range_counter == 1:
+                range_list.append([xmin, xmax])
                 print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
                 # update fit_df with new wavelength range for all lines
-                for i in range(len(root.fit_df)):
-                    # change wavelength range to selected range if the prior range overlaps with the selected range
-                    if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
-                        root.fit_df.loc[i, 'w_min'] = xmin
-                        root.fit_df.loc[i, 'w_max'] = xmax
+                for i, wave_range in range_df.iterrows():
+                    # adding the subplot
+                    j = i // ncols
+                    if nrows == 1:
+                        plot1 = root.axs[i]
+                    else:
+                        plot1 = root.axs[j, i % ncols]
+                    if wave_range['w_min'] < xmin & wave_range['w_max'] > xmax:
+                        cut_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
+                        cont_anchors = []
+                        for range in range_list:
+                            co = util_functions.crop_spectrum(cut_spec, range[0], range[1])
+                            point = np.nanmean(co, axis=0)
+                            cont_anchors.append(point)
+                        cut_spec_norm = util_functions.normalize_spectrum_linear(cut_spec, cont_anchors[0], cont_anchors[1])
+                        root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])] = cut_spec_norm
+                        plot1.clear()
+                        root.vlines = {}
+
+                        plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
+                        plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
+                        plot1.plot(plot_spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
+                        plot1.legend()
+                        root.canvas.draw()
+
+
                 print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
                 print(root.fit_df)    
                 range_counter += 1
