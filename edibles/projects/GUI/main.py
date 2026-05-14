@@ -17,11 +17,9 @@ import numpy as np
 from scipy.interpolate import interp1d
 import astropy.constants as cst
 from scipy.special import wofz
-
-# from other_functions import voigt_optical_depth
-
 from edibles.utils.voigt_profile import voigt_profile, fwhm2sigma, VoigtFWHM, getVGrid
 from scipy.ndimage import gaussian_filter
+from edibles.utils.voigt_profile import voigt_optical_depth
 
 # mother_function is used to model the spectrum
 def mother_function(wavegrid, lambda0=0.0, f=0.0, gamma=0.0, b=0.0,
@@ -203,42 +201,3 @@ def master_function(wavegrid, v_resolution=0.0, n_step=25, **kwargs):
         n_step=n_step
     )
 
-
-def voigt_optical_depth(wave, lambda0=0.0, b=0.0, N=0.0, f=0.0, gamma=0.0, v_rad=0.0):
-    """
-    Function to return the value of a Voigt optical depth profile at a given wavelength, for a line
-    centered at lambda0.
-
-    Args:
-        wave (float64): Wavelength at which optical depth is to be calculatd (in Angstrom)
-        lambda0 (float64): Central (rest) wavelength for the absorption line, in Angstrom.
-        b (float64): The b parameter (Gaussian width), in km/s.
-        N (float64): The column density (in cm^{-2})
-        f (float64): The oscillator strength (dimensionless)
-        gamma (float64): Lorentzian gamma (=HWHM) component
-        v_rad (float64): Radial velocity of absorption line (in km/s)
-
-    Returns:
-        float64: Optical Depth at wave.
-
-    """
-
-    # All we have to do is proper conversions so that we feed the right numbers into the call
-    # to the VoigtProfile -- see documentation for details.
-    nu = cst.c.to("angstrom/s").value / wave
-    nu0 = cst.c.to("angstrom/s").value / lambda0
-    sigma = (b * 1e13) / lambda0 / np.sqrt(2)
-    gamma_voigt = gamma / 4 / np.pi
-    tau_factor = (N * np.pi * cst.e.esu ** 2 / cst.m_e.cgs / cst.c.cgs * f).value
-
-    # print("Nu0 is:        " + "{:e}".format(nu0))
-    # print("Sigma is:      " + "{:e}".format(sigma))
-    # print("Gamma is:      " + "{:e}".format(gamma_voigt))
-    # print("Tau_factor is: " + "{:e}".format(tau_factor))
-
-    # Transform this into a frequency grid centered around nu0
-
-    ThisVoigtProfile = voigt_profile(nu - nu0, sigma, gamma_voigt)
-    tau = tau_factor * ThisVoigtProfile
-
-    return tau

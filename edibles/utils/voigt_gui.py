@@ -545,6 +545,65 @@ def main():
     clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
     clear_df_btn.grid(column=0, row=elnum+10)
 
+    # set starting values for fit using plotted spectrum
+    # for each component v_comp
+
+    v_rad_window_comp_entry = tk.Entry(root)
+    v_rad_window_comp_entry.grid(column=0, row=elnum+12)
+
+    def set_v_rad_shift():
+        """
+        Setting a radial valocity shift for a specific fitting window.
+        """
+        for i, _ in enumerate(root.span):
+            root.span[i].set_visible(False)
+
+
+        root.v_rad_active = True
+
+        v_comp = v_rad_window_comp_entry.get()
+        v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
+
+        # select initial wavelength from plot
+        def onclick(event):
+            if root.v_rad_active:
+                v_comp = v_rad_window_comp_entry.get()
+                v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
+
+                ix= event.xdata
+                print(f'Clicked at x = {ix}')
+
+                # find correspinding wavelength in df
+                line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
+                print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
+
+                # calculate doppler shift between selected wavelength and line center
+                c = 299792.458 # speed of light in km/s
+                line_center = root.fit_df.loc[line_idx, 'WavelengthAir']
+                v_rad_init = (ix - line_center) / line_center * c
+                print(f'Calculated radial velocity: {v_rad_init:.2f} km/s')
+
+                # update fit_df with new v_rad_init for selected component
+                print('v_comp_sub_df.index', v_comp_sub_df.index)
+                print(root.fit_df)
+                for i, row in root.fit_df.iterrows():
+                    if row['v_comp'] == int(v_comp):
+                        root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
+
+                print(root.fit_df)
+                plot_fit_info()
+                root.v_rad_active = False
+
+
+        root.cid = root.canvas.mpl_connect('button_press_event', onclick)
+
+        root.canvas.draw()
+
+    clear_df_btn = tk.Button(root, text="Apply shift to spectrum", command=set_v_rad_shift)
+    clear_df_btn.grid(column=0, row=elnum+11)
+
+
+
     root.grid_columnconfigure(1, weight=1)
     root.grid_rowconfigure(elnum+10, weight=1)
 
