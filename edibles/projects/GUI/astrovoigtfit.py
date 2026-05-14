@@ -19,6 +19,7 @@ from scipy.interpolate import CubicSpline, make_interp_spline
 from lmfit import Parameters, Model
 
 from main import master_function
+from edibles.utils import voigt_fitting
 
 
 def Voigt_fit_wrapper(**params_list):
@@ -82,6 +83,8 @@ def Voigt_fit_wrapper(**params_list):
         master_kwargs[f'b_{suffix}'] = data['b']
         master_kwargs[f'N_{suffix}'] = data['N']
         master_kwargs[f'v_rad_{suffix}'] = data['v_rad']
+
+    print('master_kwargs', master_kwargs)
 
     return master_function(wavegrid, v_resolution=v_resolution,
                            n_step=n_step, **master_kwargs)

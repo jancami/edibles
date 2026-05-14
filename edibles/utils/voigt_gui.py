@@ -429,7 +429,7 @@ def main():
     v_rad_btn.grid(column=0, row=elnum+5)
 
     # change wavelength range
-    def range_function():
+    def cont_range_function():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
@@ -457,7 +457,7 @@ def main():
 
         root.canvas.draw_idle()
 
-    range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
+    range_btn = tk.Button(root, text='Set wavelength range', command=cont_range_function)
     range_btn.grid(column=0, row=elnum+7)
 
 
@@ -602,10 +602,42 @@ def main():
     clear_df_btn = tk.Button(root, text="Apply shift to spectrum", command=set_v_rad_shift)
     clear_df_btn.grid(column=0, row=elnum+11)
 
+    # change wavelength range
+    def cont_range_function():
+        if root.cid is not None:
+            root.canvas.mpl_disconnect(root.cid)
+        root.w_range_active = True
+        range_counter = 0
+        range_list = []
+        print_msg("Select wavelength range by clicking and dragging on the plot.")
+        # make range selection tool using matplotlib span selector
+        # apply it on canvas
+        def onselect(xmin, xmax):
+            if range_counter < 2:
+                print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
+                # update fit_df with new wavelength range for all lines
+                for i in range(len(root.fit_df)):
+                    # change wavelength range to selected range if the prior range overlaps with the selected range
+                    if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
+                        root.fit_df.loc[i, 'w_min'] = xmin
+                        root.fit_df.loc[i, 'w_max'] = xmax
+                print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
+                print(root.fit_df)    
+                range_counter += 1
+
+        root.span.clear()
+        for _, ax in enumerate(root.axs.flatten()):
+            selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+            root.span.append(selector)
+
+        root.canvas.draw_idle()
+
+    range_btn = tk.Button(root, text='Select continuum ranges', command=cont_range_function)
+    range_btn.grid(column=0, row=elnum+12)
 
 
     root.grid_columnconfigure(1, weight=1)
-    root.grid_rowconfigure(elnum+10, weight=1)
+    root.grid_rowconfigure(elnum+13, weight=1)
 
     root.mainloop()
 

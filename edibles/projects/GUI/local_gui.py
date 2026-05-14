@@ -30,6 +30,7 @@ from edibles.utils.edibles_oracle import EdiblesOracle
 from flux_wave_find import wave_flux_data
 from main import master_function
 from importlib.resources import files
+from edibles.utils import voigt_fitting
 
 # Speed of light in km/s
 c_light = 299792.458

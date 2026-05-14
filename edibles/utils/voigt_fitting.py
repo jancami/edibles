@@ -95,7 +95,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
     for i, row in range_df.iterrows():
         params[f'slope_{i}'].set(value=0)
         spec_cut = fit_spec[(fit_spec >= row['w_min']) & (fit_spec <= row['w_max'])][1]
-        params[f'cont_{i}'].set(value=np.nanmedian(spec_cut))
+        params[f'cont_{i}'].set(value=np.nanmedian(spec_cut), min=0)
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
