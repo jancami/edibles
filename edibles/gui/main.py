@@ -168,6 +168,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     wav = sp.wave
                     flux = sp.flux
 
+                    if sp.c_flux is not None:
+                        self.ax.plot(wav, sp.c_flux)
+
                 # Refresh and replot figure
                 self.ax.plot(wav, flux)
                 self.ax.set_xlabel(r"Wavelength ($\AA$)")
