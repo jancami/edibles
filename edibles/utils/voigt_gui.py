@@ -350,6 +350,9 @@ def main():
                 file = Path(file)
                 print(f"Loaded file: {file}, wave range: {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}")
                 spec = dr5_io.read_combined_spec(DATADIR / file, bary_corr=True)
+                if 3300 < np.mean(wave_range) < 3305:
+                    spec[0] = transformations.doppler_shift_wl(spec[0], -1)
+
                 spec = util_functions.crop_spectrum(spec, *wave_range)
                 my_order = np.nanmedian(spec[4])
                 spec = spec[:, spec[4]==my_order]
