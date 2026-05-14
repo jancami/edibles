@@ -19,6 +19,7 @@ obs_list = obs_list.loc[obs_list['Order'] != 'ALL']
 print(obs_list)
 
 out_dir = DATADIR / 'combined'
+order_tell_dir = DATADIR / 'order_tell'
 
 
 obs_times = obs_list['DateObs'].unique()
@@ -78,13 +79,30 @@ for obs_time in obs_times:
                         cflux = data_tell['cflux']
                         m_trans = data_tell['mtrans']
                         tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
-                        hdul[1]['M_WAVE'] = m_wave
-                        hdul[1]['CFLUX'] = cflux
-                        hdul[1]['MTRANS'] = m_trans
-                        hdul.writeto(file)
-
                 else:
                     tell_spec = np.full((3, len(wave)), np.nan)
+
+                col1 = fits.Column(name='WAVE', format='D', array=wave)
+                col2 = fits.Column(name='FLUX', format='D', array=flux)
+                col3 = fits.Column(name='FLUX_ERROR', format='D', array=error)
+                col4 = fits.Column(name='FLAT', format='D', array=flat)
+
+                if tell_file.is_file():
+                    col6 = fits.Column(name='M_WAVE', format='D', array=m_wave)
+                    col7 = fits.Column(name='CFLUX', format='D', array=cflux)
+                    col8 = fits.Column(name='MTRANS', format='D', array=m_trans)
+
+                    coldefs = fits.ColDefs([col1, col2, col3, col4, col6, col7, col8])
+
+                else:
+                    coldefs = fits.ColDefs([col1, col2, col3, col4])
+
+                hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
+
+                order_tell_hdul =  fits.HDUList([hdu_0, hdu])
+
+                order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
+
 
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
