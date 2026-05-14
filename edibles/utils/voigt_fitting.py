@@ -25,8 +25,6 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     c_comps = input_df[['v_comp', 'b_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
     comp_param_names = []
-    for i, w_range in range_df.iterrows():
-        comp_param_names += [f'cont_{i}', f'slope_{i}']
     incl_vrad = []
     incl_b = []
     for _, row in c_comps.iterrows():
@@ -60,7 +58,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             inst_res = 100000
 
         body_lines.append(f'    x{i} = x[(x >= {w_range["w_min"]}) & (x <= {w_range["w_max"]})]')
-        body_lines.append(f'    y{i} = cont_slope(x{i}, cont_{i}, slope_{i})')
+        body_lines.append(f'    y{i} = np.ones(len(x{i}))')
         sub_df = input_df.loc[(input_df['w_min'] == w_range["w_min"]) & (input_df['w_max'] == w_range["w_max"])]
         for j, row in sub_df.iterrows():
             v_rad = row['v_comp']
@@ -74,7 +72,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
 
     
     print("\n".join(body_lines))
-    namespace = {"np": np, "cont_slope": cont_slope, "add_voigt": add_voigt, "pyasl": pyasl}
+    namespace = {"np": np, "add_voigt": add_voigt, "pyasl": pyasl}
     exec("\n".join(body_lines), namespace)
     func = namespace[func_name]
     func.__doc__ = f"Auto-generated n-component Voigt profile.\nParameters: {signature_str}"
@@ -91,11 +89,6 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
     # extract fitting ranges
     range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
-    # set continuum slopes to 0 for each fitting range
-    for i, row in range_df.iterrows():
-        params[f'slope_{i}'].set(value=0)
-        spec_cut = fit_spec[(fit_spec >= row['w_min']) & (fit_spec <= row['w_max'])][1]
-        params[f'cont_{i}'].set(value=np.nanmedian(spec_cut), min=0)
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
@@ -115,9 +108,9 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         params[f'b_{b}'].set(    value=0.1,  min=0, max=4)
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-2, max=row[f'v_rad_init']+2)
 
-        params[f'n_{v_comp}_{sp}'].set(    value=1e10, min=0)
+        params[f'n_{v_comp}_{sp}'].set(    value=1e9, min=0)
 
-    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0])
+    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
 
     return result
 

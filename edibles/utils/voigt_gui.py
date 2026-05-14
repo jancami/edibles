@@ -20,7 +20,7 @@ atomic_line_list = pd.read_csv(atomic_line_file)
 atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 
 # remove lines which are contaminated by telluric lines
-atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+# atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
@@ -94,7 +94,7 @@ def resample(spectrum: np.array, wave_new: np.array, assume_sorted=True) -> np.a
     return np.array([wave_new, *new_cols])
 
 
-def coadd_spectra(spectra: list, ref_spec_num=0) -> np.array:
+def coadd_spectra(spectra: list, ref_spec_num=0, return_error=True) -> np.array:
     """
     Coadds a list of spectra.
     Before coadding, the spectra get resampled to the same wavelength points using the spectrum with index ref_spec_num as reference.
@@ -127,10 +127,16 @@ def coadd_spectra(spectra: list, ref_spec_num=0) -> np.array:
 
     masked_flux_list = np.ma.masked_array(flux_list, mask=np.isnan(flux_list))
     masked_weight_list = np.ma.masked_array(weight_list, mask=np.isnan(weight_list))
+    masked_error_list = 1/masked_weight_list
 
-    coadd_flux = np.ma.average(masked_flux_list, weights=masked_weight_list, axis=0)
+    coadd_flux = np.ma.sum(masked_flux_list, axis=0)
 
-    return np.array([x, coadd_flux])
+    coadd_error = np.sqrt(np.ma.sum(masked_error_list**2, axis=0))
+
+    if return_error:
+        return np.array([x, coadd_flux, coadd_error])
+    else:
+        return np.array([x, coadd_flux])
 
 
 def results_to_df(result, fit_df):
@@ -158,13 +164,6 @@ def results_to_df(result, fit_df):
     c_comps = fit_df[['v_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
 
-    # continuum parameters
-    for i, wave_range in range_df.iterrows():
-        for k, row in fit_df.iterrows():
-            if row['w_min'] == wave_range['w_min'] and row['w_max'] == wave_range['w_max']:
-                fit_df.loc[k, f'cont'] = best_values[f'cont_{i}']
-                fit_df.loc[k, f'slope'] = best_values[f'slope_{i}']
-
     # v_rad, b and N for each component
     for i, v_comp in c_comps.iterrows():
         for k, row in fit_df.iterrows():
@@ -188,6 +187,8 @@ def main():
     root.vlines = {}
     root.v_rad_active = False
     root.w_range_active = False
+    root.result = None
+    root.errorbar = True
 
     # Setting some window properties
     root.title("Voigt fitter")
@@ -246,7 +247,7 @@ def main():
     fei_btn = tk.Button(root, text = "FeI", fg = "blue", command=lambda: add_elem("FeI"))
     fei_btn.grid(column=0, row=4)
 
-    tiii_btn = tk.Button(root, text = "TiII", fg = "blue", command=lambda: add_elem("TiII"))
+    tiii_btn = tk.Button(root, text = "TiII", fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
     elnum = 5
@@ -278,7 +279,7 @@ def main():
         """
         Plotting relevant fitting info in the spectrum plots.
         """
-        print('Plotting fit infooooooooooooooooooooooooooooooooooooooo')
+        print('Plotting fit info')
         # c_comps = root.fit_df['v_comp'].drop_duplicates().reset_index(drop=True)
 
         # iterate through plot windows
@@ -329,6 +330,8 @@ def main():
 
         file_lists = []
         coadded_spectra = []
+        for plot1 in root.axs.flatten():
+            plot1.clear()
         for i, wave_range in range_df.iterrows():
             pythia = EdiblesOracle()
             file_list = pythia.getFilteredObsList(object=[root.star_name], MergedOnly=True, Wave=np.mean(wave_range))
@@ -352,6 +355,7 @@ def main():
                 spec = dr5_io.read_combined_spec(DATADIR / file, bary_corr=True)
                 if 3300 < np.mean(wave_range) < 3305:
                     spec[0] = transformations.doppler_shift_wl(spec[0], -1)
+                    spec[2] /= 10
 
                 spec = util_functions.crop_spectrum(spec, *wave_range)
                 my_order = np.nanmedian(spec[4])
@@ -362,13 +366,19 @@ def main():
 
                 # plot the spectrum in the GUI using matplotlib
                 # plotting the graph
-                plot1.plot(spec[0], spec[1], label = file.name, alpha=0.5)
+                if root.errorbar:
+                    plot1.errorbar(spec[0], spec[1], yerr=spec[2], label = file.name, alpha=0.5)
+                else:
+                    plot1.plot(spec[0], spec[1], label = file.name, alpha=0.5)
 
                 spectra.append(np.array([spec[0], spec[1], spec[2]]))  # wavelength, flux, error
 
             # coad spectra
             coadded_spec = coadd_spectra(spectra)
-            plot1.plot(coadded_spec[0], coadded_spec[1], label='Coadd', color='k')
+            if root.errorbar:
+                plot1.errorbar(coadded_spec[0], coadded_spec[1], yerr=coadded_spec[2], label='Coadd', color='k')
+            else:
+                plot1.plot(coadded_spec[0], coadded_spec[1], label='Coadd', color='k')
             coadded_spectra.append(coadded_spec)
             plot1.legend()
 
@@ -449,9 +459,39 @@ def main():
                     if root.fit_df.loc[i, 'w_min'] < xmax and root.fit_df.loc[i, 'w_max'] > xmin:
                         root.fit_df.loc[i, 'w_min'] = xmin
                         root.fit_df.loc[i, 'w_max'] = xmax
+
                 print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
                 print(root.fit_df)    
                 root.w_range_active = False
+                range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+                new_spec_list = []
+                for i, wave_range in range_df.iterrows():
+                    spec = util_functions.crop_spectrum(root.fit_spec, *wave_range)
+                    new_spec_list.append(spec)
+                    # getting the subplot
+                    j = i // ncols
+                    if nrows == 1:
+                        plot1 = root.axs[i]
+                    else:
+                        plot1 = root.axs[j, i % ncols]
+                    plot1.clear()
+                    if root.errorbar:
+                        plot1.errorbar(spec[0], spec[1], yerr=spec[2], color='k', label = 'Data')
+                    else:
+                        plot1.plot(spec[0], spec[1], color='k', label = 'Data')
+
+                    if root.result is not None:
+                        if len(root.fit_spec[0]) == len(root.result.best_fit):
+                            plot1.plot(spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
+                    plot1.legend()
+                    root.canvas.draw()
+
+
+
+                root.fit_spec = np.concatenate(new_spec_list, axis=1)
+
+
 
         root.span.clear()
         for _, ax in enumerate(root.axs.flatten()):
@@ -492,7 +532,11 @@ def main():
             root.vlines = {}
 
             plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
-            plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
+            # plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
+            if root.errorbar:
+                plot1.errorbar(plot_spec[0], plot_spec[1], yerr=plot_spec[2], color='k', label = 'Data')
+            else:
+                plot1.plot(plot_spec[0], plot_spec[1], color='k', label = 'Data')
             plot1.plot(plot_spec[0], result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
             plot1.legend()
             root.canvas.draw()
@@ -543,6 +587,8 @@ def main():
 
     def clear_df_func():
         root.fit_df = pd.DataFrame()
+        root.fit_spec = None
+        root.result = None
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
     
     clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
@@ -610,17 +656,17 @@ def main():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
-        range_counter = 0
+        root.range_counter = 0
         range_list = []
         print_msg("Select wavelength range by clicking and dragging on the plot.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
             range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
-            if range_counter == 0:
+            if root.range_counter == 0:
                 range_list.append([xmin, xmax])
-                range_counter += 1
-            elif range_counter == 1:
+                root.range_counter += 1
+            elif root.range_counter == 1:
                 range_list.append([xmin, xmax])
                 print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
                 # update fit_df with new wavelength range for all lines
@@ -631,28 +677,35 @@ def main():
                         plot1 = root.axs[i]
                     else:
                         plot1 = root.axs[j, i % ncols]
-                    if wave_range['w_min'] < xmin & wave_range['w_max'] > xmax:
+                    if (wave_range['w_min'] < xmin) & (wave_range['w_max'] > xmax):
                         cut_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
                         cont_anchors = []
                         for range in range_list:
                             co = util_functions.crop_spectrum(cut_spec, range[0], range[1])
-                            point = np.nanmean(co, axis=0)
+                            point = np.nanmean(co, axis=1)
                             cont_anchors.append(point)
-                        cut_spec_norm = util_functions.normalize_spectrum_linear(cut_spec, cont_anchors[0], cont_anchors[1])
+                        print(cont_anchors)
+                        cut_spec_norm = util_functions.normalize_spectrum_linear(cut_spec, cont_anchors[0], cont_anchors[1], additional_normalized_columns=[2])
                         root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])] = cut_spec_norm
                         plot1.clear()
                         root.vlines = {}
 
                         plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
-                        plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
-                        plot1.plot(plot_spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
+                        if root.errorbar:
+                            plot1.errorbar(plot_spec[0], plot_spec[1], yerr=plot_spec[2], color='k', label = 'Data')
+                        else:
+                            plot1.plot(plot_spec[0], plot_spec[1], color='k', label = 'Data')
+
+                        if root.result is not None:
+                            if len(root.fit_spec[0]) == len(root.result.best_fit):
+                                plot1.plot(plot_spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
                         plot1.legend()
                         root.canvas.draw()
 
 
                 print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
                 print(root.fit_df)    
-                range_counter += 1
+                root.range_counter += 1
 
         root.span.clear()
         for _, ax in enumerate(root.axs.flatten()):

@@ -74,7 +74,7 @@ def normalize_spectrum_linear(spectrum: np.array, cont_1: np.array, cont_2: np.a
 
     if additional_normalized_columns is not None:
         for i in additional_normalized_columns:
-            k = i - 2  # shift index from spectrum numbering to numbering in additional_columns
+            k = int(i - 2)  # shift index from spectrum numbering to numbering in additional_columns
             additional_columns[k] = additional_columns[k] / f(wave)
 
     if len(additional_columns) > 0:
