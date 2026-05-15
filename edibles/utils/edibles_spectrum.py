@@ -102,9 +102,15 @@ class EdiblesSpectrum:
                 self.flux = hdulist[1].data['FLUX']
                 self.raw_wave = np.copy(self.wave)
                 self.raw_flux = np.copy(self.flux)
-                self.c_flux = hdulist[1].data.get('CFLUX')
-                self.m_trans = hdulist[1].data.get('MTRANS')
-                self.m_wave = hdulist[1].data.get('M_WAVE')
+
+                if 'CFLUX' in hdulist[1].header.values():
+                    self.c_flux = hdulist[1].data['CFLUX']
+                    self.m_trans = hdulist[1].data['MTRANS']
+                    self.m_wave = hdulist[1].data['M_WAVE']
+                else:
+                    self.c_flux = None
+                    self.m_trans = None
+                    self.m_wave = None
 
             else:
                 self.flux = hdulist[0].data
