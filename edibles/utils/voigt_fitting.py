@@ -97,7 +97,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_rad_init']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
     for k, row in c_comps.iterrows():
@@ -105,7 +105,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         b = row['b_comp']
         sp = row['Species']
         # Shared parameters
-        params[f'b_{b}'].set(    value=0.1,  min=0, max=4)
+        params[f'b_{b}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-2, max=row[f'v_rad_init']+2)
 
         params[f'n_{v_comp}_{sp}'].set(    value=1e9, min=0)

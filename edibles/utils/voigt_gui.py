@@ -13,6 +13,7 @@ from pathlib import Path
 from scipy.interpolate import interp1d
 from matplotlib.widgets import SpanSelector
 from edibles.utils import transformations
+from lmfit.model import save_modelresult, load_modelresult
 
 
 atomic_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv'
@@ -44,12 +45,12 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
     i_df = in_df.copy()
     i_df.loc[:, 'v_comp'] = v_comp
     i_df.loc[:, f'v_rad_init'] = 0.0
-    i_df.loc[:, f'v_rad_min'] = -100.0
-    i_df.loc[:, f'v_rad_max'] = 100.0
+    # i_df.loc[:, f'v_rad_min'] = -100.0
+    # i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, f'b_init'] = 0.001
     i_df.loc[:, f'b_min'] = 0.0
-    i_df.loc[:, f'b_max'] = 20
+    i_df.loc[:, f'b_max'] = 6
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
@@ -548,11 +549,18 @@ def main():
     fit_btn.grid(column=0, row=elnum+4)
 
     def save_function():
+        # Save fitting results in csv file
         res_df = results_to_df(root.result, root.fit_df)
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
         print(elem_str)
         res_df.to_csv(fitting_dir / f'{root.star_name}_{elem_str}.csv', index=False)
+
+        # Save spectrum
+        np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}.dat', root.fit_spec.T)
+
+        # Save model result 
+        save_modelresult(root.result, fitting_dir / f'{root.star_name}_{elem_str}.sav')
 
 
     save_btn = tk.Button(root, text="Save fit results", command=save_function)
@@ -571,14 +579,44 @@ def main():
             print("No star name entered.")
             return
         try:
-
+            # load fit df
             fit_df = pd.read_csv(fitting_dir / f'{star_name}_{elem_str}.csv')
             print(fit_df)
             fit_df['v_rad_init'] = fit_df['v_rad_fit']
             fit_df['b_init'] = fit_df['b_fit']
             fit_df['n_init'] = fit_df['n_fit']
+
             root.fit_df = fit_df
-            # plot_fit_info()
+
+            # load spectrum
+            root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
+
+            # load model result
+            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav')
+
+            range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+            # update fit_df with new wavelength range for all lines
+            for i, wave_range in range_df.iterrows():
+                spec = util_functions.crop_spectrum(root.fit_spec, *wave_range)
+                # getting the subplot
+                j = i // ncols
+                if nrows == 1:
+                    plot1 = root.axs[i]
+                else:
+                    plot1 = root.axs[j, i % ncols]
+                plot1.clear()
+                if root.errorbar:
+                    plot1.errorbar(spec[0], spec[1], yerr=spec[2], color='k', label = 'Data')
+                else:
+                    plot1.plot(spec[0], spec[1], color='k', label = 'Data')
+
+                if root.result is not None:
+                    if len(root.fit_spec[0]) == len(root.result.best_fit):
+                        plot1.plot(spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
+                plot1.legend()
+                root.canvas.draw()
+
         except FileNotFoundError:
             print(f"No fit results found for {star_name}.")
 
@@ -597,59 +635,56 @@ def main():
     # set starting values for fit using plotted spectrum
     # for each component v_comp
 
-    v_rad_window_comp_entry = tk.Entry(root)
-    v_rad_window_comp_entry.grid(column=0, row=elnum+12)
+    # v_rad_window_comp_entry = tk.Entry(root)
+    # v_rad_window_comp_entry.grid(column=0, row=elnum+12)
 
-    def set_v_rad_shift():
-        """
-        Setting a radial valocity shift for a specific fitting window.
-        """
-        for i, _ in enumerate(root.span):
-            root.span[i].set_visible(False)
-
-
-        root.v_rad_active = True
-
-        v_comp = v_rad_window_comp_entry.get()
-        v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
-
-        # select initial wavelength from plot
-        def onclick(event):
-            if root.v_rad_active:
-                v_comp = v_rad_window_comp_entry.get()
-                v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
-
-                ix= event.xdata
-                print(f'Clicked at x = {ix}')
-
-                # find correspinding wavelength in df
-                line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
-                print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
-
-                # calculate doppler shift between selected wavelength and line center
-                c = 299792.458 # speed of light in km/s
-                line_center = root.fit_df.loc[line_idx, 'WavelengthAir']
-                v_rad_init = (ix - line_center) / line_center * c
-                print(f'Calculated radial velocity: {v_rad_init:.2f} km/s')
-
-                # update fit_df with new v_rad_init for selected component
-                print('v_comp_sub_df.index', v_comp_sub_df.index)
-                print(root.fit_df)
-                for i, row in root.fit_df.iterrows():
-                    if row['v_comp'] == int(v_comp):
-                        root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
-
-                print(root.fit_df)
-                plot_fit_info()
-                root.v_rad_active = False
+    # def set_v_rad_shift():
+    #     """
+    #     Setting a radial valocity shift for a specific fitting window.
+    #     """
+    #     for i, _ in enumerate(root.span):
+    #         root.span[i].set_visible(False)
 
 
-        root.cid = root.canvas.mpl_connect('button_press_event', onclick)
+    #     root.v_rad_active = True
 
-        root.canvas.draw()
+    #     v_comp = v_rad_window_comp_entry.get()
+    #     v_comp_sub_df = root.fit_df.loc[root.fit_df['v_comp'] == int(v_comp)]
 
-    clear_df_btn = tk.Button(root, text="Apply shift to spectrum", command=set_v_rad_shift)
-    clear_df_btn.grid(column=0, row=elnum+11)
+    #     # select initial wavelength from plot
+    #     def onclick(event):
+    #         if root.v_rad_active:
+    #             ix= event.xdata
+    #             print(f'Clicked at x = {ix}')
+
+    #             # find correspinding wavelength in df
+    #             line_idx = (root.fit_df['WavelengthAir'] - ix).abs().idxmin()
+    #             print(f'Selected line: {root.fit_df.loc[line_idx, "WavelengthAir"]}')
+
+    #             # calculate doppler shift between selected wavelength and line center
+    #             c = 299792.458 # speed of light in km/s
+    #             line_center = root.fit_df.loc[line_idx, 'WavelengthAir']
+    #             v_rad_init = (ix - line_center) / line_center * c
+    #             print(f'Calculated radial velocity: {v_rad_init:.2f} km/s')
+
+    #             # update fit_df with new v_rad_init for selected component
+    #             print('v_comp_sub_df.index', v_comp_sub_df.index)
+    #             print(root.fit_df)
+    #             for i, row in root.fit_df.iterrows():
+    #                 if row['v_comp'] == int(v_comp):
+    #                     root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
+
+    #             print(root.fit_df)
+    #             plot_fit_info()
+    #             root.v_rad_active = False
+
+
+    #     root.cid = root.canvas.mpl_connect('button_press_event', onclick)
+
+    #     root.canvas.draw()
+
+    # window_shift_btn = tk.Button(root, text="Apply shift to spectrum", command=set_v_rad_shift)
+    # window_shift_btn.grid(column=0, row=elnum+11)
 
     # change wavelength range
     def cont_range_function():
