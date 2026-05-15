@@ -191,7 +191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         idx = self.ui.FiltertableView.selectionModel().selectedRows()
         skiptotal = 0
         for idxxx in idx:
-            if '4' in DATARELEASE:
+            if '4' in DATARELEASE or '5' in DATARELEASE:
                 filename = self.model.data(self.model.index(idxxx.row(), 8))
             elif '3' in DATARELEASE:
                 filename = self.model.data(self.model.index(idxxx.row(), 0))
