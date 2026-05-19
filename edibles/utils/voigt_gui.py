@@ -3,6 +3,7 @@ import tkinter as tk
 from importlib.resources import files
 import pandas as pd
 from edibles.utils.edibles_oracle import EdiblesOracle
+from edibles.utils.edibles_spectrum import EdiblesSpectrum
 import numpy as np
 from edibles.projects.edr5_integration import dr5_io, util_functions
 from edibles import DATADIR
@@ -21,7 +22,7 @@ atomic_line_list = pd.read_csv(atomic_line_file)
 atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 
 # remove lines which are contaminated by telluric lines
-# atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
@@ -335,7 +336,7 @@ def main():
             plot1.clear()
         for i, wave_range in range_df.iterrows():
             pythia = EdiblesOracle()
-            file_list = pythia.getFilteredObsList(object=[root.star_name], MergedOnly=True, Wave=np.mean(wave_range))
+            file_list = pythia.getFilteredObsList(object=[root.star_name], OrdersOnly=True, Wave=np.mean(wave_range))
             file_lists.append(file_list)
 
             # getting the subplot
@@ -351,20 +352,26 @@ def main():
                 print_msg(f"No spectra found for {root.star_name} in wavelength range {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}.")
 
             for file in file_list:
-                file = Path(file)
                 print(f"Loaded file: {file}, wave range: {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}")
-                spec = dr5_io.read_combined_spec(DATADIR / file, bary_corr=True)
+                spec = EdiblesSpectrum(file)
+                file = Path(file)
+
+                if spec.c_flux is None:
+                    spec = np.array([spec.bary_wave, spec.flux, spec.flux_err])
+                else:
+                    spec = np.array([spec.bary_wave, spec.c_flux, spec.flux_err])
+
+                # crop spectrum
+                spec = util_functions.crop_spectrum(spec, *wave_range)
+                # my_order = np.nanmedian(spec[4])
+                # spec = spec[:, spec[4]==my_order]
+                # if len(spec) > 5:
+                #     if not np.isnan(spec[6]).all():
+                #         spec[1] = spec[6]
+
                 if 3300 < np.mean(wave_range) < 3305:
                     spec[0] = transformations.doppler_shift_wl(spec[0], -1)
-                    spec[2] /= 10
-
-                spec = util_functions.crop_spectrum(spec, *wave_range)
-                my_order = np.nanmedian(spec[4])
-                spec = spec[:, spec[4]==my_order]
-                if len(spec) > 5:
-                    if not np.isnan(spec[6]).all():
-                        spec[1] = spec[6]
-
+                    # spec[2] /= 10
                 # plot the spectrum in the GUI using matplotlib
                 # plotting the graph
                 if root.errorbar:
