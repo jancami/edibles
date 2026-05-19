@@ -20,6 +20,8 @@ dependencies = [
     "scipy",
     "specutils",
     "PyQt5",
+    "PyAstronomy",
+    "customtkinter"
 ]
 
 [tool.hatch.version]
