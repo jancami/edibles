@@ -22,7 +22,10 @@ atomic_line_list = pd.read_csv(atomic_line_file)
 atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 
 # remove lines which are contaminated by telluric lines
-atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+# atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+
+molecular_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_molecules.csv'
+molecular_line_list = pd.read_csv(atomic_line_file)
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
@@ -236,6 +239,32 @@ def main():
         print(root.fit_df)
         # plot_fit_info()
 
+    def add_molec(molec):
+        elem_lbl.configure(text = f"{molec} selected")
+        elem_inds = atomic_line_list[atomic_line_list['Species'] == molec].index
+        elem_df = atomic_line_list.loc[elem_inds]
+
+        v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
+
+        # Make initial dataframe (include wavelength range)
+        ext_df = make_default_df(elem_df, v_comp)
+        print(ext_df)
+
+        # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
+        if not root.fit_df.empty:
+            for i, i_row in ext_df.iterrows():
+                for _, k_row in root.fit_df.iterrows():
+                    if i_row['Species'] == k_row['Species'] and i_row['WavelengthAir'] == k_row['WavelengthAir']:
+                        ext_df.loc[i, 'w_min'] = k_row['w_min']
+                        ext_df.loc[i, 'w_max'] = k_row['w_max']
+            
+
+        # load spectra within wavelength range
+        root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
+        print_msg(f'Adding a species {molec} to fit_df.')
+        print(root.fit_df)
+
+
     # Button for elements
     ki_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
     ki_btn.grid(column=0, row=1)
@@ -252,7 +281,10 @@ def main():
     tiii_btn = tk.Button(root, text = "TiII", fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
-    elnum = 5
+    ch_plus_btn = tk.Button(root, text = r"CH$^+$", fg = "purple", command=lambda: add_elem(r"CH$^+$"))
+    ch_plus_btn.grid(column=0, row=6)
+
+    elnum = 6
 
     # Text box for star name
     star_lbl = tk.Label(root, text="Enter star name:")

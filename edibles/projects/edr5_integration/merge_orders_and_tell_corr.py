@@ -48,7 +48,7 @@ for obs_time in obs_times:
         if subsub_df.empty:
             continue
         for i, row in subsub_df.iterrows():
-            file = DATADIR / row['Filename']
+            file = DATADIR / row['Filename'].replace('orders', 'orders_raw')
             with fits.open(file) as hdul:
                 print(file)
                 hdu_0 = hdul[0]
@@ -82,33 +82,33 @@ for obs_time in obs_times:
                 else:
                     tell_spec = np.full((3, len(wave)), np.nan)
 
-                col1 = fits.Column(name='WAVE', format='D', array=wave)
-                col2 = fits.Column(name='FLUX', format='D', array=flux)
-                col3 = fits.Column(name='FLUX_ERROR', format='D', array=error)
-                col4 = fits.Column(name='FLAT', format='D', array=flat)
-
-                if tell_file.is_file():
-                    col6 = fits.Column(name='M_WAVE', format='D', array=m_wave)
-                    col7 = fits.Column(name='CFLUX', format='D', array=cflux)
-                    col8 = fits.Column(name='MTRANS', format='D', array=m_trans)
-
-                    coldefs = fits.ColDefs([col1, col2, col3, col4, col6, col7, col8])
-
-                else:
-                    coldefs = fits.ColDefs([col1, col2, col3, col4])
-
-                hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
-
-                order_tell_hdul =  fits.HDUList([hdu_0, hdu])
-
-                order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
-
-
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
             
             cl_ang = setting_dependent_crop(iter_spec, setting)
             iter_spec = crop_spectrum(iter_spec, cl_ang[0], cl_ang[1])
+
+            # save separate order
+            col1 = fits.Column(name='WAVE', format='D', array=iter_spec[0])
+            col2 = fits.Column(name='FLUX', format='D', array=iter_spec[1])
+            col3 = fits.Column(name='FLUX_ERROR', format='D', array=iter_spec[2])
+            col4 = fits.Column(name='FLAT', format='D', array=iter_spec[3])
+
+            if tell_file.is_file():
+                col6 = fits.Column(name='M_WAVE', format='D', array=iter_spec[5])
+                col7 = fits.Column(name='CFLUX', format='D', array=iter_spec[6])
+                col8 = fits.Column(name='MTRANS', format='D', array=iter_spec[7])
+
+                coldefs = fits.ColDefs([col1, col2, col3, col4, col6, col7, col8])
+
+            else:
+                coldefs = fits.ColDefs([col1, col2, col3, col4])
+
+            hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
+
+            order_tell_hdul = fits.HDUList([hdu_0, hdu])
+
+            order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
 
             out_spec = np.concatenate((out_spec, iter_spec), axis=1)
 
@@ -140,7 +140,7 @@ for obs_time in obs_times:
 
         hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
 
-        file = DATADIR / row['Filename']
+        file = DATADIR / row['Filename'].replace('orders', 'orders_raw')
 
         with fits.open(file) as hdul:
             hdu_0 = hdul[0]
