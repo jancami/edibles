@@ -19,7 +19,7 @@ obs_list = obs_list.loc[obs_list['Order'] != 'ALL']
 print(obs_list)
 
 out_dir = DATADIR / 'combined'
-order_tell_dir = DATADIR / 'order_tell'
+order_tell_dir = DATADIR / 'orders'
 
 
 obs_times = obs_list['DateObs'].unique()
@@ -49,38 +49,38 @@ for obs_time in obs_times:
             continue
         for i, row in subsub_df.iterrows():
             file = DATADIR / row['Filename'].replace('orders', 'orders_raw')
-            with fits.open(file) as hdul:
-                print(file)
-                hdu_0 = hdul[0]
-                data = hdul[1].data
+            hdul = fits.open(file)
+            print(file)
+            hdu_0 = hdul[0]
+            data = hdul[1].data
 
-                wave = data['WAVE']
-                flux = data['FLUX']
-                error = data['ERROR']
-                flat = data['FLAT']
-                order = np.full(len(wave), row['Order'])
+            wave = data['WAVE']
+            flux = data['FLUX']
+            error = data['ERROR']
+            flat = data['FLAT']
+            order = np.full(len(wave), row['Order'])
 
-                iter_spec = np.array([wave, flux, error, flat, order], dtype=float)
+            iter_spec = np.array([wave, flux, error, flat, order], dtype=float)
 
-                tell_file = DATADIR / 'tell_corr' / file.name
+            tell_file = DATADIR / 'tell_corr' / file.name
 
-                if tell_file.is_file():
-                    try:
-                        with fits.open(tell_file) as hdul_tell:
-                            data_tell = hdul_tell[1].data
+            if tell_file.is_file():
+                try:
+                    with fits.open(tell_file) as hdul_tell:
+                        data_tell = hdul_tell[1].data
 
-                    except OSError:
-                        print(f'Telluric file corrupted: {tell_file}')
-                        tell_spec = np.full((3, len(wave)), np.nan)
-
-                    else:
-                        m_wave = data_tell['mlambda'] * 1e4
-                        m_wave = transformations.angstrom_vac_to_air(m_wave)
-                        cflux = data_tell['cflux']
-                        m_trans = data_tell['mtrans']
-                        tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
-                else:
+                except OSError:
+                    print(f'Telluric file corrupted: {tell_file}')
                     tell_spec = np.full((3, len(wave)), np.nan)
+
+                else:
+                    m_wave = data_tell['mlambda'] * 1e4
+                    m_wave = transformations.angstrom_vac_to_air(m_wave)
+                    cflux = data_tell['cflux']
+                    m_trans = data_tell['mtrans']
+                    tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
+            else:
+                tell_spec = np.full((3, len(wave)), np.nan)
 
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
@@ -109,6 +109,7 @@ for obs_time in obs_times:
             order_tell_hdul = fits.HDUList([hdu_0, hdu])
 
             order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
+            hdul.close()
 
             out_spec = np.concatenate((out_spec, iter_spec), axis=1)
 

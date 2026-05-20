@@ -368,7 +368,7 @@ def main():
             plot1.clear()
         for i, wave_range in range_df.iterrows():
             pythia = EdiblesOracle()
-            file_list = pythia.getFilteredObsList(object=[root.star_name], OrdersOnly=True, Wave=np.mean(wave_range))
+            file_list = pythia.getFilteredObsList(object=[root.star_name], OrdersOnly=True, Wave=np.mean(wave_range), closest_order=True)
             file_lists.append(file_list)
 
             # getting the subplot
@@ -791,9 +791,58 @@ def main():
     range_btn = tk.Button(root, text='Select continuum ranges', command=cont_range_function)
     range_btn.grid(column=0, row=elnum+12)
 
+    def mask_function():
+        if root.cid is not None:
+            root.canvas.mpl_disconnect(root.cid)
+        root.w_range_active = True
+        print_msg("Select wavelength range by clicking and dragging on the plot.")
+        # make range selection tool using matplotlib span selector
+        # apply it on canvas
+        def onselect(xmin, xmax):
+            print(f'Selected wavelength range: {xmin:.2f} - {xmax:.2f}')
+            spec_inds = root.fit_spec[0].searchsorted([xmin, xmax])
+            print(spec_inds)
+            root.fit_spec[2, spec_inds[0]:spec_inds[1]] = np.inf
+            range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+            for i, wave_range in range_df.iterrows():
+                # adding the subplot
+                j = i // ncols
+                if nrows == 1:
+                    plot1 = root.axs[i]
+                else:
+                    plot1 = root.axs[j, i % ncols]
+                if (wave_range['w_min'] < xmin) & (wave_range['w_max'] > xmax):
+                    plot1.clear()
+                    root.vlines = {}
+
+                    plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
+                    if root.errorbar:
+                        plot1.errorbar(plot_spec[0], plot_spec[1], yerr=plot_spec[2], color='k', label = 'Data')
+                    else:
+                        plot1.plot(plot_spec[0], plot_spec[1], color='k', label = 'Data')
+
+                    if root.result is not None:
+                        if len(root.fit_spec[0]) == len(root.result.best_fit):
+                            plot1.plot(plot_spec[0], root.result.best_fit[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Fit', color='r')
+                    plot1.legend()
+                    root.canvas.draw()
+
+                    print_msg(f"Added mask to fitting spectrum.")
+                root.w_range_active = False
+
+        root.span.clear()
+        for _, ax in enumerate(root.axs.flatten()):
+            selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+            root.span.append(selector)
+
+        root.canvas.draw_idle()
+
+    mask_btn = tk.Button(root, text='Select mask ranges', command=mask_function)
+    mask_btn.grid(column=0, row=elnum+13)
 
     root.grid_columnconfigure(1, weight=1)
-    root.grid_rowconfigure(elnum+13, weight=1)
+    root.grid_rowconfigure(elnum+14, weight=1)
 
     root.mainloop()
 

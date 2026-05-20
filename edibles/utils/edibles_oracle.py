@@ -6,6 +6,7 @@ from pathlib import Path
 from edibles import DATADIR
 from edibles import EDIBLES_PYTHONDIR, DATARELEASE
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
+from pprint import pprint
 
 
 class EdiblesOracle:
@@ -41,7 +42,7 @@ class EdiblesOracle:
         # total_rows = len(self.ebvlog.index)
         # print(total_rows)
 
-    def _getObsListFilteredByObsLogParameters(self, object=None, Wave=None, WaveMin=None, WaveMax=None, MergedOnly=False, OrdersOnly=False):
+    def _getObsListFilteredByObsLogParameters(self, object=None, Wave=None, WaveMin=None, WaveMax=None, MergedOnly=False, OrdersOnly=False, closest_order=False):
         '''Filter all the observations in the ObsLog by the parameters
         contained in the obslog, i.e. by object (if specified), wavelength
         range or merged versus specific orders. '''
@@ -87,7 +88,21 @@ class EdiblesOracle:
         if WaveMax: 
             bool_wave_matches = (self.obslog.WaveMin < WaveMax) & (bool_wave_matches)
 
-        ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches)
+        if closest_order:
+            bool_closest_order = np.zeros(len(self.obslog.index),dtype=bool)
+            for value, group_df in self.obslog.groupby('DateObs'):
+                # print(f"Value: {value}")
+                # print(group_df)
+                mean_waves = group_df.loc[:, ['WaveMin', 'WaveMax']].mean(axis=1) - Wave
+                # print(mean_waves)
+                co_ind = mean_waves.abs().idxmin()
+                # print(mean_waves.abs())
+                # print('co_ind', co_ind)
+                bool_closest_order[co_ind] = True
+        else:
+            bool_closest_order = np.ones(len(self.obslog.index),dtype=bool)
+
+        ind = np.where(bool_object_matches & bool_order_matches & bool_wave_matches & bool_closest_order)
         #print(ind)
         print("**Filtered File List**")
         print(self.obslog.iloc[ind].Filename)
@@ -260,7 +275,7 @@ class EdiblesOracle:
                            LogNHII_reference=None, fH2=None,fH2_min=None,fH2_max=None, \
                            fH2_reference=None, RV=None,RV_min=None,RV_max=None, \
                            RV_reference=None, AV=None,AV_min=None,AV_max=None, \
-                           AV_reference=None):
+                           AV_reference=None, closest_order=False):
         
         '''This method will provide a filtered list of observations that match 
         the specified criteria on sightline/target parameters as well as
@@ -351,7 +366,7 @@ class EdiblesOracle:
         
         # STEP 3
         # Now push this list of objects through for further filtering based on obs log
-        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly)
+        FilteredObsList = self._getObsListFilteredByObsLogParameters(object=common_objects_list, Wave=Wave, WaveMin=WaveMin, WaveMax=WaveMax, MergedOnly=MergedOnly, OrdersOnly=OrdersOnly, closest_order=closest_order)
 
         print(len(FilteredObsList))
 
