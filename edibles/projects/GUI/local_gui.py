@@ -21,18 +21,18 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from edibles.projects.GUI.co_adding_flux import coadd_spectra
+from co_adding_flux import coadd_spectra
 from matplotlib.ticker import AutoMinorLocator
 import numpy as np
 import json
-from edibles.projects.GUI.main_run import get_species_data, astrovoigtfit_run
+from main_run import get_species_data, astrovoigtfit_run
 from edibles.utils.edibles_oracle import EdiblesOracle
-from edibles.projects.GUI.flux_wave_find import wave_flux_data
-from edibles.projects.GUI.main import master_function
+from flux_wave_find import wave_flux_data
+from main import master_function
+from importlib.resources import files
+from edibles.utils import voigt_fitting
 from astropy import constants as ast
 from scipy.interpolate import CubicSpline
-from astropy.stats import mad_std
-import pandas as pd
 
 # Speed of light in km/s
 c_light = ast.c.to('km/s')
