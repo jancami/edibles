@@ -25,7 +25,7 @@ atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 # atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
 
 molecular_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_molecules.csv'
-molecular_line_list = pd.read_csv(atomic_line_file)
+molecular_line_list = pd.read_csv(molecular_line_file)
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
@@ -52,7 +52,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
     # i_df.loc[:, f'v_rad_min'] = -100.0
     # i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
-    i_df.loc[:, f'b_init'] = 0.001
+    i_df.loc[:, f'b_init'] = 0.1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
 
@@ -239,16 +239,24 @@ def main():
         print(root.fit_df)
         # plot_fit_info()
 
-    def add_molec(molec):
+    def add_ch_plus():
+        molec = 'CH+'
         elem_lbl.configure(text = f"{molec} selected")
-        elem_inds = atomic_line_list[atomic_line_list['Species'] == molec].index
-        elem_df = atomic_line_list.loc[elem_inds]
+        print(molecular_line_list)
+        elem_inds = molecular_line_list[molecular_line_list['Species'] == molec].index
+        elem_df = molecular_line_list.loc[elem_inds]
+        print(elem_df)
+        elem_df = elem_df.loc[((elem_df.loc[:, 'WavelengthAir'] > 4229) & (elem_df.loc[:, 'WavelengthAir'] < 4233)) |
+                              ((elem_df.loc[:, 'WavelengthAir'] > 3957) & (elem_df.loc[:, 'WavelengthAir'] < 3958))]
+        print(elem_df)
+
+        elem_df.replace('CH+', 'CHplus', inplace=True)
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
 
         # Make initial dataframe (include wavelength range)
         ext_df = make_default_df(elem_df, v_comp)
-        print(ext_df)
+        print("ext_df", ext_df)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
         if not root.fit_df.empty:
@@ -281,7 +289,7 @@ def main():
     tiii_btn = tk.Button(root, text = "TiII", fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
-    ch_plus_btn = tk.Button(root, text = r"CH$^+$", fg = "purple", command=lambda: add_elem(r"CH$^+$"))
+    ch_plus_btn = tk.Button(root, text = "CH$^+$", fg = "purple", command=lambda: add_ch_plus())
     ch_plus_btn.grid(column=0, row=6)
 
     elnum = 6
