@@ -360,10 +360,10 @@ class AnalysisTab(ctk.CTkFrame):
             messagebox.showwarning("Warning", "Need at least 2 continuum anchors. Continuum fitting cancelled.")
             return
 
-        anc         = sorted(cont_anchors)
-        spline      = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
-        continuum   = spline(wave)
-        norm_flux   = flux / continuum
+        anc = sorted(cont_anchors)
+        spline = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+        continuum = spline(wave)
+        norm_flux = flux / continuum
 
     # 2. INTERACTIVE UNCERTAINTY REGION SELECTOR
         err_bounds = []
@@ -416,7 +416,7 @@ class AnalysisTab(ctk.CTkFrame):
         self.plot_data['norm_flux'] = norm_flux
 
         plt.close('all')
-        self.update_plots(plot_title='Continuum fitted, fitting region masked.')
+        self.update_plots(plot_title='Continuum fitted.')
 
     def setup_fit_params(self, parent):
         # This frame now only contains Wavelength and Absorption Range
