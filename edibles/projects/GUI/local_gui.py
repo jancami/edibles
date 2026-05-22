@@ -33,7 +33,8 @@ from importlib.resources import files
 from edibles.utils import voigt_fitting
 
 # Speed of light in km/s
-c_light = 299792.458
+c_light = ast.c.to('km/s')
+print([c_light])
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("Dark")
@@ -169,7 +170,10 @@ class AnalysisTab(ctk.CTkFrame):
 
         # --- Right Main Area ---
         self.main_frame = ctk.CTkFrame(self.paned_window, corner_radius=0, fg_color="transparent")
-        self.main_frame.grid_rowconfigure(1, weight=1)
+        self.main_frame.grid_rowconfigure(0, weight=0)  # file buttons
+        self.main_frame.grid_rowconfigure(1, weight=0)  # prep button
+        self.main_frame.grid_rowconfigure(2, weight=1)  # tabview
+        self.main_frame.grid_rowconfigure(3, weight=0)  # fit params
         self.main_frame.grid_columnconfigure(0, weight=1)
         
         # Add main frame to paned window
@@ -180,7 +184,7 @@ class AnalysisTab(ctk.CTkFrame):
 
         # 2. Middle: Plots
         self.tabview = ctk.CTkTabview(self.main_frame)
-        self.tabview.grid(row=1, column=0, padx=20, pady=(0, 10), sticky="nsew")
+        self.tabview.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="nsew")
         self.tabview.add("Continuum Fit")
         self.tabview.add("Voigt Fit")
         self.tabview.add("Fit Results")
@@ -231,54 +235,22 @@ class AnalysisTab(ctk.CTkFrame):
         ctk.CTkLabel(tab, text="Species:", anchor="w").grid(row=5, column=0, padx=10, pady=(10, 0), sticky="w")
         self.mol_scroll = ctk.CTkScrollableFrame(tab, height=300)
         self.mol_scroll.grid(row=6, column=0, padx=10, pady=(0, 10), sticky="nsew")
-        
         self.molecule_entries = []
+
         # Initial molecules
         self.add_molecule_inputs("13CH+_4032", "2, 2", f"{1e13/70}, {1e13/70}", "-11, 4")
         self.add_molecule_inputs("12CH+_4032", "2, 2", "1e13, 1e13", "-11, 4")
         
-        # Local Mode Inputs (Knots)
-        self.n_knots_label = ctk.CTkLabel(self.mol_scroll, text="N Knots:", anchor="w")
-        self.n_knots_entry = ctk.CTkEntry(self.mol_scroll, placeholder_text="10")
-        self.n_knots_entry.insert(0, "10")
-        self.n_knots_label.pack(pady=(10,0), anchor="w", padx=5)
-        self.n_knots_entry.pack(pady=(0,5), fill="x", padx=5)
-        
-        # Continuum Order
-        self.cont_order_label = ctk.CTkLabel(self.mol_scroll, text="Cont. Order:", anchor="w")
-        self.cont_order_combo = ctk.CTkComboBox(self.mol_scroll, values=["Linear", "Quadratic", "Cubic"])
-        self.cont_order_combo.set("Cubic")
-        self.cont_order_label.pack(pady=(5,0), anchor="w", padx=5)
-        self.cont_order_combo.pack(pady=(0,5), fill="x", padx=5)
-        
-        self.knots_x_label = ctk.CTkLabel(self.mol_scroll, text="Knots X Array (optional):", anchor="w")
-        self.knots_x_entry = ctk.CTkEntry(self.mol_scroll, placeholder_text="e.g. 6707.5, 6708.0")
-        self.knots_x_label.pack(pady=(5,0), anchor="w", padx=5)
-        self.knots_x_entry.pack(pady=(0,5), fill="x", padx=5)
-        
-        self.show_knots_switch = ctk.CTkSwitch(self.mol_scroll, text="Show Knots")
-        self.show_knots_switch.select()
-        self.show_knots_switch.pack(pady=(5,5), anchor="w", padx=5)
-        
-        self.show_continuum_switch = ctk.CTkSwitch(self.mol_scroll, text="Show Continuum")
-        self.show_continuum_switch.select()
-        self.show_continuum_switch.pack(pady=(0,5), anchor="w", padx=5)
-        
-        self.normalize_plot_switch = ctk.CTkSwitch(self.mol_scroll, text="Plot Normalized")
-        self.normalize_plot_switch.deselect()
-        self.normalize_plot_switch.pack(pady=(0,10), anchor="w", padx=5)
-
         # Buttons
         btn_frame = ctk.CTkFrame(tab, fg_color="transparent")
         btn_frame.grid(row=7, column=0, padx=10, pady=5, sticky="ew")
         ctk.CTkButton(btn_frame, text="+ Add Species", width=80, command=lambda: self.add_molecule_inputs("", "", "", "")).pack(side="left", padx=(0, 5), expand=True, fill="x")
         ctk.CTkButton(btn_frame, text="- Remove Species", width=80, fg_color="#D32F2F", hover_color="#B71C1C", command=self.remove_last_molecule).pack(side="right", expand=True, fill="x")
-
         ctk.CTkButton(tab, text="Run Analysis", command=self.run_analysis, height=40, font=ctk.CTkFont(size=14, weight="bold")).grid(row=8, column=0, padx=10, pady=20, sticky="ew")
 
     def setup_file_selection(self, parent):
         self.file_frame = ctk.CTkFrame(parent)
-        self.file_frame.grid(row=0, column=0, padx=20, pady=10, sticky="ew")
+        self.file_frame.grid(row=0, column=0, padx=20, pady=(10, 2), sticky="ew")
         
         # Local Mode Widgets
         self.local_fetch_btn = ctk.CTkButton(self.file_frame, text="🔍 Fetch Files", width=100, command=self.fetch_files_local)
@@ -296,29 +268,158 @@ class AnalysisTab(ctk.CTkFrame):
         self.local_sigma_frame = ctk.CTkFrame(self.file_frame, fg_color="transparent")
         self.local_sigma_frame.pack(side="left", padx=10)
         
-        # Two sigma fields — they look similar but feed different things:
-        # "Sigma" goes into coadd_spectra as the per-spectrum noise (used to
-        # weight each spectrum during co-addition).
         ctk.CTkLabel(self.local_sigma_frame, text="Sigma:", width=50).pack(side="left")
         self.local_sigma_entry = ctk.CTkEntry(self.local_sigma_frame, width=100)
         self.local_sigma_entry.pack(side="left")
         self.local_sigma_entry.insert(0, "0.002")
 
-        # "Fit σ" is the noise of the *co-added* spectrum and gets passed to
-        # the fit as std_dev (lmfit uses weights = 1/std_dev). Default matches
-        # Sigma; bump it if your co-added spectrum is noisier than that.
         ctk.CTkLabel(self.local_sigma_frame, text="Fit σ:", width=50).pack(side="left", padx=(10, 0))
         self.local_std_dev_entry = ctk.CTkEntry(self.local_sigma_frame, width=100)
         self.local_std_dev_entry.pack(side="left")
         self.local_std_dev_entry.insert(0, "0.002")
 
+        # Interactive Continuum Fitting — row=1, not row=0
+        self.prep_frame = ctk.CTkFrame(parent)
+        self.prep_frame.grid(row=1, column=0, padx=20, pady=(2, 4), sticky="ew")
+
+        self.interp_btn = ctk.CTkButton(
+            self.prep_frame,
+            text="Continuum Fitting",
+            fg_color="#7B2CBF",
+            hover_color="#5A1E8C",
+            command= self.prep_spectra,
+        )
+        self.interp_btn.pack(side="left", padx=10, pady=4)
+        
         self.local_files = []
         self.local_selected_vars = []
 
+    # INTERACTIVE TOOLS:
+
+    def prep_spectra(self):
+        """
+        Opens two matplotlib click windows:
+          1. Continuum anchor placement (cubic spline preview).
+          2. Fit-region boundary selection.
+        Results are stored in self.plot_data and the abs range fields are
+        updated automatically.
+        """
+        if not self.plot_data or 'wave' not in self.plot_data:
+            messagebox.showwarning("Warning", "Please co-add spectra first.")
+            return
+
+        wave = self.plot_data['wave']
+        flux = self.plot_data['flux']
+    
+
+    # 1. INTERACTIVE CONTINUUM FITTER
+        
+        cont_anchors = []
+        cont_artists = []
+        preview      = [None]
+
+        def click_continuum(event):
+            if event.button == 1:
+                lam, flx = event.xdata, event.ydata
+                cont_anchors.append((lam, flx))
+                dot, = ax_cont.plot(lam, flx, 'o', color='orange', ms=6, zorder=5)
+                cont_artists.append(dot)
+                _update_preview()
+                ax_cont.set_title(f'{len(cont_anchors)} anchor(s). Close when done')
+                fig_cont.canvas.draw()
+
+            elif event.button == 3 and cont_anchors:
+                cont_anchors.pop()
+                cont_artists.pop().remove()
+                _update_preview()
+                ax_cont.set_title(f'{len(cont_anchors)} anchor(s). Close when done')
+                fig_cont.canvas.draw()
+        
+        def _update_preview():
+            if preview[0] is not None:
+                try:    preview[0].remove()
+                except: pass
+            if len(cont_anchors) >= 2:
+                anc = sorted(cont_anchors)
+                cs  = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+                preview[0], = ax_cont.plot(wave, cs(wave), 'orange', linestyle='-', alpha=0.7)
+
+        fig_cont, ax_cont = plt.subplots(figsize=(10, 5))
+        ax_cont.plot(wave, flux, 'k-')
+        ax_cont.set_ylabel('Flux')
+        ax_cont.set_xlabel('Wavelength (Å)')
+        ax_cont.set_title('Left-click: add continuum anchor. Right-click: undo. Close when done.')
+        cid_cont = fig_cont.canvas.mpl_connect('button_press_event', click_continuum)
+        plt.tight_layout()
+        plt.show()
+        fig_cont.canvas.mpl_disconnect(cid_cont)
+
+        if len(cont_anchors) < 2:
+            messagebox.showwarning("Warning", "Need at least 2 continuum anchors. Continuum fitting cancelled.")
+            return
+
+        anc = sorted(cont_anchors)
+        spline = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+        continuum = spline(wave)
+        norm_flux = flux / continuum
+
+    # 2. INTERACTIVE UNCERTAINTY REGION SELECTOR
+        err_bounds = []
+        err_lines  = []
+        err_span   = [None]
+
+        def click_uncertainty(event):
+            if event.inaxes != ax_err:
+                return
+            if event.button == 1 and len(err_bounds) < 2:
+                err_bounds.append(event.xdata)
+                err_lines.append(ax_err.axvline(event.xdata, color='orange', linestyle='-', alpha=0.8))
+                if len(err_bounds) == 2:
+                    lo, hi = sorted(err_bounds)
+                    err_span[0] = ax_err.axvspan(lo, hi, alpha=0.15, color='orange')
+                    n_pix = int(np.sum((wave >= lo) & (wave <= hi)))
+                    ax_err.set_title(f'Region set ({n_pix} px). Close when done')
+                fig_err.canvas.draw()
+            elif event.button == 3:
+                err_bounds.clear()
+                for l in err_lines: l.remove()
+                err_lines.clear()
+                if err_span[0] is not None:
+                    err_span[0].remove()
+                    err_span[0] = None
+                ax_err.set_title('Reset — click two boundaries')
+                fig_err.canvas.draw()
+
+        fig_err, ax_err = plt.subplots(figsize=(10, 5))
+        ax_err.plot(wave, norm_flux, 'k-')
+        ax_err.axhline(1.0, color='gray', linestyle='-', alpha=0.5)
+        ax_err.set_ylabel('Normalised Flux')
+        ax_err.set_xlabel('Wavelength (Å)')
+        ax_err.set_title('Select a flat continuum region for uncertainty estimation. Close when done.')
+        cid_err = fig_err.canvas.mpl_connect('button_press_event', click_uncertainty)
+        plt.tight_layout()
+        plt.show()
+        print()
+        fig_err.canvas.mpl_disconnect(cid_err)
+        
+        if len(err_bounds) == 2:
+            lo, hi = sorted(err_bounds)
+            err_mask = (wave >= lo) & (wave <= hi)
+            measured_std = float(np.std(norm_flux[err_mask]))
+            self.plot_data['fit_std_dev'] = measured_std
+            print(f"Uncertainty from selected region: {measured_std:.5f} ({err_mask.sum()} pixels)")
+
+    #results
+        self.plot_data['continuum'] = continuum
+        self.plot_data['norm_flux'] = norm_flux
+
+        plt.close('all')
+        self.update_plots(plot_title='Continuum fitted.')
+
     def setup_fit_params(self, parent):
-        # This frame now only contains Wavelength and Absorption Range, Degree/Knots are in setup_inputs_tab
+        # This frame now only contains Wavelength and Absorption Range
         frame = ctk.CTkFrame(parent)
-        frame.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+        frame.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
         
         # Wavelength Range
         ctk.CTkLabel(frame, text="Fit Range (Min, Max):").pack(side="left", padx=(10, 5))
@@ -438,7 +539,15 @@ class AnalysisTab(ctk.CTkFrame):
         self.voigt_color_combo = ctk.CTkComboBox(scroll_frame, values=colors)
         self.voigt_color_combo.grid(row=29, column=0, padx=10, pady=(0, 10), sticky="ew")
         self.voigt_color_combo.set("green")
-        
+
+        #Show Continuum toggle (used in Voigt Fit panel)
+        self.show_continuum_switch = ctk.BooleanVar(value=True)
+        ctk.CTkSwitch(scroll_frame, text="Show Continuum", variable=self.show_continuum_switch, command=self.update_plots).grid(row=30, column=0, padx=10, pady=5, sticky="w")
+
+        #Normalize plot toggle
+        self.normalize_plot_switch = ctk.BooleanVar(value=False)
+        ctk.CTkSwitch(scroll_frame, text="Plot Normalized", variable=self.normalize_plot_switch, command=self.update_plots).grid(row=31, column=0, padx=10, pady=(0, 10), sticky="w")
+
         ctk.CTkButton(scroll_frame, text="🔄 Update Plots", command=self.update_plots).grid(row=30, column=0, padx=10, pady=20, sticky="ew")
 
     def on_theme_change(self, value):
@@ -844,7 +953,7 @@ class AnalysisTab(ctk.CTkFrame):
             self.plot_data = { # Initialize
                 'wave': wave_coadd,
                 'flux': flux_coadd,
-                'continuum': np.ones_like(wave_coadd), # Initial dummy continuum
+                'continuum': np.ones_like(wave_coadd), # Dummy until prep_spectra runs
                 'norm_flux': flux_coadd, # Initially same
                 'model': np.zeros_like(wave_coadd),
                 'residuals': np.zeros_like(wave_coadd),
@@ -854,10 +963,12 @@ class AnalysisTab(ctk.CTkFrame):
                 'lambda_0_ref': lambda_0 # Store lambda_0 for velocity conversion
             }
             
-            # Plot in Continuum Panel
+            #Plot in Continuum Panel
             self.update_plots(plot_title=f"Co-added Spectrum ({len(selected_files)} files)")
-            self.local_status_label.configure(text=f"Co-added {len(selected_files)} files.", text_color="green")
-            
+            self.local_status_label.configure(
+                text=f"Co-added {len(selected_files)} files. Click 'Continuum Fitting' next.",
+                text_color="green"
+            )
         except Exception as e:
             messagebox.showerror("Error", f"Failed to co-add spectra: {e}")
 
@@ -869,10 +980,6 @@ class AnalysisTab(ctk.CTkFrame):
             "wave_max": self.wave_max.get(),
             "abs_min": self.abs_min.get(),
             "abs_max": self.abs_max.get(),
-            "n_knots": self.n_knots_entry.get(),
-            "cont_order": self.cont_order_combo.get(),
-            "knots_x": self.knots_x_entry.get(),
-            "show_knots": self.show_knots_switch.get(),
             "molecules": [
                 {
                     "name": entry['name'].get(),
@@ -987,16 +1094,6 @@ class AnalysisTab(ctk.CTkFrame):
             self.abs_min.insert(0, data.get("abs_min", ""))
             self.abs_max.delete(0, tk.END)
             self.abs_max.insert(0, data.get("abs_max", ""))
-
-            self.n_knots_entry.delete(0, tk.END)
-            self.n_knots_entry.insert(0, data.get("n_knots", "10"))
-            self.cont_order_combo.set(data.get("cont_order", "Cubic"))
-            self.knots_x_entry.delete(0, tk.END)
-            self.knots_x_entry.insert(0, data.get("knots_x", ""))
-            if data.get("show_knots", True):
-                self.show_knots_switch.select()
-            else:
-                self.show_knots_switch.deselect()
             
             # Restore Plotting Style Settings
             self.theme_var.set(data.get("theme", "Dark"))
@@ -1043,8 +1140,6 @@ class AnalysisTab(ctk.CTkFrame):
                 self.show_sigma_var.set(False)
 
             self.sigma_level_slider.set(data.get("sigma_level", 1.0))
-            
-            messagebox.showinfo("Loaded", "Session loaded successfully!")
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load session: {e}")
@@ -1132,11 +1227,52 @@ class AnalysisTab(ctk.CTkFrame):
             except ValueError:
                 fit_std_dev = 0.002
 
-            fitresult, continuum_normalized_flux, continuum, std_dev = astrovoigtfit_run(
-                wave, flux, molecules, species_params, absorption_range, n_knots, knots_x_array,
-                species_file=species_file, spline_order=spline_order, std_dev=fit_std_dev,
+            # Pass the interactively-built continuum into astrovoigtfit_run if
+            # prep_spectra has been run
+
+            prep_continuum = self.plot_data.get('continuum')
+            has_interactive_continuum = (
+                prep_continuum is not None
+                and not np.all(prep_continuum == 1.0)  # not the dummy from coadd
             )
-            
+            print(f"has_interactive_continuum: {has_interactive_continuum}")
+            print(f"wave range: {wave.min():.3f} to {wave.max():.3f}")
+            if has_interactive_continuum:
+                continuum_slice = prep_continuum[mask]
+                norm_flux_check = flux / continuum_slice
+                print(f"norm_flux range: {norm_flux_check.min():.4f} to {norm_flux_check.max():.4f}")
+            else:
+                print(f"flux range: {flux.min():.4f} to {flux.max():.4f}")
+            if has_interactive_continuum:
+                
+                continuum_slice = prep_continuum[mask]
+                norm_flux = flux / continuum_slice
+
+                # Use interactively measured std if available, else fall back to user input
+                fit_std_dev = self.plot_data.get('fit_std_dev', fit_std_dev)
+                print(f"has_interactive_continuum: {has_interactive_continuum}")
+                print(f"fit_std_dev being used: {fit_std_dev}")
+                print(f"fit_std_dev from prep: {self.plot_data.get('fit_std_dev', 'NOT SET')}")
+                fitresult, _, __, std_dev = astrovoigtfit_run(
+                    wave, norm_flux, molecules, species_params, absorption_range,
+                    n_knots=0, knots_x_array=None,
+                    species_file=species_file, spline_order=3, std_dev=fit_std_dev,
+                )
+                continuum_normalized_flux = norm_flux
+                continuum = continuum_slice
+            else:
+                fitresult, continuum_normalized_flux, continuum, std_dev = astrovoigtfit_run(
+                    wave, flux, molecules, species_params, absorption_range,
+                    n_knots=10, knots_x_array=None,
+                    species_file=species_file, spline_order=3, std_dev=fit_std_dev,
+                )
+                continuum_slice = continuum
+            if has_interactive_continuum and self.plot_data.get('fit_std_dev') is None:
+                messagebox.showwarning(
+                "Missing σ Estimate",
+                "You haven't run 'Continuum Fitting' yet. σ will default to the Fit σ box value.\n\nClick 'Continuum Fitting' first for best results."
+                )
+
             lambda_0 = None
             if molecules:
                 all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')
@@ -1147,20 +1283,28 @@ class AnalysisTab(ctk.CTkFrame):
                         pass
 
             individual_spectra = self.plot_data.get('individual_spectra')
-            
+
+            preserved_continuum   = self.plot_data.get('continuum')
+            preserved_norm_flux   = self.plot_data.get('norm_flux')
+            preserved_fit_std_dev = self.plot_data.get('fit_std_dev')
+            preserved_comp_guesses = self.plot_data.get('component_guesses')
+            preserved_full_wave   = self.plot_data.get('wave')
+            preserved_full_flux   = self.plot_data.get('flux')
+
             self.plot_data = {
                 'wave': wave,
                 'flux': flux,
                 'norm_flux': continuum_normalized_flux,
                 'continuum': continuum,
-                'model': fitresult.best_fit,
-                'residuals': flux - fitresult.best_fit,
+                'model': fitresult.best_fit * continuum_slice,
+                'residuals': flux - (fitresult.best_fit * continuum_slice),
                 'mode': 'Local Mode',
                 'fitresult': fitresult,
                 'molecules': molecules,
-                'lambda_0_ref': lambda_0
+                'lambda_0_ref': lambda_0,
+                'fit_std_dev': preserved_fit_std_dev,
+                'component_guesses': preserved_comp_guesses,
             }
-            
             if individual_spectra:
                 self.plot_data['individual_spectra'] = individual_spectra
             
@@ -1213,8 +1357,6 @@ class AnalysisTab(ctk.CTkFrame):
         shade_alpha = 0.2 if theme == 'Dark' else 0.3
 
         # 1. Continuum Fit Plot
-        # For GM2, we now show the continuum fit in this tab too, as requested.
-        # Logic is same for all modes now: Data + Continuum.
         
         if self.canvas1: 
             self.canvas1.get_tk_widget().destroy()
@@ -1235,9 +1377,6 @@ class AnalysisTab(ctk.CTkFrame):
         plot_wave_cont = self.plot_data['wave']
         xlabel_cont = self.xlabel_entry.get() or "Wavelength (Å)"
         
-        # Speed of light in km/s
-        c_light = 299792.458 
-
         if self.show_velocity_axis_var.get() and self.plot_data.get('lambda_0_ref'):
             lambda_0_ref = self.plot_data['lambda_0_ref']
             # velocity = c * (wave - lambda_0) / lambda_0
@@ -1268,31 +1407,6 @@ class AnalysisTab(ctk.CTkFrame):
             
         ax1_top.plot(plot_wave_cont, self.plot_data['continuum'], color=cont_color, linewidth=2, label='Continuum')
         ax1_top.axvspan(abs_min_plot, abs_max_plot, color=shade_color, alpha=shade_alpha, label='Absorption Range')
-        
-        # Plot Knots in Continuum Panel (GM2/GM3 only)
-        if self.show_knots_switch.get():
-            fitresult = self.plot_data.get('fitresult')
-            if fitresult:
-                used_knots_x = fitresult.userkws.get('knot_x_array')
-                if used_knots_x is not None:
-                    # Convert knots to velocity if enabled
-                    if self.show_velocity_axis_var.get() and self.plot_data.get('lambda_0_ref'):
-                        used_knots_x_plot = c_light * (used_knots_x - lambda_0_ref) / lambda_0_ref
-                    else:
-                        used_knots_x_plot = used_knots_x
-
-                    knot_y_values = []
-                    i = 0
-                    while True:
-                        name = f'knot_y_{i}'
-                        if name in fitresult.params:
-                            knot_y_values.append(fitresult.params[name].value)
-                            i += 1
-                        else:
-                            break
-                    if len(knot_y_values) == len(used_knots_x_plot):
-                        ax1_top.plot(used_knots_x_plot, knot_y_values, 'o', color='orange', markersize=6, label='Knots')
-
         ax1_top.set_title(plot_title if plot_title else "Continuum Fit")
         ax1_top.set_ylabel("Flux")
         ax1_top.legend()
@@ -1319,6 +1433,7 @@ class AnalysisTab(ctk.CTkFrame):
         
         self.toolbar1 = NavigationToolbar2Tk(self.canvas1, self.tabview.tab("Continuum Fit"))
         self.toolbar1.update()
+        plt.close(fig1)
         self.toolbar1.pack(side="bottom", fill="x")
 
         # 2. Voigt Fit Plot
@@ -1369,7 +1484,7 @@ class AnalysisTab(ctk.CTkFrame):
             # 3. Flat Continuum Line (if enabled)
             if self.show_continuum_switch.get():
                 cont_color = self.cont_color_combo.get()
-                ax2.axhline(1.0, color=cont_color, linestyle='--', linewidth=1.5, label='Continuum')
+                ax2.axhline(1.0, color=cont_color, linestyle='-', linewidth=1.5, label='Continuum')
 
             # 4. Individual Lines (if enabled)
             if self.show_individual_lines_var.get():
@@ -1518,32 +1633,7 @@ class AnalysisTab(ctk.CTkFrame):
                 cont_color = self.cont_color_combo.get()
                 ax2.plot(plot_wave, self.plot_data['continuum'], color=cont_color, linestyle='--', linewidth=1.5, label='Continuum')
             
-            # 4. Knots (if enabled)
-            if self.show_knots_switch.get():
-                fitresult = self.plot_data.get('fitresult')
-                if fitresult:
-                    # Extract knots
-                    used_knots_x = fitresult.userkws.get('knot_x_array')
-                    knot_y_values = []
-                    i = 0
-                    while True:
-                        name = f'knot_y_{i}'
-                        if name in fitresult.params:
-                            knot_y_values.append(fitresult.params[name].value)
-                            i += 1
-                        else:
-                            break
-                    
-                    if used_knots_x is not None and len(knot_y_values) == len(used_knots_x):
-                         # Knots X must ALSO be converted if Velocity Axis is ON
-                        plot_knots_x2 = used_knots_x
-                        if self.show_velocity_axis_var.get() and self.plot_data.get('lambda_0_ref'):
-                            lambda_0 = self.plot_data['lambda_0_ref']
-                            plot_knots_x2 = [c_light * (kx - lambda_0) / lambda_0 for kx in used_knots_x]
-                            
-                        ax2.plot(plot_knots_x2, knot_y_values, 'o', color='orange', markersize=6, label='Knots')
-
-            # 5. Individual Lines (if enabled)
+            # 4. Individual Lines (if enabled)
             if self.show_individual_lines_var.get():
                 fitresult = self.plot_data.get('fitresult')
                 if fitresult:
@@ -1684,6 +1774,7 @@ class AnalysisTab(ctk.CTkFrame):
         
         self.canvas2 = FigureCanvasTkAgg(fig2, master=self.tabview.tab("Voigt Fit"))
         self.canvas2.draw()
+        plt.close(fig2)
         self.canvas2.get_tk_widget().pack(fill="both", expand=True)
         
         self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.tabview.tab("Voigt Fit"))
