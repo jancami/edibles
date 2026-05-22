@@ -32,6 +32,7 @@ from main import master_function
 from importlib.resources import files
 from edibles.utils import voigt_fitting
 import astropy.constants as ast
+from scipy.interpolate import CubicSpline
 
 # Speed of light in km/s
 c_light = ast.c.to('km/s')
@@ -320,6 +321,7 @@ class AnalysisTab(ctk.CTkFrame):
         preview      = [None]
 
         def click_continuum(event):
+            print(f"Button clicked: {event.button}")
             if event.button == 1:
                 lam, flx = event.xdata, event.ydata
                 cont_anchors.append((lam, flx))
