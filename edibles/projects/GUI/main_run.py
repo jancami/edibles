@@ -1,11 +1,11 @@
 import re
 import numpy as np
 from scipy.interpolate import CubicSpline, make_interp_spline
-
+from importlib.resources import files
 from astrovoigtfit import astro_simultaneous_fit
 
 
-def get_species_data(species_file='species.txt'):
+def get_species_data(species_file=files('edibles') / 'projects/GUI/species.txt'):
     """Parses species.txt to return available species and their wavelength ranges.
 
     Returns

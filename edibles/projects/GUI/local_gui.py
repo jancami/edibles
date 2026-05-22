@@ -31,8 +31,6 @@ from flux_wave_find import wave_flux_data
 from main import master_function
 from importlib.resources import files
 from edibles.utils import voigt_fitting
-from astropy import constants as ast
-from scipy.interpolate import CubicSpline
 
 # Speed of light in km/s
 c_light = ast.c.to('km/s')
@@ -943,7 +941,7 @@ class AnalysisTab(ctk.CTkFrame):
             if self.molecule_entries:
                 mol_name = self.molecule_entries[0]['name'].get()
                 if mol_name:
-                    all_species = get_species_data('species.txt')
+                    all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')
                     if mol_name in all_species:
                         # 'line' is the rest wavelength (string or float in dict)
                         try:
@@ -1212,7 +1210,15 @@ class AnalysisTab(ctk.CTkFrame):
             if len(wave) == 0:
                 raise ValueError("No data points in the specified wavelength range.")
 
-            species_file = 'species.txt'
+            n_knots = int(self.n_knots_entry.get())
+            knots_x_str = self.knots_x_entry.get()
+            knots_x_array = [float(x.strip()) for x in knots_x_str.split(',')] if knots_x_str.strip() else None
+            
+            species_file = files('edibles') / 'projects/GUI/species.txt'
+            
+            # Get Spline Order
+            order_map = {"Linear": 1, "Quadratic": 2, "Cubic": 3}
+            spline_order = order_map.get(self.cont_order_combo.get(), 3)
 
             # Read the "Fit σ" box. If the user typed garbage, just fall
             # back to 0.002 — same as the old hardcoded default.
@@ -1269,7 +1275,7 @@ class AnalysisTab(ctk.CTkFrame):
 
             lambda_0 = None
             if molecules:
-                all_species = get_species_data('species.txt')
+                all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')
                 if molecules[0] in all_species:
                     try:
                         lambda_0 = float(all_species[molecules[0]]['line'])

@@ -19,6 +19,7 @@ obs_list = obs_list.loc[obs_list['Order'] != 'ALL']
 print(obs_list)
 
 out_dir = DATADIR / 'combined'
+order_tell_dir = DATADIR / 'orders'
 
 
 obs_times = obs_list['DateObs'].unique()
@@ -47,50 +48,68 @@ for obs_time in obs_times:
         if subsub_df.empty:
             continue
         for i, row in subsub_df.iterrows():
-            file = DATADIR / row['Filename']
-            with fits.open(file) as hdul:
-                print(file)
-                hdu_0 = hdul[0]
-                data = hdul[1].data
+            file = DATADIR / row['Filename'].replace('orders', 'orders_raw')
+            hdul = fits.open(file)
+            print(file)
+            hdu_0 = hdul[0]
+            data = hdul[1].data
 
-                wave = data['WAVE']
-                flux = data['FLUX']
-                error = data['ERROR']
-                flat = data['FLAT']
-                order = np.full(len(wave), row['Order'])
+            wave = data['WAVE']
+            flux = data['FLUX']
+            error = data['ERROR']
+            flat = data['FLAT']
+            order = np.full(len(wave), row['Order'])
 
-                iter_spec = np.array([wave, flux, error, flat, order], dtype=float)
+            iter_spec = np.array([wave, flux, error, flat, order], dtype=float)
 
-                tell_file = DATADIR / 'tell_corr' / file.name
+            tell_file = DATADIR / 'tell_corr' / file.name
 
-                if tell_file.is_file():
-                    try:
-                        with fits.open(tell_file) as hdul_tell:
-                            data_tell = hdul_tell[1].data
+            if tell_file.is_file():
+                try:
+                    with fits.open(tell_file) as hdul_tell:
+                        data_tell = hdul_tell[1].data
 
-                    except OSError:
-                        print(f'Telluric file corrupted: {tell_file}')
-                        tell_spec = np.full((3, len(wave)), np.nan)
-
-                    else:
-                        m_wave = data_tell['mlambda'] * 1e4
-                        m_wave = transformations.angstrom_vac_to_air(m_wave)
-                        cflux = data_tell['cflux']
-                        m_trans = data_tell['mtrans']
-                        tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
-                        hdul[1]['M_WAVE'] = m_wave
-                        hdul[1]['CFLUX'] = cflux
-                        hdul[1]['MTRANS'] = m_trans
-                        hdul.writeto(file)
+                except OSError:
+                    print(f'Telluric file corrupted: {tell_file}')
+                    tell_spec = np.full((3, len(wave)), np.nan)
 
                 else:
-                    tell_spec = np.full((3, len(wave)), np.nan)
+                    m_wave = data_tell['mlambda'] * 1e4
+                    m_wave = transformations.angstrom_vac_to_air(m_wave)
+                    cflux = data_tell['cflux']
+                    m_trans = data_tell['mtrans']
+                    tell_spec = np.array([m_wave, cflux, m_trans], dtype=float)
+            else:
+                tell_spec = np.full((3, len(wave)), np.nan)
 
             if setting in [564, 860]:
                 iter_spec = np.concatenate((iter_spec, tell_spec), axis=0)
             
             cl_ang = setting_dependent_crop(iter_spec, setting)
             iter_spec = crop_spectrum(iter_spec, cl_ang[0], cl_ang[1])
+
+            # save separate order
+            col1 = fits.Column(name='WAVE', format='D', array=iter_spec[0])
+            col2 = fits.Column(name='FLUX', format='D', array=iter_spec[1])
+            col3 = fits.Column(name='FLUX_ERROR', format='D', array=iter_spec[2])
+            col4 = fits.Column(name='FLAT', format='D', array=iter_spec[3])
+
+            if tell_file.is_file():
+                col6 = fits.Column(name='M_WAVE', format='D', array=iter_spec[5])
+                col7 = fits.Column(name='CFLUX', format='D', array=iter_spec[6])
+                col8 = fits.Column(name='MTRANS', format='D', array=iter_spec[7])
+
+                coldefs = fits.ColDefs([col1, col2, col3, col4, col6, col7, col8])
+
+            else:
+                coldefs = fits.ColDefs([col1, col2, col3, col4])
+
+            hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
+
+            order_tell_hdul = fits.HDUList([hdu_0, hdu])
+
+            order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
+            hdul.close()
 
             out_spec = np.concatenate((out_spec, iter_spec), axis=1)
 
@@ -122,7 +141,7 @@ for obs_time in obs_times:
 
         hdu = fits.BinTableHDU.from_columns(coldefs, name='SCI')
 
-        file = DATADIR / row['Filename']
+        file = DATADIR / row['Filename'].replace('orders', 'orders_raw')
 
         with fits.open(file) as hdul:
             hdu_0 = hdul[0]
