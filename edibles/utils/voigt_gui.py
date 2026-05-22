@@ -59,8 +59,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
-    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 150/c)
-    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 150/c)
+    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 50/c)
+    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 50/c)
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
@@ -347,7 +347,6 @@ def main():
                     print(root.vlines.get(key))
                     if root.vlines.get(key) is None:
                         root.vlines[key] = plot1.axvline(x, color='red', linestyle='--')
-                        print('xdataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                         print(root.vlines[key].get_xdata())
                     else:
                         line = root.vlines[key]
@@ -496,7 +495,6 @@ def main():
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
         print_msg("Select wavelength range by clicking and dragging on the plot.")
-        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):

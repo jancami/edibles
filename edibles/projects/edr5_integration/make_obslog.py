@@ -22,6 +22,7 @@ obs_log_path = files('edibles') / 'data/DR5_ObsLog.csv'
 
 out_df = pd.DataFrame()
 for file in file_list:
+    print(file)
     with fits.open(file) as hdul:
         hdr = hdul[0].header
         data = hdul[1].data
