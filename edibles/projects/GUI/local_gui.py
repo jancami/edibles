@@ -31,6 +31,7 @@ from flux_wave_find import wave_flux_data
 from main import master_function
 from importlib.resources import files
 from edibles.utils import voigt_fitting
+import astropy.constants as ast
 
 # Speed of light in km/s
 c_light = ast.c.to('km/s')
