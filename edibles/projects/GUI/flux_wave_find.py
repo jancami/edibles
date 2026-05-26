@@ -23,16 +23,20 @@ def wave_flux_info(star_name=None, wave=None):
     
     return test
 
-def wave_flux_data(star_name= None, wave = None, wrange = None, file_number = None, file_name = None):
+def wave_flux_data(star_name=None, wave=None, wrange=None, file_number=None, file_name=None):
     if file_name is None:
         if file_number is None:
             print("Error: Must provide either file_name or file_number")
             return None, None
-        test = wave_flux_info(star_name= star_name, wave = wave)
+        test = wave_flux_info(star_name=star_name, wave=wave)
         if file_number >= len(test):
-             print(f"Error: file_number {file_number} out of range for {len(test)} files found.")
-             return None, None
+            print(f"Error: file_number {file_number} out of range for {len(test)} files found.")
+            return None, None
         file_name = test[file_number]
+    
+    # SANITIZE FILENAME FOR WINDOWS - replace colons with hyphens
+    if isinstance(file_name, str):
+        file_name = file_name.replace(':', '_')
     
     sp = EdiblesSpectrum(file_name)
     try:

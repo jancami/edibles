@@ -18,7 +18,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline, make_interp_spline
 from lmfit import Parameters, Model
 
-from main import master_function
+from edibles.projects.GUI.main import master_function
 
 
 def Voigt_fit_wrapper(**params_list):
@@ -176,7 +176,6 @@ def _generate_smart_knots(wavegrid, species_params, n_knots,
 
     return np.sort(np.unique(final_knots))
 
-
 def astro_simultaneous_fit(wavegrid, ydata, species_params,
                            n_knots=10, knots_x_array=None,
                            v_resolution=0.0, n_step=25, std_dev=0.002,
@@ -243,7 +242,8 @@ def astro_simultaneous_fit(wavegrid, ydata, species_params,
             if tie_v_rad:
                 params.add(f'v_rad_{species_idx}_{i}', expr=f'v_rad_0_{i}')
             else:
-                params.add(f'v_rad_{species_idx}_{i}', value=species_data['v_rad'][i], vary=True)
+                params.add(f'v_rad_{species_idx}_{i}', value=species_data['v_rad'][i],
+                        min=-30, max=30, vary=True)
 
     if len(ydata) == len(wavegrid):
         initial_knot_y = np.interp(knots_x_array, wavegrid, ydata)

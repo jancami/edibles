@@ -2,7 +2,7 @@ import re
 import numpy as np
 from scipy.interpolate import CubicSpline, make_interp_spline
 
-from astrovoigtfit import astro_simultaneous_fit
+from edibles.projects.GUI.astrovoigtfit import astro_simultaneous_fit
 
 
 def get_species_data(species_file='species.txt'):

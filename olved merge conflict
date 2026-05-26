@@ -1,0 +1,113 @@
+[1mdiff --cc edibles/projects/GUI/local_gui.py[m
+[1mindex 4ff5a4b,b09b4e2..0000000[m
+[1m--- a/edibles/projects/GUI/local_gui.py[m
+[1m+++ b/edibles/projects/GUI/local_gui.py[m
+[36m@@@ -25,18 -25,15 +25,25 @@@[m [mfrom edibles.projects.GUI.co_adding_flu[m
+  from matplotlib.ticker import AutoMinorLocator[m
+  import numpy as np[m
+  import json[m
+[31m -from main_run import get_species_data, astrovoigtfit_run[m
+[32m +from edibles.projects.GUI.main_run import get_species_data, astrovoigtfit_run[m
+  from edibles.utils.edibles_oracle import EdiblesOracle[m
+[32m++<<<<<<< HEAD[m
+[32m +from edibles.projects.GUI.flux_wave_find import wave_flux_data[m
+[32m +from edibles.projects.GUI.main import master_function[m
+[32m +from astropy import constants as ast[m
+[32m +from scipy.interpolate import CubicSpline[m
+[32m +from astropy.stats import mad_std[m
+[32m +import pandas as pd[m
+[32m++=======[m
+[32m+ from flux_wave_find import wave_flux_data[m
+[32m+ from main import master_function[m
+[32m+ from importlib.resources import files[m
+[32m+ from edibles.utils import voigt_fitting[m
+[32m++>>>>>>> 849e55844ecc0d8f3b4b758de89a37fbd7aa2556[m
+  [m
+  # Speed of light in km/s[m
+[31m -c_light = 299792.458[m
+[32m +c_light = ast.c.to('km/s')[m
+[32m +print([c_light])[m
+  [m
+  # Set appearance mode and default color theme[m
+  ctk.set_appearance_mode("Dark")[m
+[36m@@@ -1212,7 -1115,15 +1219,19 @@@[m [mclass AnalysisTab(ctk.CTkFrame)[m
+              if len(wave) == 0:[m
+                  raise ValueError("No data points in the specified wavelength range.")[m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +            species_file = 'species.txt'[m
+[32m++=======[m
+[32m+             n_knots = int(self.n_knots_entry.get())[m
+[32m+             knots_x_str = self.knots_x_entry.get()[m
+[32m+             knots_x_array = [float(x.strip()) for x in knots_x_str.split(',')] if knots_x_str.strip() else None[m
+[32m+             [m
+[32m+             species_file = files('edibles') / 'projects/GUI/species.txt'[m
+[32m+             [m
+[32m+             # Get Spline Order[m
+[32m+             order_map = {"Linear": 1, "Quadratic": 2, "Cubic": 3}[m
+[32m+             spline_order = order_map.get(self.cont_order_combo.get(), 3)[m
+[32m++>>>>>>> 849e55844ecc0d8f3b4b758de89a37fbd7aa2556[m
+  [m
+              # Read the "Fit σ" box. If the user typed garbage, just fall[m
+              # back to 0.002 — same as the old hardcoded default.[m
+[36m@@@ -1221,55 -1132,14 +1240,55 @@@[m
+              except ValueError:[m
+                  fit_std_dev = 0.002[m
+  [m
+[31m -            fitresult, continuum_normalized_flux, continuum, std_dev = astrovoigtfit_run([m
+[31m -                wave, flux, molecules, species_params, absorption_range, n_knots, knots_x_array,[m
+[31m -                species_file=species_file, spline_order=spline_order, std_dev=fit_std_dev,[m
+[32m +            # Pass the interactively-built continuum into astrovoigtfit_run if[m
+[32m +            # prep_spectra has been run[m
+[32m +[m
+[32m +            prep_continuum = self.plot_data.get('continuum')[m
+[32m +            has_interactive_continuum = ([m
+[32m +                prep_continuum is not None[m
+[32m +                and not np.all(prep_continuum == 1.0)  # not the dummy from coadd[m
+              )[m
+[31m -            [m
+[32m +            print(f"has_interactive_continuum: {has_interactive_continuum}")[m
+[32m +            print(f"wave range: {wave.min():.3f} to {wave.max():.3f}")[m
+[32m +            if has_interactive_continuum:[m
+[32m +                continuum_slice = prep_continuum[mask][m
+[32m +                norm_flux_check = flux / continuum_slice[m
+[32m +                print(f"norm_flux range: {norm_flux_check.min():.4f} to {norm_flux_check.max():.4f}")[m
+[32m +            else:[m
+[32m +                print(f"flux range: {flux.min():.4f} to {flux.max():.4f}")[m
+[32m +            if has_interactive_continuum:[m
+[32m +                [m
+[32m +                continuum_slice = prep_continuum[mask][m
+[32m +                norm_flux = flux / continuum_slice[m
+[32m +[m
+[32m +                # Use interactively measured std if available, else fall back to user input[m
+[32m +                fit_std_dev = self.plot_data.get('fit_std_dev', fit_std_dev)[m
+[32m +                print(f"has_interactive_continuum: {has_interactive_continuum}")[m
+[32m +                print(f"fit_std_dev being used: {fit_std_dev}")[m
+[32m +                print(f"fit_std_dev from prep: {self.plot_data.get('fit_std_dev', 'NOT SET')}")[m
+[32m +                fitresult, _, __, std_dev = astrovoigtfit_run([m
+[32m +                    wave, norm_flux, molecules, species_params, absorption_range,[m
+[32m +                    n_knots=0, knots_x_array=None,[m
+[32m +                    species_file=species_file, spline_order=3, std_dev=fit_std_dev,[m
+[32m +                )[m
+[32m +                continuum_normalized_flux = norm_flux[m
+[32m +                continuum = continuum_slice[m
+[32m +            else:[m
+[32m +                fitresult, continuum_normalized_flux, continuum, std_dev = astrovoigtfit_run([m
+[32m +                    wave, flux, molecules, species_params, absorption_range,[m
+[32m +                    n_knots=10, knots_x_array=None,[m
+[32m +                    species_file=species_file, spline_order=3, std_dev=fit_std_dev,[m
+[32m +                )[m
+[32m +                continuum_slice = continuum[m
+[32m +            if has_interactive_continuum and self.plot_data.get('fit_std_dev') is None:[m
+[32m +                messagebox.showwarning([m
+[32m +                "Missing σ Estimate",[m
+[32m +                "You haven't run 'Continuum Fitting' yet. σ will default to the Fit σ box value.\n\nClick 'Continuum Fitting' first for best results."[m
+[32m +                )[m
+[32m +[m
+              lambda_0 = None[m
+              if molecules:[m
+[31m-                 all_species = get_species_data('species.txt')[m
+[32m+                 all_species = get_species_data(files('edibles') / 'projects/GUI/species.txt')[m
+                  if molecules[0] in all_species:[m
+                      try:[m
+                          lambda_0 = float(all_species[molecules[0]]['line'])[m

@@ -16,23 +16,26 @@ EdiblesApp at the bottom is the app window. AnalysisTab is one analysis
 session — you can open multiple tabs.
 """
 
+#next step: include the spectrum to be loaded with continuum too
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from co_adding_flux import coadd_spectra
+from edibles.projects.GUI.co_adding_flux import coadd_spectra
 from matplotlib.ticker import AutoMinorLocator
 import numpy as np
 import json
-from main_run import get_species_data, astrovoigtfit_run
+from edibles.projects.GUI.main_run import get_species_data, astrovoigtfit_run
 from edibles.utils.edibles_oracle import EdiblesOracle
-from flux_wave_find import wave_flux_data
-from main import master_function
+from edibles.projects.GUI.flux_wave_find import wave_flux_data
+from edibles.projects.GUI.main import master_function
 from importlib.resources import files
 from edibles.utils import voigt_fitting
 from astropy import constants as ast
 from scipy.interpolate import CubicSpline
+import pandas as pd
 
 # Speed of light in km/s
 c_light = ast.c.to('km/s')
@@ -292,6 +295,24 @@ class AnalysisTab(ctk.CTkFrame):
             command= self.prep_spectra,
         )
         self.interp_btn.pack(side="left", padx=10, pady=4)
+
+        self.interp_btn = ctk.CTkButton(
+            self.prep_frame,
+            text="Save Continuum",
+            fg_color="#7B2CBF",
+            hover_color="#5A1E8C",
+            command= self.save_continuum,
+        )
+        self.interp_btn.pack(side="left", padx=11, pady=4)
+        
+        self.interp_btn = ctk.CTkButton(
+            self.prep_frame,
+            text="Load Continuum",
+            fg_color="#7B2CBF",
+            hover_color="#5A1E8C",
+            command= self.load_csv,
+        )
+        self.interp_btn.pack(side="left", padx=12, pady=4)
         
         self.local_files = []
         self.local_selected_vars = []
@@ -321,6 +342,7 @@ class AnalysisTab(ctk.CTkFrame):
         preview      = [None]
 
         def click_continuum(event):
+        
             if event.button == 1:
                 lam, flx = event.xdata, event.ydata
                 cont_anchors.append((lam, flx))
@@ -355,7 +377,7 @@ class AnalysisTab(ctk.CTkFrame):
         plt.tight_layout()
         plt.show()
         fig_cont.canvas.mpl_disconnect(cid_cont)
-
+        
         if len(cont_anchors) < 2:
             messagebox.showwarning("Warning", "Need at least 2 continuum anchors. Continuum fitting cancelled.")
             return
@@ -1031,9 +1053,42 @@ class AnalysisTab(ctk.CTkFrame):
             try:
                 with open(file_path, 'w') as f:
                     json.dump(data, f, indent=4)
-                messagebox.showinfo("Saved", "Session saved successfully!")
+                messagebox.showinfo("Saved", "Session saved!")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to save session: {e}")
+                messagebox.showerror("Error", f"Session not saved: {e}")
+
+    def load_csv(self):
+        file_path = filedialog.askopenfilename(
+            title="Select CSV file",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        if not file_path:
+            return
+
+        try:
+            df = pd.read_csv(file_path)
+            wave = df['wave'].to_numpy(dtype=float)
+            flux = df['norm_flux'].to_numpy(dtype=float)
+
+            self.plot_data = {
+                'wave':      wave,
+                'flux':      flux,
+                'continuum': np.ones_like(wave),
+                'norm_flux': flux,
+                'model':     np.ones_like(wave),
+                'residuals': np.zeros_like(wave),
+                'mode':      'Local Mode',
+                'sigma':     np.full_like(wave, 0.002),
+            }
+
+            self.update_plots(plot_title=f"Loaded Continuum {file_path.split('/')[-1]}. σ = 0.002")
+            self.local_status_label.configure(
+                text=f"Loaded {len(wave)} points. Check off 'Plot Normalized' in Plot Settings, then click 'Update Plots'; now you're ready to fit!",
+                text_color="green"
+            )
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load CSV: {e}")
 
     def load_session(self):
         """Loads inputs from a JSON file."""
@@ -1316,7 +1371,7 @@ class AnalysisTab(ctk.CTkFrame):
         plt.close('all') # Clear previous figures to prevent memory leak
         if not self.plot_data:
             return
-            
+           
         # Get Settings
         theme = self.theme_var.get()
         show_grid = self.grid_var.get()
@@ -1774,6 +1829,27 @@ class AnalysisTab(ctk.CTkFrame):
         self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.tabview.tab("Voigt Fit"))
         self.toolbar2.update()
         self.toolbar2.pack(side="bottom", fill="x")
+
+    def save_continuum(self):
+            """
+            Save the normalized spectrum after continuum fitted."""
+            if not self.plot_data or 'norm_flux' not in self.plot_data:
+                messagebox.showwarning("Warning", "No normalised spectrum to save. Run continuum fitting first.")
+                return
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                title="Save Normalised Spectrum"
+            )
+            if file_path:
+                import pandas as pd
+                df = pd.DataFrame({
+                    'wave': self.plot_data['wave'],
+                    'norm_flux': self.plot_data['norm_flux'],
+                })
+                df.to_csv(file_path, index=False)
+                messagebox.showinfo("Saved", f"Normalised spectrum saved to {file_path}")
+
 
 class EdiblesApp(ctk.CTk):
     def __init__(self):
