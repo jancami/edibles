@@ -1,4 +1,4 @@
-from edibles.utils.voigt_fitting import voigt_fit_wrapper
+from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper
 import tkinter as tk
 from importlib.resources import files
 import pandas as pd
