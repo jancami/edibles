@@ -119,7 +119,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             n_comp = row['n_comp']  # Column density component
             sp = row['Species']  # Species
             # Add component
-            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}_{sp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
+            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
         # Add instrumental broadening
         body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, edgeHandling="firstlast")')
         
@@ -167,7 +167,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max', 'v_rad_min','v_rad_max']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
     for _, row in c_comps.iterrows():
@@ -176,7 +176,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         n_comp = row['n_comp']
         # Shared parameters
         params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
-        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_min'], max=row[f'v_rad_max'])
+        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row['v_rad_min'], max=row['v_rad_max'])
         params[f'n_{n_comp}'].set(value=1e9, min=0)
 
     result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
