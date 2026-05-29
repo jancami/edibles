@@ -646,6 +646,7 @@ def main():
             # load spectrum
             root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
 
+            # generating the fitting function so it can be used for loading the results
             voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
             root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav', funcdefs={'voigt_n_comp': voigt_n_comp})
