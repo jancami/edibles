@@ -54,7 +54,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df.loc[:, f'v_rad_min'] = -100.0
     i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
-    i_df.loc[:, 'n_comp'] = [n_comp + i for i in range(len(i_df))]   # change 
+    i_df.loc[:, 'n_comp'] = n_comp
     i_df.loc[:, f'b_init'] = 0.1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
@@ -261,6 +261,11 @@ def main():
 
         # Make initial dataframe (include wavelength range)
         ext_df = make_default_df(elem_df, v_comp, n_comp)
+
+        for i, row in ext_df.iterrows():
+            if row['WavelengthAir'] == 4229.347:
+                ext_df.loc[i, 'n_comp'] += 1
+
         print("ext_df", ext_df.columns)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
