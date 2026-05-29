@@ -4,6 +4,7 @@ from edibles import DATADIR
 import matplotlib.pyplot as plt
 from edibles.utils.voigt_profile import voigt_optical_depth
 from lmfit import Model
+from lmfit.model import ModelResult
 import numpy as np
 from importlib.resources import files
 import pandas as pd
@@ -12,12 +13,34 @@ from pprint import pprint
 from PyAstronomy import pyasl
 
 
+def add_voigt(x: np.array, y: np.array, lambda0: float, b: float, n: float, f: float, gamma: float, v_rad: float) -> np.array:
+    """
+    Multiplies a flux array y with a voigt absorption line of an element or molecule.
 
-def cont_slope(x, cont, slope):
-    return (cont + slope * x)
+    Parameters
+    ----------
+    x : np.array
+        Wavelength array.
+    y : np.array
+        Flux array.
+    lambda0 : float
+        Central wavelength of voigt line.
+    b : float
+        Gaussian broadening parameter of voigt line.
+    n : float
+        Column desity of the species.
+    f : float
+        Oscillator strength of the transition.
+    gamma : float
+        Natural line width of the transition (Lorentzian component).
+    v_rad : float
+        Radial velocity.
 
-
-def add_voigt(x, y, lambda0, b, n, f, gamma, v_rad):
+    Returns
+    -------
+    np.array
+        New flux array with additional voigt component.
+    """
     return y * np.exp(-voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad))
 
 def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
@@ -32,87 +55,103 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     Returns
     -------
     Callable
-        Mutli voigt absorption function.
+        Multi voigt absorption function.
     """
+    # Get individual wavelength ranges
     range_df = input_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+    # Get individual velocity, Gaussian width and column density components.
     c_comps = input_df[['v_comp', 'b_comp', 'n_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
+    # initialize list of parameters for the generated function
     comp_param_names = []
+    # initialize list of v_rad, b and n components which are already included so they dont get included twice.
     incl_vrad = []
     incl_b = []
     incl_n = []
     for _, row in c_comps.iterrows():
-        v_rad = row['v_comp']
-        b = row['b_comp']
-        n = row['n_comp']
-        sp = row['Species']
-        comp_param_names += [f'n_{v_rad}_{sp}']
-        if v_rad not in incl_vrad:
-            comp_param_names += [f'v_rad_{v_rad}']
-        if b not in incl_b:
-            comp_param_names += [f'b_{b}']
-        if n not in incl_n:
-            comp_param_names += [f'n_{n}']
+        v_comp = row['v_comp']  # Radial velocity component
+        b_comp = row['b_comp']  # Gaussian width component
+        n_comp = row['n_comp']  # Column density component
+        sp = row['Species']  # Species
+        if v_comp not in incl_vrad:
+            comp_param_names += [f'v_rad_{v_comp}']  # Add column density parameter of component v_rad 
+        if b_comp not in incl_b:
+            comp_param_names += [f'b_{b_comp}']  # Add b parameter of component b
+        if n_comp not in incl_n:
+            comp_param_names += [f'n_{n_comp}']  # Add column density parameter of component n 
 
-            incl_vrad.append(v_rad)
-            incl_b.append(b)
-            incl_n.append(n)
+            # add patameters to list of included components, so they dont get included twice.
+            incl_vrad.append(v_comp)
+            incl_b.append(b_comp)
+            incl_n.append(n_comp)
 
+    # Add atomic/molecular data for transitions
     for j, row in input_df.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
-    all_params = ['x'] + comp_param_names
-    signature_str = ", ".join(all_params)
-    func_name   = f"voigt_n_comp"
+    all_params = ['x'] + comp_param_names  # Add wavelength as parameter
+    signature_str = ", ".join(all_params)  # Join list to string
+    func_name   = f"voigt_n_comp"  # Define function name
     
+    # Start writing lines of function definition
     body_lines  = [f"def {func_name}({signature_str}):"]
-    body_lines.append("    segments = []")
+    body_lines.append("    segments = []")  # List of flux output
 
+    # Iterate trough wavelength windows
     for i, w_range in range_df.iterrows():
-        mean_wl = np.mean(w_range)
+        # define instrumental resolution 
+        # TODO: refine
+        mean_wl = np.mean(w_range)  # mean wavelength of wavelength window
         if mean_wl < 5000:
             inst_res = 80000
         else:
             inst_res = 100000
-
+        # Take spectrum within window
         body_lines.append(f'    x{i} = x[(x >= {w_range["w_min"]}) & (x <= {w_range["w_max"]})]')
+        # Initalize constant flux of 1
         body_lines.append(f'    y{i} = np.ones(len(x{i}))')
+        # Get lines which are in the wavelength window
         sub_df = input_df.loc[(input_df['w_min'] == w_range["w_min"]) & (input_df['w_max'] == w_range["w_max"])]
+        # Add voigt component for each line in the window
         for j, row in sub_df.iterrows():
-            v_rad = row['v_comp']
-            b = row['b_comp']
-            n = row['n_comp']
-            sp = row['Species']
-            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b}, n_{n}_{sp}, f_{j}, gamma_{j}, v_rad_{v_rad})')
+            v_comp = row['v_comp']  # Radial velocity component
+            b_comp = row['b_comp']  # Gaussian width component
+            n_comp = row['n_comp']  # Column density component
+            sp = row['Species']  # Species
+            # Add component
+            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}_{sp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
+        # Add instrumental broadening
         body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, edgeHandling="firstlast")')
         
+        # Append flux to output flux array
         body_lines.append(f'    segments.append(y{i})')
-    body_lines.append("    return np.concatenate(segments)")
+    body_lines.append("    return np.concatenate(segments)")  # Return flux
 
     
-    print("\n".join(body_lines))
-    namespace = {"np": np, "add_voigt": add_voigt, "pyasl": pyasl}
+    print("\n".join(body_lines))  # Join lines to one string
+    namespace = {"np": np, "add_voigt": add_voigt, "pyasl": pyasl}  # Define used functions
+    # Turn string into function
     exec("\n".join(body_lines), namespace)
     func = namespace[func_name]
     func.__doc__ = f"Auto-generated n-component Voigt profile.\nParameters: {signature_str}"
-    return func
+    return func  # Return function
 
 
-def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
+def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
     """
-    Generates a voigt model from 
+    Generates a voigt model from a fitting DataFrame and an input spectrum.
 
     Parameters
     ----------
     fit_df : pd.DataFrame
-        _description_
+        DataFrame including species names, wavelengths, values and cloud component numbers for v_rad, b and n. 
     fit_spec : np.array
-        _description_
+        Fitted spectrum. [wave, flux, error]
 
     Returns
     -------
-    _type_
-        _description_
+    ModelResult
+        Fitting result of multi component voigt model.
     """
     # generate fitting function
     generated_fit_function = make_multi_comp_voigt(fit_df)
@@ -120,9 +159,6 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
     vmodel = Model(generated_fit_function)
     # generate parameters
     params = vmodel.make_params()
-    # extract fitting ranges
-    range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
-
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
@@ -131,18 +167,17 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
-    for k, row in c_comps.iterrows():
+    for _, row in c_comps.iterrows():
         v_comp = row['v_comp']
-        b = row['b_comp']
-        sp = row['Species']
+        b_comp = row['b_comp']
+        n_comp = row['n_comp']
         # Shared parameters
-        params[f'b_{b}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
+        params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_min'], max=row[f'v_rad_max'])
-
-        params[f'n_{v_comp}_{sp}'].set(value=1e9, min=0)
+        params[f'n_{n_comp}'].set(value=1e9, min=0)
 
     result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
 
