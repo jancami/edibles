@@ -30,7 +30,7 @@ molecular_line_list = pd.read_csv(molecular_line_file)
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
-def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
+def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFrame:
     """
     Create a default DataFrame for Voigt fitting.
 
@@ -40,7 +40,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
         DataFrame loaded from a line list.
     v_comp : int
         velocity component number (used to link lines that belong to the same component and set the same initial v_rad and b values)
-
+    n_comp : int
+        column density component, free from b and v.
     Returns
     -------
     pd.DataFrame
@@ -53,6 +54,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
     # i_df.loc[:, f'v_rad_min'] = -100.0
     # i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
+    i_df.loc[:, 'n_comp'] = [n_comp + i for i in range(len(i_df))]   # change 
     i_df.loc[:, f'b_init'] = 0.1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
@@ -176,7 +178,7 @@ def results_to_df(result, fit_df):
             if row['v_comp'] == v_comp['v_comp'] and row['Species'] == v_comp['Species']:
                 fit_df.loc[k, f'v_rad_fit'] = best_values[f'v_rad_{v_comp["v_comp"]}']
                 fit_df.loc[k, f'b_fit'] = best_values[f'b_{v_comp["v_comp"]}']
-                fit_df.loc[k, f'n_fit'] = best_values[f'n_{v_comp["v_comp"]}_{v_comp["Species"]}']
+                fit_df.loc[k, 'n_fit']     = best_values[f'n_{int(row["n_comp"])}_{row["Species"]}'] # change
 
     print(fit_df)
 
@@ -220,9 +222,10 @@ def main():
         elem_df = atomic_line_list.loc[elem_inds]
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
+        n_comp = root.fit_df['n_comp'].max() + 1 if len(root.fit_df) > 0 else 0 # change
 
         # Make initial dataframe (include wavelength range)
-        ext_df = make_default_df(elem_df, v_comp)
+        ext_df = make_default_df(elem_df, v_comp, n_comp)
         print(ext_df)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
@@ -254,9 +257,10 @@ def main():
         elem_df.replace('CH+', 'CHplus', inplace=True)
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
+        n_comp = root.fit_df['n_comp'].max() + 1 if len(root.fit_df) > 0 else 0 # change
 
         # Make initial dataframe (include wavelength range)
-        ext_df = make_default_df(elem_df, v_comp)
+        ext_df = make_default_df(elem_df, v_comp, n_comp)
         print("ext_df", ext_df)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
