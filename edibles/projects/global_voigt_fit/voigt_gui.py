@@ -55,7 +55,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, 'n_comp'] = n_comp
-    i_df.loc[:, f'b_init'] = 0.1
+    i_df.loc[:, f'b_init'] = 1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
 

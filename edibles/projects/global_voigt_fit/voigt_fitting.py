@@ -15,14 +15,14 @@ from PyAstronomy import pyasl
 
 def add_voigt(x: np.array, y: np.array, lambda0: float, b: float, n: float, f: float, gamma: float, v_rad: float) -> np.array:
     """
-    Multiplies a flux array y with a voigt absorption line of an element or molecule.
+    Adds a voigt absorption line of an element or molecule to an optical depth array.
 
     Parameters
     ----------
     x : np.array
         Wavelength array.
     y : np.array
-        Flux array.
+        Optical depth array.
     lambda0 : float
         Central wavelength of voigt line.
     b : float
@@ -39,9 +39,9 @@ def add_voigt(x: np.array, y: np.array, lambda0: float, b: float, n: float, f: f
     Returns
     -------
     np.array
-        New flux array with additional voigt component.
+        New optical depth array with additional voigt component.
     """
-    return y * np.exp(-voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad))
+    return y + voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad)
 
 def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     """
@@ -108,8 +108,8 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             inst_res = 100000
         # Take spectrum within window
         body_lines.append(f'    x{i} = x[(x >= {w_range["w_min"]}) & (x <= {w_range["w_max"]})]')
-        # Initalize constant flux of 1
-        body_lines.append(f'    y{i} = np.ones(len(x{i}))')
+        # Initalize optical depth of 0
+        body_lines.append(f'    y{i} = np.zeros(len(x{i}))')
         # Get lines which are in the wavelength window
         sub_df = input_df.loc[(input_df['w_min'] == w_range["w_min"]) & (input_df['w_max'] == w_range["w_max"])]
         # Add voigt component for each line in the window
@@ -117,9 +117,10 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             v_comp = row['v_comp']  # Radial velocity component
             b_comp = row['b_comp']  # Gaussian width component
             n_comp = row['n_comp']  # Column density component
-            sp = row['Species']  # Species
             # Add component
             body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
+        # convert to transmission spectrum
+        body_lines.append(f'    y{i} = np.exp(-y{i})')
         # Add instrumental broadening
         body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, edgeHandling="firstlast")')
         
@@ -175,11 +176,11 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         b_comp = row['b_comp']
         n_comp = row['n_comp']
         # Shared parameters
-        params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
+        params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'], vary=True)
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row['v_rad_min'], max=row['v_rad_max'])
         params[f'n_{n_comp}'].set(value=1e9, min=0)
 
-    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
+    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2]**2)
 
     return result
 
