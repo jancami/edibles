@@ -108,7 +108,7 @@ for obs_time in obs_times:
 
             order_tell_hdul = fits.HDUList([hdu_0, hdu])
 
-            order_tell_hdul.writeto(order_tell_dir / file.name, overwrite=True)
+            order_tell_hdul.writeto(order_tell_dir / file.name.replace(':', '_'), overwrite=True)
             hdul.close()
 
             out_spec = np.concatenate((out_spec, iter_spec), axis=1)
@@ -146,7 +146,7 @@ for obs_time in obs_times:
         with fits.open(file) as hdul:
             hdu_0 = hdul[0]
 
-            out_file = file.name.replace(f'_O{row["Order"]}', '')
+            out_file = file.name.replace(f'_O{row["Order"]}', '').replace(':', '_')
 
             out_hdul = fits.HDUList([hdu_0, hdu])
             out_hdul.writeto(out_dir / out_file, overwrite=True)
