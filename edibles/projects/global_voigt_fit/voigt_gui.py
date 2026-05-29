@@ -1,11 +1,11 @@
-from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper
+from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper, make_multi_comp_voigt
 import tkinter as tk
 from importlib.resources import files
 import pandas as pd
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 import numpy as np
-from edibles.projects.edr5_integration import dr5_io, util_functions
+from edibles.projects.edr5_integration import util_functions
 from edibles import DATADIR
 from PyAstronomy import pyasl
 import matplotlib.pyplot as plt
@@ -646,8 +646,9 @@ def main():
             # load spectrum
             root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
 
+            voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
-            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav')
+            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav', funcdefs={'voigt_n_comp': voigt_n_comp})
 
             range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
