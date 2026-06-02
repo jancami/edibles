@@ -1,7 +1,7 @@
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 import numpy as np
 import matplotlib.pyplot as plt
-from voigt_profile import voigt_profile
+from voigt_profile import voigt_optical_depth
 
 
 # =========
@@ -36,9 +36,9 @@ flux_norm = flux_norm[mask]
 # 4. Líneas CN (valores físicos)
 # =========
 
-R0 = 3874.608
-R1 = 3873.998
-P1 = 3875.763
+R0 = 3874.6059
+R1 = 3873.9939
+P1 = 3875.759
 
 
 # =========
@@ -46,7 +46,6 @@ P1 = 3875.763
 # =========
 
 continuum = np.median(flux_norm)
-tau0_main = -np.log(np.min(flux_norm) / continuum)
 
 
 # =========
@@ -56,29 +55,27 @@ tau0_main = -np.log(np.min(flux_norm) / continuum)
 sigma = 0.014
 gamma = 0.004
 
+n = 1e23
+v_rad=-14
+
+f0 = 0.342 #Para R(0) = 3874.6059
+f1= 0.0228 #Para R(1) = 3873.9939
+f2= 0.0114 #Para P(1) = 3875.759
+
 
 # =========
 # 7. Perfiles Voigt individuales
 # =========
 
-profile_R0 = voigt_profile(wave - R0, sigma, gamma)
-profile_R1 = voigt_profile(wave - R1, sigma, gamma)
-profile_P1 = voigt_profile(wave - P1, sigma, gamma)
+profile_R0 = voigt_optical_depth(wave, lambda0=R0, b=sigma, gamma=gamma, N=n, v_rad=v_rad, f=f0)
+profile_R1 = voigt_optical_depth(wave, lambda0=R1, b=sigma, gamma=gamma, N=n, v_rad=v_rad, f=f1)
+profile_P1 = voigt_optical_depth(wave, lambda0=P1, b=sigma, gamma=gamma, N=n, v_rad=v_rad, f=f2)
 
-# Normalizar cada perfil
-profile_R0 = profile_R0 / np.max(profile_R0)
-profile_R1 = profile_R1 / np.max(profile_R1)
-profile_P1 = profile_P1 / np.max(profile_P1)
-
+print(profile_R0, profile_R1, profile_P1)
 
 # =========
 # 8. Profundidades relativas (IMPORTANTE)
 # =========
-
-# 🔬 Estas son aproximadas — puedes ajustarlas
-tau_R0 = tau0_main
-tau_R1 = 0.09 * tau0_main
-tau_P1 = 0.07 * tau0_main
 
 
 
@@ -87,11 +84,8 @@ tau_P1 = 0.07 * tau0_main
 # 9. Modelo multilínea (suma de τ)
 # =========
 
-tau_total = (
-    tau_R0 * profile_R0
-    + tau_R1 * profile_R1
-    + tau_P1 * profile_P1
-)
+tau_total = profile_R0 + profile_R1 + profile_P1
+
 
 fit_flux = continuum * np.exp(-tau_total)
 
@@ -112,3 +106,5 @@ plt.ylabel("Normalized Flux")
 
 plt.legend()
 plt.show()
+
+
