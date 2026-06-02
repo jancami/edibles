@@ -69,6 +69,37 @@ def line_intensity(bpp, dpp, jp, jpp, t, k=my_k, dk=my_dk):
 
 
 def linear_stick_model(bp, dp, b, d, origin, j_min, j_max, t, k=my_k, dk=my_dk):
+    """
+    Makes a line list of molecular transitions.
+
+    Parameters
+    ----------
+    bp : _type_
+        _description_
+    dp : _type_
+        _description_
+    b : _type_
+        _description_
+    d : _type_
+        _description_
+    origin : _type_
+        _description_
+    j_min : _type_
+        _description_
+    j_max : _type_
+        _description_
+    t : _type_
+        _description_
+    k : _type_, optional
+        _description_, by default my_k
+    dk : _type_, optional
+        _description_, by default my_dk
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     my_line_list = pd.DataFrame()
     # R-branch
     j_start = np.max([1, j_min])
