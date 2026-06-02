@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from importlib.resources import files
 
-print(os.environ)
+#print(os.environ)
 
 if 'EDIBLES_DATARELEASE' in os.environ:
     DATARELEASE = os.environ['EDIBLES_DATARELEASE']
