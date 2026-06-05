@@ -58,6 +58,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df.loc[:, f'b_init'] = 1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
+    i_df.loc[:, f'n_init'] = 1e15
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
@@ -222,6 +223,17 @@ def main():
     root.weight_entry = tk.Entry(root)
     root.weight_entry.grid(column=0, row=elnum+15)
 
+    # Add text field for column densities
+    n_lbl = tk.Label(root, text="Enter column densities (comma separated):")
+    n_lbl.grid(column=0, row=elnum+16)
+    root.n_entry = tk.Entry(root)
+    root.n_entry.grid(column=0, row=elnum+17)
+
+    # Add text field for b values
+    b_lbl = tk.Label(root, text="Enter b values (comma separated):")
+    b_lbl.grid(column=0, row=elnum+18)
+    root.b_entry = tk.Entry(root)
+    root.b_entry.grid(column=0, row=elnum+19)
 
 
     # function to display text when
@@ -252,6 +264,17 @@ def main():
         print_msg(f'Adding a species {elem} to fit_df.')
         print(root.fit_df)
         # plot_fit_info()
+        print(ext_df)
+
+        # Add default n and b values to text fields if they are empty
+        n_comps = root.fit_df[['n_comp', 'n_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['n_comp'])
+        n_init_list = [f'{i:.2e}' for i in n_comps['n_init']]
+        root.n_entry.delete(0, tk.END)
+        root.n_entry.insert(0, ", ".join(n_init_list))
+
+        b_comps = root.fit_df[['b_comp', 'b_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['b_comp'])
+        root.b_entry.delete(0, tk.END)
+        root.b_entry.insert(0, ", ".join(b_comps['b_init'].astype(str).values))
 
     def add_ch_plus():
         molec = 'CH+'
@@ -458,7 +481,8 @@ def main():
         weight_list = np.ones(len(range_df))
         weight_string = ", ".join([str(w) for w in weight_list])
 
-        root.weight_entry.insert(0, weight_string)
+        if root.weight_entry.get() == "":
+            root.weight_entry.insert(0, weight_string)
 
 
     load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
@@ -578,6 +602,67 @@ def main():
     range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
     range_btn.grid(column=0, row=elnum+7)
 
+    def guesses_to_df():
+        # Get n and b values from text fields and copy to fit_df
+        n_string = root.n_entry.get()
+        b_string = root.b_entry.get()
+        n_values = [float(n) for n in n_string.split(',')]
+        b_values = [float(b) for b in b_string.split(',')]
+
+        for n_comp, n_init in enumerate(n_values):
+            root.fit_df.loc[root.fit_df['n_comp'] == n_comp, 'n_init'] = n_init
+
+        for b_comp, b_init in enumerate(b_values):
+            root.fit_df.loc[root.fit_df['b_comp'] == b_comp, 'b_init'] = b_init
+
+
+    def plot_init_guess():
+        # multi_comp_voigt = make_multi_comp_voigt(root.fit_df)
+
+        weight_str = root.weight_entry.get()
+        range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        for i, wave_range in range_df.iterrows():
+            for k, row in root.fit_df.iterrows():
+                if row['w_min'] == wave_range['w_min'] and row['w_max'] == wave_range['w_max']:
+                    if weight_str:
+                        weights = [float(w) for w in weight_str.split(',')]
+                        if len(weights) == len(range_df):
+                            weight = weights[i]
+                            root.fit_df.loc[k, 'weight'] = weight
+                        else:
+                            print_msg("Number of weights does not match number of fit windows. Ignoring weights.")
+
+        guesses_to_df()
+        params, guess = voigt_fit_wrapper(root.fit_df, root.fit_spec, fit=False)
+
+        for i, wave_range in range_df.iterrows():
+            # adding the subplot
+            j = i // ncols
+            if nrows == 1:
+                plot1 = root.axs[i]
+            else:
+                plot1 = root.axs[j, i % ncols]
+
+            plot1.clear()
+            root.vlines = {}
+
+            plot_spec = root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])]
+            # plot1.plot(plot_spec[0], plot_spec[1], 'k', label = 'Data')
+            if root.errorbar:
+                plot1.errorbar(plot_spec[0], plot_spec[1], yerr=plot_spec[2], color='k', label = 'Data')
+            else:
+                plot1.plot(plot_spec[0], plot_spec[1], color='k', label = 'Data')
+            plot1.plot(plot_spec[0], guess[(root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])], label='Init guess', color='b')
+            plot1.legend()
+            root.canvas.draw()
+
+        return
+
+    # plot initial guess for fit
+    guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
+    guess_btn.grid(column=0, row=elnum+20)
+
 
     # fitting
     def fit_spectrum():
@@ -590,6 +675,8 @@ def main():
             return
         
         print_msg('Fitting voigt model.')
+
+        guesses_to_df()
 
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
@@ -895,7 +982,7 @@ def main():
     mask_btn.grid(column=0, row=elnum+13)
 
     root.grid_columnconfigure(1, weight=1)
-    root.grid_rowconfigure(elnum+17, weight=1)
+    root.grid_rowconfigure(elnum+20, weight=1)
 
     root.mainloop()
 
