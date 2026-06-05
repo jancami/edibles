@@ -2,14 +2,14 @@
     Model(continuum_voigt_wrapper)
 [[Fit Statistics]]
     # fitting method   = leastsq
-    # function evals   = 30
+    # function evals   = 85
     # data points      = 20
     # variables        = 3
-    chi-square         = 27688.8261
-    reduced chi-square = 1628.75448
-    Akaike info crit   = 150.661039
-    Bayesian info crit = 153.648236
-    R-squared          = -0.20437775
+    chi-square         = 21.6032818
+    reduced chi-square = 1.27078128
+    Akaike info crit   = 7.54225928
+    Bayesian info crit = 10.5294561
+    R-squared          = 0.99906032
 [[Variables]]
     n_species:      1 (fixed)
     v_resolution:   3 (fixed)
@@ -19,9 +19,9 @@
     f_0_0:          0.3331 (fixed)
     gamma_0_0:      3.74e+07 (fixed)
     n_component_0:  1 (fixed)
-    b_0_0:          0.20051673 +/- 50.3686571 (25119.43%) (init = 1)
-    N_0_0:          1.8930e+10 +/- 2.6333e+14 (1391102.79%) (init = 1e+12)
-    v_rad_0_0:      4.96138864 +/- 342.253449 (6898.34%) (init = 5)
+    b_0_0:          0.78797757 +/- 0.01076743 (1.37%) (init = 1)
+    N_0_0:          5.1893e+11 +/- 8.7746e+09 (1.69%) (init = 1e+12)
+    v_rad_0_0:      8.97672250 +/- 0.00691383 (0.08%) (init = 10)
     knot_y_0:       1.005317 (fixed)
     knot_y_1:       1.006214 (fixed)
     knot_y_2:       1.001607 (fixed)
@@ -30,6 +30,4 @@
     knot_y_5:       1.000821 (fixed)
     knot_y_6:       0.9994447 (fixed)
 [[Correlations]] (unreported correlations are < 0.100)
-    C(b_0_0, N_0_0)     = -0.9292
-    C(N_0_0, v_rad_0_0) = +0.7228
-    C(b_0_0, v_rad_0_0) = -0.4164
+    C(b_0_0, N_0_0) = -0.4037
