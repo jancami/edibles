@@ -144,7 +144,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     return func  # Return function
 
 
-def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
+def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> ModelResult:
     """
     Generates a voigt model from a fitting DataFrame and an input spectrum.
 
@@ -176,7 +176,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max', 'v_rad_min', 'v_rad_max']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max', 'v_rad_min', 'v_rad_max', 'n_init']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
     for _, row in c_comps.iterrows():
@@ -186,7 +186,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         # Shared parameters
         params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'], vary=True)
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row['v_rad_min'], max=row['v_rad_max'])
-        params[f'n_{n_comp}'].set(value=1e9, min=0)
+        params[f'n_{n_comp}'].set(value=row['n_init'], min=0)
 
     # convert weights for individual windows to array of length fit_spec
     weights = np.ones(len(fit_spec[0]))
@@ -195,9 +195,13 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
     for i, wave_range in range_df.iterrows():
         weights[(fit_spec[0] >= wave_range['w_min']) & (fit_spec[0] <= wave_range['w_max'])] = fit_df.loc[fit_df['w_min'] == wave_range['w_min'], 'weight'].values[0]
 
-    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=weights/fit_spec[2]**2)  # Fit with combined weights of S/N and user-defined weights
+    if fit:
+        result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=weights/fit_spec[2]**2)  # Fit with combined weights of S/N and user-defined weights
 
-    return result
+        return result
+    else:
+        guess = vmodel.eval(params, x=fit_spec[0])
+        return params, guess
 
 
 
