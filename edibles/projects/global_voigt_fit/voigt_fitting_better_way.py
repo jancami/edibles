@@ -144,7 +144,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
 
         params[f'n_{v_comp}_{sp}'].set(value=1e9, min=0)
 
-    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
+    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2]**2)
 
     return result
 

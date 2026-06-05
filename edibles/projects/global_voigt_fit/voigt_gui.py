@@ -51,8 +51,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df = in_df.copy()
     i_df.loc[:, 'v_comp'] = v_comp
     i_df.loc[:, f'v_rad_init'] = 0.0
-    i_df.loc[:, f'v_rad_min'] = -100.0
-    i_df.loc[:, f'v_rad_max'] = 100.0
+    i_df.loc[:, f'v_rad_min'] = -50.0
+    i_df.loc[:, f'v_rad_max'] = 50.0
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, 'n_comp'] = n_comp
     i_df.loc[:, f'b_init'] = 1
@@ -186,6 +186,8 @@ def results_to_df(result, fit_df):
     return fit_df
 
 def main():
+    elnum = 6 # number of element entries
+
     root = tk.Tk()
 
     # defining global variables for the GUI
@@ -213,6 +215,14 @@ def main():
     # Button for selecting element to fit. Only KI for now, but can be easily extended to include more elements.
     elem_lbl = tk.Label(root, text="Select a species.")
     elem_lbl.grid(column=0, row=0)
+
+    # Add text field for weights of the fit windows
+    weight_lbl = tk.Label(root, text="Enter weights for fit windows (comma separated):")
+    weight_lbl.grid(column=0, row=elnum+14)
+    root.weight_entry = tk.Entry(root)
+    root.weight_entry.grid(column=0, row=elnum+15)
+
+
 
     # function to display text when
     # button is clicked
@@ -302,7 +312,6 @@ def main():
     ch_plus_btn = tk.Button(root, text = "CH$^+$", fg = "purple", command=lambda: add_ch_plus())
     ch_plus_btn.grid(column=0, row=6)
 
-    elnum = 6
 
     # Text box for star name
     star_lbl = tk.Label(root, text="Enter star name:")
@@ -320,7 +329,7 @@ def main():
     # containing the Matplotlib figure
     root.canvas.draw()
     # placing the canvas on the Tkinter window
-    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=20, sticky='nesw')
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=27, sticky='nesw')
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
@@ -443,6 +452,14 @@ def main():
         print('file lists:', file_lists)
         root.fit_spec = np.concatenate(coadded_spectra, axis=1)
 
+        # insert default weights for fit windows
+        range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        weight_list = np.ones(len(range_df))
+        weight_string = ", ".join([str(w) for w in weight_list])
+
+        root.weight_entry.insert(0, weight_string)
+
 
     load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
     load_btn.grid(column=0, row=elnum+3)
@@ -485,6 +502,8 @@ def main():
                 for i, row in root.fit_df.iterrows():
                     if row['v_comp'] == int(v_comp):
                         root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
+                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 1
+                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 1
 
                 print(root.fit_df)
                 plot_fit_info()
@@ -571,10 +590,26 @@ def main():
             return
         
         print_msg('Fitting voigt model.')
+
+        range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        weight_str = root.weight_entry.get()
+        for i, wave_range in range_df.iterrows():
+            for k, row in root.fit_df.iterrows():
+                if row['w_min'] == wave_range['w_min'] and row['w_max'] == wave_range['w_max']:
+                    if weight_str:
+                        weights = [float(w) for w in weight_str.split(',')]
+                        if len(weights) == len(range_df):
+                            weight = weights[i]
+                            root.fit_df.loc[k, 'weight'] = weight
+                        else:
+                            print_msg("Number of weights does not match number of fit windows. Ignoring weights.")
+
+        print(range_df)
+        print(root.fit_df)
         
         result = voigt_fit_wrapper(root.fit_df, root.fit_spec)
 
-        range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
         for i, wave_range in range_df.iterrows():
             # adding the subplot
@@ -860,7 +895,7 @@ def main():
     mask_btn.grid(column=0, row=elnum+13)
 
     root.grid_columnconfigure(1, weight=1)
-    root.grid_rowconfigure(elnum+14, weight=1)
+    root.grid_rowconfigure(elnum+17, weight=1)
 
     root.mainloop()
 
