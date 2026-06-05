@@ -1,11 +1,11 @@
-from edibles.utils.voigt_fitting import voigt_fit_wrapper
+from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper, make_multi_comp_voigt
 import tkinter as tk
 from importlib.resources import files
 import pandas as pd
 from edibles.utils.edibles_oracle import EdiblesOracle
 from edibles.utils.edibles_spectrum import EdiblesSpectrum
 import numpy as np
-from edibles.projects.edr5_integration import dr5_io, util_functions
+from edibles.projects.edr5_integration import util_functions
 from edibles import DATADIR
 from PyAstronomy import pyasl
 import matplotlib.pyplot as plt
@@ -22,14 +22,15 @@ atomic_line_list = pd.read_csv(atomic_line_file)
 atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 
 # remove lines which are contaminated by telluric lines
-# atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
+atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(4044, 4045)]
 
 molecular_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_molecules.csv'
-molecular_line_list = pd.read_csv(atomic_line_file)
+molecular_line_list = pd.read_csv(molecular_line_file)
 
 fitting_dir = files('edibles') / 'data/voigt_fitting_data'
 
-def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
+def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFrame:
     """
     Create a default DataFrame for Voigt fitting.
 
@@ -39,7 +40,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
         DataFrame loaded from a line list.
     v_comp : int
         velocity component number (used to link lines that belong to the same component and set the same initial v_rad and b values)
-
+    n_comp : int
+        column density component, free from b and v.
     Returns
     -------
     pd.DataFrame
@@ -49,17 +51,18 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int) -> pd.DataFrame:
     i_df = in_df.copy()
     i_df.loc[:, 'v_comp'] = v_comp
     i_df.loc[:, f'v_rad_init'] = 0.0
-    # i_df.loc[:, f'v_rad_min'] = -100.0
-    # i_df.loc[:, f'v_rad_max'] = 100.0
+    i_df.loc[:, f'v_rad_min'] = -100.0
+    i_df.loc[:, f'v_rad_max'] = 100.0
     i_df.loc[:, 'b_comp'] = v_comp
-    i_df.loc[:, f'b_init'] = 0.001
+    i_df.loc[:, 'n_comp'] = n_comp
+    i_df.loc[:, f'b_init'] = 1
     i_df.loc[:, f'b_min'] = 0.0
     i_df.loc[:, f'b_max'] = 6
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
-    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 150/c)
-    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 150/c)
+    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 50/c)
+    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 50/c)
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
@@ -175,7 +178,7 @@ def results_to_df(result, fit_df):
             if row['v_comp'] == v_comp['v_comp'] and row['Species'] == v_comp['Species']:
                 fit_df.loc[k, f'v_rad_fit'] = best_values[f'v_rad_{v_comp["v_comp"]}']
                 fit_df.loc[k, f'b_fit'] = best_values[f'b_{v_comp["v_comp"]}']
-                fit_df.loc[k, f'n_fit'] = best_values[f'n_{v_comp["v_comp"]}_{v_comp["Species"]}']
+                fit_df.loc[k, 'n_fit']     = best_values[f'n_{int(row["n_comp"])}'] 
 
     print(fit_df)
 
@@ -219,10 +222,11 @@ def main():
         elem_df = atomic_line_list.loc[elem_inds]
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
+        n_comp = root.fit_df['n_comp'].max() + 1 if len(root.fit_df) > 0 else 0 # change
 
         # Make initial dataframe (include wavelength range)
-        ext_df = make_default_df(elem_df, v_comp)
-        print(ext_df)
+        ext_df = make_default_df(elem_df, v_comp, n_comp)
+        print(ext_df.columns)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
         if not root.fit_df.empty:
@@ -239,16 +243,30 @@ def main():
         print(root.fit_df)
         # plot_fit_info()
 
-    def add_molec(molec):
+    def add_ch_plus():
+        molec = 'CH+'
         elem_lbl.configure(text = f"{molec} selected")
-        elem_inds = atomic_line_list[atomic_line_list['Species'] == molec].index
-        elem_df = atomic_line_list.loc[elem_inds]
+        print(molecular_line_list)
+        elem_inds = molecular_line_list[molecular_line_list['Species'] == molec].index
+        elem_df = molecular_line_list.loc[elem_inds]
+        print(elem_df)
+        elem_df = elem_df.loc[((elem_df.loc[:, 'WavelengthAir'] > 4229) & (elem_df.loc[:, 'WavelengthAir'] < 4233)) |
+                              ((elem_df.loc[:, 'WavelengthAir'] > 3957) & (elem_df.loc[:, 'WavelengthAir'] < 3958))]
+        print(elem_df)
+
+        elem_df.replace('CH+', 'CHplus', inplace=True)
 
         v_comp = root.fit_df['v_comp'].max() + 1 if len(root.fit_df) > 0 else 0
+        n_comp = root.fit_df['n_comp'].max() + 1 if len(root.fit_df) > 0 else 0 # change
 
         # Make initial dataframe (include wavelength range)
-        ext_df = make_default_df(elem_df, v_comp)
-        print(ext_df)
+        ext_df = make_default_df(elem_df, v_comp, n_comp)
+
+        for i, row in ext_df.iterrows():
+            if row['WavelengthAir'] == 4229.347:
+                ext_df.loc[i, 'n_comp'] += 1
+
+        print("ext_df", ext_df.columns)
 
         # if w_min, w_max is aready changed in fit_df, copy the values to ext_df
         if not root.fit_df.empty:
@@ -281,7 +299,7 @@ def main():
     tiii_btn = tk.Button(root, text = "TiII", fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
-    ch_plus_btn = tk.Button(root, text = r"CH$^+$", fg = "purple", command=lambda: add_elem(r"CH$^+$"))
+    ch_plus_btn = tk.Button(root, text = "CH$^+$", fg = "purple", command=lambda: add_ch_plus())
     ch_plus_btn.grid(column=0, row=6)
 
     elnum = 6
@@ -338,7 +356,6 @@ def main():
                     print(root.vlines.get(key))
                     if root.vlines.get(key) is None:
                         root.vlines[key] = plot1.axvline(x, color='red', linestyle='--')
-                        print('xdataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                         print(root.vlines[key].get_xdata())
                     else:
                         line = root.vlines[key]
@@ -487,7 +504,6 @@ def main():
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
         print_msg("Select wavelength range by clicking and dragging on the plot.")
-        print('11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
@@ -630,8 +646,10 @@ def main():
             # load spectrum
             root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
 
+            # generating the fitting function so it can be used for loading the results
+            voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
-            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav')
+            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav', funcdefs={'voigt_n_comp': voigt_n_comp})
 
             range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 

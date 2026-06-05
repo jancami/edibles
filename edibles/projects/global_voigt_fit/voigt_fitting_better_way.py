@@ -21,24 +21,42 @@ def add_voigt(x, y, lambda0, b, n, f, gamma, v_rad):
     return y * np.exp(-voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad))
 
 def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
+    """
+    Makes a multi component voigt function based on an input DataFrame.
+
+    Parameters
+    ----------
+    input_df : pd.DataFrame
+        DataFrame including species names, wavelengths, values and cloud component numbers for v_rad, b and n. 
+
+    Returns
+    -------
+    Callable
+        Mutli voigt absorption function.
+    """
     range_df = input_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
-    c_comps = input_df[['v_comp', 'b_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+    c_comps = input_df[['v_comp', 'b_comp', 'n_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
     comp_param_names = []
     incl_vrad = []
     incl_b = []
+    incl_n = []
     for _, row in c_comps.iterrows():
         v_rad = row['v_comp']
         b = row['b_comp']
+        n = row['n_comp']
         sp = row['Species']
         comp_param_names += [f'n_{v_rad}_{sp}']
         if v_rad not in incl_vrad:
             comp_param_names += [f'v_rad_{v_rad}']
         if b not in incl_b:
             comp_param_names += [f'b_{b}']
+        if n not in incl_n:
+            comp_param_names += [f'n_{n}']
 
             incl_vrad.append(v_rad)
             incl_b.append(b)
+            incl_n.append(n)
 
     for j, row in input_df.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
@@ -63,8 +81,9 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         for j, row in sub_df.iterrows():
             v_rad = row['v_comp']
             b = row['b_comp']
+            n = row['n_comp']
             sp = row['Species']
-            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b}, n_{v_rad}_{sp}, f_{j}, gamma_{j}, v_rad_{v_rad})')
+            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b}, n_{n}_{sp}, f_{j}, gamma_{j}, v_rad_{v_rad})')
         body_lines.append(f'    y{i} = pyasl.instrBroadGaussFast(x{i}, y{i}, {inst_res}, edgeHandling="firstlast")')
         
         body_lines.append(f'    segments.append(y{i})')
@@ -80,6 +99,21 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
 
 
 def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
+    """
+    Generates a voigt model from 
+
+    Parameters
+    ----------
+    fit_df : pd.DataFrame
+        _description_
+    fit_spec : np.array
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     # generate fitting function
     generated_fit_function = make_multi_comp_voigt(fit_df)
     # Make lmfit model
@@ -106,9 +140,9 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array):
         sp = row['Species']
         # Shared parameters
         params[f'b_{b}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'])
-        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_init']-2, max=row[f'v_rad_init']+2)
+        params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row[f'v_rad_min'], max=row[f'v_rad_max'])
 
-        params[f'n_{v_comp}_{sp}'].set(    value=1e9, min=0)
+        params[f'n_{v_comp}_{sp}'].set(value=1e9, min=0)
 
     result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2])
 
