@@ -72,7 +72,6 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         v_comp = row['v_comp']  # Radial velocity component
         b_comp = row['b_comp']  # Gaussian width component
         n_comp = row['n_comp']  # Column density component
-        sp = row['Species']  # Species
         if v_comp not in incl_vrad:
             comp_param_names += [f'v_rad_{v_comp}']  # Add column density parameter of component v_rad 
         if b_comp not in incl_b:
@@ -89,6 +88,8 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     for j, row in input_df.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
+    comp_param_names += ['v_rad_corr']  # Add radial velocity correction parameter
+
     all_params = ['x'] + comp_param_names  # Add wavelength as parameter
     signature_str = ", ".join(all_params)  # Join list to string
     func_name   = f"voigt_n_comp"  # Define function name
@@ -102,8 +103,10 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         # define instrumental resolution 
         # TODO: refine
         mean_wl = np.mean(w_range)  # mean wavelength of wavelength window
-        if mean_wl < 5000:
+        if 3500 <= mean_wl < 5000:
             inst_res = 80000
+        elif mean_wl < 3500:
+            inst_res = 70000
         else:
             inst_res = 100000
         # Take spectrum within window
@@ -118,7 +121,10 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             b_comp = row['b_comp']  # Gaussian width component
             n_comp = row['n_comp']  # Column density component
             # Add component
-            body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
+            if row['WavelengthAir'] < 3303:
+                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}, f_{j}, gamma_{j}, v_rad_{v_comp} + v_rad_corr)')
+            else:
+                body_lines.append(f'    y{i} = add_voigt(x{i}, y{i}, lambda0_{j}, b_{b_comp}, n_{n_comp}, f_{j}, gamma_{j}, v_rad_{v_comp})')
         # convert to transmission spectrum
         body_lines.append(f'    y{i} = np.exp(-y{i})')
         # Add instrumental broadening
@@ -161,6 +167,8 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
     # generate parameters
     params = vmodel.make_params()
 
+    params['v_rad_corr'].set(value=0, min=-3, max=3)  # Set radial velocity correction parameter
+
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
         params[f'lambda0_{i}'].set(value=row['WavelengthAir'], vary=False)
@@ -168,7 +176,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         params[f'gamma_{i}'].set(value=row['Gamma'], vary=False)
 
     # extract the doppler and b components
-    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max', 'v_rad_min','v_rad_max']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species', 'v_rad_init', 'b_init', 'b_min', 'b_max', 'v_rad_min', 'v_rad_max']].drop_duplicates().reset_index(drop=True)
 
     # set initial values and bounds of b values and v_rad
     for _, row in c_comps.iterrows():
@@ -180,7 +188,14 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array) -> ModelResult:
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row['v_rad_min'], max=row['v_rad_max'])
         params[f'n_{n_comp}'].set(value=1e9, min=0)
 
-    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=1/fit_spec[2]**2)
+    # convert weights for individual windows to array of length fit_spec
+    weights = np.ones(len(fit_spec[0]))
+    range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+    for i, wave_range in range_df.iterrows():
+        weights[(fit_spec[0] >= wave_range['w_min']) & (fit_spec[0] <= wave_range['w_max'])] = fit_df.loc[fit_df['w_min'] == wave_range['w_min'], 'weight'].values[0]
+
+    result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=weights/fit_spec[2]**2)  # Fit with combined weights of S/N and user-defined weights
 
     return result
 
