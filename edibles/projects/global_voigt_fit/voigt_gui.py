@@ -207,11 +207,34 @@ def main():
 
     # make label for important messages
     msg_lbl = tk.Label(root, text="")
-    msg_lbl.grid(column=1, row=0)
+    msg_lbl.grid(column=2, row=0, rowspan=25)
 
     def print_msg(msg: str):
         msg_lbl.config(text=msg)
         print(msg)
+
+    # PRinting welcome message
+    print_msg('Welcome to the global voigt fitting GUI!\n' \
+    'Click on a species to add it to the fit,\n' \
+    'or to add another cloud component for the species.\n' \
+    'Then, enter a star name in the text field.\n' \
+    'After you are done with this, you can either load\n' 
+    'a spectrum or load a prior fit result if it exists\n' \
+    'for the star name and species.\n\n' \
+    'Then, normalize the spectrum and if needed\n'
+    'adjust the wavelength ranges for fitting or\n' \
+    'mask problematic areas.\n' \
+    'Select an initial radial valocity by \n' \
+    'clicking the button.\n'
+    'Finally, fit the spectrum and save the result.\n' \
+    'If a fit does not turn oout well, try\n' \
+    'adjusting the initial values and ranges\n'
+    'for v_rad, b, n and weight for each fit window\n' 
+    'and plot the initial guess.\n'
+    'By clicking Clear fit DataFrame, all present\n' \
+    'fit information will be cleared and a new\n' \
+    'fit can be started.'
+        )
 
     # Button for selecting element to fit. Only KI for now, but can be easily extended to include more elements.
     elem_lbl = tk.Label(root, text="Select a species.")
@@ -261,7 +284,9 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
-        print_msg(f'Adding a species {elem} to fit_df.')
+        print_msg(f'Adding a species {elem} to fit_df.\n' \
+                  'Clicking it a second time will add another\n' \
+                  'cloud component for the same species.')
         print(root.fit_df)
         # plot_fit_info()
         print(ext_df)
@@ -312,7 +337,9 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
-        print_msg(f'Adding a species {molec} to fit_df.')
+        print_msg(f'Adding a species {molec} to fit_df.\n' \
+                  'Clicking it a second time will add another\n'
+                  'cloud component for the same species.')
         print(root.fit_df)
 
 
@@ -491,7 +518,7 @@ def main():
     # set starting values for fit using plotted spectrum
     # for each component v_comp
     v_rad_comp_entry = tk.Entry(root)
-    v_rad_comp_entry.grid(column=0, row=elnum+6)
+    v_rad_comp_entry.grid(column=0, row=elnum+8)
 
     root.span = []
 
@@ -539,14 +566,15 @@ def main():
         root.canvas.draw()
 
     v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
-    v_rad_btn.grid(column=0, row=elnum+5)
+    v_rad_btn.grid(column=0, row=elnum+7)
 
     # change wavelength range
     def range_function():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
-        print_msg("Select wavelength range by clicking and dragging on the plot.")
+        print_msg("Select wavelength range by clicking and dragging on the plot.\n" \
+        "For each window you will have to click the button again.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
@@ -600,7 +628,7 @@ def main():
         root.canvas.draw_idle()
 
     range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
-    range_btn.grid(column=0, row=elnum+7)
+    range_btn.grid(column=0, row=elnum+4)
 
     def guesses_to_df():
         # Get n and b values from text fields and copy to fit_df
@@ -674,7 +702,7 @@ def main():
             print_msg("No spectrum loaded.")
             return
         
-        print_msg('Fitting voigt model.')
+        print_msg(f'Fitting voigt model for {root.fit_df["v_comp"].nunique()} components and {root.fit_df["Species"].nunique()} species.\n')
 
         guesses_to_df()
 
@@ -723,7 +751,7 @@ def main():
         root.result = result
 
     fit_btn = tk.Button(root, text="Fit Spectrum", command=fit_spectrum)
-    fit_btn.grid(column=0, row=elnum+4)
+    fit_btn.grid(column=0, row=elnum+9)
 
     def save_function():
         # Save fitting results in csv file
@@ -741,7 +769,7 @@ def main():
 
 
     save_btn = tk.Button(root, text="Save fit results", command=save_function)
-    save_btn.grid(column=0, row=elnum+8)
+    save_btn.grid(column=0, row=elnum+10)
 
     def load_fit_result():
         """
@@ -800,7 +828,7 @@ def main():
             print(f"No fit results found for {star_name}.")
 
     load_res_btn = tk.Button(root, text="Load fit results", command=load_fit_result)
-    load_res_btn.grid(column=0, row=elnum+9)
+    load_res_btn.grid(column=0, row=elnum+11)
 
     def clear_df_func():
         root.fit_df = pd.DataFrame()
@@ -809,7 +837,7 @@ def main():
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
     
     clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
-    clear_df_btn.grid(column=0, row=elnum+10)
+    clear_df_btn.grid(column=0, row=elnum+12)
 
     # set starting values for fit using plotted spectrum
     # for each component v_comp
@@ -917,7 +945,8 @@ def main():
                         root.canvas.draw()
 
 
-                print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
+                print_msg(f'Updated wavelength range for {len(root.fit_df)} lines.\n'
+                          'For each window you will have to click the button again.')
                 print(root.fit_df)    
                 root.range_counter += 1
 
@@ -929,13 +958,14 @@ def main():
         root.canvas.draw_idle()
 
     range_btn = tk.Button(root, text='Select continuum ranges', command=cont_range_function)
-    range_btn.grid(column=0, row=elnum+12)
+    range_btn.grid(column=0, row=elnum+5)
 
     def mask_function():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
-        print_msg("Select wavelength range by clicking and dragging on the plot.")
+        print_msg("Select wavelength range by clicking and dragging on the plot.\n" \
+        "For each window you will have to click the button again.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
@@ -979,10 +1009,10 @@ def main():
         root.canvas.draw_idle()
 
     mask_btn = tk.Button(root, text='Select mask ranges', command=mask_function)
-    mask_btn.grid(column=0, row=elnum+13)
+    mask_btn.grid(column=0, row=elnum+6)
 
     root.grid_columnconfigure(1, weight=1)
-    root.grid_rowconfigure(elnum+20, weight=1)
+    root.grid_rowconfigure(elnum+21, weight=1)
 
     root.mainloop()
 
