@@ -634,7 +634,7 @@ def main():
                             print_msg("Number of weights does not match number of fit windows. Ignoring weights.")
 
         guesses_to_df()
-        params, guess = voigt_fit_wrapper(root.fit_df, root.fit_spec, fit=False)
+        _, guess = voigt_fit_wrapper(root.fit_df, root.fit_spec, fit=False)
 
         for i, wave_range in range_df.iterrows():
             # adding the subplot
