@@ -88,7 +88,9 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
     for j, row in input_df.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
-    comp_param_names += ['v_rad_corr']  # Add radial velocity correction parameter
+    if any(input_df['WavelengthAir'] < 3303):
+        comp_param_names += ['v_rad_corr']  # Add radial velocity correction parameter if one of the lines 
+        # is in the near-UV, to account for possible wavelength calibration issues in this range.
 
     all_params = ['x'] + comp_param_names  # Add wavelength as parameter
     signature_str = ", ".join(all_params)  # Join list to string
@@ -103,6 +105,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         # define instrumental resolution 
         # TODO: refine
         mean_wl = np.mean(w_range)  # mean wavelength of wavelength window
+        # Set instrumental resolution
         if mean_wl < 5000:
             inst_res = 80000
         else:
