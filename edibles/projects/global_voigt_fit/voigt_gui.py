@@ -69,13 +69,14 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
-    for i, row in i_df.iterrows():
-        w_min = row['w_min']
-        w_max = row['w_max']
-        if i + 1 < len(i_df):
-            if i_df.loc[i+1, 'w_min'] < w_max:
-                i_df.loc[i+1, 'w_min'] = w_min
-                i_df.loc[i, 'w_max'] = i_df.loc[i+1, 'w_max']
+    for _ in range(4):
+        for i, row in i_df.iterrows():
+            w_min = row['w_min']
+            w_max = row['w_max']
+            if i + 1 < len(i_df):
+                if i_df.loc[i+1, 'w_min'] < w_max:
+                    i_df.loc[i+1, 'w_min'] = w_min
+                    i_df.loc[i, 'w_max'] = i_df.loc[i+1, 'w_max']
     
     return i_df
 
@@ -189,7 +190,7 @@ def results_to_df(result, fit_df):
     return fit_df
 
 def main():
-    elnum = 6 # number of element entries
+    elnum = 7 # number of element entries
 
     root = tk.Tk()
 
@@ -308,15 +309,14 @@ def main():
         root.b_entry.delete(0, tk.END)
         root.b_entry.insert(0, ", ".join(b_comps['b_init'].astype(str).values))
 
-    def add_ch_plus():
-        molec = 'CH+'
+    def add_molecule(molec):
         elem_lbl.configure(text = f"{molec} selected")
         print(molecular_line_list)
         elem_inds = molecular_line_list[molecular_line_list['Species'] == molec].index
         elem_df = molecular_line_list.loc[elem_inds]
         print(elem_df)
-        elem_df = elem_df.loc[((elem_df.loc[:, 'WavelengthAir'] > 4229) & (elem_df.loc[:, 'WavelengthAir'] < 4233)) |
-                              ((elem_df.loc[:, 'WavelengthAir'] > 3957) & (elem_df.loc[:, 'WavelengthAir'] < 3958))]
+        elem_df = elem_df.loc[elem_df["J''"].notna()]
+
         print(elem_df)
 
         elem_df.replace('CH+', 'CHplus', inplace=True)
@@ -328,8 +328,7 @@ def main():
         ext_df = make_default_df(elem_df, v_comp, n_comp)
 
         for i, row in ext_df.iterrows():
-            if row['WavelengthAir'] == 4229.347:
-                ext_df.loc[i, 'n_comp'] += 1
+            ext_df.loc[i, 'n_comp'] += row["J''"]
 
         print("ext_df", ext_df.columns)
 
@@ -366,8 +365,11 @@ def main():
     tiii_btn = tk.Button(root, text = "TiII", bg = 'yellow', fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
-    ch_plus_btn = tk.Button(root, text = "CH⁺", bg = 'yellow', fg = "purple", command=lambda: add_ch_plus())
+    ch_plus_btn = tk.Button(root, text = "CH⁺", bg = 'yellow', fg = "purple", command=lambda: add_molecule("CH+"))
     ch_plus_btn.grid(column=0, row=6)
+
+    cn_btn = tk.Button(root, text = "CN", bg = 'yellow', fg = "purple", command=lambda: add_molecule("12CN"))
+    cn_btn.grid(column=0, row=7)
 
 
     # Text box for star name
@@ -417,13 +419,12 @@ def main():
 
                 if wave_range['w_min'] < row['WavelengthAir'] < wave_range['w_max']:
                     x = transformations.doppler_shift_wl(row['WavelengthAir'], row['v_rad_init'])
-                    print(x)
-                    key = (i, int(row['v_comp']))
-                    print(root.vlines)
-                    print(root.vlines.get(key))
+                    key = (i, k)  # Get key for the vline which will be changed
+                    # If there is no vline with the key, make a new one
                     if root.vlines.get(key) is None:
                         root.vlines[key] = plot1.axvline(x, color='red', linestyle='--')
                         print(root.vlines[key].get_xdata())
+                    # If there is a vline with the key, change the data
                     else:
                         line = root.vlines[key]
                         line.set_xdata([x, x])
@@ -445,6 +446,8 @@ def main():
             return
         
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        print(range_df)
 
         file_lists = []
         coadded_spectra = []
@@ -484,10 +487,6 @@ def main():
                 # if len(spec) > 5:
                 #     if not np.isnan(spec[6]).all():
                 #         spec[1] = spec[6]
-
-                if 3300 < np.mean(wave_range) < 3305:
-                    spec[0] = transformations.doppler_shift_wl(spec[0], -1)
-                    # spec[2] /= 10
                 # plot the spectrum in the GUI using matplotlib
                 # plotting the graph
                 if root.errorbar:
