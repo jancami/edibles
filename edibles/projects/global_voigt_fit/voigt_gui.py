@@ -15,7 +15,9 @@ from scipy.interpolate import interp1d
 from matplotlib.widgets import SpanSelector
 from edibles.utils import transformations
 from lmfit.model import save_modelresult, load_modelresult
+from scipy.interpolate import CubicSpline
 
+# error bars for the parameters, make tables for CH+ globally-fitted params
 
 atomic_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_atoms.csv'
 atomic_line_list = pd.read_csv(atomic_line_file)
@@ -56,7 +58,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, 'n_comp'] = n_comp
     i_df.loc[:, f'b_init'] = 1
-    i_df.loc[:, f'b_min'] = 0.0
+    i_df.loc[:, f'b_min'] = 0
     i_df.loc[:, f'b_max'] = 6
 
     # make wavelength range +- 150 km/s around line center
@@ -197,6 +199,11 @@ def main():
     root.w_range_active = False
     root.result = None
     root.errorbar = True
+    root.cont_anchors = []
+    root.cont_artists = []
+    root.cont_preview = [None]
+    root.cont_active = False
+    root.fit_cont = {}
 
     # Setting some window properties
     root.title("Voigt fitter")
@@ -284,22 +291,22 @@ def main():
 
 
     # Button for elements
-    ki_btn = tk.Button(root, text = "KI", fg = "red", command=lambda: add_elem("KI"))
+    ki_btn = tk.Button(root, text = "KI", bg = 'yellow', fg = "red", command=lambda: add_elem("KI"))
     ki_btn.grid(column=0, row=1)
 
-    nai_btn = tk.Button(root, text = "NaI", fg = "green", command=lambda: add_elem("NaI"))
+    nai_btn = tk.Button(root, text = "NaI", bg = 'yellow', fg = "green", command=lambda: add_elem("NaI"))
     nai_btn.grid(column=0, row=2)
 
-    caI_btn = tk.Button(root, text = "CaI", fg = "blue", command=lambda: add_elem("CaI"))
+    caI_btn = tk.Button(root, text = "CaI", bg = 'yellow', fg = "blue", command=lambda: add_elem("CaI"))
     caI_btn.grid(column=0, row=3)
 
-    fei_btn = tk.Button(root, text = "FeI", fg = "blue", command=lambda: add_elem("FeI"))
+    fei_btn = tk.Button(root, text = "FeI", bg = 'yellow', fg = "blue", command=lambda: add_elem("FeI"))
     fei_btn.grid(column=0, row=4)
 
-    tiii_btn = tk.Button(root, text = "TiII", fg = "purple", command=lambda: add_elem("TiII"))
+    tiii_btn = tk.Button(root, text = "TiII", bg = 'yellow', fg = "purple", command=lambda: add_elem("TiII"))
     tiii_btn.grid(column=0, row=5)
 
-    ch_plus_btn = tk.Button(root, text = "CH$^+$", fg = "purple", command=lambda: add_ch_plus())
+    ch_plus_btn = tk.Button(root, text = "CH⁺", bg = 'yellow', fg = "purple", command=lambda: add_ch_plus())
     ch_plus_btn.grid(column=0, row=6)
 
     elnum = 6
@@ -315,6 +322,7 @@ def main():
     nrows = 2
     ncols = 3
     root.fig, root.axs = plt.subplots(nrows=nrows, ncols=ncols)
+    plt.close('all')
     # creating the Tkinter canvas
     root.canvas = FigureCanvasTkAgg(root.fig, master = root)  
     # containing the Matplotlib figure
@@ -436,25 +444,25 @@ def main():
                 plot1.errorbar(coadded_spec[0], coadded_spec[1], yerr=coadded_spec[2], label='Coadd', color='k')
             else:
                 plot1.plot(coadded_spec[0], coadded_spec[1], label='Coadd', color='k')
-            coadded_spectra.append(coadded_spec)
+            coadded_spectra.append(np.vstack([coadded_spec, coadded_spec[1:2]]))  # 4th row = original flux 
             plot1.legend()
 
         root.canvas.draw()
         print('file lists:', file_lists)
         root.fit_spec = np.concatenate(coadded_spectra, axis=1)
 
-
-    load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
-    load_btn.grid(column=0, row=elnum+3)
-
     # set starting values for fit using plotted spectrum
     # for each component v_comp
     v_rad_comp_entry = tk.Entry(root)
-    v_rad_comp_entry.grid(column=0, row=elnum+6)
+    v_rad_comp_entry.grid(column=0, row=elnum+7)
 
     root.span = []
 
     def set_v_rad_init():
+        if root.cid is not None:
+            root.canvas.mpl_disconnect(root.cid) # Disconnect previous onclick event before setting new v_rad_init, otherwise the v_rad is overwritten as the wrong component.
+        root.v_rad_active = True
+        
         for i, _ in enumerate(root.span):
             root.span[i].set_visible(False)
 
@@ -494,9 +502,6 @@ def main():
         root.cid = root.canvas.mpl_connect('button_press_event', onclick)
 
         root.canvas.draw()
-
-    v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
-    v_rad_btn.grid(column=0, row=elnum+5)
 
     # change wavelength range
     def range_function():
@@ -556,10 +561,6 @@ def main():
 
         root.canvas.draw_idle()
 
-    range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
-    range_btn.grid(column=0, row=elnum+7)
-
-
     # fitting
     def fit_spectrum():
         """
@@ -572,7 +573,7 @@ def main():
         
         print_msg('Fitting voigt model.')
         
-        result = voigt_fit_wrapper(root.fit_df, root.fit_spec)
+        result = voigt_fit_wrapper(root.fit_df, root.fit_spec[:3]) #4 columns in .dat
 
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
@@ -600,10 +601,7 @@ def main():
         print(result.best_values)
         root.result = result
 
-    fit_btn = tk.Button(root, text="Fit Spectrum", command=fit_spectrum)
-    fit_btn.grid(column=0, row=elnum+4)
-
-    def save_function():
+    def save_function():    
         # Save fitting results in csv file
         res_df = results_to_df(root.result, root.fit_df)
         elem_list = root.fit_df.loc[:, 'Species'].unique()
@@ -617,9 +615,106 @@ def main():
         # Save model result 
         save_modelresult(root.result, fitting_dir / f'{root.star_name}_{elem_str}.sav')
 
+    def continuum_fit_func():
+        """
+        The continuum is fitted using a cubic spline, with manually-selected
+        anchor points.
+        
+        A seperate popup window opens for interactive continuum fitting.
 
-    save_btn = tk.Button(root, text="Save fit results", command=save_function)
-    save_btn.grid(column=0, row=elnum+8)
+        Clicking adds an anchor point at the position of the cursor. Right click
+        to remove the last anchor point added.
+
+        After closing the fitting window, the continuum is applied unless anchor points > 2:
+        then no changes made.
+
+        The GUI plots are updated automatically after each window is processed.
+        """
+
+        if root.fit_spec is None:
+            print_msg("Load a spectrum first.")
+            return
+
+        range_df = root.fit_df[['w_min','w_max']].drop_duplicates().sort_values('w_min').reset_index(drop=True)
+
+        for i, wave_range in range_df.iterrows():
+            mask = (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])
+            wave = root.fit_spec[0, mask]
+            flux = root.fit_spec[1, mask]
+
+            cont_anchors = []
+            cont_artists = []
+            preview = [None]
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(wave, flux, 'k-')
+            ax.set_title(f'Window {i+1}: {wave_range["w_min"]:.2f} - {wave_range["w_max"]:.2f} Left-click will add an anchor; right-click will remove last anchor.')
+            ax.set_xlabel('Wavelength (Angstrom)')
+            ax.set_ylabel('Flux')
+    
+            def onclick(event, wave=wave, ax=ax, fig=fig, cont_anchors=cont_anchors, preview=preview, cont_artists=cont_artists):
+                if event.xdata is None or event.ydata is None:
+                    return
+                if event.button == 1:
+                    lam, flx = event.xdata, event.ydata
+                    cont_anchors.append((lam, flx))
+                    dot, = ax.plot(lam, flx, 'o', color='orange', ms=6)
+                    cont_artists.append(dot)
+                    if len(cont_anchors) >= 2:
+                        anc = sorted(cont_anchors)
+                        cs = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+                        if preview[0]:
+                            try: preview[0].remove()
+                            except: pass
+                        preview[0], = ax.plot(wave, cs(wave), 'orange', alpha=0.7)
+                    ax.set_title(f'{len(cont_anchors)} anchors. Close when done')
+                    fig.canvas.draw()
+
+                elif event.button == 3 and cont_anchors:
+                    cont_anchors.pop()
+                    cont_artists.pop().remove()
+                    if len(cont_anchors) >= 2:
+                        anc = sorted(cont_anchors)
+                        cs = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+                        if preview[0]:
+                            preview[0].remove()
+                        preview[0], = ax.plot(wave, cs(wave), 'orange', alpha=0.7)
+                    else:
+                        if preview[0]:
+                            preview[0].remove()
+                            preview[0] = None
+                    ax.set_title(f'{len(cont_anchors)} anchors. Close when done')
+                    fig.canvas.draw()
+
+            fig.canvas.mpl_connect('button_press_event', onclick)
+            plt.tight_layout()
+            plt.show(block=True)
+            plt.close(fig)
+
+            if len(cont_anchors) >= 2:
+                anc = sorted(cont_anchors)
+                spline = CubicSpline([p[0] for p in anc], [p[1] for p in anc], extrapolate=True)
+                continuum = spline(wave)
+                root.fit_spec[1, mask] /= continuum
+                root.fit_spec[2, mask] /= continuum
+
+                j = i // ncols
+                plot1 = root.axs[j, i % ncols] if nrows > 1 else root.axs[i]
+                plot1.clear()
+                spec = root.fit_spec[:3, mask]
+                if root.errorbar:
+                    plot1.errorbar(spec[0], spec[1], yerr=spec[2], color='k', label='Data')
+                else:
+                    plot1.plot(spec[0], spec[1], color='k', label='Data')
+                plot1.legend()
+                root.canvas.draw()
+                print_msg(f"Window {i+1}: continuum applied with {len(cont_anchors)} anchors.")
+            else:
+                print_msg(f"Window {i+1}: skipped (fewer than 2 anchors).")
+        
+        plt.close('all')
+        root.canvas.draw()
+    
 
     def load_fit_result():
         """
@@ -645,6 +740,8 @@ def main():
 
             # load spectrum
             root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
+            if root.fit_spec.shape[0] == 3:
+                root.fit_spec = np.vstack([root.fit_spec, root.fit_spec[1:2]]) 
 
             # generating the fitting function so it can be used for loading the results
             voigt_n_comp = make_multi_comp_voigt(root.fit_df)
@@ -677,17 +774,11 @@ def main():
         except FileNotFoundError:
             print(f"No fit results found for {star_name}.")
 
-    load_res_btn = tk.Button(root, text="Load fit results", command=load_fit_result)
-    load_res_btn.grid(column=0, row=elnum+9)
-
     def clear_df_func():
         root.fit_df = pd.DataFrame()
         root.fit_spec = None
         root.result = None
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
-    
-    clear_df_btn = tk.Button(root, text="Clear fit DataFrame", command=clear_df_func)
-    clear_df_btn.grid(column=0, row=elnum+10)
 
     # set starting values for fit using plotted spectrum
     # for each component v_comp
@@ -778,7 +869,7 @@ def main():
                             cont_anchors.append(point)
                         print(cont_anchors)
                         cut_spec_norm = util_functions.normalize_spectrum_linear(cut_spec, cont_anchors[0], cont_anchors[1], additional_normalized_columns=[2])
-                        root.fit_spec[:, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])] = cut_spec_norm
+                        root.fit_spec[:3, (root.fit_spec[0] >= wave_range['w_min']) & (root.fit_spec[0] <= wave_range['w_max'])] = cut_spec_norm[:3]
                         plot1.clear()
                         root.vlines = {}
 
@@ -805,9 +896,6 @@ def main():
             root.span.append(selector)
 
         root.canvas.draw_idle()
-
-    range_btn = tk.Button(root, text='Select continuum ranges', command=cont_range_function)
-    range_btn.grid(column=0, row=elnum+12)
 
     def mask_function():
         if root.cid is not None:
@@ -856,8 +944,38 @@ def main():
 
         root.canvas.draw_idle()
 
-    mask_btn = tk.Button(root, text='Select mask ranges', command=mask_function)
-    mask_btn.grid(column=0, row=elnum+13)
+# Buttons for functions
+
+    load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
+    load_btn.grid(column=0, row=elnum+3)
+    
+    load_res_btn = tk.Button(root, text="Load Fit Results",command=load_fit_result)
+    load_res_btn.grid(column=0, row=elnum+4)
+
+    cont_btn = tk.Button(root, text="Fit Continuum", command=continuum_fit_func)
+    cont_btn.grid(column=0, row=elnum+5)
+
+    v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
+    v_rad_btn.grid(column=0, row=elnum+6)
+
+    range_btn = tk.Button(root, text='Select Continuum Ranges', command=cont_range_function)
+    range_btn.grid(column=0, row=elnum+8)
+
+    mask_btn = tk.Button(root, text='Select Mask Ranges', command=mask_function)
+    mask_btn.grid(column=0, row=elnum+9)
+    
+    range_btn = tk.Button(root, text='Set Wavelength Range', command=range_function)
+    range_btn.grid(column=0, row=elnum+10)
+    
+    clear_df_btn = tk.Button(root, text="Clear Fit DataFrame", command=clear_df_func)
+    clear_df_btn.grid(column=0, row=elnum+11)
+
+    fit_btn = tk.Button(root, text="Fit Spectrum", bg='orange', command=fit_spectrum)
+    fit_btn.grid(column=0, row=elnum+12)
+
+    save_btn = tk.Button(root, text="Save Fit Results", command=save_function)
+    save_btn.grid(column=0, row=elnum+13)
+
 
     root.grid_columnconfigure(1, weight=1)
     root.grid_rowconfigure(elnum+14, weight=1)
