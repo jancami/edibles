@@ -69,13 +69,14 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
-    for i, row in i_df.iterrows():
-        w_min = row['w_min']
-        w_max = row['w_max']
-        if i + 1 < len(i_df):
-            if i_df.loc[i+1, 'w_min'] < w_max:
-                i_df.loc[i+1, 'w_min'] = w_min
-                i_df.loc[i, 'w_max'] = i_df.loc[i+1, 'w_max']
+    for _ in range(4):
+        for i, row in i_df.iterrows():
+            w_min = row['w_min']
+            w_max = row['w_max']
+            if i + 1 < len(i_df):
+                if i_df.loc[i+1, 'w_min'] < w_max:
+                    i_df.loc[i+1, 'w_min'] = w_min
+                    i_df.loc[i, 'w_max'] = i_df.loc[i+1, 'w_max']
     
     return i_df
 
@@ -418,13 +419,12 @@ def main():
 
                 if wave_range['w_min'] < row['WavelengthAir'] < wave_range['w_max']:
                     x = transformations.doppler_shift_wl(row['WavelengthAir'], row['v_rad_init'])
-                    print(x)
-                    key = (i, int(row['v_comp']))
-                    print(root.vlines)
-                    print(root.vlines.get(key))
+                    key = (i, k)  # Get key for the vline which will be changed
+                    # If there is no vline with the key, make a new one
                     if root.vlines.get(key) is None:
                         root.vlines[key] = plot1.axvline(x, color='red', linestyle='--')
                         print(root.vlines[key].get_xdata())
+                    # If there is a vline with the key, change the data
                     else:
                         line = root.vlines[key]
                         line.set_xdata([x, x])
@@ -446,6 +446,8 @@ def main():
             return
         
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+
+        print(range_df)
 
         file_lists = []
         coadded_spectra = []
@@ -485,10 +487,6 @@ def main():
                 # if len(spec) > 5:
                 #     if not np.isnan(spec[6]).all():
                 #         spec[1] = spec[6]
-
-                if 3300 < np.mean(wave_range) < 3305:
-                    spec[0] = transformations.doppler_shift_wl(spec[0], -1)
-                    # spec[2] /= 10
                 # plot the spectrum in the GUI using matplotlib
                 # plotting the graph
                 if root.errorbar:
