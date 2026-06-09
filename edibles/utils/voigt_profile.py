@@ -402,8 +402,7 @@ def multi_voigt_absorption_line( **params_list):
     #print("v_rad: ",all_v_rad)
     #print('----')
 
-    # Now call voigt_absorption_line with these parameters.... 
-
+    # Now call voigt_absorption_line with these parameters.... u
     model = voigt_absorption_line(wavegrid, lambda0=all_lambda, f=all_f, gamma=all_gamma, b=all_b, N=all_N, v_rad=all_v_rad, 
                                   v_resolution=v_resolution, n_step=n_step, debug=False)
     

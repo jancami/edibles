@@ -1,0 +1,70 @@
+[[Model]]
+    Model(continuum_voigt_wrapper)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 3027
+    # data points      = 32
+    # variables        = 9
+    chi-square         = 22.8973965
+    reduced chi-square = 0.99553898
+    Akaike info crit   = 7.28919393
+    Bayesian info crit = 20.4808171
+    R-squared          = 0.99960495
+[[Variables]]
+    n_species:      1 (fixed)
+    v_resolution:   3 (fixed)
+    n_step:         25 (fixed)
+    n_trans_0:      1 (fixed)
+    lambda_0_0:     7698.965 (fixed)
+    f_0_0:          0.3331 (fixed)
+    gamma_0_0:      3.74e+07 (fixed)
+    n_component_0:  3 (fixed)
+    b_0_0:          1.00736868 +/- 0.04713232 (4.68%) (init = 1.5)
+    N_0_0:          8.3564e+11 +/- 5.0743e+10 (6.07%) (init = 5e+12)
+    v_rad_0_0:     -5.38801981 +/- 0.00931176 (0.17%) (init = -5)
+    b_0_1:          0.67917455 +/- 0.01599855 (2.36%) (init = 1.5)
+    N_0_1:          2.4939e+11 +/- 7.9522e+09 (3.19%) (init = 5e+11)
+    v_rad_0_1:     -3.49929498 +/- 0.02145870 (0.61%) (init = -2)
+    b_0_2:          4.82020303 +/- 1.30487731 (27.07%) (init = 1.5)
+    N_0_2:          3.2770e+10 +/- 7.7192e+09 (23.56%) (init = 1e+11)
+    v_rad_0_2:     -1.01230617 +/- 0.49960911 (49.35%) (init = -1)
+    knot_y_0:       0.9989858 (fixed)
+    knot_y_1:       1.001592 (fixed)
+    knot_y_2:       1.002962 (fixed)
+    knot_y_3:       0.9975101 (fixed)
+    knot_y_4:       0.9989625 (fixed)
+    knot_y_5:       1.002539 (fixed)
+    knot_y_6:       1.002748 (fixed)
+    knot_y_7:       1.003451 (fixed)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(b_0_2, N_0_2)         = +0.9107
+    C(b_0_0, N_0_0)         = -0.8870
+    C(N_0_2, v_rad_0_2)     = -0.8477
+    C(b_0_2, v_rad_0_2)     = -0.8060
+    C(b_0_0, v_rad_0_0)     = +0.6606
+    C(v_rad_0_0, v_rad_0_1) = +0.6548
+    C(v_rad_0_1, v_rad_0_2) = +0.6479
+    C(v_rad_0_1, N_0_2)     = -0.6303
+    C(b_0_0, v_rad_0_1)     = +0.6033
+    C(N_0_0, v_rad_0_0)     = -0.5509
+    C(N_0_1, b_0_2)         = -0.5390
+    C(N_0_1, N_0_2)         = -0.5343
+    C(N_0_1, v_rad_0_2)     = +0.5327
+    C(v_rad_0_1, b_0_2)     = -0.5186
+    C(N_0_0, b_0_1)         = +0.4965
+    C(v_rad_0_0, N_0_2)     = -0.3676
+    C(v_rad_0_0, v_rad_0_2) = +0.3676
+    C(v_rad_0_0, b_0_2)     = -0.3234
+    C(b_0_1, v_rad_0_1)     = +0.3112
+    C(b_0_0, N_0_1)         = -0.3020
+    C(b_0_1, v_rad_0_2)     = +0.2977
+    C(b_0_0, v_rad_0_2)     = +0.2969
+    C(b_0_0, N_0_2)         = -0.2969
+    C(N_0_0, N_0_1)         = +0.2957
+    C(b_0_1, N_0_2)         = -0.2851
+    C(N_0_0, v_rad_0_1)     = -0.2700
+    C(b_0_0, b_0_2)         = -0.2586
+    C(v_rad_0_0, b_0_1)     = -0.2469
+    C(b_0_1, b_0_2)         = -0.2461
+    C(v_rad_0_0, N_0_1)     = -0.1868
+    C(b_0_0, b_0_1)         = -0.1444

@@ -254,7 +254,7 @@ def astro_simultaneous_fit(wavegrid, ydata, species_params,
         initial_knot_y = np.ones(n_knots)
 
     for i in range(n_knots):
-        params.add(f'knot_y_{i}', value=initial_knot_y[i], min=0, vary=True)
+        params.add(f'knot_y_{i}', value=initial_knot_y[i], min=0, vary=False)
 
     model = Model(continuum_voigt_wrapper,
                   independent_vars=['wavegrid', 'knot_x_array', 'spline_order'])

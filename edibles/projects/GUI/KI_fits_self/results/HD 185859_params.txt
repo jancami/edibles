@@ -1,0 +1,52 @@
+[[Model]]
+    Model(continuum_voigt_wrapper)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 132
+    # data points      = 44
+    # variables        = 6
+    chi-square         = 187.399020
+    reduced chi-square = 4.93155315
+    Akaike info crit   = 75.7582222
+    Bayesian info crit = 86.4633600
+    R-squared          = 0.99831995
+[[Variables]]
+    n_species:      1 (fixed)
+    v_resolution:   3 (fixed)
+    n_step:         25 (fixed)
+    n_trans_0:      1 (fixed)
+    lambda_0_0:     7698.965 (fixed)
+    f_0_0:          0.3331 (fixed)
+    gamma_0_0:      3.74e+07 (fixed)
+    n_component_0:  2 (fixed)
+    b_0_0:          4.94932553 +/- 0.26866232 (5.43%) (init = 2.5)
+    N_0_0:          3.1291e+11 +/- 2.1829e+10 (6.98%) (init = 1e+13)
+    v_rad_0_0:     -4.29286156 +/- 0.08047619 (1.87%) (init = -6)
+    b_0_1:          0.82465659 +/- 0.01229864 (1.49%) (init = 3)
+    N_0_1:          1.7825e+13 +/- 3.3680e+12 (18.89%) (init = 1e+11)
+    v_rad_0_1:     -3.80172826 +/- 0.01388583 (0.37%) (init = -3)
+    knot_y_0:       1.000054 (fixed)
+    knot_y_1:       0.9760467 (fixed)
+    knot_y_2:       0.9942348 (fixed)
+    knot_y_3:       0.9958548 (fixed)
+    knot_y_4:       0.994301 (fixed)
+    knot_y_5:       1.007349 (fixed)
+    knot_y_6:       1.001562 (fixed)
+    knot_y_7:       0.9838968 (fixed)
+    knot_y_8:       1.00142 (fixed)
+    knot_y_9:       1.002711 (fixed)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(N_0_0, N_0_1)         = -0.7325
+    C(b_0_0, N_0_0)         = -0.6011
+    C(b_0_1, N_0_1)         = -0.5577
+    C(b_0_0, N_0_1)         = +0.5234
+    C(N_0_0, v_rad_0_0)     = +0.5135
+    C(b_0_0, v_rad_0_1)     = -0.3815
+    C(v_rad_0_0, v_rad_0_1) = -0.3478
+    C(N_0_1, v_rad_0_1)     = -0.3250
+    C(v_rad_0_0, N_0_1)     = -0.3134
+    C(b_0_1, v_rad_0_1)     = +0.3111
+    C(b_0_0, v_rad_0_0)     = -0.2826
+    C(N_0_0, v_rad_0_1)     = +0.1913
+    C(v_rad_0_0, b_0_1)     = -0.1117
+    C(b_0_0, b_0_1)         = -0.1100

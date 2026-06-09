@@ -245,12 +245,12 @@ def main():
             i_df = elem_df.copy()
             i_df.loc[:, 'v_comp'] = v_comp
             i_df.loc[:, f'v_rad_init'] = scl_rv[star_name]
-            i_df.loc[:, f'v_rad_min'] = -20
-            i_df.loc[:, f'v_rad_max'] = 20
+            i_df.loc[:, f'v_rad_min'] = -100
+            i_df.loc[:, f'v_rad_max'] = 100
             i_df.loc[:, 'b_comp'] = v_comp
-            i_df.loc[:, f'b_init'] = 10
+            i_df.loc[:, f'b_init'] = 2
             i_df.loc[:, f'b_min'] = 0
-            i_df.loc[:, f'b_max'] = 20
+            i_df.loc[:, f'b_max'] = 15
             fit_df = pd.concat((fit_df, i_df), ignore_index=True)
 
         # Define wave range for each line
