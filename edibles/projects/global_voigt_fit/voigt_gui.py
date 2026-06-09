@@ -389,7 +389,7 @@ def main():
     # containing the Matplotlib figure
     root.canvas.draw()
     # placing the canvas on the Tkinter window
-    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=27, sticky='nesw')
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=33, sticky='nesw')
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
@@ -460,7 +460,7 @@ def main():
 
             # getting the subplot
             j = i // ncols
-            if nrows == 1:
+            if nrows == 1 or ncols == 1:
                 plot1 = root.axs[i]
             else:
                 plot1 = root.axs[j, i % ncols]
