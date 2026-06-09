@@ -43,13 +43,13 @@ def add_voigt(x: np.array, y: np.array, lambda0: float, b: float, n: float, f: f
     """
     return y + voigt_optical_depth(x, lambda0=lambda0, b=b, N=n, f=f, gamma=gamma, v_rad=v_rad)
 
-def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
+def make_multi_comp_voigt(fit_df: pd.DataFrame) -> Callable:
     """
     Makes a multi component voigt function based on an input DataFrame.
 
     Parameters
     ----------
-    input_df : pd.DataFrame
+    fit_df : pd.DataFrame
         DataFrame including species names, wavelengths, values and cloud component numbers for v_rad, b and n. 
 
     Returns
@@ -58,9 +58,9 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         Multi voigt absorption function.
     """
     # Get individual wavelength ranges
-    range_df = input_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
+    range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
     # Get individual velocity, Gaussian width and column density components.
-    c_comps = input_df[['v_comp', 'b_comp', 'n_comp', 'Species']].drop_duplicates().reset_index(drop=True)
+    c_comps = fit_df[['v_comp', 'b_comp', 'n_comp', 'Species']].drop_duplicates().reset_index(drop=True)
 
     # initialize list of parameters for the generated function
     comp_param_names = []
@@ -85,10 +85,10 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
             incl_n.append(n_comp)
 
     # Add atomic/molecular data for transitions
-    for j, row in input_df.iterrows():
+    for j, row in fit_df.iterrows():
         comp_param_names += [f'lambda0_{j}', f'f_{j}', f'gamma_{j}']
 
-    if any(input_df['WavelengthAir'] < 3303):
+    if any(fit_df['WavelengthAir'] < 3303):
         comp_param_names += ['v_rad_corr']  # Add radial velocity correction parameter if one of the lines 
         # is in the near-UV, to account for possible wavelength calibration issues in this range.
 
@@ -115,7 +115,7 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         # Initalize optical depth of 0
         body_lines.append(f'    y{i} = np.zeros(len(x{i}))')
         # Get lines which are in the wavelength window
-        sub_df = input_df.loc[(input_df['w_min'] == w_range["w_min"]) & (input_df['w_max'] == w_range["w_max"])]
+        sub_df = fit_df.loc[(fit_df['w_min'] == w_range["w_min"]) & (fit_df['w_max'] == w_range["w_max"])]
         # Add voigt component for each line in the window
         for j, row in sub_df.iterrows():
             v_comp = row['v_comp']  # Radial velocity component
@@ -168,7 +168,8 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> Mod
     # generate parameters
     params = vmodel.make_params()
 
-    params['v_rad_corr'].set(value=0, min=-3, max=3)  # Set radial velocity correction parameter
+    if any(fit_df['WavelengthAir'] < 3303):
+        params['v_rad_corr'].set(value=0, min=-3, max=3)  # Set radial velocity correction parameter
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
