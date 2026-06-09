@@ -231,6 +231,7 @@ def main():
     'Then, normalize the spectrum and if needed\n'
     'adjust the wavelength ranges for fitting or\n' \
     'mask problematic areas.\n' \
+    'Use Fit continuum if your continuum is curved.\n' \
     'Select an initial radial valocity by \n' \
     'clicking the button.\n'
     'Finally, fit the spectrum and save the result.\n' \
