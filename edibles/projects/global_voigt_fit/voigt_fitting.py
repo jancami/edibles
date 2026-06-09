@@ -103,12 +103,10 @@ def make_multi_comp_voigt(input_df: pd.DataFrame) -> Callable:
         # define instrumental resolution 
         # TODO: refine
         mean_wl = np.mean(w_range)  # mean wavelength of wavelength window
-        if 3500 <= mean_wl < 5000:
+        if mean_wl < 5000:
             inst_res = 80000
-        elif mean_wl < 3500:
-            inst_res = 70000
         else:
-            inst_res = 100000
+            inst_res = 110000
         # Take spectrum within window
         body_lines.append(f'    x{i} = x[(x >= {w_range["w_min"]}) & (x <= {w_range["w_max"]})]')
         # Initalize optical depth of 0
@@ -244,12 +242,12 @@ def main():
             i_df = elem_df.copy()
             i_df.loc[:, 'v_comp'] = v_comp
             i_df.loc[:, f'v_rad_init'] = scl_rv[star_name]
-            i_df.loc[:, f'v_rad_min'] = -20
-            i_df.loc[:, f'v_rad_max'] = 20
+            i_df.loc[:, f'v_rad_min'] = -100
+            i_df.loc[:, f'v_rad_max'] = 100
             i_df.loc[:, 'b_comp'] = v_comp
-            i_df.loc[:, f'b_init'] = 10
+            i_df.loc[:, f'b_init'] = 2
             i_df.loc[:, f'b_min'] = 0
-            i_df.loc[:, f'b_max'] = 20
+            i_df.loc[:, f'b_max'] = 15
             fit_df = pd.concat((fit_df, i_df), ignore_index=True)
 
         # Define wave range for each line
