@@ -519,15 +519,6 @@ def main():
         if root.weight_entry.get() == "":
             root.weight_entry.insert(0, weight_string)
 
-
-    load_btn = tk.Button(root, text="Load Spectrum", command=load_spectrum)
-    load_btn.grid(column=0, row=elnum+3)
-
-    # set starting values for fit using plotted spectrum
-    # for each component v_comp
-    v_rad_comp_entry = tk.Entry(root)
-    v_rad_comp_entry.grid(column=0, row=elnum+8)
-
     root.span = []
 
     def set_v_rad_init():
@@ -636,9 +627,6 @@ def main():
 
         root.canvas.draw_idle()
 
-    range_btn = tk.Button(root, text='Set wavelength range', command=range_function)
-    range_btn.grid(column=0, row=elnum+4)
-
     def guesses_to_df():
         # Get n and b values from text fields and copy to fit_df
         n_string = root.n_entry.get()
@@ -695,10 +683,6 @@ def main():
             root.canvas.draw()
 
         return
-
-    # plot initial guess for fit
-    guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+20)
 
 
     # fitting
@@ -1115,18 +1099,21 @@ def main():
     cont_btn = tk.Button(root, text="Fit Continuum", command=continuum_fit_func)
     cont_btn.grid(column=0, row=elnum+5)
 
-    v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
-    v_rad_btn.grid(column=0, row=elnum+6)
-
     range_btn = tk.Button(root, text='Select Continuum Ranges', command=cont_range_function)
-    range_btn.grid(column=0, row=elnum+8)
+    range_btn.grid(column=0, row=elnum+6)
 
     mask_btn = tk.Button(root, text='Select Mask Ranges', command=mask_function)
-    mask_btn.grid(column=0, row=elnum+9)
+    mask_btn.grid(column=0, row=elnum+7)
     
     range_btn = tk.Button(root, text='Set Wavelength Range', command=range_function)
-    range_btn.grid(column=0, row=elnum+10)
+    range_btn.grid(column=0, row=elnum+8)
     
+    v_rad_btn = tk.Button(root, text='v_rad init', command=set_v_rad_init)
+    v_rad_btn.grid(column=0, row=elnum+9)
+
+    v_rad_comp_entry = tk.Entry(root)
+    v_rad_comp_entry.grid(column=0, row=elnum+10)
+
     clear_df_btn = tk.Button(root, text="Clear Fit DataFrame", command=clear_df_func)
     clear_df_btn.grid(column=0, row=elnum+11)
 
@@ -1135,6 +1122,10 @@ def main():
 
     save_btn = tk.Button(root, text="Save Fit Results", command=save_function)
     save_btn.grid(column=0, row=elnum+13)
+
+    # plot initial guess for fit
+    guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
+    guess_btn.grid(column=0, row=elnum+20)
 
 
     root.grid_columnconfigure(1, weight=1)
