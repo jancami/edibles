@@ -922,6 +922,16 @@ def main():
         root.result = None
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
 
+    #removing the last component of a the radial velocity
+    def remove_last_comp():
+        if root.fit_df.empty:
+            print_msg("No component to remove.")
+            return
+        last_v_comp = root.fit_df['v_comp'].max()
+        root.fit_df = root.fit_df[root.fit_df['v_comp'] != last_v_comp].reset_index(drop=True)
+        print_msg(f"Removed component {last_v_comp}.")
+        print(root.fit_df)
+    
     # set starting values for fit using plotted spectrum
     # for each component v_comp
 
@@ -1117,15 +1127,18 @@ def main():
     clear_df_btn = tk.Button(root, text="Clear Fit DataFrame", command=clear_df_func)
     clear_df_btn.grid(column=0, row=elnum+11)
 
+    remove_comp_btn = tk.Button(root, text="Remove Last Component", command=remove_last_comp)
+    remove_comp_btn.grid(column=0, row=elnum+12)
+
     fit_btn = tk.Button(root, text="Fit Spectrum", bg='orange', command=fit_spectrum)
-    fit_btn.grid(column=0, row=elnum+12)
+    fit_btn.grid(column=0, row=elnum+13)
 
     save_btn = tk.Button(root, text="Save Fit Results", command=save_function)
-    save_btn.grid(column=0, row=elnum+13)
+    save_btn.grid(column=0, row=elnum+14)
 
     # plot initial guess for fit
     guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+20)
+    guess_btn.grid(column=0, row=elnum+21)
 
 
     root.grid_columnconfigure(1, weight=1)
