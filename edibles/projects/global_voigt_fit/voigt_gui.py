@@ -389,7 +389,7 @@ def main():
     # containing the Matplotlib figure
     root.canvas.draw()
     # placing the canvas on the Tkinter window
-    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=27, sticky='nesw')
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=35, sticky='nesw')
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
@@ -1137,7 +1137,7 @@ def main():
 
     # plot initial guess for fit
     guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+21)
+    guess_btn.grid(column=0, row=elnum+15)
 
 
     root.grid_columnconfigure(1, weight=1)
