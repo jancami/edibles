@@ -555,8 +555,8 @@ def main():
                 for i, row in root.fit_df.iterrows():
                     if row['v_comp'] == int(v_comp):
                         root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
-                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 0.1
-                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 0.1
+                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 1
+                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 1
 
                 print(root.fit_df)
                 plot_fit_info()
