@@ -927,9 +927,14 @@ def main():
             print_msg("No component to remove.")
             return
         last_v_comp = root.fit_df['v_comp'].max()
-        root.fit_df = root.fit_df[root.fit_df['v_comp'] != last_v_comp].reset_index(drop=True)
-        print_msg(f"Removed component {last_v_comp}.")
-        print(root.fit_df)
+        last_comp_indices = root.fit_df[root.fit_df['v_comp'] == last_v_comp].index
+        for key in list(root.vlines.keys()):
+            if key[1] in last_comp_indices:
+                root.vlines[key].remove()
+                del root.vlines[key]
+                root.fit_df = root.fit_df[root.fit_df['v_comp'] != last_v_comp].reset_index(drop=True)
+                root.canvas.draw()
+                print_msg(f"Removed component {last_v_comp}.")
     
     # set starting values for fit using plotted spectrum
     # for each component v_comp
@@ -1137,7 +1142,7 @@ def main():
 
     # plot initial guess for fit
     guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+15)
+    guess_btn.grid(column=0, row=elnum+21)
 
 
     root.grid_columnconfigure(1, weight=1)
