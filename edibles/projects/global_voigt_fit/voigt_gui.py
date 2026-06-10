@@ -921,7 +921,7 @@ def main():
         root.result = None
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
 
-    #removing the last component of a the radial velocity
+    # remove the last component of the radial velocity
     def remove_last_comp():
         if root.fit_df.empty:
             print_msg("No component to remove.")
