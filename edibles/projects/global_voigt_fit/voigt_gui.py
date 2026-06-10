@@ -250,21 +250,21 @@ def main():
 
     # Add text field for weights of the fit windows
     weight_lbl = tk.Label(root, text="Enter weights for fit windows (comma separated):")
-    weight_lbl.grid(column=0, row=elnum+14)
+    weight_lbl.grid(column=0, row=elnum+15)
     root.weight_entry = tk.Entry(root)
-    root.weight_entry.grid(column=0, row=elnum+15)
+    root.weight_entry.grid(column=0, row=elnum+16)
 
     # Add text field for column densities
     n_lbl = tk.Label(root, text="Enter column densities (comma separated):")
-    n_lbl.grid(column=0, row=elnum+16)
+    n_lbl.grid(column=0, row=elnum+17)
     root.n_entry = tk.Entry(root)
-    root.n_entry.grid(column=0, row=elnum+17)
+    root.n_entry.grid(column=0, row=elnum+18)
 
     # Add text field for b values
     b_lbl = tk.Label(root, text="Enter b values (comma separated):")
-    b_lbl.grid(column=0, row=elnum+18)
+    b_lbl.grid(column=0, row=elnum+19)
     root.b_entry = tk.Entry(root)
-    root.b_entry.grid(column=0, row=elnum+19)
+    root.b_entry.grid(column=0, row=elnum+20)
 
 
     # function to display text when
@@ -555,8 +555,8 @@ def main():
                 for i, row in root.fit_df.iterrows():
                     if row['v_comp'] == int(v_comp):
                         root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
-                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 1
-                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 1
+                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 0.1
+                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 0.1
 
                 print(root.fit_df)
                 plot_fit_info()
