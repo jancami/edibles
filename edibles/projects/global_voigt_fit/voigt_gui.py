@@ -349,6 +349,16 @@ def main():
                   'Clicking it a second time will add another\n'
                   'cloud component for the same species.')
         print(root.fit_df)
+        
+        # Add default n and b values to text fields if they are empty
+        n_comps = root.fit_df[['n_comp', 'n_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['n_comp'])
+        n_init_list = [f'{i:.2e}' for i in n_comps['n_init']]
+        root.n_entry.delete(0, tk.END)
+        root.n_entry.insert(0, ", ".join(n_init_list))
+
+        b_comps = root.fit_df[['b_comp', 'b_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['b_comp'])
+        root.b_entry.delete(0, tk.END)
+        root.b_entry.insert(0, ", ".join(b_comps['b_init'].astype(str).values))
 
 
     # Button for elements
