@@ -1,5 +1,6 @@
 from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper, make_multi_comp_voigt
 import tkinter as tk
+from tkinter import simpledialog
 from importlib.resources import files
 import pandas as pd
 from edibles.utils.edibles_oracle import EdiblesOracle
@@ -380,8 +381,8 @@ def main():
     star_entry.grid(column=0, row=elnum+2)
 
     # the figure that will contain the plot ==============================================================
-    nrows = 2
-    ncols = 3
+    nrows = simpledialog.askinteger("Input", "How many rows?", minvalue=1, parent=root)
+    ncols = simpledialog.askinteger("Input", "How many columns? The number of columns cannot be 1!", minvalue=2, parent=root)
     root.fig, root.axs = plt.subplots(nrows=nrows, ncols=ncols)
     plt.close('all')
     # creating the Tkinter canvas
