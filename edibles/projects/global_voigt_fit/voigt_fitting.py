@@ -165,7 +165,8 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> Mod
     # generate parameters
     params = vmodel.make_params()
 
-    params['v_rad_corr'].set(value=0, min=-3, max=3)  # Set radial velocity correction parameter
+    has_short_wl = (fit_df['WavelengthAir'] < 3303).any() #only the case when spectrum is at <3303 !important so the covar matrix can be made
+    params['v_rad_corr'].set(value=0, min=-3, max=3, vary=has_short_wl)
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
@@ -184,7 +185,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> Mod
         # Shared parameters
         params[f'b_{b_comp}'].set(value=row['b_init'],  min=row['b_min'], max=row['b_max'], vary=True)
         params[f'v_rad_{v_comp}'].set(value=row[f'v_rad_init'],    min=row['v_rad_min'], max=row['v_rad_max'])
-        params[f'n_{n_comp}'].set(value=row['n_init'], min=0)
+        params[f'n_{n_comp}'].set(value=row['n_init'], min=0, vary=row['n_init'] != 0) #if n_init = 0, skip so covar matrix can be found
 
     # convert weights for individual windows to array of length fit_spec
     weights = np.ones(len(fit_spec[0]))
