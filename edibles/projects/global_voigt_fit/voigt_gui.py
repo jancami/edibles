@@ -218,16 +218,8 @@ def main():
     root.title("Voigt fitter")
     root.geometry("1600x1000")
 
-    # make label for important messages
-    msg_lbl = tk.Label(root, text="")
-    msg_lbl.grid(column=2, row=0, rowspan=25)
-
-    def print_msg(msg: str):
-        msg_lbl.config(text=msg)
-        print(msg)
-
     # PRinting welcome message
-    print_msg('Welcome to the global voigt fitting GUI!\n' \
+    print('Welcome to the global voigt fitting GUI!\n' \
     'Click on a species to add it to the fit,\n' \
     'or to add another cloud component for the species.\n' \
     'Then, enter a star name in the text field.\n' \
@@ -298,7 +290,7 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
-        print_msg(f'Adding a species {elem} to fit_df.\n' \
+        print(f'Adding a species {elem} to fit_df.\n' \
                   'Clicking it a second time will add another\n' \
                   'cloud component for the same species.')
         print(root.fit_df)
@@ -349,7 +341,7 @@ def main():
 
         # load spectra within wavelength range
         root.fit_df = pd.concat([root.fit_df, ext_df], ignore_index=True)
-        print_msg(f'Adding a species {molec} to fit_df.\n' \
+        print(f'Adding a species {molec} to fit_df.\n' \
                   'Clicking it a second time will add another\n'
                   'cloud component for the same species.')
         print(root.fit_df)
@@ -453,12 +445,11 @@ def main():
     # TODO: add option to exclude a spectrum from coaddidtion if it is bad (e.g. by plotting the spectra and letting the user click on the bad spectra)
     def load_spectrum():
         root.star_name = star_entry.get()
-        msg_lbl.config(text=f"Loading spectrum for {root.star_name}...")
         print(f"Loading spectrum for {root.star_name}...")
         # load spectrum for star_name
         # extract fitting ranges
         if root.fit_df.empty:
-            print_msg("No element selected. Spectra cannot be loaded as no fitting ranges are defined.")
+            print("No element selected. Spectra cannot be loaded as no fitting ranges are defined.")
             return
         
         range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
@@ -484,7 +475,7 @@ def main():
             root.vlines = {}
             spectra = []
             if len(file_list) == 0:
-                print_msg(f"No spectra found for {root.star_name} in wavelength range {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}.")
+                print(f"No spectra found for {root.star_name} in wavelength range {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}.")
 
             for file in file_list:
                 print(f"Loaded file: {file}, wave range: {wave_range['w_min']:.2f} - {wave_range['w_max']:.2f}")
@@ -588,7 +579,7 @@ def main():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
-        print_msg("Select wavelength range by clicking and dragging on the plot.\n" \
+        print("Select wavelength range by clicking and dragging on the plot.\n" \
         "For each window you will have to click the button again.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
@@ -602,7 +593,7 @@ def main():
                         root.fit_df.loc[i, 'w_min'] = xmin
                         root.fit_df.loc[i, 'w_max'] = xmax
 
-                print_msg(f"Updated wavelength range for {len(root.fit_df)} lines.")
+                print(f"Updated wavelength range for {len(root.fit_df)} lines.")
                 print(root.fit_df)    
                 root.w_range_active = False
                 range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
@@ -671,7 +662,7 @@ def main():
                             weight = weights[i]
                             root.fit_df.loc[k, 'weight'] = weight
                         else:
-                            print_msg("Number of weights does not match number of fit windows. Ignoring weights.")
+                            print("Number of weights does not match number of fit windows. Ignoring weights.")
 
         guesses_to_df()
         _, guess = voigt_fit_wrapper(root.fit_df, root.fit_spec, fit=False)
@@ -707,10 +698,10 @@ def main():
         Assigns result to root.result and prints best fit values to console.
         """
         if root.fit_spec is None:
-            print_msg("No spectrum loaded.")
+            print("No spectrum loaded.")
             return
         
-        print_msg(f'Fitting voigt model for {root.fit_df["v_comp"].nunique()} components and {root.fit_df["Species"].nunique()} species.\n')
+        print(f'Fitting voigt model for {root.fit_df["v_comp"].nunique()} components and {root.fit_df["Species"].nunique()} species.\n')
 
         guesses_to_df()
 
@@ -726,7 +717,7 @@ def main():
                             weight = weights[i]
                             root.fit_df.loc[k, 'weight'] = weight
                         else:
-                            print_msg("Number of weights does not match number of fit windows. Ignoring weights.")
+                            print("Number of weights does not match number of fit windows. Ignoring weights.")
 
         print(range_df)
         print(root.fit_df)
@@ -780,7 +771,7 @@ def main():
         # Save best fit array separately
         np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}_bestfit.dat', root.result.best_fit)
 
-        print_msg("Fit results saved successfully.")
+        print("Fit results saved successfully.")
 
     def continuum_fit_func():
         """
@@ -799,7 +790,7 @@ def main():
         """
 
         if root.fit_spec is None:
-            print_msg("Load a spectrum first.")
+            print("Load a spectrum first.")
             return
 
         range_df = root.fit_df[['w_min','w_max']].drop_duplicates().sort_values('w_min').reset_index(drop=True)
@@ -875,9 +866,9 @@ def main():
                     plot1.plot(spec[0], spec[1], color='k', label='Data')
                 plot1.legend()
                 root.canvas.draw()
-                print_msg(f"Window {i+1}: continuum applied with {len(cont_anchors)} anchors.")
+                print(f"Window {i+1}: continuum applied with {len(cont_anchors)} anchors.")
             else:
-                print_msg(f"Window {i+1}: skipped (fewer than 2 anchors).")
+                print(f"Window {i+1}: skipped (fewer than 2 anchors).")
         
         plt.close('all')
         root.canvas.draw()
@@ -891,7 +882,7 @@ def main():
         star_name = star_entry.get()
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
-        print_msg(f'Loading fit results: {fitting_dir / f"{star_name}_{elem_str}.csv"}')
+        print(f'Loading fit results: {fitting_dir / f"{star_name}_{elem_str}.csv"}')
         if star_name is None:
             print("No star name entered.")
             return
@@ -954,12 +945,12 @@ def main():
         root.fit_df = pd.DataFrame()
         root.fit_spec = None
         root.result = None
-        print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
+        print('Clearing the present fit_df DataFrame. A new fit can be started.')
 
     # remove the last component of the radial velocity
     def remove_last_comp():
         if root.fit_df.empty:
-            print_msg("No component to remove.")
+            print("No component to remove.")
             return
         last_v_comp = root.fit_df['v_comp'].max()
         last_comp_indices = root.fit_df[root.fit_df['v_comp'] == last_v_comp].index
@@ -969,7 +960,7 @@ def main():
                 del root.vlines[key]
                 root.fit_df = root.fit_df[root.fit_df['v_comp'] != last_v_comp].reset_index(drop=True)
                 root.canvas.draw()
-                print_msg(f"Removed component {last_v_comp}.")
+                print(f"Removed component {last_v_comp}.")
     
     # set starting values for fit using plotted spectrum
     # for each component v_comp
@@ -1032,7 +1023,7 @@ def main():
         root.w_range_active = True
         root.range_counter = 0
         range_list = []
-        print_msg("Select wavelength range by clicking and dragging on the plot.")
+        print("Select wavelength range by clicking and dragging on the plot.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
         def onselect(xmin, xmax):
@@ -1077,7 +1068,7 @@ def main():
                         root.canvas.draw()
 
 
-                print_msg(f'Updated wavelength range for {len(root.fit_df)} lines.\n'
+                print(f'Updated wavelength range for {len(root.fit_df)} lines.\n'
                           'For each window you will have to click the button again.')
                 print(root.fit_df)    
                 root.range_counter += 1
@@ -1093,7 +1084,7 @@ def main():
         if root.cid is not None:
             root.canvas.mpl_disconnect(root.cid)
         root.w_range_active = True
-        print_msg("Select wavelength range by clicking and dragging on the plot.\n" \
+        print("Select wavelength range by clicking and dragging on the plot.\n" \
         "For each window you will have to click the button again.")
         # make range selection tool using matplotlib span selector
         # apply it on canvas
@@ -1127,7 +1118,7 @@ def main():
                     plot1.legend()
                     root.canvas.draw()
 
-                    print_msg(f"Added mask to fitting spectrum.")
+                    print(f"Added mask to fitting spectrum.")
                 root.w_range_active = False
 
         root.span.clear()
