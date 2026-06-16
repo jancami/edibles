@@ -17,6 +17,7 @@ from matplotlib.widgets import SpanSelector
 from edibles.utils import transformations
 from lmfit.model import save_modelresult, load_modelresult
 from scipy.interpolate import CubicSpline
+import pickle
 
 # error bars for the parameters, make tables for CH+ globally-fitted params
 
@@ -65,8 +66,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
-    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 50/c)
-    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 50/c)
+    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 80/c)
+    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 80/c)
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
@@ -170,12 +171,13 @@ def results_to_df(result, fit_df):
     """
     best_values = result.best_values
 
+    params = result.params
+
     print('results to file')
 
     range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
     c_comps = fit_df[['v_comp', 'Species']].drop_duplicates().reset_index(drop=True)
-
 
     # v_rad, b and N for each component
     for i, v_comp in c_comps.iterrows():
@@ -185,9 +187,11 @@ def results_to_df(result, fit_df):
                 fit_df.loc[k, f'b_fit'] = best_values[f'b_{v_comp["v_comp"]}']
                 fit_df.loc[k, 'n_fit']     = best_values[f'n_{int(row["n_comp"])}'] 
 
+                fit_df.loc[k,'v_rad_err'] = params[f'v_rad_{v_comp["v_comp"]}'].stderr
+                fit_df.loc[k,'b_err'] = params[f'b_{v_comp["v_comp"]}'].stderr
+                fit_df.loc[k, 'n_err'] = params[f'n_{int(row["n_comp"])}'].stderr if best_values[f'n_{int(row["n_comp"])}'] != 0 else None
     print(fit_df)
-
-
+    
     return fit_df
 
 def main():
@@ -233,6 +237,7 @@ def main():
     'Then, normalize the spectrum and if needed\n'
     'adjust the wavelength ranges for fitting or\n' \
     'mask problematic areas.\n' \
+    'Use Fit continuum if your continuum is curved.\n' \
     'Select an initial radial valocity by \n' \
     'clicking the button.\n'
     'Finally, fit the spectrum and save the result.\n' \
@@ -348,6 +353,16 @@ def main():
                   'Clicking it a second time will add another\n'
                   'cloud component for the same species.')
         print(root.fit_df)
+        
+        # Add default n and b values to text fields if they are empty
+        n_comps = root.fit_df[['n_comp', 'n_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['n_comp'])
+        n_init_list = [f'{i:.2e}' for i in n_comps['n_init']]
+        root.n_entry.delete(0, tk.END)
+        root.n_entry.insert(0, ", ".join(n_init_list))
+
+        b_comps = root.fit_df[['b_comp', 'b_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['b_comp'])
+        root.b_entry.delete(0, tk.END)
+        root.b_entry.insert(0, ", ".join(b_comps['b_init'].astype(str).values))
 
 
     # Button for elements
@@ -717,7 +732,17 @@ def main():
         print(root.fit_df)
         
         result = voigt_fit_wrapper(root.fit_df, root.fit_spec[:3]) #4 columns in .dat
+        root.result = result
+        print(result.best_values)
 
+        print("\nfit uncertainties")
+        for name, param in result.params.items():
+            print(
+                f"{name}: value={param.value:.6g}, "
+                f"stderr={param.stderr}"
+            )
+
+        print("errorbars =", result.errorbars)
 
         for i, wave_range in range_df.iterrows():
             # adding the subplot
@@ -741,10 +766,8 @@ def main():
             root.canvas.draw()
 
         print(result.best_values)
-        root.result = result
 
     def save_function():    
-        # Save fitting results in csv file
         res_df = results_to_df(root.result, root.fit_df)
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
@@ -754,8 +777,10 @@ def main():
         # Save spectrum
         np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}.dat', root.fit_spec.T)
 
-        # Save model result 
-        save_modelresult(root.result, fitting_dir / f'{root.star_name}_{elem_str}.sav')
+        # Save best fit array separately
+        np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}_bestfit.dat', root.result.best_fit)
+
+        print_msg("Fit results saved successfully.")
 
     def continuum_fit_func():
         """
@@ -888,8 +913,17 @@ def main():
             # generating the fitting function so it can be used for loading the results
             voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
-            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav', funcdefs={'voigt_n_comp': voigt_n_comp})
-
+            # Load best fit array
+            best_fit_path = fitting_dir / f'{star_name}_{elem_str}_bestfit.dat'
+            if best_fit_path.exists():
+                best_fit = np.genfromtxt(best_fit_path)
+                # wrap in a simple object so the rest of the plotting code works unchanged
+                class _FitResult:
+                    pass
+                root.result = _FitResult()
+                root.result.best_fit = best_fit
+            else:
+                root.result = None
             range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
             # update fit_df with new wavelength range for all lines
