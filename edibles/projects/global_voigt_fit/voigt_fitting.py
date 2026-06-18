@@ -169,7 +169,8 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> Mod
     params = vmodel.make_params()
 
     has_short_wl = (fit_df['WavelengthAir'] < 3303).any() #only the case when spectrum is at <3303 !important so the covar matrix can be made
-    params['v_rad_corr'].set(value=0, min=-3, max=3, vary=has_short_wl)
+    if any(fit_df['WavelengthAir'] < 3303):
+        params['v_rad_corr'].set(value=0, min=-3, max=3, vary=has_short_wl)
 
     # Fixed atomic parameters — generalized over all components. Fixing them like this does not significantly decrease the fitting performance.
     for i, row in fit_df.iterrows():
