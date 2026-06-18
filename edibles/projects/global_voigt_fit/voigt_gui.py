@@ -397,7 +397,7 @@ def main():
 
     # the figure that will contain the plot ==============================================================
     nrows = simpledialog.askinteger("Input", "How many rows?", minvalue=1, parent=root)
-    ncols = simpledialog.askinteger("Input", "How many columns? The number of columns cannot be 1!", minvalue=2, parent=root)
+    ncols = simpledialog.askinteger("Input", "How many columns?", minvalue=1, parent=root)
     root.fig, root.axs = plt.subplots(nrows=nrows, ncols=ncols)
     plt.close('all')
     # creating the Tkinter canvas
@@ -426,7 +426,9 @@ def main():
             for i, wave_range in range_df.iterrows():
                 # getting the subplot axis
                 j = i // ncols
-                if nrows == 1:
+                if nrows == 1 and ncols == 1:
+                    plot1 = root.axs
+                elif nrows == 1 or ncols == 1:
                     plot1 = root.axs[i]
                 else:
                     plot1 = root.axs[j, i % ncols]
@@ -467,8 +469,11 @@ def main():
 
         file_lists = []
         coadded_spectra = []
-        for plot1 in root.axs.flatten():
-            plot1.clear()
+        if root.axs is not list:
+            root.axs.clear()
+        else:
+            for plot1 in root.axs.flatten():
+                plot1.clear()
         for i, wave_range in range_df.iterrows():
             pythia = EdiblesOracle()
             file_list = pythia.getFilteredObsList(object=[root.star_name], OrdersOnly=True, Wave=np.mean(wave_range), closest_order=True)
@@ -476,7 +481,9 @@ def main():
 
             # getting the subplot
             j = i // ncols
-            if nrows == 1 or ncols == 1:
+            if nrows == 1 and ncols == 1:
+                plot1 = root.axs
+            elif nrows == 1 or ncols == 1:
                 plot1 = root.axs[i]
             else:
                 plot1 = root.axs[j, i % ncols]
@@ -613,7 +620,9 @@ def main():
                     new_spec_list.append(spec)
                     # getting the subplot
                     j = i // ncols
-                    if nrows == 1:
+                    if nrows == 1 and ncols == 1:
+                        plot1 = root.axs
+                    elif nrows == 1:
                         plot1 = root.axs[i]
                     else:
                         plot1 = root.axs[j, i % ncols]
@@ -636,9 +645,14 @@ def main():
 
 
         root.span.clear()
-        for _, ax in enumerate(root.axs.flatten()):
+        if root.axs is not list:
+            ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
+        else:
+            for _, ax in enumerate(root.axs.flatten()):
+                selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+                root.span.append(selector)
 
         root.canvas.draw_idle()
 
@@ -679,7 +693,9 @@ def main():
         for i, wave_range in range_df.iterrows():
             # adding the subplot
             j = i // ncols
-            if nrows == 1:
+            if nrows == 1 and ncols == 1:
+                plot1 = root.axs
+            elif nrows == 1 or ncols == 1:
                 plot1 = root.axs[i]
             else:
                 plot1 = root.axs[j, i % ncols]
@@ -747,7 +763,9 @@ def main():
         for i, wave_range in range_df.iterrows():
             # adding the subplot
             j = i // ncols
-            if nrows == 1:
+            if nrows == 1 and ncols == 1:
+                plot1 = root.axs
+            elif nrows == 1 or ncols == 1:
                 plot1 = root.axs[i]
             else:
                 plot1 = root.axs[j, i % ncols]
@@ -866,7 +884,10 @@ def main():
                 root.fit_spec[2, mask] /= continuum
 
                 j = i // ncols
-                plot1 = root.axs[j, i % ncols] if nrows > 1 else root.axs[i]
+                if root.axs is not list:
+                    plot1 = root.axs
+                else:
+                    plot1 = root.axs[j, i % ncols] if nrows > 1 else root.axs[i]
                 plot1.clear()
                 spec = root.fit_spec[:3, mask]
                 if root.errorbar:
@@ -931,7 +952,9 @@ def main():
                 spec = util_functions.crop_spectrum(root.fit_spec, *wave_range)
                 # getting the subplot
                 j = i // ncols
-                if nrows == 1:
+                if nrows == 1 and ncols == 1:
+                    plot1 = root.axs
+                elif nrows == 1 or ncols == 1:
                     plot1 = root.axs[i]
                 else:
                     plot1 = root.axs[j, i % ncols]
@@ -1047,7 +1070,9 @@ def main():
                 for i, wave_range in range_df.iterrows():
                     # adding the subplot
                     j = i // ncols
-                    if nrows == 1:
+                    if nrows == 1 and ncols == 1:
+                        plot1 = root.axs
+                    elif nrows == 1 or ncols == 1:
                         plot1 = root.axs[i]
                     else:
                         plot1 = root.axs[j, i % ncols]
@@ -1083,9 +1108,14 @@ def main():
                 root.range_counter += 1
 
         root.span.clear()
-        for _, ax in enumerate(root.axs.flatten()):
+        if root.axs is not list:
+            ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
+        else:
+            for _, ax in enumerate(root.axs.flatten()):
+                selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+                root.span.append(selector)
 
         root.canvas.draw_idle()
 
@@ -1107,7 +1137,9 @@ def main():
             for i, wave_range in range_df.iterrows():
                 # adding the subplot
                 j = i // ncols
-                if nrows == 1:
+                if nrows == 1 and ncols == 1:
+                    plot1 = root.axs
+                elif nrows == 1 or ncols == 1:
                     plot1 = root.axs[i]
                 else:
                     plot1 = root.axs[j, i % ncols]
@@ -1131,9 +1163,14 @@ def main():
                 root.w_range_active = False
 
         root.span.clear()
-        for _, ax in enumerate(root.axs.flatten()):
+        if root.axs is not list:
+            ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
+        else:
+            for _, ax in enumerate(root.axs.flatten()):
+                selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
+                root.span.append(selector)
 
         root.canvas.draw_idle()
 
