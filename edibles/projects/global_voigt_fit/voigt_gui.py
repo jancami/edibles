@@ -1,5 +1,6 @@
 from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper, make_multi_comp_voigt
 import tkinter as tk
+from tkinter import simpledialog
 from importlib.resources import files
 import pandas as pd
 from edibles.utils.edibles_oracle import EdiblesOracle
@@ -16,6 +17,7 @@ from matplotlib.widgets import SpanSelector
 from edibles.utils import transformations
 from lmfit.model import save_modelresult, load_modelresult
 from scipy.interpolate import CubicSpline
+import pickle
 
 # error bars for the parameters, make tables for CH+ globally-fitted params
 
@@ -64,8 +66,8 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
 
     # make wavelength range +- 150 km/s around line center
     c = 299792.458 # speed of light in km/s
-    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 50/c)
-    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 50/c)
+    i_df.loc[:, 'w_min'] = i_df.loc[:, 'WavelengthAir'] * (1 - 80/c)
+    i_df.loc[:, 'w_max'] = i_df.loc[:, 'WavelengthAir'] * (1 + 80/c)
 
     # if wavelength ranges overlap, merge them
     i_df = i_df.sort_values(by='w_min').reset_index(drop=True)
@@ -169,12 +171,13 @@ def results_to_df(result, fit_df):
     """
     best_values = result.best_values
 
+    params = result.params
+
     print('results to file')
 
     range_df = fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
     c_comps = fit_df[['v_comp', 'Species']].drop_duplicates().reset_index(drop=True)
-
 
     # v_rad, b and N for each component
     for i, v_comp in c_comps.iterrows():
@@ -184,9 +187,11 @@ def results_to_df(result, fit_df):
                 fit_df.loc[k, f'b_fit'] = best_values[f'b_{v_comp["v_comp"]}']
                 fit_df.loc[k, 'n_fit']     = best_values[f'n_{int(row["n_comp"])}'] 
 
+                fit_df.loc[k,'v_rad_err'] = params[f'v_rad_{v_comp["v_comp"]}'].stderr
+                fit_df.loc[k,'b_err'] = params[f'b_{v_comp["v_comp"]}'].stderr
+                fit_df.loc[k, 'n_err'] = params[f'n_{int(row["n_comp"])}'].stderr if best_values[f'n_{int(row["n_comp"])}'] != 0 else None
     print(fit_df)
-
-
+    
     return fit_df
 
 def main():
@@ -232,6 +237,7 @@ def main():
     'Then, normalize the spectrum and if needed\n'
     'adjust the wavelength ranges for fitting or\n' \
     'mask problematic areas.\n' \
+    'Use Fit continuum if your continuum is curved.\n' \
     'Select an initial radial valocity by \n' \
     'clicking the button.\n'
     'Finally, fit the spectrum and save the result.\n' \
@@ -250,21 +256,21 @@ def main():
 
     # Add text field for weights of the fit windows
     weight_lbl = tk.Label(root, text="Enter weights for fit windows (comma separated):")
-    weight_lbl.grid(column=0, row=elnum+14)
+    weight_lbl.grid(column=0, row=elnum+15)
     root.weight_entry = tk.Entry(root)
-    root.weight_entry.grid(column=0, row=elnum+15)
+    root.weight_entry.grid(column=0, row=elnum+16)
 
     # Add text field for column densities
     n_lbl = tk.Label(root, text="Enter column densities (comma separated):")
-    n_lbl.grid(column=0, row=elnum+16)
+    n_lbl.grid(column=0, row=elnum+17)
     root.n_entry = tk.Entry(root)
-    root.n_entry.grid(column=0, row=elnum+17)
+    root.n_entry.grid(column=0, row=elnum+18)
 
     # Add text field for b values
     b_lbl = tk.Label(root, text="Enter b values (comma separated):")
-    b_lbl.grid(column=0, row=elnum+18)
+    b_lbl.grid(column=0, row=elnum+19)
     root.b_entry = tk.Entry(root)
-    root.b_entry.grid(column=0, row=elnum+19)
+    root.b_entry.grid(column=0, row=elnum+20)
 
 
     # function to display text when
@@ -347,6 +353,16 @@ def main():
                   'Clicking it a second time will add another\n'
                   'cloud component for the same species.')
         print(root.fit_df)
+        
+        # Add default n and b values to text fields if they are empty
+        n_comps = root.fit_df[['n_comp', 'n_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['n_comp'])
+        n_init_list = [f'{i:.2e}' for i in n_comps['n_init']]
+        root.n_entry.delete(0, tk.END)
+        root.n_entry.insert(0, ", ".join(n_init_list))
+
+        b_comps = root.fit_df[['b_comp', 'b_init']].drop_duplicates().reset_index(drop=True).sort_values(by=['b_comp'])
+        root.b_entry.delete(0, tk.END)
+        root.b_entry.insert(0, ", ".join(b_comps['b_init'].astype(str).values))
 
 
     # Button for elements
@@ -380,8 +396,8 @@ def main():
     star_entry.grid(column=0, row=elnum+2)
 
     # the figure that will contain the plot ==============================================================
-    nrows = 2
-    ncols = 3
+    nrows = simpledialog.askinteger("Input", "How many rows?", minvalue=1, parent=root)
+    ncols = simpledialog.askinteger("Input", "How many columns? The number of columns cannot be 1!", minvalue=2, parent=root)
     root.fig, root.axs = plt.subplots(nrows=nrows, ncols=ncols)
     plt.close('all')
     # creating the Tkinter canvas
@@ -389,7 +405,7 @@ def main():
     # containing the Matplotlib figure
     root.canvas.draw()
     # placing the canvas on the Tkinter window
-    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=33, sticky='nesw')
+    root.canvas.get_tk_widget().grid(column=1, row=1, rowspan=35, sticky='nesw')
     # creating the Matplotlib toolbar
     toolbar_frame = tk.Frame(master=root)
     toolbar_frame.grid(column=1, row=1)
@@ -716,7 +732,17 @@ def main():
         print(root.fit_df)
         
         result = voigt_fit_wrapper(root.fit_df, root.fit_spec[:3]) #4 columns in .dat
+        root.result = result
+        print(result.best_values)
 
+        print("\nfit uncertainties")
+        for name, param in result.params.items():
+            print(
+                f"{name}: value={param.value:.6g}, "
+                f"stderr={param.stderr}"
+            )
+
+        print("errorbars =", result.errorbars)
 
         for i, wave_range in range_df.iterrows():
             # adding the subplot
@@ -740,10 +766,8 @@ def main():
             root.canvas.draw()
 
         print(result.best_values)
-        root.result = result
 
     def save_function():    
-        # Save fitting results in csv file
         res_df = results_to_df(root.result, root.fit_df)
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
@@ -753,8 +777,10 @@ def main():
         # Save spectrum
         np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}.dat', root.fit_spec.T)
 
-        # Save model result 
-        save_modelresult(root.result, fitting_dir / f'{root.star_name}_{elem_str}.sav')
+        # Save best fit array separately
+        np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}_bestfit.dat', root.result.best_fit)
+
+        print_msg("Fit results saved successfully.")
 
     def continuum_fit_func():
         """
@@ -887,8 +913,17 @@ def main():
             # generating the fitting function so it can be used for loading the results
             voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
-            root.result = load_modelresult(fitting_dir / f'{star_name}_{elem_str}.sav', funcdefs={'voigt_n_comp': voigt_n_comp})
-
+            # Load best fit array
+            best_fit_path = fitting_dir / f'{star_name}_{elem_str}_bestfit.dat'
+            if best_fit_path.exists():
+                best_fit = np.genfromtxt(best_fit_path)
+                # wrap in a simple object so the rest of the plotting code works unchanged
+                class _FitResult:
+                    pass
+                root.result = _FitResult()
+                root.result.best_fit = best_fit
+            else:
+                root.result = None
             range_df = root.fit_df[['w_min', 'w_max']].drop_duplicates().reset_index(drop=True).sort_values(by=['w_min'])
 
             # update fit_df with new wavelength range for all lines
@@ -921,6 +956,21 @@ def main():
         root.result = None
         print_msg('Clearing the present fit_df DataFrame. A new fit can be started.')
 
+    # remove the last component of the radial velocity
+    def remove_last_comp():
+        if root.fit_df.empty:
+            print_msg("No component to remove.")
+            return
+        last_v_comp = root.fit_df['v_comp'].max()
+        last_comp_indices = root.fit_df[root.fit_df['v_comp'] == last_v_comp].index
+        for key in list(root.vlines.keys()):
+            if key[1] in last_comp_indices:
+                root.vlines[key].remove()
+                del root.vlines[key]
+                root.fit_df = root.fit_df[root.fit_df['v_comp'] != last_v_comp].reset_index(drop=True)
+                root.canvas.draw()
+                print_msg(f"Removed component {last_v_comp}.")
+    
     # set starting values for fit using plotted spectrum
     # for each component v_comp
 
@@ -1116,15 +1166,18 @@ def main():
     clear_df_btn = tk.Button(root, text="Clear Fit DataFrame", command=clear_df_func)
     clear_df_btn.grid(column=0, row=elnum+11)
 
+    remove_comp_btn = tk.Button(root, text="Remove Last Component", command=remove_last_comp)
+    remove_comp_btn.grid(column=0, row=elnum+12)
+
     fit_btn = tk.Button(root, text="Fit Spectrum", bg='orange', command=fit_spectrum)
-    fit_btn.grid(column=0, row=elnum+12)
+    fit_btn.grid(column=0, row=elnum+13)
 
     save_btn = tk.Button(root, text="Save Fit Results", command=save_function)
-    save_btn.grid(column=0, row=elnum+13)
+    save_btn.grid(column=0, row=elnum+14)
 
     # plot initial guess for fit
     guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+20)
+    guess_btn.grid(column=0, row=elnum+21)
 
 
     root.grid_columnconfigure(1, weight=1)
