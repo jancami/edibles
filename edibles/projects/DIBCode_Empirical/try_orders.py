@@ -1,4 +1,4 @@
-from importdata import importdata
+from edibles.projects.DIBCode_Empirical.importdata import importdata
 def try_orders(target,minrange,maxrange,ContinuumMin,ContinuumMax):
     for x in range(24):
         try:
