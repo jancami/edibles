@@ -767,18 +767,27 @@ def main():
 
         print(result.best_values)
 
-    def save_function():    
-        res_df = results_to_df(root.result, root.fit_df)
+    def save_function(): 
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
+        sightline_dir = fitting_dir / f'{elem_str} fits' / root.star_name
+        sightline_dir.mkdir(parents=True, exist_ok=True)   
+
+        res_df = results_to_df(root.result, root.fit_df)
         print(elem_str)
-        res_df.to_csv(fitting_dir / f'{root.star_name}_{elem_str}.csv', index=False)
+        res_df.to_csv(sightline_dir / f'{root.star_name}_{elem_str}.csv', index=False)
 
         # Save spectrum
-        np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}.dat', root.fit_spec.T)
+        np.savetxt(sightline_dir / f'{root.star_name}_{elem_str}.dat', root.fit_spec.T)
 
         # Save best fit array separately
-        np.savetxt(fitting_dir / f'{root.star_name}_{elem_str}_bestfit.dat', root.result.best_fit)
+        np.savetxt(sightline_dir / f'{root.star_name}_{elem_str}_bestfit.dat', root.result.best_fit)
+
+        # Save chi square and reduced chi square
+        sav_file_path = sightline_dir / f'{root.star_name}_{elem_str}.sav'
+        with open(sav_file_path, 'w') as f:
+            f.write(f'chisqr: {root.result.chisqr}\n')
+            f.write(f'redchi: {root.result.redchi}\n')
 
         print_msg("Fit results saved successfully.")
 
