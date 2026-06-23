@@ -63,32 +63,21 @@ The syntax to create the example variable ``VARIABLE`` is as follows::
     VARIABLE='/path/to/folder'
     export VARIABLE
 
-There are 4 environment variables required to install and use the EDIBLES package:
+There are two environment variables required to install and use the EDIBLES package:
 
-- PYTHONPATH
 - EDIBLES_DATADIR
 - EDIBLES_DATARELEASE
-- EDIBLES_PYTHONDIR
 
-The 3 environment variables beginning with ``EDIBLES_`` are there to tell the edibles package where your data is, your data version, and the explicit path to the edibles project folder.
+They are here to tell the edibles package where your data is, and your data version.
 
-The ``PYTHONPATH`` variable represents a user defined path to the parent folder where python looks when trying to import python packages (in addition to the default path where pip would install packages). Ideally, all of your python coding should be done within this folder. The edibles python package will also reside within this folder.
+Once completed, your .bashrc file should look something like this::
 
-once completed, your .bashrc file should look something like this::
-
-    PYTHONPATH='/home/python'
-    export PYTHONPATH
-
-    EDIBLES_DATADIR='/data/DR4'
+    EDIBLES_DATADIR='/data/DR5'
     export EDIBLES_DATADIR
 
-    EDIBLES_DATARELEASE='DR4'
+    EDIBLES_DATARELEASE='DR5'
     export EDIBLES_DATARELEASE
 
-    EDIBLES_PYTHONDIR='/home/python/edibles'
-    export EDIBLES_PYTHONDIR
-
-After saving, open a new terminal and type ``echo $PYTHONPATH`` to print the PYTHONPATH to the screen (you can also do this with the others if you like).
 
 Windows
 ^^^^^^^
@@ -103,10 +92,8 @@ To add an environment variable permanently in Windows:
 
    - Choose "New"
    - Enter the variable "Name" and "Value"
-   - for EDIBLES_PYTHONDIR add e.g. C:\\Users\\Username\\Home\\Python\\EDIBLES\\
-   - for PYTHONPATH add e.g. C:\\Users\\Username\\Anaconda3\\lib\\site-packages\\
-   - for EDIBLES_DATADIR add C:\\Users\\Username\\Edibles\\DR4\\
-   - for EDIBLES_DATARELEASE add DR4
+   - for EDIBLES_DATADIR add C:\\Users\\Username\\Edibles\\DR5\\
+   - for EDIBLES_DATARELEASE add DR5
 
 6. Click "Edit" to modify an existing environment variable
 
