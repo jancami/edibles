@@ -770,7 +770,7 @@ def main():
     def save_function(): 
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
-        sightline_dir = fitting_dir / f'{elem_str} fits' / root.star_name
+        sightline_dir = files('edibles') / f'data/voigt_fitting_data/{elem_str} fits' / root.star_name
         sightline_dir.mkdir(parents=True, exist_ok=True)   
 
         res_df = results_to_df(root.result, root.fit_df)
@@ -900,13 +900,13 @@ def main():
         star_name = star_entry.get()
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
-        print_msg(f'Loading fit results: {fitting_dir / f"{star_name}_{elem_str}.csv"}')
+        print_msg(f'Loading fit results: {files("edibles") / f"data/voigt_fitting_data/{elem_str} fits/{star_name}/{star_name}_{elem_str}.csv"}')
         if star_name is None:
             print("No star name entered.")
             return
         try:
             # load fit df
-            fit_df = pd.read_csv(fitting_dir / f'{star_name}_{elem_str}.csv')
+            fit_df = pd.read_csv(files('edibles') / f'data/voigt_fitting_data/{elem_str} fits/{star_name}/{star_name}_{elem_str}.csv')
             print(fit_df)
             fit_df['v_rad_init'] = fit_df['v_rad_fit']
             fit_df['b_init'] = fit_df['b_fit']
@@ -915,7 +915,7 @@ def main():
             root.fit_df = fit_df
 
             # load spectrum
-            root.fit_spec = np.genfromtxt(fitting_dir / f'{star_name}_{elem_str}.dat', unpack=True)
+            root.fit_spec = np.genfromtxt(files('edibles') / f'data/voigt_fitting_data/{elem_str} fits/{star_name}/{star_name}_{elem_str}.dat', unpack=True)
             if root.fit_spec.shape[0] == 3:
                 root.fit_spec = np.vstack([root.fit_spec, root.fit_spec[1:2]]) 
 
@@ -923,7 +923,7 @@ def main():
             voigt_n_comp = make_multi_comp_voigt(root.fit_df)
             # load model result
             # Load best fit array
-            best_fit_path = fitting_dir / f'{star_name}_{elem_str}_bestfit.dat'
+            best_fit_path = files('edibles') / f'data/voigt_fitting_data/{elem_str} fits/{star_name}/{star_name}_{elem_str}_bestfit.dat'
             if best_fit_path.exists():
                 best_fit = np.genfromtxt(best_fit_path)
                 # wrap in a simple object so the rest of the plotting code works unchanged
