@@ -469,7 +469,7 @@ def main():
 
         file_lists = []
         coadded_spectra = []
-        if root.axs is not list:
+        if not isinstance(root.axs, np.ndarray):
             root.axs.clear()
         else:
             for plot1 in root.axs.flatten():
@@ -645,7 +645,7 @@ def main():
 
 
         root.span.clear()
-        if root.axs is not list:
+        if not isinstance(root.axs, np.ndarray):
             ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
@@ -884,7 +884,7 @@ def main():
                 root.fit_spec[2, mask] /= continuum
 
                 j = i // ncols
-                if root.axs is not list:
+                if not isinstance(root.axs, np.ndarray):
                     plot1 = root.axs
                 else:
                     plot1 = root.axs[j, i % ncols] if nrows > 1 else root.axs[i]
@@ -1108,7 +1108,7 @@ def main():
                 root.range_counter += 1
 
         root.span.clear()
-        if root.axs is not list:
+        if not isinstance(root.axs, np.ndarray):
             ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
@@ -1163,7 +1163,7 @@ def main():
                 root.w_range_active = False
 
         root.span.clear()
-        if root.axs is not list:
+        if not isinstance(root.axs, np.ndarray):
             ax = root.axs
             selector = SpanSelector(ax, onselect, 'horizontal', useblit=True, props=dict(alpha=0.5, facecolor='red'))
             root.span.append(selector)
