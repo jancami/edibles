@@ -1,0 +1,48 @@
+"""
+Re-runs the NaI fit for HD 149757 and saves the missing
+_bestfit.dat and .sav files.
+ 
+Edit FITS_ROOT if your path differs.
+"""
+ 
+from pathlib import Path
+import numpy as np
+import pandas as pd
+from edibles.projects.global_voigt_fit.voigt_fitting import voigt_fit_wrapper
+ 
+FITS_ROOT = Path(r'C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data')
+ 
+star_name = 'HD 184915'
+elem_str  = 'NaI'
+ 
+star_dir     = FITS_ROOT / f'{elem_str} fits' / star_name
+csv_path     = star_dir / f'{star_name}_{elem_str}.csv'
+dat_path     = star_dir / f'{star_name}_{elem_str}.dat'
+bestfit_path = star_dir / f'{star_name}_{elem_str}_bestfit.dat'
+sav_path     = star_dir / f'{star_name}_{elem_str}.sav'
+ 
+print(f'Loading {csv_path}')
+fit_df = pd.read_csv(csv_path)
+fit_df['v_rad_init'] = fit_df['v_rad_fit']
+fit_df['v_rad_min']  = fit_df['v_rad_fit'] - 1
+fit_df['v_rad_max']  = fit_df['v_rad_fit'] + 1
+fit_df['b_init']     = fit_df['b_fit']
+fit_df['n_init']     = fit_df['n_fit']
+ 
+print(f'Loading {dat_path}')
+fit_spec = np.genfromtxt(dat_path, unpack=True)
+if fit_spec.shape[0] == 3:
+    fit_spec = np.vstack([fit_spec, fit_spec[1:2]])
+ 
+print('Running fit...')
+result = voigt_fit_wrapper(fit_df, fit_spec[:3])
+ 
+np.savetxt(bestfit_path, result.best_fit)
+print(f'Saved {bestfit_path.name}')
+ 
+with open(sav_path, 'w') as f:
+    f.write(f'chisqr: {result.chisqr}\n')
+    f.write(f'redchi: {result.redchi}\n')
+print(f'Saved {sav_path.name}')
+print(f'chisqr: {result.chisqr}')
+print(f'redchi: {result.redchi}')

@@ -12,7 +12,7 @@ import numpy as np
 
 # keep in mind that this will go through ALL of the target folders in your main folder at once.
 
-base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\Na fits") 
+base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\NaI fits") 
 
 for star_dir in base_dir.iterdir():
     for sav_file in star_dir.glob('*.sav'):

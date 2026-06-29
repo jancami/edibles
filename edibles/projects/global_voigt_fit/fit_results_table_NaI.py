@@ -1,10 +1,14 @@
+# This script runs through all your fitting results for every sightline completed by voigt_gui and creates a table
+# with the fit results. 
+
+
 import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
 
 base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\NaI fits")
-output_csv_path = base_dir / "fit_results.csv"
+output_csv_path = base_dir / "fit_results_NaI_1.csv"
 
 all_rows = []
 

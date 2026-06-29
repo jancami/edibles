@@ -59,7 +59,7 @@ def make_default_df(in_df: pd.DataFrame, v_comp: int, n_comp: int) -> pd.DataFra
     i_df.loc[:, f'v_rad_max'] = 50.0
     i_df.loc[:, 'b_comp'] = v_comp
     i_df.loc[:, 'n_comp'] = n_comp
-    i_df.loc[:, f'b_init'] = 1
+    i_df.loc[:, f'b_init'] = 1.0
     i_df.loc[:, f'b_min'] = 0.1
     i_df.loc[:, f'b_max'] = 6
     i_df.loc[:, f'n_init'] = 1e15
@@ -521,6 +521,11 @@ def main():
             coadded_spectra.append(np.vstack([coadded_spec, coadded_spec[1:2]]))  # 4th row = original flux 
             plot1.legend()
 
+        elem_list = root.fit_df.loc[:, 'Species'].unique()
+        elem_str = '_'.join(elem_list)
+        root.fig.texts.clear()
+        root.fig.text(0.5, 0.93, f'{root.star_name} {elem_str} fit',
+                      ha='center', fontsize=14, fontweight='bold')
         root.canvas.draw()
         print('file lists:', file_lists)
         root.fit_spec = np.concatenate(coadded_spectra, axis=1)
@@ -571,8 +576,8 @@ def main():
                 for i, row in root.fit_df.iterrows():
                     if row['v_comp'] == int(v_comp):
                         root.fit_df.loc[i, f'v_rad_init'] = v_rad_init
-                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 1
-                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 1
+                        root.fit_df.loc[i, f'v_rad_min'] = v_rad_init - 5
+                        root.fit_df.loc[i, f'v_rad_max'] = v_rad_init + 5
 
                 print(root.fit_df)
                 plot_fit_info()
@@ -900,7 +905,7 @@ def main():
         star_name = star_entry.get()
         elem_list = root.fit_df.loc[:, 'Species'].unique()
         elem_str = '_'.join(elem_list)
-        print_msg(f'Loading fit results: {files("edibles") / f"data/voigt_fitting_data/{elem_str} fits/{star_name}/{star_name}_{elem_str}.csv"}')
+        print_msg(f'Loading fit results:\n {files("edibles") / f"data/voigt_fitting_data/\n{elem_str} fits/{star_name}/{star_name}_{elem_str}.csv"}')
         if star_name is None:
             print("No star name entered.")
             return
