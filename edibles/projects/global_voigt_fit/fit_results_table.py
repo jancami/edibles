@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits")
-output_csv_path = base_dir / "fit_results.csv"
+output_csv_path = base_dir / "fit_results_TiII.csv"
 
 all_rows = []
 

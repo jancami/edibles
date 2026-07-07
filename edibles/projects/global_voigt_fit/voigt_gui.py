@@ -771,6 +771,46 @@ def main():
             root.canvas.draw()
 
         print(result.best_values)
+        
+    def show_residuals():
+        if root.result is None or root.fit_spec is None:
+            print_msg("Fit (or load) a result first.")
+            return
+        
+        best_fit = root.result.best_fit
+        if len(best_fit) != len(root.fit_spec[0]):
+            print_msg("Best-fit length doesn't match spectrum; refit first.")
+            return
+        
+        range_df = (root.fit_df[['w_min', 'w_max']]
+                    .drop_duplicates().sort_values('w_min').reset_index(drop=True))
+        
+        n = len(range_df)
+        fig, axes = plt.subplots(n, 1, figsize=(8, 2.2 * n), squeeze=False)
+        for i, wave_range in range_df.iterrows():
+            mask = ((root.fit_spec[0] >= wave_range['w_min']) &
+                    (root.fit_spec[0] <= wave_range['w_max']))
+            wave = root.fit_spec[0, mask]
+            flux = root.fit_spec[1, mask]
+            err = root.fit_spec[2, mask]
+            model = best_fit[mask]
+            
+            resid = flux - model
+            # normalised residual (sigma units); masked points have err=inf -> 0
+            with np.errstate(divide='ignore', invalid='ignore'):
+                norm = np.where(np.isfinite(err) & (err > 0), resid / err, np.nan)
+                
+                ax = axes[i, 0]
+                ax.axhline(0, color='r', lw=1)
+                ax.axhline(1, color='r', lw=0.6, ls=':')
+                ax.axhline(-1, color='r', lw=0.6, ls=':')
+                ax.plot(wave, norm, 'k.', ms=3)
+                ax.set_ylabel('(data-model)/$\\sigma$')
+                ax.set_title(f"{wave_range['w_min']:.2f} - {wave_range['w_max']:.2f} "
+                             f"  rms={np.nanstd(norm):.2f}$\\sigma$")
+                axes[-1, 0].set_xlabel('Wavelength (Angstrom)')
+                fig.tight_layout()
+                plt.show(block=False)
 
     def save_function(): 
         elem_list = root.fit_df.loc[:, 'Species'].unique()
@@ -1191,7 +1231,10 @@ def main():
 
     # plot initial guess for fit
     guess_btn = tk.Button(root, text = 'Plot initial guess', command=plot_init_guess)
-    guess_btn.grid(column=0, row=elnum+21)
+    guess_btn.grid(column=0, row=elnum+22)
+    
+    resid_btn = tk.Button(root, text="Show Residuals", command=show_residuals)
+    resid_btn.grid(column=0, row=elnum+23)
 
 
     root.grid_columnconfigure(1, weight=1)

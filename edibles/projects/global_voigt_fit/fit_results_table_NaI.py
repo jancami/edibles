@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\NaI fits")
-output_csv_path = base_dir / "fit_results_NaI_1.csv"
+output_csv_path = base_dir / "fit_results_NaI.csv"
 
 all_rows = []
 

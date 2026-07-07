@@ -199,7 +199,7 @@ def voigt_fit_wrapper(fit_df: pd.DataFrame, fit_spec: np.array, fit=True) -> Mod
         weights[(fit_spec[0] >= wave_range['w_min']) & (fit_spec[0] <= wave_range['w_max'])] = fit_df.loc[fit_df['w_min'] == wave_range['w_min'], 'weight'].values[0]
 
     if fit:
-        result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=weights/fit_spec[2]**2)  # Fit with combined weights of S/N and user-defined weights
+        result = vmodel.fit(fit_spec[1], params, x=fit_spec[0], weights=weights/fit_spec[2])  # Fit with combined weights of S/N and user-defined weights
 
         return result
     else:
