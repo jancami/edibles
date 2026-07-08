@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-def plot_continuum_removed(spectra_data):
+def plot_continuum_removed(spectra_data,figpath):
     """
       Divides out the Chebyshev continuum.
       Plots normalized and scaled spectra between 0.5 and 1
       Args:
           spectra_data: data of the spectra received from plotall()
+          figpath: path for the final plotted figure to go into as a .png file
       Returns: Plot of the normalized and scaled spectra.
       """
     fig1, (ax1_obs, ax1_mod) = plt.subplots(1, 2, figsize=(16, 6), sharex=True, sharey=True)
@@ -59,4 +60,5 @@ def plot_continuum_removed(spectra_data):
 
     fig1.tight_layout()
     fig2.tight_layout()
+    plt.savefig(f"{figpath}/Continuum_Removed_Scaled.png")
     plt.show()

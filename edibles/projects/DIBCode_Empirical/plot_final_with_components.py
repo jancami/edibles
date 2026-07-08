@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from edibles.projects.DIBCode_Empirical.composite_model import composite_model
 from numpy.polynomial import chebyshev
-def plot_final_with_components(x, data, params):
+def plot_final_with_components(x, data, params, figpath):
     """
     Creates the final plot of the components.
     Args:
@@ -55,5 +55,6 @@ def plot_final_with_components(x, data, params):
     plt.ylabel("Flux")
     plt.grid(alpha=0.3)
     plt.tight_layout()
+    plt.savefig(f"{figpath}/Final_Model_With_Components.png")
     plt.show()
 

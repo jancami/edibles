@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from edibles.projects.DIBCode_Empirical.perform_fit import perform_fit
 from edibles.projects.DIBCode_Empirical.importdata import importdata
-def plotall(targets, minrange, maxrange, csv_name, c0, c1, model_v_shift, data_piece, ContinuumMin, ContinuumMax):
+def plotall(targets, minrange, maxrange, csv_name, c0, c1, model_v_shift, data_piece, ContinuumMin, ContinuumMax,figpath):
     '''Plots the model and data residuals for all targets.
     Args:
         targets: List of sightlines.
@@ -97,6 +97,7 @@ def plotall(targets, minrange, maxrange, csv_name, c0, c1, model_v_shift, data_p
     #ax_m_raw.legend(loc='upper right', fontsize='xx-small', ncol=3)
 
     plt.tight_layout()
+    plt.savefig(f"{figpath}/Normalized_Flux.png")
     plt.show()
 
     return spectra_data
