@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.polynomial import chebyshev
 def composite_model(x, params):
     """Computes a flexible model combining Gaussians, Lorentzians, and Chebyshev continuum.
 

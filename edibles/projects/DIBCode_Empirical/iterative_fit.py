@@ -4,7 +4,7 @@ from numpy.polynomial import Chebyshev
 import pandas as pd
 from scipy.optimize import minimize as minimize
 from lmfit import Parameters, minimize
-from edibles.projects.DIBCode_Empirical.calculate_chisqr_manual import calculate_chisqr_manual, 
+from edibles.projects.DIBCode_Empirical.calculate_chisqr_manual import calculate_chisqr_manual
 from edibles.projects.DIBCode_Empirical.calculate_reduced_chi_square import calculate_reduced_chi_square
 from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
 from edibles.projects.DIBCode_Empirical.define_aic_bic import calculate_aic, calculate_bic
@@ -13,6 +13,8 @@ from edibles.projects.DIBCode_Empirical.initialize_lorentzian import initialize_
 from edibles.projects.DIBCode_Empirical.initialize_chebyshev import initialize_chebyshev
 from edibles.projects.DIBCode_Empirical.plot_iteration import plot_iteration
 from edibles.projects.DIBCode_Empirical.composite_model import composite_model
+from edibles.projects.DIBCode_Empirical.residual import residual
+from edibles.projects.DIBCode_Empirical.f_test import f_test
 def iterative_fit(x, data, uncertainties=None,
                   max_iterations=20,
                   significance_level=0.05,
@@ -64,6 +66,7 @@ def iterative_fit(x, data, uncertainties=None,
     params.add('c0', value=np.median(data))  # Just constant baseline
 
     # Fit initial model
+    #residual_model=residual(params,x,data,uncertainties)
     result = minimize(residual, params, args=(x, data, uncertainties), method='leastsq')
     # **CRITICAL FIX: Recalculate chi-square with fitted parameters**
     result.chisqr = calculate_chisqr_manual(result.params, x, data, uncertainties)

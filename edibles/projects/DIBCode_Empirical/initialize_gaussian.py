@@ -1,4 +1,5 @@
 import numpy as np
+from edibles.projects.DIBCode_Empirical.estimate_feature_width import estimate_feature_width
 def initialize_gaussian(x, residuals, prefix='g0_'):
     """Initializes a Gaussian profile at the location of strongest absorption.
 

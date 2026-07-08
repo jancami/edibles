@@ -1,4 +1,5 @@
 import numpy as np
+from edibles.projects.DIBCode_Empirical.composite_model import composite_model
 def calculate_chisqr_manual(params, x, data, uncertainties):
     model = composite_model(x, params)
     if uncertainties is not None:

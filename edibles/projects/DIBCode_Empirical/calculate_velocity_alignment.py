@@ -1,6 +1,6 @@
 import numpy as np
-from get_shifted_data import get_shifted_data
-from edibles.projects.calculate_correlation import calculate_correlation
+from edibles.projects.DIBCode_Empirical.get_shifted_data import get_shifted_data
+from edibles.projects.DIBCode_Empirical.calculate_correlation import calculate_correlation
 def calculate_velocity_alignment(x_ref, y_obs, model_template, v_grid, mask):
     """
     Calculates correlations across the grid and returns best fit data

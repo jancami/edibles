@@ -6,7 +6,11 @@ from edibles.projects.DIBCode_Empirical.data_cleaning import data_cleaning
 from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
 from edibles.projects.DIBCode_Empirical.plot_final_with_components import plot_final_with_components
 from edibles.projects.DIBCode_Empirical.iterative_fit import iterative_fit
-def run_model_fitting(minrange, maxrange, folder, csv_name):
+
+from edibles.projects.DIBCode_Empirical.calculate_chisqr_manual import calculate_chisqr_manual
+from edibles.projects.DIBCode_Empirical.remove_components import remove_components
+from edibles.projects.DIBCode_Empirical.refit_components import refit_components
+def run_model_fitting(minrange, maxrange, folder, csv_name, removed_components, recalibrated_wavelength, coadded_flux, coadd_SNR):
     '''
     Runs the model fitting for the target star
     Args:
@@ -20,7 +24,8 @@ def run_model_fitting(minrange, maxrange, folder, csv_name):
         - List of parameter data.
 
     '''
-    if __name__ == "__main__":
+    #if __name__ == "__main__":
+    if 1 == 1:
 
         x, data = data_cleaning(x=recalibrated_wavelength, data=coadded_flux, minrange=minrange, maxrange=maxrange)
         """                                                                                                                
@@ -48,6 +53,10 @@ def run_model_fitting(minrange, maxrange, folder, csv_name):
         # folder = "C:/Users/brook/Desktop"
         if not os.path.exists(folder):
             os.makedirs(folder)
+
+        # Drop whatever looks like continuum noise and refit
+        best_params = remove_components(best_params, removed_components)
+        result, best_params = refit_components(best_params, x, data, uncertainties)
 
         best_params_list1 = list(best_params.valuesdict())
         best_params_list2 = list(best_params.valuesdict().values())

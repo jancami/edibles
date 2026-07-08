@@ -1,4 +1,9 @@
 import matplotlib.pyplot as plt
+from edibles.projects.DIBCode_Empirical.composite_model import composite_model
+from edibles.projects.DIBCode_Empirical.calculate_reduced_chi_square import calculate_reduced_chi_square
+from edibles.projects.DIBCode_Empirical.define_aic_bic import calculate_aic,calculate_bic
+from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
+from edibles.projects.DIBCode_Empirical.get_component_params_text import get_component_params_text
 def plot_iteration(x, data, best_params, best_result, candidates, best_candidate_idx,
                    iteration, n_data, uncertainties=None):
     """Plots each candidate fitting option in a separate subplot.

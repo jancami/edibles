@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from edibles.project.DIBCode_Empirical import composite_model
+from edibles.projects.DIBCode_Empirical.composite_model import composite_model
 from numpy.polynomial import chebyshev
 def plot_final_with_components(x, data, params):
     """
