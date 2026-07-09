@@ -27,7 +27,7 @@ atomic_line_list = atomic_line_list.dropna(subset=['Gamma'])
 
 # remove lines which are contaminated by telluric lines
 atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(7664, 7666)]
-atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(4044, 4045)]
+# atomic_line_list = atomic_line_list.loc[~atomic_line_list['WavelengthAir'].between(4044, 4045)]
 
 molecular_line_file = files('edibles') / 'data/auxiliary_data/line_catalogs/edibles_linelist_molecules.csv'
 molecular_line_list = pd.read_csv(molecular_line_file)
