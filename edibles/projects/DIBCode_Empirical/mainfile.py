@@ -39,8 +39,6 @@ listt = ['HD 170740', 'HD 23180', 'HD 24398', 'HD 144470', 'HD 147165', 'HD 1476
 data_results = plotall(targets = listt, minrange=minrange, maxrange=maxrange, csv_name = f'/Users/oliverridge/PycharmProjects/EDIBLES/component_data/{csv_name}', c0=c0, c1=c1, model_v_shift=10.67, data_piece = data_piece, ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax, figpath=figpath)
 plot_continuum_removed(data_results,figpath)
 # Make output for Git repository
-# Make wavelength shift correlation region smaller?? - check with the first DIBs, look at +0.5, 0, -0.5, -1 - how does the peak change
-# Definitely a good idea to make the correlation region smaller
 #DIB 6270 - minrange=6268, maxrange=6272, c0=1.0226, c1=0.0037, data_piece = "564nm_redu_O10", ContinuumMin = 6253, ContinuumMax = 6256
-#DIB 6203 - minrange=6200, maxrange=6208.25,  c0=1.016831287649225, c1=0, data_piece= "564nm_redu_O9", ContinuumMin = 6190, ContinuumMax = 6194
+#DIB 6203 - minrange=6200, maxrange=6208.25, c0=1.016831287649225, c1=0, data_piece= "564nm_redu_O9", ContinuumMin = 6190, ContinuumMax = 6194
 #DIB 6613 - minrange=6611, maxrange=6616, c0=1.0315, c1=0.01, data_piece = "564nm_redu_O16", ContinuumMin = 6600, ContinuumMax = 6604
