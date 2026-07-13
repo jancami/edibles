@@ -1,5 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+"""
+Display the continuum window to ensure it is flat and 
+Args:
+    
+Returns:
+    
+"""
 def continuum_window(common_wave, coadded_flux, ContinuumMin, ContinuumMax, wavelength_target):
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.plot(common_wave, coadded_flux, 'k-', lw=1, label='Coadded spectrum')
