@@ -3,9 +3,11 @@ import matplotlib.pyplot as plt
 """
 Display the continuum window to ensure it is flat and 
 Args:
-    
+    common_wave:
+    coadded_flux:
+    ContinuumMin:
 Returns:
-    
+    Plot of the continuum window
 """
 def continuum_window(common_wave, coadded_flux, ContinuumMin, ContinuumMax, wavelength_target):
     fig, ax = plt.subplots(figsize=(12, 4))

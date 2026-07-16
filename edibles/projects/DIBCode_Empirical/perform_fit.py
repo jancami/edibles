@@ -6,7 +6,7 @@ from edibles.projects.DIBCode_Empirical.fitting_objective import fitting_objecti
 from edibles.projects.DIBCode_Empirical.plot_alignment_verification import plot_alignment_verification
 from edibles.projects.DIBCode_Empirical.calculate_velocity_alignment import calculate_velocity_alignment
 
-def perform_fit(x_obs, y_obs, params, c0, c1=0, target='Target', fitlimit=0, use_mask=False, model_v_shift=0):
+def perform_fit(x_obs, y_obs, params, figpath, c0, c1=0, target='Target', fitlimit=0, use_mask=False, model_v_shift=0):
     """
     Fits absorption profiles with a 1st order Chebyshev continuum.
     Args:
@@ -46,7 +46,7 @@ def perform_fit(x_obs, y_obs, params, c0, c1=0, target='Target', fitlimit=0, use
     best_v, max_r, correlations, best_y_data = calculate_velocity_alignment(x_ref, y_obs, model_template, v_grid, mask)
 
     plot_alignment_verification(x_ref, y_obs, best_y_data, model_template, v_grid, correlations, best_v, max_r, mask,
-                                use_mask, target)
+                                use_mask, target, figpath)
 
     # 4. Optimization Loop
     n = len(best_y_data)
@@ -87,6 +87,6 @@ def perform_fit(x_obs, y_obs, params, c0, c1=0, target='Target', fitlimit=0, use
     if best_fit:
         print(
             f"Fit Complete: Shift={best_fit['v_shift']:.2f} km/s, Scale={best_fit['scale_factor']:.5f}, Poly Order={best_fit['order']}")
-        plot_final_fit(best_fit, target)
+        plot_final_fit(best_fit, target, figpath)
 
     return best_fit

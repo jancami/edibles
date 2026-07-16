@@ -33,7 +33,7 @@ def plotall(targets, minrange, maxrange, csv_name, c0, c1, model_v_shift, data_p
 
         fd = perform_fit(recalibrated_wavelength, coadded_flux, components_params,
                          c0=c0, c1=c1,
-                         target=target, model_v_shift=model_v_shift)
+                         target=target, model_v_shift=model_v_shift, figpath=figpath)
 
         if fd:
             y_m, y_o = fd['y_total_model'], fd['y_obs']
@@ -97,7 +97,7 @@ def plotall(targets, minrange, maxrange, csv_name, c0, c1, model_v_shift, data_p
     #ax_m_raw.legend(loc='upper right', fontsize='xx-small', ncol=3)
 
     plt.tight_layout()
-    plt.savefig(f"{figpath}/Normalized_Flux.png")
+    plt.savefig(f"{figpath}/Models.png")
     plt.show()
 
     return spectra_data

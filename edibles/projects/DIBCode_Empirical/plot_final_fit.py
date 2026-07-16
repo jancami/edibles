@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-def plot_final_fit(fd, target):
+def plot_final_fit(fd, target, figpath):
     """
     Plots the final continuum fit, components, and residuals
     Args:
@@ -31,4 +31,5 @@ def plot_final_fit(fd, target):
     ax2.set_xlabel("Wavelength (Velocity Corrected)")
 
     plt.tight_layout()
+    plt.savefig(f"{figpath}/Component_Visualization_{target}")
     plt.show()

@@ -20,4 +20,9 @@ if 'EDIBLES_PYTHONDIR' in os.environ:
 else:
     EDIBLES_PYTHONDIR = files('edibles')
 
+if 'EDIBLES_OUTPUTDIR' in os.environ:
+    EDIBLES_OUTPUTDIR = Path(os.environ['EDIBLES_OUTPUTDIR'])
+else:
+    EDIBLES_OUTPUTDIR = Path('~/EDIBLES_output')
+
 __version__ = '0.2'

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 def plot_alignment_verification(x_ref, y_obs, best_y_data, model_template, v_grid, correlations, best_v, max_r, mask,
-                                use_mask, target):
+                                use_mask, target,figpath):
     """
     Plots the cross-correlation results and shifted spectra
     Args:
@@ -39,5 +39,6 @@ def plot_alignment_verification(x_ref, y_obs, best_y_data, model_template, v_gri
     ax2.grid(True, alpha=0.3)
     ax2.legend()
     plt.tight_layout()
+    plt.savefig(f"{figpath}/Alignment_Verification_{target}.png")
     plt.show()
 
