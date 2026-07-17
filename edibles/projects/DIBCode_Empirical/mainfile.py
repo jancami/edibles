@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import os
 from edibles.projects.DIBCode_Empirical.importdata import importdata
 from edibles.projects.DIBCode_Empirical.continuum_window import continuum_window
 from edibles.projects.DIBCode_Empirical.perform_fit import perform_fit
@@ -6,7 +7,6 @@ from edibles.projects.DIBCode_Empirical.run_model_fitting import run_model_fitti
 from edibles.projects.DIBCode_Empirical.plot_continuum_removed import plot_continuum_removed
 from edibles.projects.DIBCode_Empirical.plotall import plotall
 from edibles.projects.DIBCode_Empirical.try_orders import try_orders
-from edibles import DATADIR
 from edibles import EDIBLES_OUTPUTDIR
 
 from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
@@ -25,6 +25,8 @@ removed_components=["l0","g2"]
 #try_orders(target="HD 170740",minrange=minrange, maxrange=maxrange, ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax)
 #try_orders is used to check each order, useful for finding the correct order for new DIBs
 figpath = f"{EDIBLES_OUTPUTDIR}/DIB {wavelength_target}"
+if not os.path.exists(figpath):
+    os.makedirs(figpath)
 # If the figure path and directories do not exist they will have to be made
 recalibrated_wavelength, coadded_flux, coadd_SNR, target, common_wave_full, coadded_flux_full = importdata(target="HD 170740",minrange=minrange, maxrange=maxrange, data_piece = data_piece, ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax)
 plt.plot(recalibrated_wavelength, coadded_flux)
@@ -36,7 +38,7 @@ plt.show()
 
 continuum_window(common_wave_full,coadded_flux_full,ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax, wavelength_target=wavelength_target)
 
-run_model_fitting(minrange=minrange, maxrange=maxrange, folder = f"{EDIBLES_OUTPUTDIR}/component_data/{csv_name}", csv_name = csv_name, removed_components=removed_components, recalibrated_wavelength=recalibrated_wavelength,coadded_flux=coadded_flux, coadd_SNR=coadd_SNR, figpath=figpath)
+run_model_fitting(minrange=minrange, maxrange=maxrange, folder = f"{EDIBLES_OUTPUTDIR}/component_data", csv_name = csv_name, removed_components=removed_components, recalibrated_wavelength=recalibrated_wavelength,coadded_flux=coadded_flux, coadd_SNR=coadd_SNR, figpath=figpath)
 # Change the folder component to your path that you want component data to go into
 
 listt = ['HD 170740', 'HD 23180', 'HD 24398', 'HD 144470', 'HD 147165', 'HD 147683', 'HD 149757', 'HD 166937', 'HD 184915', 'HD 185418', 'HD 185859', 'HD 203532']
