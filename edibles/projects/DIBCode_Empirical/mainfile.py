@@ -20,7 +20,6 @@ ContinuumMin=6253
 ContinuumMax=6256
 wavelength_target=6270
 csv_name=f"HD170740components{wavelength_target}.csv"
-mainfolder=f""
 removed_components=["l0","g2"]
 #try_orders(target="HD 170740",minrange=minrange, maxrange=maxrange, ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax)
 #try_orders is used to check each order, useful for finding the correct order for new DIBs
