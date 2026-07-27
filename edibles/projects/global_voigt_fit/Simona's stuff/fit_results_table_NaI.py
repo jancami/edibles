@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\NaI fits")
-output_csv_path = base_dir / "fit_results_NaI.csv"
+base_dir = Path(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits")
+output_csv_path = base_dir / "fit_results_TiII.csv"
 
 all_rows = []
 

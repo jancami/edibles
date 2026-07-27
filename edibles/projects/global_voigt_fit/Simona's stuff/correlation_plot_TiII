@@ -1,0 +1,30 @@
+# this script creates a correlation plot with the column density of the deepest TiII component of each sightline 
+# and plots it against the equivalent width of the 5797 DIB in the same sightline 
+
+import os
+import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+ew_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits\list of EDIBLES by strength of 5797 DIB.csv")
+ti_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits\fit_results_TiII.csv")
+
+ti_max = ti_df.groupby('Sightline', as_index=False)['Number Density (N)'].max()
+merged = pd.merge(ew_df, ti_max, on='Sightline', how='inner')
+
+
+fig, ax = plt.subplots(figsize=(7, 6))
+
+ax.scatter(merged['EW5780'], merged['Number Density (N)'], 
+           color='steelblue', edgecolor='k', s=60, alpha=0.8)
+
+
+r, p = pearsonr(merged['EW5780'], merged['Number Density (N)'])
+ax.set_xlabel('EW 5780 DIB (mÅ)')
+ax.set_ylabel('Ti II Column Density N (cm$^{-2}$)')
+ax.set_title(f'Ti II Column Density vs. EW(5780)\nr = {r:.2f}, p = {p:.3g}')
+ax.grid()
+plt.tight_layout()
+plt.show()
