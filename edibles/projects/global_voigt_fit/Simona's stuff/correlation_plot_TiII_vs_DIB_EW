@@ -1,0 +1,73 @@
+# this script creates a correlation plot with the column density of the deepest TiII component of each sightline 
+# and plots it against the equivalent width of the 5797 DIB in the same sightline 
+
+import os
+import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+ew_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits\list of EDIBLES by strength of 5797 DIB.csv")
+ti_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits\fit_results_TiII.csv")
+
+
+err_col = 'Number Density error (+/-)'
+
+ti_max = ti_df.groupby('Sightline').agg(
+    N_TiII=('Number Density (N)', 'sum'),
+    N_TiII_err=(err_col, lambda x: np.sqrt(np.sum(x**2)))
+).reset_index()
+
+
+merged = pd.merge(ew_df, ti_max, on='Sightline', how='inner')
+
+# --- cutoff: only keep sightlines within EW <= 1000 and N <= 1e12 ---
+# merged = merged[(merged['EW5797'] <= 1000) & (merged['N_TiII'] <= 1e12)]
+# ---------------------------------------------------------------------
+
+n_targets = len(merged)
+
+r, p = pearsonr(merged['EW5797'], merged['N_TiII'])
+
+fig, ax = plt.subplots(figsize=(7, 6))
+
+ax.errorbar(merged['EW5797'], merged['N_TiII'],
+            xerr=merged['EW5797_err'], yerr=merged['N_TiII_err'],
+            fmt='o', color='steelblue', ecolor='gray', elinewidth=1,
+            capsize=3, markeredgecolor='k', markersize=4, alpha=0.85,
+            label=f'Sightlines plotted: {n_targets}')
+
+ax.set_xlabel('EW 5797 DIB (mÅ)')
+ax.set_ylabel('Ti II Column Density N (cm$^{-2}$)')
+ax.set_title(f'Ti II Column Density vs. EW(5797)\nr = {r:.2f}, p = {p:.3g}')
+ax.grid()
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+# =================================================================
+# EW(5780) plot
+# =================================================================
+merged2 = pd.merge(ew_df, ti_max, on='Sightline', how='inner')
+n_targets2 = len(merged2)
+
+r2, p2 = pearsonr(merged2['EW5780'], merged2['N_TiII'])
+
+fig, ax = plt.subplots(figsize=(7, 6))
+
+xerr2 = merged2['EW5780_err'] if 'EW5780_err' in merged2.columns else None
+
+ax.errorbar(merged2['EW5780'], merged2['N_TiII'],
+            xerr=xerr2, yerr=merged2['N_TiII_err'],
+            fmt='o', color='steelblue', ecolor='gray', elinewidth=1,
+            capsize=3, markeredgecolor='k', markersize=6, alpha=0.85,
+            label=f'Sightlines plotted: {n_targets2}')
+
+ax.set_xlabel('EW 5780 DIB (mÅ)')
+ax.set_ylabel('Ti II Column Density N (cm$^{-2}$)')
+ax.set_title(f'Ti II Column Density vs. EW(5780)\nr = {r2:.2f}, p = {p2:.3g}')
+ax.grid()
+ax.legend()
+plt.tight_layout()
+plt.show()

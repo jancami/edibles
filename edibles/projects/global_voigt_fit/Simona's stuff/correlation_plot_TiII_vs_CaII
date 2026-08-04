@@ -1,0 +1,65 @@
+import os
+import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+import pandas as pd
+import numpy as np
+from pathlib import Path
+
+ca_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\CaII fits\fit_results_CaII.csv")
+ti_df = pd.read_csv(r"C:\Users\User\Downloads\PYTHON PROJECTS\edibles\edibles\data\voigt_fitting_data\TiII fits\fit_results_TiII.csv")
+
+ti_total = ti_df.groupby('Sightline', as_index=False)['Number Density (N)'].sum()
+ti_total = ti_total.rename(columns={'Number Density (N)': 'N_TiII'})
+
+ca_total = ca_df.groupby('Sightline', as_index=False)['Number Density (N)'].sum()
+ca_total = ca_total.rename(columns={'Number Density (N)': 'N_CaII'})
+
+
+err_col_candidates = ['Number Density error (+/-)', 'N Error', 'N_err', 'Error']
+err_col = next((c for c in err_col_candidates if c in ti_df.columns), None)
+
+if err_col is not None:
+    ti_err = ti_df.groupby('Sightline', as_index=False)[err_col].apply(
+        lambda x: np.sqrt(np.sum(x**2))
+    ).rename(columns={err_col: 'N_TiII_err'})
+    ca_err = ca_df.groupby('Sightline', as_index=False)[err_col].apply(
+        lambda x: np.sqrt(np.sum(x**2))
+    ).rename(columns={err_col: 'N_CaII_err'})
+    ti_total = pd.merge(ti_total, ti_err, on='Sightline', how='left')
+    ca_total = pd.merge(ca_total, ca_err, on='Sightline', how='left')
+else:
+    ti_total['N_TiII_err'] = 0.0
+    ca_total['N_CaII_err'] = 0.0
+
+
+merged = pd.merge(ca_total, ti_total, on='Sightline', how='inner')
+n_targets = len(merged)
+
+r, p = pearsonr(merged['N_CaII'], merged['N_TiII'])
+
+fig, ax = plt.subplots(figsize=(7, 6))
+
+ax.errorbar(merged['N_CaII'], merged['N_TiII'],
+            xerr=merged['N_CaII_err'], yerr=merged['N_TiII_err'],
+            fmt='o', color='steelblue', ecolor='gray', elinewidth=1,
+            capsize=3, markeredgecolor='k', markersize=4, alpha=0.85,
+            label=f'Sightlines plotted: {n_targets}')
+
+# Reference line: N(TiII)/N(CaII) = 0.3 (Welty & Hobbs / Welty & Crowther)
+# x_ref = np.linspace(merged['N_CaII'].min(), merged['N_CaII'].max(), 50)
+# ax.plot(x_ref, 0.3 * x_ref, 'r--', lw=1.5, label='N(Ti II)/N(Ca II) = 0.3')
+
+# Label each sightline
+for _, row in merged.iterrows():
+    ax.annotate(row['Sightline'], (row['N_CaII'], row['N_TiII']),
+                fontsize=7, xytext=(4, 4), textcoords='offset points')
+
+ax.set_xlabel(r'Ca II Column Density N (cm$^{-2}$)')
+ax.set_ylabel(r'Ti II Column Density N (cm$^{-2}$)')
+ax.set_title(f'Ti II vs Ca II Column Density\n'
+             f'Pearson r = {r:.2f}, p = {p:.3g}')
+ax.grid(True, ls=':', alpha=0.5)
+ax.legend(fontsize=8)
+
+plt.tight_layout()
+plt.show()

@@ -195,7 +195,7 @@ def results_to_df(result, fit_df):
     return fit_df
 
 def main():
-    elnum = 7 # number of element entries
+    elnum = 8 # number of element entries
 
     root = tk.Tk()
 
@@ -374,18 +374,21 @@ def main():
 
     caI_btn = tk.Button(root, text = "CaI", bg = 'yellow', fg = "blue", command=lambda: add_elem("CaI"))
     caI_btn.grid(column=0, row=3)
+    
+    caii_btn = tk.Button(root, text = "CaII", bg = 'yellow', fg = "blue", command=lambda: add_elem("CaII"))
+    caii_btn.grid(column=0, row=4)
 
     fei_btn = tk.Button(root, text = "FeI", bg = 'yellow', fg = "blue", command=lambda: add_elem("FeI"))
-    fei_btn.grid(column=0, row=4)
+    fei_btn.grid(column=0, row=5)
 
     tiii_btn = tk.Button(root, text = "TiII", bg = 'yellow', fg = "purple", command=lambda: add_elem("TiII"))
-    tiii_btn.grid(column=0, row=5)
+    tiii_btn.grid(column=0, row=6)
 
     ch_plus_btn = tk.Button(root, text = "CH⁺", bg = 'yellow', fg = "purple", command=lambda: add_molecule("CH+"))
-    ch_plus_btn.grid(column=0, row=6)
+    ch_plus_btn.grid(column=0, row=7)
 
     cn_btn = tk.Button(root, text = "CN", bg = 'yellow', fg = "purple", command=lambda: add_molecule("12CN"))
-    cn_btn.grid(column=0, row=7)
+    cn_btn.grid(column=0, row=8)
 
 
     # Text box for star name
