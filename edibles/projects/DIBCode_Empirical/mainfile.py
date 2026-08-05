@@ -11,16 +11,16 @@ from edibles import EDIBLES_OUTPUTDIR
 
 from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
 
-minrange=6268
-maxrange=6272
-c0=1.0226
-c1=0.0037
-data_piece="564nm_redu_O10"
-ContinuumMin=6253
-ContinuumMax=6256
-wavelength_target=6270
+minrange=6200
+maxrange=6208.25
+c0=1.016831287649225
+c1=0
+data_piece="564nm_redu_O9"
+ContinuumMin=6190
+ContinuumMax=6194
+wavelength_target=6203
 csv_name=f"HD170740components{wavelength_target}.csv"
-removed_components=["l0","g2"]
+removed_components=["l1","l2","g3"]
 #try_orders(target="HD 170740",minrange=minrange, maxrange=maxrange, ContinuumMin = ContinuumMin, ContinuumMax = ContinuumMax)
 #try_orders is used to check each order, useful for finding the correct order for new DIBs
 figpath = f"{EDIBLES_OUTPUTDIR}/DIB {wavelength_target}"
@@ -47,6 +47,6 @@ plot_continuum_removed(data_results,figpath)
 # Add documentation for newly added files
 
 
-#DIB 6270 - minrange=6268, maxrange=6272, c0=1.0226, c1=0.0037, data_piece = "564nm_redu_O10", ContinuumMin = 6253, ContinuumMax = 6256
-#DIB 6203 - minrange=6200, maxrange=6208.25, c0=1.016831287649225, c1=0, data_piece= "564nm_redu_O9", ContinuumMin = 6190, ContinuumMax = 6194
-#DIB 6613 - minrange=6611, maxrange=6616, c0=1.0315, c1=0.01, data_piece = "564nm_redu_O16", ContinuumMin = 6600, ContinuumMax = 6604
+#DIB 6270 - minrange=6268, maxrange=6272, c0=1.0226, c1=0.0037, data_piece = "564nm_redu_O10", ContinuumMin = 6253, ContinuumMax = 6256, removed_components=["l0","g0","l2"]
+#DIB 6203 - minrange=6200, maxrange=6208.25, c0=1.016831287649225, c1=0, data_piece= "564nm_redu_O9", ContinuumMin = 6190, ContinuumMax = 6194, removed_components=["l1","l2","g3"]
+#DIB 6613 - minrange=6611, maxrange=6616, c0=1.0315, c1=0.01, data_piece = "564nm_redu_O16", ContinuumMin = 6600, ContinuumMax = 6604, removed_components=["g4","g5"]
