@@ -15,7 +15,7 @@ from edibles.projects.DIBCode_Empirical.plot_iteration import plot_iteration
 from edibles.projects.DIBCode_Empirical.composite_model import composite_model
 from edibles.projects.DIBCode_Empirical.residual import residual
 from edibles.projects.DIBCode_Empirical.f_test import f_test
-def iterative_fit(x, data, uncertainties=None,
+def iterative_fit(x, data, wavelength_target, uncertainties=None,
                   max_iterations=20,
                   significance_level=0.05,
                   criterion='bic',
@@ -262,7 +262,7 @@ def iterative_fit(x, data, uncertainties=None,
 
         if plot:
             plot_iteration(x, data, best_params, best_result, candidates, best_candidate_idx,
-                           iteration, n_data, uncertainties)
+                           iteration, n_data, wavelength_target,uncertainties)
 
         # ====================================================================
         # Decision: accept or stop

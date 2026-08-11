@@ -4,8 +4,12 @@ from edibles.projects.DIBCode_Empirical.calculate_reduced_chi_square import calc
 from edibles.projects.DIBCode_Empirical.define_aic_bic import calculate_aic,calculate_bic
 from edibles.projects.DIBCode_Empirical.format_params_grouped import format_params_grouped
 from edibles.projects.DIBCode_Empirical.get_component_params_text import get_component_params_text
+from edibles import EDIBLES_OUTPUTDIR
+import os
+
+
 def plot_iteration(x, data, best_params, best_result, candidates, best_candidate_idx,
-                   iteration, n_data, uncertainties=None):
+                   iteration, n_data, wavelength_target, uncertainties=None):
     """Plots each candidate fitting option in a separate subplot.
 
     Renders a vertical grid of plots comparing the current running best model
@@ -170,7 +174,10 @@ def plot_iteration(x, data, best_params, best_result, candidates, best_candidate
     axes[-1, 1].set_xlabel('Wavelength', fontsize=9)
 
     plt.tight_layout()
-    plt.savefig(f'iteration_{iteration:02d}.png', dpi=120, bbox_inches='tight')
+    figpath=f'{EDIBLES_OUTPUTDIR}/DIB {wavelength_target}/initial_plot_iterations'
+    if not os.path.exists(figpath):
+        os.makedirs(figpath)
+    plt.savefig(f'{figpath}/iteration_{iteration:02d}.png', dpi=120, bbox_inches='tight')
     plt.show(block=False)
     plt.draw()
 

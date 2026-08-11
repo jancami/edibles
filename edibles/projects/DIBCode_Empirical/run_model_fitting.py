@@ -10,7 +10,7 @@ from edibles.projects.DIBCode_Empirical.iterative_fit import iterative_fit
 from edibles.projects.DIBCode_Empirical.calculate_chisqr_manual import calculate_chisqr_manual
 from edibles.projects.DIBCode_Empirical.remove_components import remove_components
 from edibles.projects.DIBCode_Empirical.refit_components import refit_components
-def run_model_fitting(minrange, maxrange, folder, csv_name, removed_components, recalibrated_wavelength, coadded_flux, coadd_SNR, figpath):
+def run_model_fitting(minrange, maxrange, folder, csv_name, removed_components, recalibrated_wavelength, coadded_flux, coadd_SNR, figpath, wavelength_target):
     '''
     Runs the model fitting for the target star
     Args:
@@ -38,7 +38,7 @@ def run_model_fitting(minrange, maxrange, folder, csv_name, removed_components, 
         uncertainties = np.full_like(data, noise_level)
 
         # Run the iterative fit
-        result, best_params, history = iterative_fit(x, data, uncertainties, max_iterations=10, significance_level=0.01,
+        result, best_params, history = iterative_fit(x, data, wavelength_target, uncertainties, max_iterations=10, significance_level=0.01,
                                                      criterion="bic", verbose=True,
                                                      plot=True)  # shows plots of each iteration
         """                                                                                                                
