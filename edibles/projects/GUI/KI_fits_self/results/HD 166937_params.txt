@@ -1,0 +1,44 @@
+[[Model]]
+    Model(continuum_voigt_wrapper)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 6902
+    # data points      = 26
+    # variables        = 6
+    chi-square         = 9.74606436
+    reduced chi-square = 0.48730322
+    Akaike info crit   = -13.5120577
+    Bayesian info crit = -5.96347850
+    R-squared          = 0.99949359
+[[Variables]]
+    n_species:      1 (fixed)
+    v_resolution:   3 (fixed)
+    n_step:         25 (fixed)
+    n_trans_0:      1 (fixed)
+    lambda_0_0:     7698.965 (fixed)
+    f_0_0:          0.3331 (fixed)
+    gamma_0_0:      3.74e+07 (fixed)
+    n_component_0:  2 (fixed)
+    b_0_0:          0.38092119 +/- 0.00364350 (0.96%) (init = 1)
+    N_0_0:          1.8732e+13 +/- 4.3598e+12 (23.28%) (init = 5e+12)
+    v_rad_0_0:     -2.74083759 +/- 0.00692170 (0.25%) (init = -3)
+    b_0_1:          0.74061982 +/- 9.8672e-05 (0.01%) (init = 2)
+    N_0_1:          3.6234e+10 +/- 2.4154e+09 (6.67%) (init = 1e+12)
+    v_rad_0_1:     -4.41980439 +/- 0.04685836 (1.06%) (init = -5)
+    knot_y_0:       0.9982633 (fixed)
+    knot_y_1:       0.9911436 (fixed)
+    knot_y_2:       0.9921612 (fixed)
+    knot_y_3:       1.007202 (fixed)
+    knot_y_4:       1.009618 (fixed)
+    knot_y_5:       1.010993 (fixed)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(N_0_0, v_rad_0_0)     = -0.9989
+    C(b_0_0, N_0_0)         = -0.9530
+    C(b_0_0, v_rad_0_0)     = +0.9449
+    C(v_rad_0_0, N_0_1)     = +0.7853
+    C(N_0_0, N_0_1)         = -0.7772
+    C(b_0_0, N_0_1)         = +0.6346
+    C(N_0_1, v_rad_0_1)     = +0.5644
+    C(v_rad_0_0, v_rad_0_1) = +0.4355
+    C(N_0_0, v_rad_0_1)     = -0.4095
+    C(b_0_0, v_rad_0_1)     = +0.1395

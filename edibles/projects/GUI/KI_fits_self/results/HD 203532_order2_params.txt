@@ -1,0 +1,52 @@
+[[Model]]
+    Model(continuum_voigt_wrapper)
+[[Fit Statistics]]
+    # fitting method   = leastsq
+    # function evals   = 136
+    # data points      = 35
+    # variables        = 6
+    chi-square         = 264.320901
+    reduced chi-square = 9.11451383
+    Akaike info crit   = 82.7635543
+    Bayesian info crit = 92.0956427
+    R-squared          = 0.99721915
+[[Variables]]
+    n_species:      1 (fixed)
+    v_resolution:   3 (fixed)
+    n_step:         25 (fixed)
+    n_trans_0:      1 (fixed)
+    lambda_0_0:     7698.965 (fixed)
+    f_0_0:          0.3331 (fixed)
+    gamma_0_0:      3.74e+07 (fixed)
+    n_component_0:  2 (fixed)
+    b_0_0:          0.98200597 +/- 0.01359416 (1.38%) (init = 2.5)
+    N_0_0:          2.8235e+11 +/- 5.3641e+10 (19.00%) (init = 1e+12)
+    v_rad_0_0:      6.34589565 +/- 0.08959143 (1.41%) (init = 5)
+    b_0_1:          1.01599769 +/- 0.21240086 (20.91%) (init = 2)
+    N_0_1:          1.3863e+12 +/- 4.6947e+11 (33.87%) (init = 1e+13)
+    v_rad_0_1:      7.80993520 +/- 0.06306830 (0.81%) (init = 8)
+    knot_y_0:       1.004549 (fixed)
+    knot_y_1:       1.001903 (fixed)
+    knot_y_2:       1.001356 (fixed)
+    knot_y_3:       1.002774 (fixed)
+    knot_y_4:       1.004981 (fixed)
+    knot_y_5:       0.9941329 (fixed)
+    knot_y_6:       0.996783 (fixed)
+    knot_y_7:       0.9969631 (fixed)
+    knot_y_8:       0.9980505 (fixed)
+    knot_y_9:       0.998353 (fixed)
+[[Correlations]] (unreported correlations are < 0.100)
+    C(N_0_0, v_rad_0_1)     = +0.9660
+    C(b_0_1, N_0_1)         = -0.9376
+    C(N_0_0, v_rad_0_0)     = +0.9338
+    C(v_rad_0_0, v_rad_0_1) = +0.9175
+    C(b_0_1, v_rad_0_1)     = -0.8468
+    C(N_0_0, b_0_1)         = -0.8453
+    C(v_rad_0_0, b_0_1)     = -0.7476
+    C(N_0_1, v_rad_0_1)     = +0.6386
+    C(N_0_0, N_0_1)         = +0.6270
+    C(v_rad_0_0, N_0_1)     = +0.5053
+    C(b_0_0, v_rad_0_1)     = +0.3807
+    C(b_0_0, N_0_0)         = +0.3096
+    C(b_0_0, v_rad_0_0)     = +0.2999
+    C(b_0_0, b_0_1)         = -0.2058
