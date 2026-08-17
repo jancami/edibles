@@ -2,6 +2,7 @@ from astropy.io import fits
 from pathlib import Path
 import numpy as np
 from edibles.projects.edr5_integration import transformations
+import pandas as pd
 
 def read_spec(spec_path:Path, bary_corr=False):
     if spec_path.parent.name == 'tell_corr':
@@ -58,3 +59,18 @@ def get_filter_name(hdr):
         filter_name = hdr['ESO INS FILT3 NAME']
 
     return filter_name
+
+
+def read_combined_spec(spec_path:Path, bary_corr=False):
+
+    with fits.open(spec_path) as f:
+        data = f[1].data
+        hdr = f[0].header
+
+    spec = pd.DataFrame(data).to_numpy().T
+
+    if bary_corr:
+        spec[0] = transformations.doppler_shift_wl(spec[0], hdr['BARYCORR'])
+    
+    return spec
+

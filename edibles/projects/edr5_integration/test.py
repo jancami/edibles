@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 pythia = EdiblesOracle()
-filelist = pythia.getFilteredObsList(object=['HD 186841'], MergedOnly=False, Wave=6707)
+filelist = pythia.getFilteredObsList(object=['HD 186841'], MergedOnly=True, Wave=6707)
 
 print(filelist)
 
 for file in filelist:
+    print(file)
     sp = EdiblesSpectrum(file)
-    wrange = [6700, 6720]
+    wrange = [6700, 6800]
     print('min', np.nanmin(sp.bary_wave))
     print('mmaxin', np.nanmax(sp.bary_wave))
     sp.getSpectrum(xmin=wrange[0], xmax=wrange[1])

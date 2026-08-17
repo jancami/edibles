@@ -16,7 +16,7 @@ from edibles.gui.gui import Ui_MainWindow
 from edibles.utils.edibles_spectrum import EdiblesSpectrum as edspec
 from edibles.gui.models import PandasModel, SelectionModel
 from edibles import EDIBLES_PYTHONDIR, DATADIR, DATARELEASE
-
+import platform
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
@@ -164,14 +164,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         DATADIR + filename[:-4] + "ascii", unpack=True
                     )
                 else:
+                    if platform.system() == 'Windows':
+                        filename = filename.replace(':', '_')
                     sp = edspec(filename)
                     wav = sp.wave
                     flux = sp.flux
 
+                    if sp.c_flux is not None:
+                        self.ax.plot(wav, sp.c_flux, 'orange')
+
                 # Refresh and replot figure
-                self.ax.plot(wav, flux)
+                self.ax.plot(wav, flux, 'b')
                 self.ax.set_xlabel(r"Wavelength ($\AA$)")
                 self.ax.set_ylabel(r"Flux")
+
 
             self.canvas.draw()
         except (AttributeError, IndexError):
@@ -188,7 +194,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         idx = self.ui.FiltertableView.selectionModel().selectedRows()
         skiptotal = 0
         for idxxx in idx:
-            if '4' in DATARELEASE:
+            if '4' in DATARELEASE or '5' in DATARELEASE:
                 filename = self.model.data(self.model.index(idxxx.row(), 8))
             elif '3' in DATARELEASE:
                 filename = self.model.data(self.model.index(idxxx.row(), 0))

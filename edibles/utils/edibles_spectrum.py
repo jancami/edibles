@@ -14,7 +14,7 @@ from pathlib import Path
 from edibles import EDIBLES_PYTHONDIR
 from edibles import DATADIR, DATARELEASE
 
-
+import platform
 from edibles.utils.functions import make_grid
 
 
@@ -75,6 +75,10 @@ class EdiblesSpectrum:
         """Filename is relative to the EDIBLES_DATADIR environment variable
 
         """
+        # Change filename if Windows is used
+        if platform.system() == 'Windows':
+            filename = filename.replace(':', '_')
+
         if filename.startswith('/'):
             filename = filename[1:]
         self.filename = Path(DATADIR) / filename
@@ -100,8 +104,18 @@ class EdiblesSpectrum:
             if DATARELEASE == 'DR5':
                 self.wave = hdulist[1].data['WAVE']
                 self.flux = hdulist[1].data['FLUX']
+                self.flux_err = hdulist[1].data['FLUX_ERROR']
                 self.raw_wave = np.copy(self.wave)
                 self.raw_flux = np.copy(self.flux)
+
+                if 'CFLUX' in hdulist[1].header.values():
+                    self.c_flux = hdulist[1].data['CFLUX']
+                    self.m_trans = hdulist[1].data['MTRANS']
+                    self.m_wave = hdulist[1].data['M_WAVE']
+                else:
+                    self.c_flux = None
+                    self.m_trans = None
+                    self.m_wave = None
 
             else:
                 self.flux = hdulist[0].data
