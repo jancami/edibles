@@ -9,7 +9,7 @@ Args:
 Returns:
     Plot of the continuum window
 """
-def continuum_window(common_wave, coadded_flux, ContinuumMin, ContinuumMax, wavelength_target):
+def continuum_window(common_wave, coadded_flux, ContinuumMin, ContinuumMax, wavelength_target, figpath):
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.plot(common_wave, coadded_flux, 'k-', lw=1, label='Coadded spectrum')
     ax.axvspan(ContinuumMin, ContinuumMax, alpha=0.3, color='green', label=f'SNR window [{ContinuumMin:.1f}–{ContinuumMax:.1f} Å]')
@@ -20,4 +20,5 @@ def continuum_window(common_wave, coadded_flux, ContinuumMin, ContinuumMax, wave
     ax.legend(fontsize=9)
     ax.grid(alpha=0.3)
     plt.tight_layout()
+    plt.savefig(f"{figpath}/Continuum_Window.png")
     plt.show()
